@@ -425,6 +425,49 @@ subschema of it, and it would hide what is far more often a mistake in the
 caller's `keep` set than an intended change. A caller who wants the relaxed
 behavior can edit cardinalities before calling `extract`.
 
+```
+function extract(S, keep):
+    trimmed     = {}                        # name -> Record, fields filtered
+    invalidated = {}                        # set of record names
+    first_bad   = none                      # (label, record_name), for the error message
+
+    for (name, rec) in S.env:               # step 1 + 2
+        kept = []
+        for f in rec.fields:
+            if f.label in keep:
+                append f to kept
+            else if f.min >= 1:
+                if first_bad is none: first_bad = (f.label, name)
+                add name to invalidated
+        trimmed[name] = Record(kept)
+
+    repeat until no change:                 # step 3: propagate, least fixpoint
+        for (name, rec) in trimmed:
+            if name in invalidated: continue
+            for f in rec.fields:
+                if f.min >= 1 and f.type is Ref and f.type.name in invalidated:
+                    add name to invalidated
+                    break
+
+    if S.root.name in invalidated:          # step 4
+        (label, record_name) = first_bad
+        fail: "removing label " + label + " deletes a mandatory field of " + record_name
+
+    new_env = {}                            # step 5: drop invalidated records and
+    for (name, rec) in trimmed:              # any field (mandatory or not) still
+        if name in invalidated: continue     # pointing at one
+        fields = [f for f in rec.fields
+                  if not (f.type is Ref and f.type.name in invalidated)]
+        new_env[name] = Record(fields)
+
+    return normalize(prune(Schema(Ref(S.root.name), new_env)))
+```
+
+`first_bad` records the *first* offender encountered during step 1's single
+pass over `S.env` in declaration order — not the first one propagation later
+discovers. Implementations MUST report this one specifically, so that two
+implementations facing the same input produce the same error message.
+
 **Worked example.** With the `Order`/`Item` schema from
 [§3.1](03-schema-model.md#31-mental-model):
 
@@ -445,7 +488,12 @@ Rules:
 
 - A label present in every sample exactly once becomes `[1,1]`.
 - A label absent from some samples becomes `[0,1]`.
-- A label seen more than once in any sample becomes an array, `[min,]`.
+- **A label seen more than once in any sample becomes `[0,]`** — cardinality
+  `min = 0`, not the observed minimum count. `infer` is permissive on array
+  length by design: it drafts a schema loose enough that a plausible sixth
+  sample with a shorter (or empty) array wouldn't need hand-editing just to
+  keep passing. Do not infer `min` from the smallest count seen; that is a
+  common and wrong assumption to carry over from validating a fixed sample set.
 - Scalar children become one scalar kind, nullable if any sample was `null`.
 - Samples disagreeing on scalar kind are an error, with one exception:
   `integer` mixed with `number` collapses to `number`. That exception exists
@@ -453,6 +501,70 @@ Rules:
 - Node children become nested named records, recursively. Since the model has
   no inline records, generated names are derived from the label and MUST be
   made unique.
+
+```
+function infer(samples, root_name = "Root"):
+    if samples is empty: fail: "cannot infer a schema from zero samples"
+    for s in samples:
+        if s is not a node: fail: "infer expects object (record) samples at the root"
+    env = {}
+    used = {}                                # names already assigned, for uniqueness
+    infer_record(samples, root_name, env, used)
+    return Schema(Ref(root_name), env)        # NOT normalized -- see below
+
+function infer_record(nodes, name, env, used):
+    add name to used
+    # Pass 1: collect every label that appears in ANY sample, in first-seen
+    # order across samples. Pass 2: for every sample, count every label from
+    # pass 1, defaulting to 0 if absent. Two passes, not one, so a label
+    # missing from sample 1 but present in sample 5 still comes out [0,1] --
+    # the result must not depend on which sample happens to be examined first.
+    order = []
+    for node in nodes:
+        for (label, _) in node.edges:
+            if label not seen before: append label to order
+
+    children = { label: [] for label in order }        # label -> list of child values
+    per_sample_counts = { label: [] for label in order } # label -> list of one count per sample
+    for node in nodes:
+        counts_here = {}
+        for (label, child) in node.edges:
+            append child to children[label]
+            counts_here[label] = counts_here.get(label, 0) + 1
+        for label in order:
+            append counts_here.get(label, 0) to per_sample_counts[label]
+
+    fields = []
+    for label in order:
+        counts = per_sample_counts[label]
+        if max(counts) > 1:
+            cmin, cmax = 0, unbounded          # array: permissive, see rule above
+        else:
+            cmin, cmax = min(counts), 1        # 0 or 1 across samples -> optional/required
+        typ = infer_type(children[label], label, name, env, used)
+        append Field(label, typ, cmin, cmax) to fields
+    env[name] = Record(fields)
+
+function infer_type(child_values, label, record_name, env, used):
+    if all child_values are nodes:
+        rec_name = unique_name_from(label, used)
+        infer_record(child_values, rec_name, env, used)
+        return Ref(rec_name)
+    if some but not all child_values are nodes:
+        fail: "label " + label + " mixes objects and values; cannot infer one type"
+        # (or, in an allow_any mode: return Any, and report the opening -- see below)
+    kinds = {}
+    saw_null = false
+    for v in child_values:
+        if v is null: saw_null = true
+        else: add value_kind(v) to kinds
+    if "number" in kinds: remove "integer" from kinds   # the one subtype relation, §6.3
+    if kinds is empty: return Scalar("string", nullable = saw_null)  # no non-null sample
+    if size(kinds) > 1:
+        fail: "label " + label + " has values of more than one scalar kind"
+        # (or, in an allow_any mode: return Any, and report the opening -- see below)
+    return Scalar(the one kind in kinds, nullable = saw_null)
+```
 
 Two requirements:
 
@@ -502,6 +614,51 @@ Computation:
   in a command-line tool.
 
 Findings MUST be sorted deterministically by `(code, location)`.
+
+```
+function lint(S):
+    findings  = []
+    reach     = reachable(S)              # plain walk, defined below -- not prune's walk
+    sat       = satisfiable_set(S)         # §6.4
+
+    for name in (reach - sat):
+        add Finding("unsatisfiable-record", "warning", name) to findings
+
+    for name in (S.env.keys - reach):
+        add Finding("unreachable-record", "warning", name) to findings
+
+    for block in equivalence_classes(S):   # §6.8, run on S as authored -- not pruned first
+        if size(block) > 1:
+            for name in block:
+                add Finding("duplicate-record", "warning", name) to findings
+
+    for (name, rec) in S.env:
+        for f in rec.fields:
+            if f.type is Any:
+                add Finding("any-field", "info", name + "." + f.label) to findings
+
+    sort findings by (code, location)
+    return findings
+
+function reachable(S):
+    seen  = {}
+    stack = [S.root.name]
+    while stack is not empty:
+        name = pop stack
+        if name in seen or name not in S.env: continue
+        add name to seen
+        for f in S.env[name].fields:
+            if f.type is Ref: push f.type.name to stack
+    return seen
+```
+
+`reachable` here is deliberately not `prune`'s reachability. It follows every
+`Ref`-typed field regardless of cardinality or satisfiability — a record
+reached only through an optional field, or only through a field whose target
+turns out unsatisfiable, still counts as referenced for `lint`'s purposes. This
+is why `unsatisfiable-record` and `unreachable-record` can each fire on records
+`prune` would have handled differently: `lint` reports the schema exactly as
+authored, `prune` transforms it.
 
 ---
 

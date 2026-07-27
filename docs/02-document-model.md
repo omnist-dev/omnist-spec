@@ -137,36 +137,61 @@ of `number` in the Schema model (§6).
 
 ---
 
-## 2.4 Resource caps
+## 2.4 Safety limits
 
-A Document is built from untrusted input. Three limits bound the work an
-implementation will do before refusing. All three are hard, normative constants.
-They are not defaults, they are not tiered, and implementations MUST NOT make
-them configurable at a value above the constant.
+A Document is built from untrusted input. Three quantities bound the work an
+implementation will do before refusing to continue: nesting depth, total node
+count, and the digit length of an `integer` literal. Every conformant
+implementation MUST enforce a finite limit on all three. **No implementation
+MAY be unbounded on any of them.**
 
-| Limit | Value | Applies to |
+**What is fixed, and what is not.** The *existence* and *meaning* of the three
+limits is normative. The specific *numbers* are not: this is a deliberate
+change from an earlier draft of this spec, which wrongly treated one platform's
+numbers as universal constants. A limit exists to bound work against untrusted
+input on the hardware actually running the implementation, and that varies
+legitimately by two orders of magnitude between an embedded parser and a
+big-data ingestion engine.
+
+| Limit | Reference default | Applies to |
 |---|---|---|
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
-| Maximum integer digits | 4300 | Decimal digits in an `integer` literal, sign excluded |
+| Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
 
-Exceeding any of the three MUST be reported as an error, not truncated,
-clamped, or silently accepted.
+The reference defaults are what the Python implementation uses today, and what
+a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
+matches CPython's own default for `sys.set_int_max_str_digits` — conversion
+between an arbitrarily long digit string and a big integer is superlinear, so
+an unbounded literal is a denial-of-service vector regardless of language.
 
-**On the digit cap.** 4300 matches CPython's own default for
-`sys.set_int_max_str_digits`. Conversion between an arbitrarily long digit
-string and a big integer is superlinear, so an unbounded literal is a
-denial-of-service vector. This is a safety bound, not a modeling statement: the
-`integer` kind itself is arbitrary-precision.
+**Choosing different values.** An implementation MAY set any of the three
+lower or higher than the reference default, to fit its deployment target —
+for example a lower depth limit on a mobile or embedded runtime with a small
+call stack, or a higher node count on a system built to ingest large batch
+documents. Whatever values an implementation chooses:
+
+- They MUST be finite. "No limit" is not a legal choice for any of the three.
+- They MUST be documented, in the same place a user would look for the rest of
+  the implementation's conformance profile.
+- The depth limit MUST match between the Document builder and the OML parser
+  within one implementation (§2.4 note below) — a document that parses MUST
+  NOT then fail to build.
+
+**What is fixed regardless of the chosen value: how exceeding it is reported.**
+Exceeding a declared limit — whatever number the implementation chose — MUST
+produce the corresponding standardized error from the `document.limit.*`
+family defined in [chapter 8](08-conformance-and-errors.md), MUST NOT be
+truncated, clamped, or silently accepted, and MUST NOT be reported as any other
+error category. A conformance test comparing two implementations with
+different configured limits is expected to see different pass/fail points on a
+depth- or size-scaling test; it MUST see the same error code at whichever point
+each of them draws its own line.
 
 **On the node cap.** The node count bounds total materialized nodes, not depth.
 It exists because a shallow document can still be enormous — a million sibling
 edges is depth 1.
 
-**On depth.** The depth cap and the OML parser's nesting cap are the same
-number, deliberately. A document that parses MUST NOT then fail to build.
-
-**Error reporting.** These three limits produce errors in the
-`document.limit.*` family; the canonical codes are defined in
-[chapter 8](08-conformance-and-errors.md). Note that chapter 8's code scheme is
-new normative material and no implementation emits it yet.
+**On depth.** Within one implementation, the Document builder's depth limit and
+the OML parser's nesting limit MUST be the same number. A document that the
+parser accepts MUST NOT then fail while the builder walks it.

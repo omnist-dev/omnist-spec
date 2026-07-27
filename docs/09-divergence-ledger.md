@@ -32,6 +32,11 @@ they cannot produce a Document or Schema the spec forbids.
 **Optional surfaces.** A command-line interface, a language-server integration,
 a formatter. Nothing in this spec requires them.
 
+**The exact value of a safety limit** (§2.4). An implementation MAY set its
+depth, node-count, and integer-digit limits to values other than the reference
+defaults (200 / 1,000,000 / 4,300), to fit its deployment target. What is not
+permitted to vary is covered in §9.2.
+
 ## 9.2 Forbidden variation
 
 An implementation MUST NOT differ on any of the following. Each is a
@@ -42,8 +47,14 @@ kinds, the value/node dichotomy. Adding a scalar kind is the single most
 damaging possible divergence: it changes the subtyping lattice and therefore
 silently changes compatibility answers.
 
-**Resource caps.** 200, 1 000 000, 4300. Not configurable above those values,
-not tiered, not per-format.
+**Whether a safety limit exists, and what it is called.** All three limits in
+§2.4 (depth, node count, integer digits) MUST be enforced by every
+implementation, at some finite value it documents. An implementation MUST NOT
+be unbounded on any of the three, and exceeding whichever value it configures
+MUST raise the matching `document.limit.*` code (§8.3.2) — never a different
+code, and never silently. The threshold number is permitted variation (§9.1);
+having no threshold at all, or reporting the wrong code when one is crossed, is
+not.
 
 **Validation results.** Which documents a schema accepts, and where a rejection
 is located.

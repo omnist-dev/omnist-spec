@@ -71,14 +71,18 @@ Every diagnostic carries at least:
 
 | Code | Raised when |
 |---|---|
-| `document.limit.depth` | Nesting exceeds 200 levels |
-| `document.limit.nodes` | More than 1 000 000 nodes materialized |
-| `document.limit.int-digits` | An integer literal exceeds 4300 digits |
+| `document.limit.depth` | Nesting exceeds the implementation's configured depth limit |
+| `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
+| `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-The three `document.limit.*` codes correspond exactly to the three constants in
-[§2.4](02-document-model.md#24-resource-caps). There are three, they are flat,
-and no implementation may add a fourth or split one into tiers.
+The three `document.limit.*` codes correspond to the three quantities in
+[§2.4](02-document-model.md#24-safety-limits). There are three, they are flat,
+and no implementation may add a fourth or split one into tiers. **The codes are
+fixed; the threshold that triggers each one is not** — an implementation MAY
+configure any of the three limits to a value other than the reference default,
+per §2.4, but whatever value it configures, crossing it MUST raise exactly this
+code, never a different one and never silently.
 
 ### 8.3.3 `schema.*` — schema well-formedness
 

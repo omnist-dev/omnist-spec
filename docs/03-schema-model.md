@@ -212,6 +212,74 @@ a separate operation defined in
 result is a list of `(path, code, message)` entries; an empty list means valid.
 Codes are defined in [chapter 8](08-conformance-and-errors.md).
 
+### 3.6.1 `validate(document, schema)` — pseudocode
+
+Uses the notation of [§6.2](06-schema-algebra.md#62-notation-used-in-the-pseudocode):
+`S.resolve(t)`, `R.field(label)`, `f.min`/`f.max`.
+
+```
+function validate(document, S):
+    result = ValidationResult()               # a list of (path, code, message)
+    conform(document.root, S, S.root, "$", result)
+    return result
+
+function conform(node, S, t, path, result):
+    d = S.resolve(t)
+    if d is Any:
+        return                                 # descent stops; accepted unchecked
+    if d is Scalar:
+        conform_scalar(node, d, path, result)
+    else:                                       # d is Record
+        conform_record(node, S, d, path, result)
+
+function conform_scalar(node, s, path, result):
+    if node is a node (not a leaf):
+        result.add(path, "shape-mismatch", "expected a scalar value, got an object")
+        return
+    if node.value is null:
+        if not s.nullable:
+            result.add(path, "null-not-allowed", "null not allowed here")
+        return                                  # null never checked against kind
+    if not matches_kind(node.value, s.kind):
+        result.add(path, "type-mismatch", "value does not match declared kind")
+
+function conform_record(node, S, rec, path, result):
+    if node is a leaf (not a node):
+        result.add(path, "shape-mismatch", "expected an object, got a value")
+        return
+    counts = {}
+    for (label, child) in node.edges:            # in edge order; order not otherwise used
+        i = counts.get(label, 0)
+        counts[label] = i + 1
+        child_path = path + "." + label + (("[" + i + "]") if i > 0 else "")
+        f = rec.field(label)
+        if f is none:
+            result.add(child_path, "unexpected-field", "field not declared on this record")
+            # no further descent: an undeclared field has no type to check against
+        else:
+            conform(child, S, f.type, child_path, result)
+    for f in rec.fields:
+        c = counts.get(f.label, 0)
+        if c < f.min or not le(c, f.max):
+            result.add(path, "cardinality",
+                        "field " + f.label + " occurs " + c + " time(s), "
+                        + "expected [" + f.min + "," + f.max + "]")
+```
+
+Two details that are easy to miss and change the result if skipped:
+
+- **An undeclared field's target is never descended into.** It is reported and
+  left alone; conformance of its subtree is meaningless once the field itself is
+  invalid.
+- **The cardinality error's path is the parent node, not the field's edges.**
+  "This record is missing a required field" has no single edge to point at when
+  the count is zero, so the path is always the record's own path, even when the
+  count is nonzero-but-wrong.
+
+`validate` MUST run within the depth limit of [§2.4](02-document-model.md#24-safety-limits).
+Exceeding it is a resource-cap error, not a validation finding, and is defined
+there, not in this section.
+
 ---
 
 ## 3.7 The `any` type

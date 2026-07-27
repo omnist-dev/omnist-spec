@@ -60,6 +60,104 @@ and report them together. Each entry carries a path, a code, and a message. See
 > upgrading. Since materialization already knows, at every node, which field and
 > type the schema expects there, upgrading and shape-checking happen in one pass.
 
+### 7.2.1 `materialize(node, schema)` — pseudocode
+
+Structurally this is [§3.6.1](03-schema-model.md#361-validatedocument-schema--pseudocode)'s
+`validate` with every leaf replaced by its upgrade result instead of discarded.
+The two MUST stay in lockstep: whatever this function accepts at a leaf,
+`validate` must also accept there, and vice versa. They are two different
+projections of the same rule, not two independently tuned rules that happen to
+agree today.
+
+```
+function materialize(node, S):
+    result = ValidationResult()
+    out = materialize_type(node, S, S.root, "$", result)
+    if not result.ok:
+        fail with every entry in result           # collect-all, not fail-fast
+    return out
+
+function materialize_type(node, S, t, path, result):
+    d = S.resolve(t)
+    if d is Any:
+        return node                                # untouched; nothing beneath upgraded
+    if d is Scalar:
+        return materialize_scalar(node, d, path, result)
+    return materialize_record(node, S, d, path, result)
+
+function materialize_record(node, S, rec, path, result):
+    if node is a leaf:
+        result.add(path, "shape-mismatch", "expected an object, got a value")
+        return node                                 # unchanged; caller will fail on result
+    out = []
+    counts = {}
+    for (label, child) in node.edges:
+        i = counts.get(label, 0)
+        counts[label] = i + 1
+        child_path = path + "." + label + (("[" + i + "]") if i > 0 else "")
+        f = rec.field(label)
+        if f is none:
+            result.add(child_path, "unexpected-field", "field not declared on this record")
+            append (label, child) to out            # kept as-is; not dropped
+        else:
+            append (label, materialize_type(child, S, f.type, child_path, result)) to out
+    for f in rec.fields:
+        c = counts.get(f.label, 0)
+        if c < f.min or not le(c, f.max):
+            result.add(path, "cardinality",
+                        "field " + f.label + " occurs " + c + " time(s), "
+                        + "expected [" + f.min + "," + f.max + "]")
+    return out
+
+function materialize_scalar(value, s, path, result):
+    if value is a node:
+        result.add(path, "shape-mismatch", "expected a " + s.kind + " value, got an object")
+        return value
+    if value is null:
+        if not s.nullable:
+            result.add(path, "null-not-allowed", "null not allowed here")
+        return value                                 # null is never converted further
+    upgraded = try_upgrade(value, s.kind)             # value-exact only; see table above
+    if upgraded is defined:
+        return upgraded
+    result.add(path, "type-mismatch",
+                "cannot be read as " + s.kind + " (not a value-exact conversion)")
+    return value                                       # unchanged; caller will fail on result
+
+function try_upgrade(value, kind):
+    # boolean is never treated as an integer or a number, in either direction,
+    # even though some host languages consider bool a subtype of int.
+    if kind == "string":   return value if value is a string else undefined
+    if kind == "boolean":  return value if value is a boolean else undefined
+    if kind == "integer":
+        if value is an integer:                    return value
+        if value is a float and value is integral:  return int(value)
+        return undefined
+    if kind == "number":
+        if value is an integer or a float:          return float(value)
+        return undefined
+    if kind in {"date", "time", "datetime"}:
+        # value MUST already be in the exact spelling matches_kind() accepts
+        # for this kind (chapter 4, §7.4-7.8) -- not merely parseable by a
+        # looser library function. A bare date string never upgrades to
+        # datetime and vice versa; the two shapes are disjoint by construction.
+        if value is a string and value matches kind's ISO spelling exactly:
+            return parse(value, kind)
+        return undefined
+    return undefined
+```
+
+**Materialization never invents and never loses.** `1.0 -> integer 1` is
+value-exact; `1.5 -> integer` is not, and is an error, not a truncation.
+`"1" -> integer` is not attempted at all: a string is never upgraded to a
+numeric kind regardless of its contents, because doing so would make
+materialization behave differently depending on which format produced the
+untyped Document, and format-independence (§2.1) is not optional.
+
+Everything under an `any` field is skipped by `materialize_type`'s first
+branch, at every depth — an `any` field one level deep and one a hundred
+levels deep behave identically: nothing beneath either is inspected.
+
 ## 7.3 Writing
 
 Writing is the reverse projection, and it is **schema-free by design**.
