@@ -1,0 +1,49 @@
+site_name: Omnist Spec
+site_description: Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.
+site_url: https://omnist-dev.github.io/omnist-spec/
+repo_url: https://github.com/omnist-dev/omnist-spec
+repo_name: omnist-dev/omnist-spec
+edit_uri: edit/master/docs/
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - tables
+  - fenced_code
+  - admonition
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - 1. Glossary: 01-glossary.md
+  - 2. Document Model: 02-document-model.md
+  - 3. Schema Model: 03-schema-model.md
+  - 4. OML Grammar: 04-oml-grammar.md
+  - 5. OSD Grammar: 05-osd-grammar.md
+  - 6. Schema Algebra: 06-schema-algebra.md
+  - 7. Codecs & Deserialization: 07-codecs-and-deserialization.md
+  - 8. Conformance & Errors: 08-conformance-and-errors.md
+  - 9. Divergence Ledger: 09-divergence-ledger.md
+  - 10. Governance & Versioning: 10-governance-and-versioning.md
