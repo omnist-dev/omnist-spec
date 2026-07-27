@@ -8,6 +8,24 @@ records constraining those edges. Because both models are small and closed, a
 set of operations over schemas — inclusion, equivalence, minimization,
 extraction, inference — are decidable and total, not best-effort.
 
+```mermaid
+graph LR
+    JSON["JSON"] --> Doc["Document<br/>(ordered edge list)"]
+    YAML["YAML"] --> Doc
+    TOML["TOML"] --> Doc
+    XML["XML"] --> Doc
+    OML["OML"] --> Doc
+
+    Doc -->|schema, stage 2| Val["validate / materialize"]
+    Schema["Schema<br/>(root + closed records)"] --> Val
+    Schema --> Algebra["Schema Algebra"]
+    Algebra --> compat["compatible_with"]
+    Algebra --> equiv["equivalent"]
+    Algebra --> norm["normalize"]
+    Algebra --> extr["extract"]
+    Algebra --> infer["infer"]
+```
+
 This specification defines:
 
 1. the Document model, and the invariants every implementation must preserve;

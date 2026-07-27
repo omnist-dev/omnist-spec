@@ -314,6 +314,16 @@ records, unique up to record naming. This is the paper's `MinimizeSA`.
 
 Three steps.
 
+```mermaid
+graph LR
+    S["Schema S"] --> P["prune (§6.5)<br/>drop unreachable / unsatisfiable"]
+    P --> E{"is_empty?"}
+    E -->|yes| Done1["return unchanged"]
+    E -->|no| R["partition refinement<br/>group records by structural signature"]
+    R --> M["merge each block to one<br/>representative, rewrite refs"]
+    M --> Done2["canonical minimal schema"]
+```
+
 1. **Prune** (§6.5). If the result is empty (`is_empty`), return it unchanged —
    `prune` deliberately leaves an unsatisfiable root's fields alone, so there is
    no "fewest records" question to answer for a schema that accepts nothing.

@@ -23,6 +23,20 @@ record Item {
 root Order
 ```
 
+As a graph, `root Order` looks like this. An edge label carries its cardinality;
+the node it points to is either a scalar kind or another record.
+
+```mermaid
+graph LR
+    Order((Order)) -->|"id [1,1]"| string1(("string"))
+    Order -->|"placed [1,1]"| datetime((datetime))
+    Order -->|"note [0,1]"| string2(("string"))
+    Order -->|"item [1,∞]"| Item((Item))
+    Item -->|"sku [1,1]"| string3(("string"))
+    Item -->|"qty [1,1]"| integer((integer))
+    Item -->|"discount [0,1]"| number((number))
+```
+
 Four things are worth noticing before the formal rules.
 
 **Every record is closed.** `Order` allows `id`, `placed`, `note`, and `item`,
