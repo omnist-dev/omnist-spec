@@ -1,0 +1,187 @@
+{
+  "vectors": [
+    {
+      "name": "compat/basic/identical-schemas",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record User {\n    \"id\": string,\n}\nroot User\n",
+        "b": "record User {\n    \"id\": string,\n}\nroot User\n"
+      },
+      "expect": { "result": true }
+    },
+
+    {
+      "name": "compat/basic/adding-optional-field-narrows-forward",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record User {\n    \"id\": string,\n    \"nick\" [0,1]: string,\n}\nroot User\n",
+        "b": "record User {\n    \"id\": string,\n}\nroot User\n"
+      },
+      "expect": { "result": false },
+      "comment": "A may emit `nick`; B is closed and has no such field. Readers holding B would break."
+    },
+
+    {
+      "name": "compat/basic/adding-optional-field-widens-backward",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record User {\n    \"id\": string,\n}\nroot User\n",
+        "b": "record User {\n    \"id\": string,\n    \"nick\" [0,1]: string,\n}\nroot User\n"
+      },
+      "expect": { "result": true },
+      "comment": "The same pair, arguments reversed. Direction is the whole question."
+    },
+
+    {
+      "name": "compat/basic/adding-required-field-is-not-accepted-by-old",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record User {\n    \"id\": string,\n}\nroot User\n",
+        "b": "record User {\n    \"id\": string,\n    \"email\": string,\n}\nroot User\n"
+      },
+      "expect": { "result": false },
+      "comment": "Clause 2 of record_sub: B requires `email` with min 1 and A does not guarantee it."
+    },
+
+    {
+      "name": "compat/scalar/integer-is-a-subtype-of-number",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"v\": integer,\n}\nroot R\n",
+        "b": "record R {\n    \"v\": number,\n}\nroot R\n"
+      },
+      "expect": { "result": true }
+    },
+
+    {
+      "name": "compat/scalar/number-is-not-a-subtype-of-integer",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"v\": number,\n}\nroot R\n",
+        "b": "record R {\n    \"v\": integer,\n}\nroot R\n"
+      },
+      "expect": { "result": false }
+    },
+
+    {
+      "name": "compat/scalar/date-is-not-a-subtype-of-datetime",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"v\": date,\n}\nroot R\n",
+        "b": "record R {\n    \"v\": datetime,\n}\nroot R\n"
+      },
+      "expect": { "result": false },
+      "comment": "integer/number is the ONLY subtyping relation. This vector exists to stop a fourth implementation from adding a second one."
+    },
+
+    {
+      "name": "compat/scalar/nullable-does-not-fit-non-nullable",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"v\": string?,\n}\nroot R\n",
+        "b": "record R {\n    \"v\": string,\n}\nroot R\n"
+      },
+      "expect": { "result": false }
+    },
+
+    {
+      "name": "compat/cardinality/narrower-range-fits-wider",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"t\" [1,3]: string,\n}\nroot R\n",
+        "b": "record R {\n    \"t\" [0,]: string,\n}\nroot R\n"
+      },
+      "expect": { "result": true }
+    },
+
+    {
+      "name": "compat/cardinality/unbounded-does-not-fit-bounded",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"t\" [0,]: string,\n}\nroot R\n",
+        "b": "record R {\n    \"t\" [,5]: string,\n}\nroot R\n"
+      },
+      "expect": { "result": false },
+      "comment": "Also pins the comma-first cardinality form [,5], which the OSD grammar accepts."
+    },
+
+    {
+      "name": "compat/recursion/coinduction-terminates-on-mutual-refs",
+      "spec": "docs/06-schema-algebra.md#66-compatible_witha-b",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record Tree {\n    \"value\": integer,\n    \"child\" [0,]: Tree,\n}\nroot Tree\n",
+        "b": "record Tree {\n    \"value\": number,\n    \"child\" [0,]: Tree,\n}\nroot Tree\n"
+      },
+      "expect": { "result": true },
+      "comment": "Recursive on both sides. An implementation without memoized coinduction does not terminate here."
+    },
+
+    {
+      "name": "compat/satisfiability/unsatisfiable-a-is-vacuously-a-subschema",
+      "spec": "docs/06-schema-algebra.md#64-is_emptys-and-satisfiability",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record Node {\n    \"child\": Node,\n}\nroot Node\n",
+        "b": "record Other {\n    \"x\": string,\n}\nroot Other\n"
+      },
+      "expect": { "result": true },
+      "comment": "A accepts no finite document, so every document it accepts is trivially accepted by B."
+    },
+
+    {
+      "name": "compat/any/any-on-the-right-absorbs-everything",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record Inner {\n    \"deep\": string,\n}\nrecord R {\n    \"payload\": Inner,\n}\nroot R\n",
+        "b": "record R {\n    \"payload\": any,\n}\nroot R\n"
+      },
+      "expect": { "result": true }
+    },
+
+    {
+      "name": "compat/any/any-on-the-left-fits-nothing-else",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "compatible_with",
+      "input": {
+        "a": "record R {\n    \"payload\": any,\n}\nroot R\n",
+        "b": "record Inner {\n    \"deep\": string,\n}\nrecord R {\n    \"payload\": Inner,\n}\nroot R\n"
+      },
+      "expect": { "result": false }
+    },
+
+    {
+      "name": "equivalent/renaming-records-preserves-equivalence",
+      "spec": "docs/06-schema-algebra.md#67-equivalenta-b",
+      "operation": "equivalent",
+      "input": {
+        "a": "record Alpha {\n    \"x\": string,\n}\nrecord Top {\n    \"a\": Alpha,\n}\nroot Top\n",
+        "b": "record Zeta {\n    \"x\": string,\n}\nrecord Top {\n    \"a\": Zeta,\n}\nroot Top\n"
+      },
+      "expect": { "result": true },
+      "comment": "Equivalence is about accepted documents, never about record names or declaration order."
+    },
+
+    {
+      "name": "equivalent/unreachable-record-does-not-change-the-language",
+      "spec": "docs/06-schema-algebra.md#67-equivalenta-b",
+      "operation": "equivalent",
+      "input": {
+        "a": "record Top {\n    \"x\": string,\n}\nroot Top\n",
+        "b": "record Unused {\n    \"y\": integer,\n}\nrecord Top {\n    \"x\": string,\n}\nroot Top\n"
+      },
+      "expect": { "result": true }
+    }
+  ]
+}

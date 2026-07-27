@@ -1,0 +1,196 @@
+{
+  "vectors": [
+    {
+      "name": "validate/basic/conforming-document",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"note\" [0,1]: string?,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            ["id", {"scalar": {"kind": "string", "value": "A-1"}}],
+            ["item", {"edges": [
+              ["sku", {"scalar": {"kind": "string", "value": "pen"}}],
+              ["qty", {"scalar": {"kind": "integer", "value": 2}}]
+            ]}],
+            ["item", {"edges": [
+              ["sku", {"scalar": {"kind": "string", "value": "pad"}}],
+              ["qty", {"scalar": {"kind": "integer", "value": 1}}]
+            ]}]
+          ]
+        }
+      },
+      "expect": { "ok": true }
+    },
+
+    {
+      "name": "validate/basic/order-is-not-a-constraint",
+      "spec": "docs/02-document-model.md#23-structural-invariants",
+      "operation": "validate",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"note\" [0,1]: string?,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            ["item", {"edges": [
+              ["qty", {"scalar": {"kind": "integer", "value": 2}}],
+              ["sku", {"scalar": {"kind": "string", "value": "pen"}}]
+            ]}],
+            ["id", {"scalar": {"kind": "string", "value": "A-1"}}]
+          ]
+        }
+      },
+      "expect": { "ok": true },
+      "comment": "Same edges, permuted at both levels. Validation counts edges and MUST ignore order (invariant D-3)."
+    },
+
+    {
+      "name": "validate/basic/nullable-scalar-accepts-null",
+      "spec": "docs/03-schema-model.md#35-nullable-versus-optional",
+      "operation": "validate",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"note\" [0,1]: string?,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            ["id", {"scalar": {"kind": "string", "value": "A-1"}}],
+            ["note", {"scalar": {"kind": null, "value": null}}],
+            ["item", {"edges": [
+              ["sku", {"scalar": {"kind": "string", "value": "pen"}}],
+              ["qty", {"scalar": {"kind": "integer", "value": 2}}]
+            ]}]
+          ]
+        }
+      },
+      "expect": { "ok": true }
+    },
+
+    {
+      "name": "validate/basic/closed-record-rejects-unknown-label",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "input": {
+        "schema": "record Order {\n    \"id\": string,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            ["id", {"scalar": {"kind": "string", "value": "A-1"}}],
+            ["shipping", {"scalar": {"kind": "string", "value": "express"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$.shipping", "code": "validate.unexpected-field" }
+        ]
+      }
+    },
+
+    {
+      "name": "validate/basic/all-failures-reported-not-just-first",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            ["id", {"scalar": {"kind": "integer", "value": 7}}],
+            ["item", {"edges": [
+              ["sku", {"scalar": {"kind": "string", "value": "pen"}}],
+              ["qty", {"scalar": {"kind": "string", "value": "two"}}]
+            ]}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$.id", "code": "validate.type-mismatch" },
+          { "path": "$.item.qty", "code": "validate.type-mismatch" }
+        ]
+      },
+      "comment": "Two independent failures. Both MUST be reported; diagnostics compare as a set, so their order is unconstrained."
+    },
+
+    {
+      "name": "validate/basic/cardinality-below-minimum",
+      "spec": "docs/03-schema-model.md#34-cardinality",
+      "operation": "validate",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n}\nrecord Order {\n    \"id\": string,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            ["id", {"scalar": {"kind": "string", "value": "A-1"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$", "code": "validate.cardinality" }
+        ]
+      },
+      "comment": "Cardinality is a property of the containing node, so the path is the node, not the missing label."
+    },
+
+    {
+      "name": "validate/basic/integer-does-not-satisfy-string",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "validate",
+      "input": {
+        "schema": "record R {\n    \"a\": string,\n}\nroot R\n",
+        "document": {
+          "edges": [["a", {"scalar": {"kind": "integer", "value": 1}}]]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$.a", "code": "validate.type-mismatch" }
+        ]
+      },
+      "comment": "Validation checks, it never converts. integer is a subtype of number and of nothing else."
+    },
+
+    {
+      "name": "validate/any/descent-stops-at-any",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "validate",
+      "input": {
+        "schema": "record Envelope {\n    \"kind\": string,\n    \"payload\": any,\n}\nroot Envelope\n",
+        "document": {
+          "edges": [
+            ["kind", {"scalar": {"kind": "string", "value": "webhook"}}],
+            ["payload", {"edges": [
+              ["anything", {"edges": [
+                ["at-all", {"scalar": {"kind": "boolean", "value": true}}]
+              ]}]
+            ]}]
+          ]
+        }
+      },
+      "expect": { "ok": true },
+      "comment": "any accepts the whole subtree unchecked. It does not open Envelope's label alphabet."
+    },
+
+    {
+      "name": "validate/any/does-not-open-the-label-alphabet",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "validate",
+      "input": {
+        "schema": "record Envelope {\n    \"kind\": string,\n    \"payload\": any,\n}\nroot Envelope\n",
+        "document": {
+          "edges": [
+            ["kind", {"scalar": {"kind": "string", "value": "webhook"}}],
+            ["payload", {"scalar": {"kind": "integer", "value": 1}}],
+            ["extra", {"scalar": {"kind": "integer", "value": 2}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$.extra", "code": "validate.unexpected-field" }
+        ]
+      }
+    }
+  ]
+}

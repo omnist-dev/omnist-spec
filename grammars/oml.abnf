@@ -1,0 +1,127 @@
+; OML (Omnist Markup Language) -- ABNF per RFC 5234.
+; Normative companion: docs/04-oml-grammar.md
+;
+; Two conformance levels are marked inline:
+;   [Core]     -- the canonical writer emits it; every reader MUST accept it.
+;   [Extended] -- read-only; readers MUST accept it, writers MUST NOT emit it.
+;
+; ABNF cannot express the three context conditions this grammar relies on.
+; They are normative and are stated in prose in docs/04-oml-grammar.md:
+;   (T1) Tokenizer priority order (sec 4.2). DATE is emitted only when not
+;        followed by "T" plus a TIME-shaped lookahead; nan/inf/-inf are
+;        claimed as NUMBER before IDENT is attempted.
+;   (T2) bare-label MUST NOT be the text "null", "true", or "false".
+;   (T3) One-token lookahead selects `node-edges` over `scalar` at the start
+;        of a document or of a braced value (sec 4.6.1).
+; Limits (sec 4.7): INTEGER digit count <= 4300; brace nesting depth <= 200.
+
+; ---------------------------------------------------------------- document
+
+document      = [SEP] ( node-edges / scalar ) [SEP]
+                ; see (T3) for the disambiguation; node-edges may be empty,
+                ; so the empty document is legal.
+
+node-edges    = [ edge *( SEP edge ) ]
+
+edge          = label COLON [SEP] value
+
+label         = STRING / bare-label
+bare-label    = IDENT                          ; subject to (T2)
+
+value         = scalar
+              / LBRACE [SEP] node-edges [SEP] RBRACE
+              / array
+
+; ------------------------------------------------------------------ arrays
+; Sugar: expanded at parse time into repeated edges at this position.
+; Elements are never arrays -- there is nothing to nest into.
+; "[]" is NOT accepted: array requires at least one element.
+
+array         = LBRACKET [SEP] array-element
+                *( COMMA [SEP] array-element [SEP] )
+                [ COMMA [SEP] ] RBRACKET
+
+array-element = scalar
+              / LBRACE [SEP] node-edges [SEP] RBRACE
+
+; ----------------------------------------------------------------- scalars
+
+scalar        = STRING / DATETIME / DATE / TIME / NUMBER / INTEGER
+              / %s"null" / %s"true" / %s"false"
+                ; token order here mirrors (T1); a bare IDENT that is none of
+                ; null/true/false is NOT a scalar and is an error.
+
+; ------------------------------------------------- whitespace / separators
+
+hspace        = %x20 / %x09                    ; space, tab; intra-line only
+newline       = %x0D.0A / %x0A                 ; CRLF or LF
+comment       = "#" *( %x00-09 / %x0B-10FFFF ) ; to end of line, NL excluded
+
+SEP           = 1*( hspace / comment / newline / ";" )
+                ; A run with no newline and no ";" is skipped and emits no
+                ; token; a run containing either is one SEP.
+
+; -------------------------------------------------------------- punctuation
+
+LBRACE        = "{"
+RBRACE        = "}"
+LBRACKET      = "["
+RBRACKET      = "]"
+COLON         = ":"
+COMMA         = ","
+
+; ------------------------------------------------------------- identifiers
+
+IDENT         = ( ALPHA / "_" ) *( ALPHA / DIGIT / "_" / "-" )
+ALPHA         = %x41-5A / %x61-7A
+DIGIT         = %x30-39
+HEXDIG        = DIGIT / %x41-46 / %x61-66
+
+; ------------------------------------------------- numeric / temporal atoms
+
+INTEGER       = [ "-" ] 1*DIGIT                ; <= 4300 digits, sign excluded
+
+NUMBER        = decimal-num / exponent-num / reserved-number
+decimal-num   = [ "-" ] 1*DIGIT "." 1*DIGIT [ exponent ]
+exponent-num  = [ "-" ] 1*DIGIT exponent
+exponent      = ( "e" / "E" ) [ "+" / "-" ] 1*DIGIT
+reserved-number = %s"nan" / %s"inf" / "-" %s"inf"
+                ; claimed before IDENT by (T1); never a bare label.
+
+DATE          = 4DIGIT "-" 2DIGIT "-" 2DIGIT   ; subject to (T1) lookahead
+TIME          = 2DIGIT ":" 2DIGIT [ ":" 2DIGIT [ "." 1*6DIGIT ] ] [ tz-offset ]
+DATETIME      = DATE "T" 2DIGIT ":" 2DIGIT
+                [ ":" 2DIGIT [ "." 1*6DIGIT ] ] [ tz-offset ]
+tz-offset     = ( "+" / "-" ) 2DIGIT ":" 2DIGIT
+
+; ------------------------------------------------------------------ strings
+
+STRING        = dquote-string                  ; [Core]
+              / raw-string                     ; [Extended]
+              / multiline-string               ; [Extended]
+
+DQUOTE        = %x22
+
+dquote-string = DQUOTE *( unescaped / escape ) DQUOTE
+unescaped     = %x20-21 / %x23-5B / %x5D-10FFFF
+                ; any char >= U+0020 except '"' and '\'; control characters
+                ; below U+0020 are an error.
+escape        = "\" ( %x22 / "\" / "/" / "b" / "f" / "n" / "r" / "t"
+                      / "u" 4HEXDIG [ "\" "u" 4HEXDIG ] )
+                ; a \uXXXX in D800-DBFF MUST be followed by a second \uXXXX
+                ; in DC00-DFFF; an unpaired surrogate escape is an error.
+                ; That range condition is not expressible in ABNF.
+
+raw-string    = "'" *( %x00-26 / %x28-10FFFF ) "'"     ; [Extended]
+                ; no escape processing at all.
+
+multiline-string = 3DQUOTE [ newline ]                 ; [Extended]
+                   *( ( DQUOTE DQUOTE not-3-dquote ) / mlchar )
+                   3DQUOTE
+                ; closes at the FIRST run of 3 or more '"'; only the first 3
+                ; are consumed. Runs of 1-2 quotes are literal content.
+not-3-dquote  = mlchar                                 ; any mlchar that is
+                ; not itself a third consecutive DQUOTE; the "first run of 3"
+                ; rule is stated normatively in docs/04-oml-grammar.md sec 4.5.
+mlchar        = %x09 / %x0A / %x20-10FFFF
+                ; tab, LF, or >= U+0020; other control characters are an error.

@@ -1,0 +1,84 @@
+; OSD (Omnist Schema Definition) -- ABNF per RFC 5234.
+; Normative companion: docs/05-osd-grammar.md
+;
+; Context conditions ABNF cannot express (all normative, see chapter 5):
+;   (S1) Exactly one root-def MUST be present.
+;   (S2) A record-def's name MUST NOT be a scalar-name or "any".
+;   (S3) Record names MUST be unique; field labels MUST be unique per record.
+;   (S4) A cardinality bound MUST be a whole number; the parser rejects a
+;        bound containing "."; Field construction rejects a negative min or
+;        max < min.
+;   (S5) "[" "]" with neither digits nor comma is an error ("empty
+;        cardinality"). The `cardinality` rule below already excludes it.
+
+; ---------------------------------------------------------------- top level
+; Whitespace and comments are discarded by the tokenizer and may appear
+; between any two tokens. They are omitted from the syntactic rules below.
+
+schema        = *( record-def / root-def )
+                ; declarations may interleave in any order; `root` need not
+                ; come last, though canonical output places it last.
+
+record-def    = %s"record" name "{" [ field *( "," field ) [ "," ] ] "}"
+                ; a trailing comma after the last field is legal and is what
+                ; canonical output emits.
+
+root-def      = %s"root" name
+
+field         = string [ cardinality ] ":" type
+                ; the label MUST be a quoted `string`. An unquoted `name` in
+                ; label position is an error.
+
+; -------------------------------------------------------------- cardinality
+; Accepts exactly these five shapes and nothing else:
+;   [n]     -> min = max = n
+;   [m,n]   -> min = m, max = n
+;   [m,]    -> min = m, max = unbounded
+;   [,n]    -> min = 0, max = n
+;   [,]     -> min = 0, max = unbounded
+; Note there is NO mandatory minimum bound before the comma: "[,5]" and
+; "[,]" are both accepted by the second alternative.
+
+cardinality   = "[" ( int [ "," [ int ] ] / "," [ int ] ) "]"
+
+int           = 1*DIGIT
+                ; a bare non-negative integer literal at the token level; no
+                ; leading "-". See (S4) for the checks applied above it.
+
+; -------------------------------------------------------------------- types
+
+type          = scalar-type / any-type / ref-type
+
+scalar-type   = scalar-name [ "?" ]
+scalar-name   = %s"string" / %s"integer" / %s"number" / %s"boolean"
+              / %s"date" / %s"time" / %s"datetime"
+
+any-type      = %s"any"
+                ; lowercase only. "any?" is an error: `any` already admits
+                ; null, so there is no nullable variant to opt into.
+                ; Capitalized "Any" is an ordinary name and parses as
+                ; ref-type.
+
+ref-type      = name
+                ; any `name` that is not a scalar-name and not "any".
+                ; "?" MUST NOT follow a ref-type; use cardinality [0,1] for
+                ; an optional field.
+
+; ------------------------------------------------------------------- tokens
+
+name          = ( ALPHA / "_" ) *( ALPHA / DIGIT / "_" )
+                ; NOTE: no hyphen, unlike OML's IDENT.
+
+string        = DQUOTE *( "\" %x00-10FFFF / %x20-21 / %x23-5B / %x5D-10FFFF )
+                DQUOTE
+                ; a backslash consumes the NEXT character verbatim; see
+                ; chapter 5 for unescaping, which has no named-escape table.
+
+DQUOTE        = %x22
+ALPHA         = %x41-5A / %x61-7A
+DIGIT         = %x30-39
+
+; ------------------------------------------------ whitespace and comments
+
+ws            = 1*( %x20 / %x09 / %x0D / %x0A )
+comment       = "#" *( %x00-09 / %x0B-10FFFF )        ; to end of line

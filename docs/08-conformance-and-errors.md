@@ -1,0 +1,287 @@
+# 8. Conformance and errors
+
+## 8.1 Status of this chapter
+
+**The error-code taxonomy in §8.3 is new normative content. No implementation
+emits it today.** It is written here because conformance testing needs stable,
+language-independent identifiers, and comparing human-readable message strings
+across three languages is not a test, it is a coincidence.
+
+The prior art, stated accurately so the migration cost is visible:
+
+| Implementation | What exists now |
+|---|---|
+| Python (reference, beta) | Validation and materialization results carry kebab-case codes: `shape-mismatch`, `unexpected-field`, `cardinality`, `null-not-allowed`, `type-mismatch`. `lint` carries its own: `unsatisfiable-record`, `unreachable-record`, `duplicate-record`, `any-field`. Everything else is a bare exception class (`DocumentError`, `SchemaError`, `ParseError`) with a human message and no code. |
+| TypeScript (alpha) | Diagnostic records carry a `code: string` field using the same kebab-case tags as Python's validation codes. |
+| Rust (alpha) | `thiserror` structs — `DocumentError`, `SchemaError`, `ParseError`, `FormatError`, `WriteError`. No code field anywhere. |
+
+So there is partial, undocumented convergence on validation codes across Python
+and TypeScript, and nothing at all outside validation. There has never been a
+cross-language convention. This chapter proposes one.
+
+**Migration.** The kebab-case validation tags Python and TypeScript already
+share are the closest prior art and map cleanly onto §8.3's `validate.*` family.
+Those two implementations SHOULD migrate to the namespaced form. Rust SHOULD
+add a code accessor to its error types. None of this is required for the current
+release; it is required before a version of this spec declares §8.3 mandatory.
+
+Until then, an implementation is conformant on error *behavior* — which inputs
+fail, and where — without being conformant on error *codes*. The test-vector
+format in §8.5 separates the two so that can be measured.
+
+## 8.2 Code format
+
+A code is a lowercase, dot-separated path. Each segment is
+`[a-z][a-z0-9-]*`. The first segment is the family. Codes are stable
+identifiers: once published, a code's meaning MUST NOT change. Retiring a code
+means adding a new one and leaving the old one documented as retired.
+
+Codes are not messages. An implementation MUST emit a human-readable message
+alongside the code, and the message MAY be localized, reworded, or improved at
+any time. Conformance tests match on codes and paths, never on message text.
+
+Every diagnostic carries at least:
+
+| Field | Meaning |
+|---|---|
+| `code` | The identifier from §8.3 |
+| `path` | Location in the Document or schema; see §8.4 |
+| `message` | Human-readable, actionable, unversioned |
+| `severity` | `error`, `warning`, or `info` |
+
+## 8.3 The taxonomy
+
+### 8.3.1 `parse.*` — text to Document, stage 1
+
+| Code | Raised when |
+|---|---|
+| `parse.unexpected-token` | A token appears where the grammar does not allow it |
+| `parse.trailing-content` | Content remains after the document's single node |
+| `parse.unterminated-string` | A string is not closed before end of input |
+| `parse.invalid-escape` | An unrecognized backslash escape |
+| `parse.unpaired-surrogate` | A `\uXXXX` surrogate escape without its partner |
+| `parse.control-character` | A literal control character in a context that forbids it |
+| `parse.reserved-word-label` | `null`, `true`, or `false` used as a bare label |
+| `parse.bare-word` | A bare identifier in value position that is not `null`/`true`/`false` |
+| `parse.empty-array` | `[]` in OML value position |
+| `parse.nested-array` | An array element that is itself an array |
+| `parse.separator-in-array` | A newline or `;` used as an array separator |
+
+### 8.3.2 `document.*` — building and limits
+
+| Code | Raised when |
+|---|---|
+| `document.limit.depth` | Nesting exceeds 200 levels |
+| `document.limit.nodes` | More than 1 000 000 nodes materialized |
+| `document.limit.int-digits` | An integer literal exceeds 4300 digits |
+| `document.unlabeled-element` | An input construct has no label to become an edge |
+
+The three `document.limit.*` codes correspond exactly to the three constants in
+[§2.4](02-document-model.md#24-resource-caps). There are three, they are flat,
+and no implementation may add a fourth or split one into tiers.
+
+### 8.3.3 `schema.*` — schema well-formedness
+
+| Code | Raised when |
+|---|---|
+| `schema.no-root` | No `root` declaration |
+| `schema.unknown-type` | A type name resolves to neither a scalar nor a defined record |
+| `schema.duplicate-record` | A record name is defined twice |
+| `schema.duplicate-field` | A label is used by two fields in one record |
+| `schema.reserved-name` | A record is named after a scalar kind or `any` |
+| `schema.invalid-cardinality` | Negative minimum, or maximum below minimum |
+| `schema.non-integer-cardinality` | A cardinality bound is not a whole number |
+| `schema.empty-cardinality` | `[]` written as a cardinality |
+| `schema.unquoted-label` | A bare name in field-label position |
+| `schema.nullable-ref` | `?` applied to a reference |
+| `schema.nullable-any` | `any?` |
+
+### 8.3.4 `validate.*` — document against schema
+
+| Code | Raised when | Existing tag it replaces |
+|---|---|---|
+| `validate.shape-mismatch` | A value where a node is expected, or the reverse | `shape-mismatch` |
+| `validate.type-mismatch` | A value of the wrong scalar kind | `type-mismatch` |
+| `validate.null-not-allowed` | `null` at a non-nullable scalar | `null-not-allowed` |
+| `validate.unexpected-field` | A label no field of the closed record names | `unexpected-field` |
+| `validate.cardinality` | An edge count outside `[min, max]` | `cardinality` |
+
+### 8.3.5 `materialize.*` — schema-directed deserialization
+
+| Code | Raised when |
+|---|---|
+| `materialize.inexact-conversion` | A leaf cannot be converted to the declared type without loss or invention |
+
+Shape and cardinality problems found during materialization use the
+`validate.*` codes above. Materialization performs the same checks; there is no
+reason for a second set of names.
+
+### 8.3.6 `algebra.*` — operations over schemas
+
+| Code | Raised when |
+|---|---|
+| `algebra.extract-invalidates-root` | `extract`'s `keep` set removes a label the root needs |
+| `algebra.infer-no-samples` | `infer` called with zero samples |
+| `algebra.infer-scalar-root` | A sample's root is a value rather than a node |
+| `algebra.infer-conflicting-scalars` | Samples disagree on a scalar kind, other than integer/number |
+
+### 8.3.7 `lint.*` — schema diagnostics
+
+These are the only codes that already exist in namespaced-adjacent form. The
+bare tags MUST become:
+
+| Code | Severity |
+|---|---|
+| `lint.unsatisfiable-record` | warning |
+| `lint.unreachable-record` | warning |
+| `lint.duplicate-record` | warning |
+| `lint.any-field` | info |
+
+### 8.3.8 `format.*` — codec adjustments
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
+| `format.float-special` | error | `NaN` or an infinity was substituted with `null` |
+| `format.null-unrepresentable` | error | A null leaf cannot be written in the target format |
+| `format.attribute-dropped` | warning | An XML attribute was discarded on read |
+| `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
+| `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
+| `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
+
+Two of these describe behavior that is currently silent — attribute and
+namespace dropping are not reported at all today. Adding the report is a
+behavior change and needs a test vector before it lands.
+
+### 8.3.9 `write.*`
+
+| Code | Raised when |
+|---|---|
+| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force |
+
+## 8.4 Paths
+
+A path locates a diagnostic. Paths are normative and MUST be byte-identical
+across implementations, because conformance vectors match on them.
+
+**Document paths** start at `$` and descend by label. A repeated label is
+disambiguated by a zero-based occurrence index in brackets.
+
+```
+$                        the root node
+$.name                   the single edge labeled `name`
+$.item[0]                the first edge labeled `item`
+$.item[2].sku            `sku` inside the third `item`
+```
+
+The index MUST be present when the label occurs more than once in that node, and
+MUST be absent when it occurs exactly once. This keeps the common case readable.
+
+Unlike the codes above, this path format is **not** new: it is the format the
+Python reference already emits, verified directly — a failure at the second of
+two `i` edges reports `$.i[1].q`, and a failure at a singly-occurring label
+reports `$.name` with no index. The rule is documented here rather than
+proposed.
+
+**Schema paths** are `RecordName` for a record-level diagnostic and
+`RecordName.label` for a field-level one. This matches what `lint` already
+reports.
+
+## 8.5 Conformance harness protocol
+
+A conformant implementation passes the vectors in `test-suite/`. Vectors are
+JSON, one case per object, grouped into files by operation.
+
+### 8.5.1 Common envelope
+
+```json
+{
+  "name": "unique-vector-id",
+  "spec": "docs/03-schema-model.md#36-validation",
+  "operation": "validate",
+  "input": { },
+  "expect": { }
+}
+```
+
+- `name` MUST be unique across the whole suite. A harness reports results keyed
+  on it.
+- `spec` points at the section the vector pins. A vector with no section to
+  point at is a vector testing something unspecified, which is a spec defect.
+- `operation` selects the driver.
+- `expect` holds either a success value or a `diagnostics` list.
+
+### 8.5.2 Diagnostics matching
+
+```json
+"expect": {
+  "ok": false,
+  "diagnostics": [
+    { "path": "$.port", "code": "validate.type-mismatch" }
+  ]
+}
+```
+
+Matching rules, all normative:
+
+1. Message text MUST NOT be compared.
+2. The diagnostic list MUST be compared as a **set**, not a sequence. Ordering
+   of diagnostics is not specified and implementations may find problems in any
+   order.
+3. Every expected diagnostic MUST be present, and no unexpected diagnostic may
+   be. Partial matching is not permitted; an implementation reporting three
+   problems where the vector expects two has failed.
+4. A harness MAY be run in **code-agnostic mode**, comparing only `ok` and the
+   set of paths. This is the mode implementations that have not yet adopted
+   §8.3 run in. A run MUST state which mode produced its results.
+
+### 8.5.3 Operation drivers
+
+| `operation` | `input` | `expect` |
+|---|---|---|
+| `parse` | `{format, text}` | `{ok, document}` or diagnostics |
+| `validate` | `{schema, document}` | `{ok}` or diagnostics |
+| `materialize` | `{schema, format, text}` | `{ok, document}` or diagnostics |
+| `compatible_with` | `{a, b}` | `{result: bool}` |
+| `equivalent` | `{a, b}` | `{result: bool}` |
+| `normalize` | `{schema}` | `{osd}` — canonical OSD text, compared byte for byte |
+| `prune` | `{schema}` | `{osd}` |
+| `is_empty` | `{schema}` | `{result: bool}` |
+| `extract` | `{schema, keep}` | `{osd}` or diagnostics |
+| `infer` | `{samples}` | `{osd}` |
+| `lint` | `{schema}` | `{findings}` — set of `{code, location}` |
+| `write` | `{document, format}` | `{text}` or diagnostics |
+
+Schemas in `input` are OSD text. Documents are given in the canonical JSON
+encoding of §8.5.4, not in a format-specific text, except where the vector is
+specifically testing a parser.
+
+### 8.5.4 Canonical document encoding
+
+A Document must be written into a JSON vector file without JSON's own
+map-and-array shape smuggling assumptions back in. The encoding is explicit:
+
+```json
+{"scalar": {"kind": "integer", "value": 42}}
+{"edges": [["name", {"scalar": {"kind": "string", "value": "Ann"}}],
+           ["tag",  {"scalar": {"kind": "string", "value": "x"}}],
+           ["tag",  {"scalar": {"kind": "string", "value": "y"}}]]}
+```
+
+- A node is `{"edges": [[label, target], ...]}`. The outer array preserves
+  order; repeated labels appear as repeated entries.
+- A scalar is `{"scalar": {"kind": K, "value": V}}` where `K` is one of the
+  seven kinds. Temporal values are ISO-8601 strings. `integer` values are JSON
+  numbers when they fit exactly and decimal strings otherwise.
+- `null` is `{"scalar": {"kind": null, "value": null}}`.
+
+This is verbose on purpose. A vector file must not depend on the reader's JSON
+library to decide whether `1` is an integer or a number.
+
+### 8.5.5 Reporting
+
+A harness run reports, per vector: pass, fail, or skip. **Skip is a first-class
+result.** An implementation that has not built `extract` yet skips those
+vectors and reports the count. A run that hides skips as passes is worthless for
+tracking convergence, which is the whole point of
+[chapter 9](09-divergence-ledger.md).
