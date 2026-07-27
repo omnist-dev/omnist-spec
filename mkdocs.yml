@@ -48,6 +48,13 @@ nav:
   - 5. OSD Grammar: 05-osd-grammar.md
   - 6. Schema Algebra: 06-schema-algebra.md
   - 7. Codecs & Deserialization: 07-codecs-and-deserialization.md
+  - Format Codecs:
+      - Overview: formats/overview.md
+      - JSON: formats/json.md
+      - YAML: formats/yaml.md
+      - TOML: formats/toml.md
+      - XML: formats/xml.md
+      - OML: formats/oml.md
   - 8. Conformance & Errors: 08-conformance-and-errors.md
   - 9. Divergence Ledger: 09-divergence-ledger.md
   - 10. Governance & Versioning: 10-governance-and-versioning.md

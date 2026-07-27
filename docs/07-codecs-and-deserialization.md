@@ -5,15 +5,13 @@
 Reading a document is two separate operations, and keeping them separate is
 normative.
 
-```
-        text  --[ stage 1: parse ]-->  untyped Document
-                                              |
-                                              | schema (optional)
-                                              v
-                                   [ stage 2: materialize ]
-                                              |
-                                              v
-                                       typed Document
+```mermaid
+graph LR
+    text["format text"] --> parse["stage 1: parse"]
+    parse --> untyped["untyped Document"]
+    schema["schema (optional)"] --> mat["stage 2: materialize"]
+    untyped --> mat
+    mat --> typed["typed Document"]
 ```
 
 **Stage 1: parse.** Turn format text into a Document. No schema is involved. The
@@ -138,7 +136,7 @@ function try_upgrade(value, kind):
         return undefined
     if kind in {"date", "time", "datetime"}:
         # value MUST already be in the exact spelling matches_kind() accepts
-        # for this kind (chapter 4, §7.4-7.8) -- not merely parseable by a
+        # for this kind (chapter 4, docs/formats/) -- not merely parseable by a
         # looser library function. A bare date string never upgrades to
         # datetime and vice versa; the two shapes are disjoint by construction.
         if value is a string and value matches kind's ISO spelling exactly:
@@ -180,116 +178,7 @@ That asymmetry is real and worth stating outright. `{"tag": ["x"]}` reads to one
 edge and writes back as `{"tag": "x"}`. The Document is unchanged; the text is
 not.
 
-## 7.4 JSON
-
-The baseline. Objects become edge lists. A key whose value is a list becomes a
-repeated label.
-
-| JSON | Document |
-|---|---|
-| `{"a":1,"b":2}` | `[(a,1),(b,2)]` |
-| `{"m":[A,B]}` | `[(m,A),(m,B)]` |
-
-**No temporal types.** JSON has none, so a reader MUST NOT produce `date`,
-`time`, or `datetime` on its own. A date-looking string stays a string unless a
-schema upgrades it in stage 2. A writer MUST stringify a temporal leaf to
-ISO-8601.
-
-**No `NaN` or `Infinity`.** Those tokens are not valid JSON. A writer MUST NOT
-emit them. The default behavior is to substitute `null` at the leaf so the
-output is always valid JSON, and to report the substitution as an
-error-severity adjustment in the format report. A strict mode MAY instead fail.
-
-**Bare nested arrays are rejected.** `[[1,2],[3,4]]` has inner elements with no
-label and therefore no edge to occupy. A reader MUST reject it rather than
-flatten it.
-
-**Top level.** A JSON document may have many top-level keys, which becomes many
-top-level edges.
-
-## 7.5 YAML
-
-The JSON-compatible core. Mappings and sequences behave as their JSON
-counterparts.
-
-**Aliases resolve at parse time.** `a: &x foo` / `b: *x` reads as two
-independent edges both carrying `foo`. Shared identity is not preserved; the
-Document model has no notion of it. This is lossless in value and lossy in
-structure sharing, which is the correct trade for a model whose whole point is
-the fully expanded edge list.
-
-**YAML resolves some scalars on its own.** A bare ISO-8601-looking scalar
-resolves to a `date` or `datetime` with no schema involved. This is the one
-format where stage 1 can produce a temporal type.
-
-**One sharp edge.** YAML's core schema has no standalone time type. A bare
-`12:00:00` resolves to the **integer** 43200 — sexagesimal, twelve hours in
-seconds. That is YAML's behavior, not a choice Omnist makes, and there is no
-read-side workaround: by the time the value reaches Omnist it is already an
-integer. Quote it.
-
-## 7.6 TOML
-
-Tables and array-of-tables map directly.
-
-| TOML | Document |
-|---|---|
-| `[[x]]` twice, each with `name` | `[(x,[(name,"a")]), (x,[(name,"b")])]` |
-
-`[[x]]` is TOML's idiomatic repeated record, and it lands on the repeated-label
-shape with no adjustment at all.
-
-**TOML has native `date`, `time`, and `datetime` literals.** All three parse to
-the matching types with no schema needed, and write back the same way. TOML is
-the one format with no temporal stringification in either direction.
-
-**TOML has no `null`.** A null-valued leaf cannot be written. Implementations
-MUST report this as a write-time adjustment rather than inventing a
-representation.
-
-**Top level must be a table.** A bare scalar Document cannot be written as TOML.
-
-## 7.7 XML
-
-XML is the format the Document model was shaped around.
-
-**Elements become edges, and interleaving survives.** `<m/><x/><m/>` reads as
-`[(m,...),(x,...),(m,...)]` in that order. A map-of-arrays model cannot
-represent this; the edge list can. This is the whole reason the Document is an
-ordered edge list rather than a map.
-
-**Repeated elements are the array.** No wrapper element is invented on either
-side.
-
-**Text is untyped.** XML carries no type information, so every leaf arrives as a
-string. Typing requires a schema in stage 2.
-
-**Single document element.** An XML document has exactly one top-level element,
-so its Document has exactly one top-level edge. A Document with several
-top-level edges cannot be written as XML. To share one Document across all
-formats, wrap the data under a single top-level key.
-
-**Attributes and namespace prefixes are dropped.** `<a x="1"><b>hi</b></a>`
-reads as `[(a,[(b,"hi")])]`; the attribute is gone. A prefixed tag `<ns:b>`
-reads as the local name `b`, with the prefix and any namespace binding
-discarded. There is no path from a Document edge back to an attribute, so
-writing never produces one.
-
-This is a real limitation of the current XML profile and is recorded as such in
-[chapter 9](09-divergence-ledger.md). Implementations MUST behave identically
-here — dropping silently in the same places — until the profile changes.
-
-## 7.8 OML
-
-OML is not a codec in the same sense. Its syntax *is* the Document model, so
-every Document shape round-trips with zero adjustments: any nesting, any
-repeated label, any interleaving.
-
-The one gap OML shares with JSON and YAML: it has no native temporal literal, so
-a temporal value written to OML text becomes a string, and reading it back
-requires a schema to recover the type. See [chapter 4](04-oml-grammar.md).
-
-## 7.9 Format reports
+## 7.4 Format reports
 
 A reader or writer SHOULD be able to report the adjustments a given conversion
 would make — a temporal value stringified, a special float substituted, a null
@@ -300,3 +189,18 @@ The report's contents are format-specific. Its codes belong to the
 `format.adjustment.*` family in
 [chapter 8](08-conformance-and-errors.md), which is new material and which no
 implementation currently emits.
+
+## 7.5 Per-format pages
+
+The format-by-format mappings that used to sit here as §7.4-7.8 now live in
+`docs/formats/`, one page per format. Each page states that format's mapping to
+and from the Document model and its current per-implementation parity gaps.
+
+| Page | Covers |
+|---|---|
+| [Format overview](formats/overview.md) | The index, and what each format can and cannot express |
+| [JSON](formats/json.md) | Objects, keyed lists, no temporal types, no `NaN` |
+| [YAML](formats/yaml.md) | Mappings, sequences, aliases, resolver-typed scalars |
+| [TOML](formats/toml.md) | Tables, array-of-tables, native temporals, no `null` |
+| [XML](formats/xml.md) | Elements, interleaving, dropped attributes and namespaces |
+| [OML](formats/oml.md) | The native format; the Document model as syntax |

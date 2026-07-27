@@ -468,13 +468,19 @@ pass over `S.env` in declaration order — not the first one propagation later
 discovers. Implementations MUST report this one specifically, so that two
 implementations facing the same input produce the same error message.
 
-**Worked example.** With the `Order`/`Item` schema from
+**Worked example.** With the `Root`/`Order`/`Address`/`LineItem` schema from
 [§3.1](03-schema-model.md#31-mental-model):
 
-- `extract(S, {"id", "placed", "item", "sku", "qty"})` succeeds and returns a
-  schema with `note` and `discount` gone.
-- `extract(S, {"id", "placed"})` fails: `Order.item` is mandatory and `item` is
-  not in `keep`, so `Order` — the root — is invalidated.
+- `extract(S, {"order", "id", "status", "total", "address", "street", "city",
+  "items", "sku", "qty", "price"})` succeeds and returns a schema with `coupon`
+  gone. `coupon` is optional, so dropping it invalidates nothing.
+- `extract(S, {"order", "id", "status"})` fails: `Order.total`, `Order.address`,
+  and `Order.items` are all mandatory and none of their labels is in `keep`, so
+  `Order` is invalidated. Per `first_bad`'s declaration-order rule above, the
+  reported offender is specifically `total` — it's declared before `address`
+  and `items` in the record, so step 1's single pass reaches it first.
+  `Root.order` is mandatory and points at `Order`, so `Root` — the root — is
+  invalidated in turn.
 
 ---
 

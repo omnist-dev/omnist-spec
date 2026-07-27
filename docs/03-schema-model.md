@@ -9,38 +9,51 @@ how many times each may appear, and what shape sits at the other end of each
 edge.
 
 ```
+record Address  { "street": string, "city": string }
+record LineItem { "sku": string, "qty": integer, "price": number }
+
 record Order {
-    "id":            string,
-    "placed":        datetime,
-    "note" [0,1]:    string,
-    "item" [1,]:     Item,
+    "id":           string,
+    "status":       string,
+    "total":        number,
+    "address":      Address,
+    "items" [1,]:   LineItem,
+    "coupon" [0,1]: string,
 }
-record Item {
-    "sku":           string,
-    "qty":           integer,
-    "discount" [,1]: number,
-}
-root Order
+
+record Root { "order": Order }
+root Root
 ```
 
-As a graph, `root Order` looks like this. An edge label carries its cardinality;
+The whole order sits under a single top-level `order` key. That is deliberate:
+a Document with one top-level edge is the only shape XML can carry, so a
+single-rooted schema is the one that round-trips through every format
+([chapter 7](07-codecs-and-deserialization.md)).
+
+As a graph, `root Root` looks like this. An edge label carries its cardinality;
 the node it points to is either a scalar kind or another record.
 
 ```mermaid
 graph LR
-    Order((Order)) -->|"id [1,1]"| string1(("string"))
-    Order -->|"placed [1,1]"| datetime((datetime))
-    Order -->|"note [0,1]"| string2(("string"))
-    Order -->|"item [1,∞]"| Item((Item))
-    Item -->|"sku [1,1]"| string3(("string"))
-    Item -->|"qty [1,1]"| integer((integer))
-    Item -->|"discount [0,1]"| number((number))
+    Root((Root)) -->|"order [1,1]"| Order((Order))
+    Order -->|"id [1,1]"| string1(("string"))
+    Order -->|"status [1,1]"| string2(("string"))
+    Order -->|"total [1,1]"| number1((number))
+    Order -->|"address [1,1]"| Address((Address))
+    Order -->|"items [1,∞]"| LineItem((LineItem))
+    Order -->|"coupon [0,1]"| string3(("string"))
+    Address -->|"street [1,1]"| string4(("string"))
+    Address -->|"city [1,1]"| string5(("string"))
+    LineItem -->|"sku [1,1]"| string6(("string"))
+    LineItem -->|"qty [1,1]"| integer1((integer))
+    LineItem -->|"price [1,1]"| number2((number))
 ```
 
 Four things are worth noticing before the formal rules.
 
-**Every record is closed.** `Order` allows `id`, `placed`, `note`, and `item`,
-and nothing else. A stray `shipping` edge is invalid. There is no wildcard.
+**Every record is closed.** `Order` allows `id`, `status`, `total`, `address`,
+`items`, and `coupon`, and nothing else. A stray `shipping` edge is invalid.
+There is no wildcard.
 
 **Cardinality does all the multiplicity work.** `[1,1]` is required and is the
 default when you write no bracket. `[0,1]` is optional. `[1,]` is a non-empty
@@ -165,9 +178,9 @@ them is the most common modeling error in Omnist.
 
 | Question | Mechanism | Written |
 |---|---|---|
-| May the edge be missing? | cardinality `min = 0` | `"note" [0,1]: string` |
-| May the value present be `null`? | nullable scalar | `"note": string?` |
-| Both? | both | `"note" [0,1]: string?` |
+| May the edge be missing? | cardinality `min = 0` | `"coupon" [0,1]: string` |
+| May the value present be `null`? | nullable scalar | `"coupon": string?` |
+| Both? | both | `"coupon" [0,1]: string?` |
 
 `?` applies to scalars only. A reference MUST NOT take `?`; "this subtree may be
 absent" is cardinality `[0,1]`. `any` MUST NOT take `?` either, since `any`
