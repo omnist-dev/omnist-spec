@@ -1,6 +1,6 @@
 site_name: Omnist Spec
 site_description: Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.
-site_url: https://omnist-dev.github.io/omnist-spec/
+site_url: https://spec.omnist.dev/
 repo_url: https://github.com/omnist-dev/omnist-spec
 repo_name: omnist-dev/omnist-spec
 edit_uri: edit/master/docs/
