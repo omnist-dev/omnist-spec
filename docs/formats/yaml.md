@@ -41,7 +41,12 @@ behavior given what the YAML parser handed it, but it collides with the one
 top-level key almost every real GitHub Actions workflow file needs (`on:`
 starting the trigger block), and almost no one quotes it. Quoting the key
 (`"on":`) sidesteps the problem entirely; there is no read-side workaround
-once an unquoted `on:` has already resolved to a boolean.
+once an unquoted `on:` has already resolved to a boolean. See
+[`test.yml`](../examples/github-actions/test.yml) (a real workflow that
+fails at exactly this point) and
+[`test-quoted-on.yml`](../examples/github-actions/test-quoted-on.yml) (the
+same file with the key quoted, which reads and validates cleanly) in
+[`../examples/`](../examples/index.md#github-actions-workflow).
 
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.

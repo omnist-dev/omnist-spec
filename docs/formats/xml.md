@@ -90,18 +90,18 @@ never on the write side.
 Note also that `<items>` elements do not sit inside an `<items>` wrapper. There
 is no wrapper element in this profile, on either side.
 
-**A real-world example.** `sitemap.xml` is the cleanest of the four
-worked examples the Python reference implementation's own docs walk
-through (`docs/examples/sitemap.md` in the `omnist` repository), because it
-isolates a gap category none of the others do: **value refinement**. A
-`sitemap.xml` schema types `changefreq` as `string` and `priority` as
-`number` — OSD has no enum or range constraint — so `changefreq: sometimes`
-and `priority: 1.5` both validate cleanly under OSD despite violating the
-sitemaps.org spec (which restricts `changefreq` to a fixed set of values and
-`priority` to `[0.0, 1.0]`). No union, no open key set, nothing else is at
-play — it's a clean demonstration of exactly one limitation, stated
-abstractly in `why-omnist.md` but not illustrated concretely anywhere in
-this spec (see also [§6.3](../06-schema-algebra.md#63-scalar-subtyping)).
+**A real-world example.** `sitemap.xml` is the cleanest of the four examples
+in [`../examples/`](../examples/index.md#sitemapxml), because it isolates a
+gap category none of the others do: **value refinement**. The schema
+([`sitemap.osd`](../examples/sitemap/sitemap.osd)) types `changefreq` as
+`string` and `priority` as `number` — OSD has no enum or range constraint —
+so `changefreq: sometimes` and `priority: 1.5` both validate cleanly under
+OSD despite violating the sitemaps.org spec (which restricts `changefreq`
+to a fixed set of values and `priority` to `[0.0, 1.0]`), demonstrated
+directly by [`invalid-values.xml`](../examples/sitemap/invalid-values.xml).
+No union, no open key set, nothing else is at play — it's a clean
+demonstration of exactly one limitation (see also
+[§6.3](../06-schema-algebra.md#63-scalar-subtyping)).
 
 ## Parity gaps
 

@@ -91,8 +91,8 @@ has no unions and no open key sets, so it never has to confront JSON's actual
 worst case. `package.json` does: its `author`/`bugs`/`repository` fields can
 each be either a string or an object, and `scripts`/`dependencies` are
 genuinely open key sets. Modeling it is exactly the kind of case `any` (§3.7)
-exists for. The Python reference implementation works through it in full at
-`docs/examples/package-json.md` in the `omnist` repository.
+exists for — see [`package.osd`](../examples/package-json/package.osd) and
+its two fixtures in [`../examples/`](../examples/index.md#packagejson).
 
 ## Parity gaps
 

@@ -95,10 +95,10 @@ and is a write-time adjustment.
 **A real-world example.** `pyproject.toml` is the canonical case of a
 spec'd-open format: its core tables are specified, but `[tool.*]` is
 *defined* to be open — third-party tools own those subtrees, and a schema
-author doesn't get to close them. The Python reference implementation works
-through modeling it in full at `docs/examples/pyproject.md` in the `omnist`
-repository, framed explicitly around where OSD's algebra can't fully capture
-the format's own spec.
+author doesn't get to close them. See [`pyproject.osd`](../examples/pyproject/pyproject.osd)
+and its three fixtures in [`../examples/`](../examples/index.md#pyprojecttoml),
+framed explicitly around where OSD's algebra can't fully capture the
+format's own spec.
 
 ## Parity gaps
 

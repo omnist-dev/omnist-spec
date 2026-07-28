@@ -86,9 +86,8 @@ as XML at all.
 ## Beyond the running example
 
 The schema above is clean on purpose — it demonstrates the model without
-tripping any of the gaps in the table above. The Python reference
-implementation's own docs go a step further: `docs/examples/` in the
-`omnist` repository works through four real external formats — a
+tripping any of the gaps in the table above. [`../examples/`](../examples/index.md)
+in this repository goes a step further: four real external formats — a
 `package.json`, a `pyproject.toml`, a GitHub Actions workflow, and a
 `sitemap.xml` — each modeling a format nobody designed for Omnist, and each
 hitting a real limit: unions, an open key set, a codec-level surprise, and
