@@ -13,17 +13,17 @@ The prior art, stated accurately so the migration cost is visible:
 |---|---|
 | Python (reference, beta) | Validation and materialization results carry kebab-case codes: `shape-mismatch`, `unexpected-field`, `cardinality`, `null-not-allowed`, `type-mismatch`. `lint` carries its own: `unsatisfiable-record`, `unreachable-record`, `duplicate-record`, `any-field`. Everything else is a bare exception class (`DocumentError`, `SchemaError`, `ParseError`) with a human message and no code. |
 | TypeScript (alpha) | Diagnostic records carry a `code: string` field using the same kebab-case tags as Python's validation codes. |
-| Rust (alpha) | `thiserror` structs — `DocumentError`, `SchemaError`, `ParseError`, `FormatError`, `WriteError`. No code field anywhere. |
+| Rust (alpha) | Top-level `thiserror` structs (`DocumentError`, `ParseError`, `FormatError`, `WriteError`) carry no code. But `SchemaError`'s validation path has an `ErrorCode` enum rendering the identical kebab-case tags Python and TypeScript use (`unexpected-field`, `cardinality`, `type-mismatch`, `null-not-allowed`, `shape-mismatch`), attached to every `ValidationError` produced by both `validate` and `materialize`. An earlier version of this table said "no code field anywhere," which was wrong — Rust has reached the same partial convergence as the other two. |
 
-So there is partial, undocumented convergence on validation codes across Python
-and TypeScript, and nothing at all outside validation. There has never been a
-cross-language convention. This chapter proposes one.
+So there is partial, undocumented convergence on validation codes across all
+three implementations, and nothing at all outside validation. There has never
+been a cross-language convention. This chapter proposes one.
 
-**Migration.** The kebab-case validation tags Python and TypeScript already
+**Migration.** The kebab-case validation tags all three implementations already
 share are the closest prior art and map cleanly onto §8.3's `validate.*` family.
-Those two implementations SHOULD migrate to the namespaced form. Rust SHOULD
-add a code accessor to its error types. None of this is required for the current
-release; it is required before a version of this spec declares §8.3 mandatory.
+All three SHOULD migrate to the namespaced form. None of this is required for
+the current release; it is required before a version of this spec declares
+§8.3 mandatory.
 
 Until then, an implementation is conformant on error *behavior* — which inputs
 fail, and where — without being conformant on error *codes*. The test-vector

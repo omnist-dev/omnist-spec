@@ -81,16 +81,14 @@ five formats rather than two ([XML](xml.md) is the constraint).
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. OML is tracked in its own rows rather than the codec row: as
-of spec v0.1, "OML read" is complete in Python (Core and Extended) and partial
-in TypeScript and Rust; "OML canonical write" is complete in Python and partial
-in both others.
+is the authority. As of spec v0.1, "OML read" is complete in all three
+implementations (Core and Extended alike), and "OML canonical write" is
+complete in Python and Rust; TypeScript's canonical writer is partial.
 
-One OML-specific open divergence exists.
-[D-5](../09-divergence-ledger.md#94-known-open-divergences) records that
-OML-Extended read support — raw and multiline strings — is Python-only.
-TypeScript and Rust MUST accept them; only the *writer* restriction is
-one-sided.
+D-5, previously open in this area, is now closed: all three implementations
+read OML-Extended (raw and multiline strings). Only the *writer* restriction
+remains one-sided by design — a canonical writer MUST NOT emit Extended
+spellings even though a reader MUST accept them.
 
 Canonical output is not permitted to vary at all. Chapter 9's
 [§9.2](../09-divergence-ledger.md#92-forbidden-variation) puts the exact bytes
