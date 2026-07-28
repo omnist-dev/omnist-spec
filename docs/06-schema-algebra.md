@@ -300,6 +300,17 @@ restructures everything beneath it, the answer is still true. That is correct �
 `B` really does accept it — and it is also a real loss of protection. This is
 the cost `any` buys, and it is why `lint` reports every `any` field.
 
+A real schema shows how concentrated this cost can get. The Python reference
+implementation's `pyproject.toml` worked example
+(`docs/examples/pyproject.md` in the `omnist` repository) types seven fields
+`any` — `readme`, `license`, and five open-key-set sections — to model a
+format whose own spec has a real union and real open key sets neither OSD
+nor `compatible_with` can see through. Its own gap table maps each field to
+whether `any` actually fixes the underlying risk or only relocates it: a
+union typed `any` shifts risk rather than removing it, since `compatible_with`
+can no longer tell a compatible payload shape from an incompatible one
+inside that field.
+
 ---
 
 ## 6.7 `equivalent(A, B)`
@@ -492,6 +503,14 @@ implementations facing the same input produce the same error message.
   and `items` in the record, so step 1's single pass reaches it first.
   `Root.order` is mandatory and points at `Order`, so `Root` — the root — is
   invalidated in turn.
+
+A real schema makes the same operation more concrete: extracting a
+`pyproject.toml` schema (`docs/examples/pyproject.md` in the `omnist`
+repository) down to just its `[project.name]`/`[project.version]` fields
+drops every `any`-typed field along the way — `readme`, `license`, and the
+open-key-set sections all disappear from the result, since `keep` never
+named their labels. The mandatory-field invalidation rule above applies
+identically whether the dropped field was a plain scalar or an `any`.
 
 ---
 

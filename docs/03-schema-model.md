@@ -99,6 +99,24 @@ The single sanctioned opening is `any` (§3.7), which is designed to not create
 this problem: it opens a value, never a label alphabet, and it is written
 literally in the schema text so it can be found by grep and audited by a human.
 
+**The closed alternative to an open map.** Refusing `{ [string]: T }` doesn't
+mean open-ended key/value data is unmodelable — it means it has to be
+authored as a record of entries instead of a map:
+
+```
+record Env      { "entry" [0,]: EnvEntry }
+record EnvEntry { "key": string, "value": string }
+root Env
+```
+
+This gives up something real, on purpose: duplicate keys now validate (two
+`entry` edges can carry the same `"key"` value — nothing stops it), and data
+must be authored in this entry-list shape from the start. A third party's
+`{"A": "1", "B": "2"}` can't be validated as-is; it has to be restructured
+into entries first, which only works when the caller owns that
+restructuring step. That's exactly the case `any` exists for (§3.7) — data
+whose shape isn't the caller's to restructure at all.
+
 ---
 
 ## 3.3 Formal definition
@@ -301,6 +319,42 @@ there, not in this section.
 value: any scalar of any kind, `null`, and any node of any shape.
 
 Its scope is deliberately narrow.
+
+**What `any` buys: one schema for a variant payload.** A common shape in
+practice — webhooks, message-queue events, CloudEvents — is a rigorously
+typed envelope wrapping a payload whose shape depends on a sibling field.
+Without unions, that payload is out of reach entirely; `any` makes it
+reachable:
+
+```
+record Event {
+    "id":      string,
+    "type":    string,
+    "created": datetime,
+    "data":    any,
+}
+root Event
+```
+
+Both of these validate against that one schema:
+
+```json
+{"id": "evt_1", "type": "user.created",
+ "created": "2026-07-01T09:30:00",
+ "data": {"name": "Ann", "email": "ann@example.com"}}
+```
+
+```json
+{"id": "evt_2", "type": "payment.settled",
+ "created": "2026-07-01T09:31:00",
+ "data": {"amount_cents": 1250, "currency": "EUR"}}
+```
+
+This does not smuggle a union back in. The schema never chooses between
+candidates — application code dispatches on `type` explicitly, then
+validates `data` against a per-event-type schema of its own, also closed.
+The choice lives in code, where it's visible and debuggable, never in the
+algebra.
 
 **What `any` opens.** The value at one declared field, and everything beneath
 it.

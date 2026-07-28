@@ -82,3 +82,15 @@ The order sits under a single top-level `order` key so that the identical
 Document survives every format, XML included: an XML document has exactly one
 top-level element, so a Document with several top-level edges cannot be written
 as XML at all.
+
+## Beyond the running example
+
+The schema above is clean on purpose — it demonstrates the model without
+tripping any of the gaps in the table above. The Python reference
+implementation's own docs go a step further: `docs/examples/` in the
+`omnist` repository works through four real external formats — a
+`package.json`, a `pyproject.toml`, a GitHub Actions workflow, and a
+`sitemap.xml` — each modeling a format nobody designed for Omnist, and each
+hitting a real limit: unions, an open key set, a codec-level surprise, and
+a value refinement OSD can't express. Each of the four per-format pages
+below links the one that's most relevant to it.

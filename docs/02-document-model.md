@@ -120,7 +120,10 @@ a list.
 **D-3. Order is never a schema constraint.** No operation in
 [chapter 6](06-schema-algebra.md) and no validation rule in §3 may consult edge
 order. A permutation of a node's edges MUST produce identical validation and
-identical algebra results.
+identical algebra results. Concretely: `[(a,1),(b,2)]` and `[(b,2),(a,1)]` are
+different Documents (edge order is data, preserved faithfully) but validate
+identically against any schema that accepts one of them — the schema counts
+how many `a` edges and how many `b` edges exist, never which comes first.
 
 **D-4. A target is a value or a node.** No third case exists. Implementations
 MUST NOT introduce a list-valued target as an internal representation that can

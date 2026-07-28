@@ -46,6 +46,13 @@ The rule is one sentence: a conversion is permitted when it loses nothing and
 invents nothing. String-to-number coercion invents; float-to-int truncation
 loses. Neither happens.
 
+**A `number`-typed field always materializes to a host float, never a
+host integer** — regardless of whether the source value looked whole. `1 ->
+number` yields a float-typed `1.0`, not an integer-typed `1`, even though
+both represent the same value exactly. This is the reverse direction of the
+`1.0 -> integer` row above, and it's easy to miss since the table shows the
+result as `Yes` without stating the target representation explicitly.
+
 At an `any`-typed field, materialization stops. The subtree passes through
 untouched and no leaf beneath it is upgraded.
 

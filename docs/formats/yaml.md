@@ -18,14 +18,30 @@ structure sharing, which is the correct trade for a model whose whole point is
 the fully expanded edge list.
 
 **YAML resolves some scalars on its own.** A bare ISO-8601-looking scalar
-resolves to a `date` or `datetime` with no schema involved. This is the one
-format where stage 1 can produce a temporal type without a schema.
+resolves to a `date` or `datetime` with no schema involved. YAML is one of two
+formats whose native parser can do this without a schema — TOML is the
+other, and covers all three temporal kinds (date, time, and datetime) where
+YAML only resolves date and datetime; a bare time-of-day resolves to an
+integer instead, not a `time` (see the sharp edge below).
 
 **One sharp edge.** YAML's core schema has no standalone time type. A bare
 `12:00:00` resolves to the **integer** 43200 — sexagesimal, twelve hours in
 seconds. That is YAML's behavior, not a choice Omnist makes, and there is no
 read-side workaround: by the time the value reaches Omnist it is already an
 integer. Quote it.
+
+**A second sharp edge, real enough to have a name: the "Norway problem."**
+YAML 1.1's core schema resolves `on`/`off`/`yes`/`no`/`true`/`false` (in
+various cases) as booleans, not strings — the classic case is `NO` parsing
+as `false`, and `on` is a less-famous instance of the same rule. A bare `on:`
+key parses to the boolean `true`, not the string `"on"`. Since a label MUST
+be a string (§2.2.2), a reader MUST refuse to build a Document from a
+boolean-keyed mapping rather than silently coercing it — this is correct
+behavior given what the YAML parser handed it, but it collides with the one
+top-level key almost every real GitHub Actions workflow file needs (`on:`
+starting the trigger block), and almost no one quotes it. Quoting the key
+(`"on":`) sidesteps the problem entirely; there is no read-side workaround
+once an unquoted `on:` has already resolved to a boolean.
 
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.
@@ -90,12 +106,8 @@ to upgrade. Same schema, same final Document, different stage.
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
 is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-Python "all four", TypeScript "JSON", Rust "JSON".
-
-For YAML specifically, that means **Python only**. Neither TypeScript nor Rust
-ships a YAML codec yet, so YAML input is not portable across implementations
-today. This is a completeness gap, not a behavioral divergence: there is no
-second YAML implementation to disagree with the first.
+"all four" for Python, TypeScript, and Rust alike — every implementation has
+a YAML codec.
 
 There is no YAML-specific entry in
 [§9.4](../09-divergence-ledger.md#94-known-open-divergences). The resolver

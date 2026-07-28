@@ -15,9 +15,25 @@ The prior art, stated accurately so the migration cost is visible:
 | TypeScript (alpha) | Diagnostic records carry a `code: string` field using the same kebab-case tags as Python's validation codes. |
 | Rust (alpha) | Top-level `thiserror` structs (`DocumentError`, `ParseError`, `FormatError`, `WriteError`) carry no code. But `SchemaError`'s validation path has an `ErrorCode` enum rendering the identical kebab-case tags Python and TypeScript use (`unexpected-field`, `cardinality`, `type-mismatch`, `null-not-allowed`, `shape-mismatch`), attached to every `ValidationError` produced by both `validate` and `materialize`. An earlier version of this table said "no code field anywhere," which was wrong — Rust has reached the same partial convergence as the other two. |
 
+There is a second, separate family of prior art this table previously missed
+entirely: **format-adjustment codes.** Python's format readers/writers already
+emit dotted (not namespaced) codes on their `WriteReport`/`check_*` results —
+`temporal.stringified` (a temporal leaf stringified to ISO-8601 for a format
+with no native temporal type), `null.omitted` (TOML/XML, a null-valued leaf
+dropped since the format can't represent it), `float.special` (JSON, a
+`NaN`/`Infinity`/`-Infinity` substituted with `null` in lenient mode),
+`key.sanitized` (XML), `string.ambiguous` (XML, a string value that would
+read back as a different type), `shape.empty_ambiguous`, `string.illegal_xml_char`,
+`string.cr_normalized`, and `string.line-break-char` (all XML). These map
+directly onto §8.3.8's `format.*` family below — the migration here is
+mostly a rename, not new design, which the original wording of this section
+didn't make clear.
+
 So there is partial, undocumented convergence on validation codes across all
-three implementations, and nothing at all outside validation. There has never
-been a cross-language convention. This chapter proposes one.
+three implementations, and a second, separate area of already-shipped
+convergence on format-adjustment codes (Python only, so far) — and nothing at
+all outside those two areas. There has never been a cross-language
+convention. This chapter proposes one.
 
 **Migration.** The kebab-case validation tags all three implementations already
 share are the closest prior art and map cleanly onto §8.3's `validate.*` family.

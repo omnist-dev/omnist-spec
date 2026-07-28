@@ -92,14 +92,20 @@ A `coupon` field would be a plain key inside `[order]`. Because TOML has no
 `[0,1]` cardinality already means. A `null` coupon has no TOML spelling at all
 and is a write-time adjustment.
 
+**A real-world example.** `pyproject.toml` is the canonical case of a
+spec'd-open format: its core tables are specified, but `[tool.*]` is
+*defined* to be open — third-party tools own those subtrees, and a schema
+author doesn't get to close them. The Python reference implementation works
+through modeling it in full at `docs/examples/pyproject.md` in the `omnist`
+repository, framed explicitly around where OSD's algebra can't fully capture
+the format's own spec.
+
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
 is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-Python "all four", TypeScript "JSON", Rust "JSON".
-
-For TOML specifically, that means **Python only**. TypeScript and Rust have no
-TOML codec yet.
+"all four" for Python, TypeScript, and Rust alike — every implementation has
+a TOML codec.
 
 There is no TOML-specific entry in
 [§9.4](../09-divergence-ledger.md#94-known-open-divergences). The `null` gap

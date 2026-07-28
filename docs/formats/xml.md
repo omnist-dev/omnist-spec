@@ -90,14 +90,25 @@ never on the write side.
 Note also that `<items>` elements do not sit inside an `<items>` wrapper. There
 is no wrapper element in this profile, on either side.
 
+**A real-world example.** `sitemap.xml` is the cleanest of the four
+worked examples the Python reference implementation's own docs walk
+through (`docs/examples/sitemap.md` in the `omnist` repository), because it
+isolates a gap category none of the others do: **value refinement**. A
+`sitemap.xml` schema types `changefreq` as `string` and `priority` as
+`number` — OSD has no enum or range constraint — so `changefreq: sometimes`
+and `priority: 1.5` both validate cleanly under OSD despite violating the
+sitemaps.org spec (which restricts `changefreq` to a fixed set of values and
+`priority` to `[0.0, 1.0]`). No union, no open key set, nothing else is at
+play — it's a clean demonstration of exactly one limitation, stated
+abstractly in `why-omnist.md` but not illustrated concretely anywhere in
+this spec (see also [§6.3](../06-schema-algebra.md#63-scalar-subtyping)).
+
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
 is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-Python "all four", TypeScript "JSON", Rust "JSON".
-
-For XML specifically, that means **Python only**. TypeScript and Rust have no
-XML codec yet.
+"all four" for Python, TypeScript, and Rust alike — every implementation has
+an XML codec.
 
 XML is also the one format with its own open divergence.
 [D-3](../09-divergence-ledger.md#94-known-open-divergences) records that

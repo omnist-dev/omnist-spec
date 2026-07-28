@@ -86,14 +86,20 @@ check shape, not to convert. A JSON leaf that did need conversion — a
 `datetime` field carrying `"2024-01-01T12:30:00"` — would stay a string after
 stage 1 and only become a `datetime` in stage 2.
 
+**A real-world example.** The running Order schema is clean by design — it
+has no unions and no open key sets, so it never has to confront JSON's actual
+worst case. `package.json` does: its `author`/`bugs`/`repository` fields can
+each be either a string or an object, and `scripts`/`dependencies` are
+genuinely open key sets. Modeling it is exactly the kind of case `any` (§3.7)
+exists for. The Python reference implementation works through it in full at
+`docs/examples/package-json.md` in the `omnist` repository.
+
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
 is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-Python "all four", TypeScript "JSON", Rust "JSON".
-
-For JSON specifically, that means all three implementations have the codec. It
-is the only format with no implementation gap.
+"all four" for Python, TypeScript, and Rust alike — every implementation has
+every codec.
 
 There is no JSON-specific entry in
 [§9.4](../09-divergence-ledger.md#94-known-open-divergences). The general
