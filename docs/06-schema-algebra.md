@@ -535,17 +535,35 @@ Rules:
   no inline records, generated names are derived from the label and MUST be
   made unique.
 
+**`allow_any` — the two cases, both specified.** By default (`allow_any =
+false`), a field `infer` cannot reduce to one precise type is a hard failure
+— opening a field to `any` is a decision an author makes deliberately, never
+one the tool makes silently on their behalf. An implementation MAY offer an
+opt-in mode (`allow_any = true`) that instead opens exactly that one field to
+`any` and *reports having done so* — a location and a reason, one entry per
+opening, never silent. Both modes share the same traversal; only the two
+failure points below branch on `allow_any`.
+
 ```
-function infer(samples, root_name = "Root"):
+struct AnyFallback:
+    location   # "RecordName.label"
+    reason     # "mixes objects and values" | "values of more than one scalar kind (k1, k2, ...)"
+
+function infer_with_report(samples, root_name = "Root", allow_any = false):
     if samples is empty: fail: "cannot infer a schema from zero samples"
     for s in samples:
         if s is not a node: fail: "infer expects object (record) samples at the root"
     env = {}
     used = {}                                # names already assigned, for uniqueness
-    infer_record(samples, root_name, env, used)
-    return Schema(Ref(root_name), env)        # NOT normalized -- see below
+    fallbacks = []                           # one AnyFallback per any-opened field
+    infer_record(samples, root_name, env, used, allow_any, fallbacks)
+    return Schema(Ref(root_name), env), fallbacks   # schema NOT normalized -- see below
 
-function infer_record(nodes, name, env, used):
+function infer(samples, root_name = "Root", allow_any = false):
+    (schema, fallbacks) = infer_with_report(samples, root_name, allow_any)
+    return schema                            # convenience wrapper; report discarded
+
+function infer_record(nodes, name, env, used, allow_any, fallbacks):
     add name to used
     # Pass 1: collect every label that appears in ANY sample, in first-seen
     # order across samples. Pass 2: for every sample, count every label from
@@ -574,18 +592,20 @@ function infer_record(nodes, name, env, used):
             cmin, cmax = 0, unbounded          # array: permissive, see rule above
         else:
             cmin, cmax = min(counts), 1        # 0 or 1 across samples -> optional/required
-        typ = infer_type(children[label], label, name, env, used)
+        typ = infer_type(children[label], label, name, env, used, allow_any, fallbacks)
         append Field(label, typ, cmin, cmax) to fields
     env[name] = Record(fields)
 
-function infer_type(child_values, label, record_name, env, used):
+function infer_type(child_values, label, record_name, env, used, allow_any, fallbacks):
     if all child_values are nodes:
         rec_name = unique_name_from(label, used)
-        infer_record(child_values, rec_name, env, used)
+        infer_record(child_values, rec_name, env, used, allow_any, fallbacks)
         return Ref(rec_name)
     if some but not all child_values are nodes:
+        if allow_any:
+            append AnyFallback(record_name + "." + label, "mixes objects and values") to fallbacks
+            return Any
         fail: "label " + label + " mixes objects and values; cannot infer one type"
-        # (or, in an allow_any mode: return Any, and report the opening -- see below)
     kinds = {}
     saw_null = false
     for v in child_values:
@@ -594,10 +614,26 @@ function infer_type(child_values, label, record_name, env, used):
     if "number" in kinds: remove "integer" from kinds   # the one subtype relation, §6.3
     if kinds is empty: return Scalar("string", nullable = saw_null)  # no non-null sample
     if size(kinds) > 1:
+        if allow_any:
+            reason = "values of more than one scalar kind (" + join(sort(kinds), ", ") + ")"
+            append AnyFallback(record_name + "." + label, reason) to fallbacks
+            return Any
         fail: "label " + label + " has values of more than one scalar kind"
-        # (or, in an allow_any mode: return Any, and report the opening -- see below)
     return Scalar(the one kind in kinds, nullable = saw_null)
 ```
+
+**Worked example.** Two samples for the same label, `"id"`, disagreeing on
+scalar kind — one sample has `"id": 7`, the other `"id": "seven"` (integer
+vs. string, not the one sanctioned integer/number subtype relation):
+
+- `infer(samples)` (default, `allow_any = false`): fails —
+  `label "id" has values of more than one scalar kind`.
+- `infer_with_report(samples, allow_any = true)`: succeeds. The returned
+  schema has `"id": any`, and the returned `fallbacks` list contains exactly
+  one `AnyFallback("Root.id", "values of more than one scalar kind (integer, string)")`.
+  `infer(samples, allow_any = true)` (the plain wrapper) returns the same
+  schema but discards the fallback list — a caller who wants to know what was
+  opened MUST call `infer_with_report` directly.
 
 Two requirements:
 
@@ -610,7 +646,7 @@ identical duplicate records. A caller who wants the canonical form calls
 **`infer` MUST NOT emit `any` by default.** Opening a field is a decision the
 author makes, never one the tool makes for them. An implementation MAY offer an
 opt-in mode; when it does, it MUST report every opening it introduced, with a
-location and a reason.
+location and a reason — `infer_with_report` above, not a silent side channel.
 
 Samples MUST be node-rooted. Inferring from a bare scalar, or from zero
 samples, is an error.
