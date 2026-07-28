@@ -206,13 +206,24 @@ change is backward-compatible for readers holding `B`.
 
 **Worked example.**
 
+Schema `A`:
+
 ```osd
-# A                              # B
-record User {                    record User {
-    "id":         string,            "id":        string,
-    "name":       string,            "name":      string,
-    "nick" [0,1]: string,        }
-}                                root User
+record User {
+    "id":         string,
+    "name":       string,
+    "nick" [0,1]: string,
+}
+root User
+```
+
+Schema `B`:
+
+```osd
+record User {
+    "id":   string,
+    "name": string,
+}
 root User
 ```
 
