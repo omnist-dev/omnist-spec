@@ -178,6 +178,18 @@ documents. Whatever values an implementation chooses:
   within one implementation (§2.4 note below) — a document that parses MUST
   NOT then fail to build.
 
+**Where this stands today.** No implementation currently exposes a public
+configuration surface for any of the three limits. Python's `_MAX_DEPTH`,
+`_MAX_NODES`, and `_MAX_INT_DIGITS` are hardcoded module constants with no
+constructor argument, function parameter, or environment variable that lets a
+caller change them — the only place they vary at all is inside Python's own
+test suite, via direct monkeypatching of the private module attribute, which
+is a test technique, not a configuration surface a real caller can use. "MAY
+set any of the three" is written for an implementation that chooses to expose
+one — an embedded or big-data target with an actual reason to deviate — not a
+capability any implementation ships today. A future implementation is free to
+be the first.
+
 **What is fixed regardless of the chosen value: how exceeding it is reported.**
 Exceeding a declared limit — whatever number the implementation chose — MUST
 produce the corresponding standardized error from the `document.limit.*`
@@ -194,4 +206,10 @@ edges is depth 1.
 
 **On depth.** Within one implementation, the Document builder's depth limit and
 the OML parser's nesting limit MUST be the same number. A document that the
-parser accepts MUST NOT then fail while the builder walks it.
+parser accepts MUST NOT then fail while the builder walks it. In Python this
+isn't an active synchronization an implementer has to maintain — the builder
+and the parser both import the same module-level constant, so there is
+exactly one number, not two kept equal by discipline. The MUST here is aimed
+at an implementation whose architecture genuinely has two separate places a
+depth limit could be configured; where a single shared constant is the
+natural design, as in Python, the requirement is satisfied automatically.

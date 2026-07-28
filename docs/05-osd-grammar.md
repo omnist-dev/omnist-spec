@@ -99,9 +99,14 @@ forms. It rejects `[]`, which is the "empty cardinality" error.
 Three further checks sit above the grammar, and MUST be applied:
 
 - A bound containing `.` is rejected: cardinality must be a whole number.
-- A negative minimum is rejected. The token grammar has no `-`, so `[-1]` fails
-  at a different layer, but the resulting error is the invalid-cardinality
-  error, not a syntax error.
+- A negative minimum is rejected. This spec's `int` production above accepts
+  only unsigned digits, but a conformant tokenizer's number token MAY include
+  an optional leading `-` (the reference implementation's does, since the same
+  token also reads negative field values elsewhere in the grammar). Either
+  way, `[-1]` MUST NOT be reported as a syntax error: whether the `-` is
+  rejected at the token boundary or accepted into the token and rejected one
+  step later at field construction, the observable result is the same
+  invalid-cardinality error, not a parse failure.
 - An inverted range, `max < min`, is rejected. `[1,0]` tokenizes fine and is
   rejected on field construction.
 

@@ -42,8 +42,15 @@ field         = string [ cardinality ] ":" type
 cardinality   = "[" ( int [ "," [ int ] ] / "," [ int ] ) "]"
 
 int           = 1*DIGIT
-                ; a bare non-negative integer literal at the token level; no
-                ; leading "-". See (S4) for the checks applied above it.
+                ; this production accepts only unsigned digits; a conformant
+                ; tokenizer's number token MAY nonetheless include an optional
+                ; leading "-" (the reference implementation's does, since the
+                ; same token reads negative scalar values elsewhere in the
+                ; grammar). Either way "[-1]" MUST surface as the (S4)
+                ; invalid-cardinality error, never a syntax error -- whether
+                ; the "-" is excluded at the token boundary or accepted into
+                ; the token and rejected one step later at field construction
+                ; is an implementation choice, not an observable difference.
 
 ; -------------------------------------------------------------------- types
 
