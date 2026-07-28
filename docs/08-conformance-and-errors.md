@@ -207,6 +207,30 @@ proposed.
 `RecordName.label` for a field-level one. This matches what `lint` already
 reports.
 
+**Text-position paths** are for `parse.*` diagnostics (§8.3.1) — stage 1
+fails before any Document exists, so there is no `$`-rooted structure yet
+for a Document path to descend into. The format is `line:col`, 1-based,
+computed from the byte offset of the failure:
+
+```
+1:1                      the very first character
+14:8                      line 14, column 8
+```
+
+**This is new normative content, unlike the two path forms above.** Python
+already computes 1-based `(line, col)` from a byte offset internally
+(`oml.py`'s `line_col`) but only ever embeds it in the diagnostic's
+human-readable *message* string ("line 14, col 8: ..."), never as a
+structured path — which is exactly why no cross-implementation convention
+exists yet to document. This section specifies one rather than describing
+one already in use, the same way §8.3's code taxonomy does.
+
+A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
+`schema.*`, `validate.*`, `materialize.*`, `algebra.*`, or `lint.*` diagnostic's
+`path` MUST be a Document or Schema path, per the two forms above — never a
+text-position path, since a Document or Schema already exists by the time any
+of those families can fire.
+
 ## 8.5 Conformance harness protocol
 
 A conformant implementation passes the vectors in `test-suite/`. Vectors are

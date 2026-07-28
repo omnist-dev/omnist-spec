@@ -185,6 +185,37 @@ That asymmetry is real and worth stating outright. `{"tag": ["x"]}` reads to one
 edge and writes back as `{"tag": "x"}`. The Document is unchanged; the text is
 not.
 
+### 7.3.1 `write(node, format)` — pseudocode
+
+Both rules above, formalized to match the pseudocode style used everywhere
+else in this spec:
+
+```
+function write(node, format):
+    if node is a leaf:
+        return format.render_scalar(node.value)
+
+    groups = ordered_map()                    # label -> list of children, first-seen order
+    for (label, child) in node.edges:
+        groups[label].append(child)
+
+    out = ordered_map()
+    for (label, children) in groups:
+        if len(children) == 1:
+            out[label] = write(children[0], format)      # bare value
+        else:
+            out[label] = [write(c, format) for c in children]  # list
+
+    return format.render_node(out)
+```
+
+`groups` MUST preserve first-seen label order (the order §7.3's grouping rule
+already requires) and, within a label, the children's original edge order.
+Neither rule above is new; this section only gives them a pseudocode form
+consistent with `validate` (§3.6.1), `materialize` (§7.2.1), and the schema
+algebra (chapter 6) — there is no ambiguity being resolved here, only a
+presentational gap being closed.
+
 ## 7.4 Format reports
 
 A reader or writer SHOULD be able to report the adjustments a given conversion
