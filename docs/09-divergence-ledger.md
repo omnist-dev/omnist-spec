@@ -85,21 +85,32 @@ As of spec v0.1.
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha |
 | Maturity | beta, reference | alpha | alpha |
 | Document model | complete | complete | complete |
-| Resource caps | all three | see §9.4 | see §9.4 |
-| OML read | complete, Core + Extended | partial | partial |
+| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | see §9.4 |
+| OML read | complete, Core + Extended | complete, Core + Extended | partial |
 | OML canonical write | complete | partial | partial |
 | OSD read/write | complete | complete | complete |
 | `any` type | yes, v0.5.0 | yes | yes |
 | `validate` | complete | complete | partial |
-| `materialize` | complete | partial | partial |
-| `compatible_with` / `equivalent` | complete | partial | not yet |
-| `prune` / `is_empty` | complete | partial | not yet |
-| `normalize` | complete | not yet | not yet |
-| `extract` | complete | not yet | not yet |
-| `infer` | complete | not yet | not yet |
-| `lint` | complete | not yet | not yet |
-| Codecs JSON/YAML/TOML/XML | all four | JSON | JSON |
+| `materialize` | complete | complete | partial |
+| `compatible_with` / `equivalent` | complete | complete | not yet |
+| `prune` / `is_empty` | complete | complete | not yet |
+| `normalize` | complete | complete | not yet |
+| `extract` | complete | complete | not yet |
+| `infer` | complete | complete | not yet |
+| `lint` | complete | complete | not yet |
+| Codecs JSON/YAML/TOML/XML | all four | all four | JSON |
 | §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — no code field |
+
+**On the TypeScript column's upgrade from "partial"/"not yet" to "complete."**
+An earlier version of this table understated TypeScript's maturity across
+`OML read`, `materialize`, `compatible_with`/`equivalent`, `prune`/`is_empty`,
+`normalize`, `extract`, `infer`, `lint`, and codec coverage — all were
+confirmed present and under test by a source/test-existence verification pass,
+not merely claimed. Per this chapter's own authority rule (§9.3, "this table is
+a summary and MUST NOT be treated as one; the conformance harness's skip
+counts are"), these cells should be treated as provisionally corrected pending
+a full harness run — replace "complete" with a more specific note if the
+harness's actual skip counts turn out nonzero for any of them.
 
 **On `any` in Rust.** Rust supports `any`. It is present as `FieldType::Any` in
 the OSD parser, is written back out as `any`, and rejects `any?` the same way
@@ -117,11 +128,11 @@ These are live discrepancies. Each needs resolution under
 
 | # | Issue | Status |
 |---|---|---|
-| D-1 | Resource caps are enforced in Python at all three limits. TypeScript and Rust enforce depth but their node-count and integer-digit enforcement is unverified. | Open. Needs vectors at each boundary, then implementation. |
+| D-1 | Resource caps: Python enforces all three. TypeScript enforces depth and integer-digit length (confirmed at the parsing layer in its OML/JSON/YAML readers, under test) but has **no node-count limit anywhere** — confirmed absent by source inspection, not merely unverified. Rust's status on all three has not yet been re-checked with the same rigor and should not be assumed identical to either. | Open. TypeScript needs a node-count limit implemented (tracked as `omnist-ts` issue #77) before this can close for that implementation. Rust's status needs its own verification pass. |
 | D-2 | A duplicate `root` declaration in OSD: Python lets the later one silently win. The spec ([§5.8](05-osd-grammar.md#58-root)) declines to bless this. | Open. Proposed resolution: make it `schema.duplicate-root`, an error. Needs a vector first. |
 | D-3 | XML attributes and namespace prefixes are dropped silently, with no adjustment reported. [§8.3.8](08-conformance-and-errors.md#838-format--codec-adjustments) defines codes for reporting them. | Open. Reporting is a behavior change; vector first. |
 | D-4 | No implementation emits §8.3 codes. Python and TypeScript share undocumented kebab-case validation tags. | Open by design. See [§8.1](08-conformance-and-errors.md#81-status-of-this-chapter) for the migration path. |
-| D-5 | OML-Extended read support (raw and multiline strings) is Python-only. | Open. TypeScript and Rust must accept them; only the writer restriction is one-sided. |
+| D-5 | OML-Extended read support (raw and multiline strings): **confirmed complete in TypeScript** — implemented and tested (`test/oml.test.ts`'s raw-string and multiline-string suites). This entry previously claimed it was Python-only; that was stale. Rust's status has not been re-checked. | Closed for TypeScript. Open only pending a Rust-specific check; if Rust also already reads OML-Extended, this entry should be removed entirely rather than left open. |
 
 ## 9.5 Adding a fourth implementation
 
