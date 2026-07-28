@@ -97,7 +97,7 @@ As of spec v0.1.
 | `normalize` | complete | complete | complete |
 | `extract` | complete | complete | complete |
 | `infer` | complete | complete | complete |
-| `lint` | complete | complete | complete (one confirmed conformance bug, see [`omnist-rs#77`](https://github.com/omnist-dev/omnist-rs/issues/77) — `duplicate-record` finding shape deviates from §6.11) |
+| `lint` | complete | complete | complete |
 | Codecs JSON/YAML/TOML/XML | all four | all four | all four |
 | §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags |
 
