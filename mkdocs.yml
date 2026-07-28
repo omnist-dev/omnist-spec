@@ -55,6 +55,7 @@ nav:
       - TOML: formats/toml.md
       - XML: formats/xml.md
       - OML: formats/oml.md
+  - Real-World Examples: examples/index.md
   - 8. Conformance & Errors: 08-conformance-and-errors.md
   - 9. Divergence Ledger: 09-divergence-ledger.md
   - 10. Governance & Versioning: 10-governance-and-versioning.md
