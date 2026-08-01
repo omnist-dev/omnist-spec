@@ -329,3 +329,30 @@ result.** An implementation that has not built `extract` yet skips those
 vectors and reports the count. A run that hides skips as passes is worthless for
 tracking convergence, which is the whole point of
 [chapter 9](09-divergence-ledger.md).
+
+## 8.6 OML/OSD conformance harness
+
+§8.5's harness exercises operations through a canonical JSON encoding
+(§8.5.4) specifically to avoid the representational ambiguity of format
+text — the same Document can be written as OML or OSD in more than one way
+(indentation, array sugar versus repeated labels, field declaration order)
+and still be the identical model. That is the right design for testing
+**operation correctness**, but it never touches the OML/OSD text an
+implementation actually reads and writes, which is a second, independent
+thing worth testing on its own: **codec fidelity** at the surface a human or
+another tool actually uses.
+
+**[conformance-harness.md](conformance-harness.md)** specifies a second,
+complementary conformance track for exactly that: a CLI wrapper contract
+every implementation exposes one command per operation under, a
+directory-per-fixture format for OML/OSD input and expected output, and a
+structural-equality comparison algorithm (not text diffing) for judging
+whether an implementation's actual output matches. It reuses this chapter's
+operation vocabulary (§8.5.3) and diagnostic envelope (§8.2) rather than
+defining either a second time.
+
+This track's fixtures and orchestrator live in this repository, under
+`conformance/`, not in a separate repository — alongside the spec text they
+pin, for the same reason `test-suite/` does: chapter 10's Spec-TDD workflow
+(§10.2) requires a vector and the prose it tests to land in the same PR, and
+that is only practical when both live in one place.
