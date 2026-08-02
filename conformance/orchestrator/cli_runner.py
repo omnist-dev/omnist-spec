@@ -35,8 +35,11 @@ def validate(input_file: Path, schema_file: Path) -> tuple[str, str, int]:
 
 
 def materialize(input_file: Path, schema_file: Path) -> tuple[str, str, int]:
+    # --json only changes the failure-path output shape (structured JSON on
+    # stdout instead of plain text); the success path is unaffected -- still
+    # plain materialized OML on stdout. Safe to always pass.
     return _run(["convert", str(input_file), "--from", "oml", "--to", "oml",
-                 "--schema", str(schema_file)])
+                 "--schema", str(schema_file), "--json"])
 
 
 def normalize(schema_file: Path) -> tuple[str, str, int]:

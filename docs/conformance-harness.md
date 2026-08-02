@@ -60,20 +60,28 @@ The real conventions, applying to every subcommand:
   emits the full §8.3 taxonomy yet — Python's `--json` output is real,
   existing, partial convergence, not yet full §8.2 compliance, and this
   track does not require Python to close that gap before being usable.
+- **`--json` failure payloads print to stdout, not stderr.** Verified
+  functionally across `validate`, `extract`, `infer`, and `convert`
+  (materialize) — `_fail()`'s own docstring in `cli.py` confirms this is
+  deliberate, not an accident of one command. An earlier revision of this
+  section said stderr; that was wrong for every command in this table.
+- **One diagnostic in this whole contract is not JSON:** `infer
+  --allow-any`'s report of which fields it opened prints to **stderr as
+  plain text**, not stdout JSON — see the `infer` row below.
 
 | Operation | Real command | Success (stdout) | Exit code |
 |---|---|---|---|
 | `write` | `omnist format INPUT [--compact] [-o FILE]` | canonical OML | 0 |
-| `validate` | `omnist validate INPUT --from oml --schema SCHEMA --json` | `{"ok": true}` | 0 (ok), 1 (validation failure, `errors` populated), 2 (parse/read error, `errors` empty) |
-| `materialize` | `omnist convert INPUT --from oml --to oml --schema SCHEMA` | materialized OML | 0, or 2 on inexact conversion/shape failure (verified: message format matches §7.2's error text, e.g. `$.d: 'not-a-date' cannot be read as date (not a value-exact conversion)`) |
+| `validate` | `omnist validate INPUT --from oml --schema SCHEMA --json` | `{"ok": true}` | 0 (ok), 1 (validation failure, `errors` populated), 2 (parse/read error, `errors` empty) — `--json` failure payload on **stdout** |
+| `materialize` | `omnist convert INPUT --from oml --to oml --schema SCHEMA --json` | materialized OML (plain, `--json` only affects the failure path) | 0, or 2 on inexact conversion/shape failure — `--json` gives `{"ok": false, "message", "errors": [{"path","code","message"}]}` on stdout, verified matching §7.2's error text exactly |
 | `normalize` | `omnist schema normalize SCHEMA [--compact] [-o FILE]` | OSD | 0 |
 | `prune` | `omnist schema prune SCHEMA [--compact] [-o FILE]` | OSD | 0 |
-| `extract` | `omnist schema extract SCHEMA --keep label1,label2,... [--compact] [-o FILE]` | OSD | 0, non-zero if `keep` invalidates the root (§6.9) |
+| `extract` | `omnist schema extract SCHEMA --keep label1,label2,... [--compact] [-o FILE] [--json]` | OSD | **0, or 1 if `keep` invalidates the root** (§6.9) — `--json` gives `{"ok": false, "message", "errors": []}` on stdout |
 | `is_empty` | `omnist schema is-empty SCHEMA --result-format json` | `{"empty": bool}` | **0 if empty (`true`), 1 if not empty (`false`)** — the boolean result is encoded in the exit code too, not just stdout; do not assume 0 always means "command succeeded" for this command |
 | `compatible_with` | `omnist schema compatible-with A B --result-format json` | `{"compatible": bool}` | 0 if `true`, 1 if `false` — same exit-code-carries-the-boolean pattern |
 | `equivalent` | `omnist schema equivalent A B --result-format json` | `{"equivalent": bool}` | 0 if `true`, 1 if `false` |
-| `infer` | `omnist infer FILE [FILE...] --from oml [--allow-any] [--compact] [-o FILE]` — **multiple positional document files, one per sample; not a single stdin stream** | OSD | 0, non-zero on ambiguous type without `--allow-any` |
-| `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | 0 (always — findings are informational output, not a command failure) |
+| `infer` | `omnist infer FILE [FILE...] --from oml [--allow-any] [--compact] [-o FILE] [--json]` — **multiple positional document files, one per sample; not a single stdin stream** | OSD. With `--allow-any` and an opened field, a plain-text report prints to **stderr** (not stdout, not JSON): `opened N field(s) as \`any\`:\n  RecordName.label — reason` | **0 (including the `--allow-any` success case), or 2 on ambiguous type without `--allow-any`** — `--json` gives `{"ok": false, "message", "errors": []}` on stdout for the exit-2 case |
+| `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | **1 if any `warning`-severity finding is present, 0 otherwise** — this was previously documented as "0, always," which was flat wrong, not just incomplete |
 
 **`is_empty`/`compatible_with`/`equivalent`'s exit-code convention is a real
 finding that changes §5.1's general contract**, not a minor detail: this
@@ -95,9 +103,12 @@ fails with the exact §7.2 error text (exit 2). No longer blocked — every
 operation in
 the table above is fully CLI-reachable today and unblocked.
 
-Every row above (except `materialize`) was checked directly against
-`omnist/cli.py` source for this revision, including `lint`'s exact `--json`
-output shape, which the previous revision had left as an unverified guess.
+Every row above was checked directly against real command output, not just
+source reading — `extract`, `infer`, and `lint`'s exact exit codes and
+`--json`/stderr shapes (including `lint`'s incorrect "always 0" claim in an
+earlier revision, and the stdout-not-stderr correction that applies to every
+`--json` failure in this table) were only found by actually running each
+command, the same way `materialize`'s CLI gap was.
 
 `parse` and `materialize`'s stage-1-only variant are intentionally **not**
 listed — this track tests round-trip and schema-directed behavior, not raw
