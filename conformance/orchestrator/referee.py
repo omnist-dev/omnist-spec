@@ -9,13 +9,6 @@ from __future__ import annotations
 
 from omnist import read_oml, parse_schema
 
-# omnist#279: isomorphic schema comparison has no public API today -- only
-# a private `_isomorphic` in omnist.ops.isomorphic, used internally to
-# cross-check normalize()'s own correctness. This is a flagged, tracked
-# stopgap: swap for the public API once omnist#279 lands. Not blocking
-# (unlike omnist#277, which had no workaround at all).
-from omnist.ops.isomorphic import _isomorphic
-
 
 def compare_document(actual_oml_text: str, expected_oml_text: str) -> bool:
     """Structural, order-sensitive equality (Doc.__eq__ already provides
@@ -39,5 +32,5 @@ def compare_schema(actual_osd_text: str, expected_osd_text: str, mode: str) -> b
     if mode == "exact":
         return actual == expected
     if mode == "isomorphic":
-        return _isomorphic(actual, expected)
+        return actual.isomorphic_to(expected)
     raise ValueError(f"unknown comparison mode {mode!r}; expected 'exact' or 'isomorphic'")
