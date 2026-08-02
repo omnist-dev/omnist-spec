@@ -27,45 +27,69 @@ the spec never constrains.
 
 ## 2. The wrapper CLI contract
 
-Every operation this track covers gets one CLI subcommand. The contract:
+**This section describes `omnist`'s (Python's) real, already-existing CLI
+(`omnist/cli.py`), verified directly against source — it does not invent a
+new convention.** The harness targets what already exists rather than
+requiring CLI changes beyond what §5 already calls for. A prior draft of
+this section specified an idealized stdin-only contract that did not match
+Python's actual CLI; that draft is replaced below.
 
-- **Primary input on stdin.** A document (OML) for document-consuming
-  operations, a schema (OSD) for schema-consuming operations.
-- **Secondary input, where an operation needs two,** as a file path
-  argument — a schema file for `validate`/`materialize`, a second schema
-  file for `compatible_with`/`equivalent`.
-- **Successful result on stdout**, in the format matching the operation's
-  result kind:
-  - Document-producing (`write`): OML.
-  - Schema-producing (`normalize`, `prune`, `extract`): OSD.
-  - Boolean-result (`is_empty`, `compatible_with`, `equivalent`): exactly
-    the literal token `true` or `false`, nothing else, followed by a single
-    newline. Exit code is `0` regardless of which boolean was printed —
-    exit code answers "did the command run," never "what was the answer."
-  - `lint`: one finding per line, three tab-separated fields —
-    `code<TAB>severity<TAB>location` — matching the fields already
-    normative for a `LintFinding` (§6.11). Findings MUST be printed in the
-    same deterministic `(code, location)` order §6.11 already requires, so
-    line-by-line comparison is sufficient; no JSON parsing is needed for
-    this one result kind.
-- **Failure: non-zero exit, JSON diagnostics on stderr.** The array uses
-  exactly §8.2's envelope — `code`, `path`, `message`, `severity` — the
-  same one §8.5's JSON-vector track uses. This track does not define a
-  second error vocabulary.
+The real conventions, applying to every subcommand:
 
-| Operation | Primary input (stdin) | Secondary input (arg) | Stdout on success |
+- **Primary input is a positional argument, and `-` means stdin** — not
+  "always stdin." Every command below accepts a file path or `-`.
+- **Format is explicit, not assumed.** Document-consuming commands take
+  `--from FORMAT` (`oml`, `json`, `yaml`, `toml`, `xml`). This track only
+  ever uses `--from oml`, but the flag MUST still be passed — there is no
+  OML-is-the-default behavior to rely on.
+- **A schema argument, where needed, is `--schema FILE`** (`validate`) or a
+  second positional (`schema compatible-with A B`, `schema equivalent A B`).
+- **Schema-producing commands accept `--compact`** (single-line OSD) or
+  omit it for pretty-printed, multi-line OSD. **This distinction is
+  deliberately irrelevant to this track**: the referee re-parses stdout
+  before comparing (§4), so `--compact` vs. pretty-printed output must
+  compare equal. Fixtures SHOULD still pick one consistently per fixture
+  file for readability; the harness itself must not care which.
+- **Structured output already exists via `--json` (most commands) or
+  `--result-format json`** (boolean-result commands: `is-empty`,
+  `compatible-with`, `equivalent`). Reuse it rather than inventing a
+  second mechanism — see the exact JSON shape below, which is **not**
+  identical to §8.2's envelope (no per-error `severity` field; errors are
+  wrapped under `{"ok", "message", "errors"}` rather than a bare array).
+  This is consistent with §8.1's own disclosure that no implementation
+  emits the full §8.3 taxonomy yet — Python's `--json` output is real,
+  existing, partial convergence, not yet full §8.2 compliance, and this
+  track does not require Python to close that gap before being usable.
+
+| Operation | Real command | Success (stdout) | Exit code |
 |---|---|---|---|
-| `write` | Document (OML) | — | OML |
-| `validate` | Document (OML) | Schema (OSD, file arg) | *(no stdout; exit 0)* |
-| `materialize` | Document (OML) | Schema (OSD, file arg) | OML |
-| `normalize` | Schema (OSD) | — | OSD |
-| `prune` | Schema (OSD) | — | OSD |
-| `extract` | Schema (OSD) | `keep` label set (file arg, one label per line) | OSD |
-| `is_empty` | Schema (OSD) | — | `true` / `false` |
-| `compatible_with` | Schema (OSD) | Second schema (OSD, file arg) | `true` / `false` |
-| `equivalent` | Schema (OSD) | Second schema (OSD, file arg) | `true` / `false` |
-| `infer` | Sample documents (OML, one per line via a wrapping array, or newline-delimited — implementation's CLI already defines its own sample-batch convention; this contract does not re-specify it) | `--allow-any` flag, optional | OSD |
-| `lint` | Schema (OSD) | — | `code<TAB>severity<TAB>location` lines |
+| `write` | `omnist format INPUT [--compact] [-o FILE]` | canonical OML | 0 |
+| `validate` | `omnist validate INPUT --from oml --schema SCHEMA --json` | `{"ok": true}` | 0 (ok), 1 (validation failure, `errors` populated), 2 (parse/read error, `errors` empty) |
+| `materialize` | `omnist convert INPUT --from oml --to oml --schema SCHEMA` | materialized OML | 0, or non-zero on inexact/shape failure (exact code TBD — not yet checked; use `--report --result-format json` for structured detail) |
+| `normalize` | `omnist schema normalize SCHEMA [--compact] [-o FILE]` | OSD | 0 |
+| `prune` | `omnist schema prune SCHEMA [--compact] [-o FILE]` | OSD | 0 |
+| `extract` | `omnist schema extract SCHEMA --keep label1,label2,... [--compact] [-o FILE]` | OSD | 0, non-zero if `keep` invalidates the root (§6.9) |
+| `is_empty` | `omnist schema is-empty SCHEMA --result-format json` | `{"empty": bool}` | **0 if empty (`true`), 1 if not empty (`false`)** — the boolean result is encoded in the exit code too, not just stdout; do not assume 0 always means "command succeeded" for this command |
+| `compatible_with` | `omnist schema compatible-with A B --result-format json` | `{"compatible": bool}` | 0 if `true`, 1 if `false` — same exit-code-carries-the-boolean pattern |
+| `equivalent` | `omnist schema equivalent A B --result-format json` | `{"equivalent": bool}` | 0 if `true`, 1 if `false` |
+| `infer` | `omnist infer FILE [FILE...] --from oml [--allow-any] [--compact] [-o FILE]` — **multiple positional document files, one per sample; not a single stdin stream** | OSD | 0, non-zero on ambiguous type without `--allow-any` |
+| `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | 0 (always — findings are informational output, not a command failure) |
+
+**`is_empty`/`compatible_with`/`equivalent`'s exit-code convention is a real
+finding that changes §5.1's general contract**, not a minor detail: this
+track's original draft assumed boolean-result commands always exit 0 and
+carry the answer only in stdout. Python's real CLI instead encodes the
+boolean in the exit code as well (0 = true, 1 = false) — the orchestrator
+MUST read the boolean from stdout's `--result-format json` payload, not
+infer it from the exit code, since a future implementation (or a future
+Python version) could legitimately choose either convention and this track
+should not be sensitive to which.
+
+**`materialize`'s exact non-zero exit code and `lint`'s exact output line
+format are the two remaining unverified details** — both need a quick check
+against `omnist/cli.py` or `docs/cli.md` before fixtures for those two
+operations are authored. Every other row above was checked directly against
+`omnist/cli.py` source for this revision.
 
 `parse` and `materialize`'s stage-1-only variant are intentionally **not**
 listed — this track tests round-trip and schema-directed behavior, not raw
