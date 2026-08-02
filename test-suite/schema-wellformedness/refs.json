@@ -1,0 +1,68 @@
+{
+  "vectors": [
+    {
+      "name": "schema-wellformedness/refs/dangling-reference-is-an-error",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": Ghost,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.a",
+            "code": "schema.unknown-type"
+          }
+        ]
+      },
+      "comment": "S-6: a Ref MUST resolve to a name present in env. `Ghost` is not a scalar keyword, not `any`, and not a defined record, so it is a dangling reference."
+    },
+    {
+      "name": "schema-wellformedness/root/root-name-not-defined-is-an-error",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": string,\n}\nroot Ghost\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "schema.unknown-type"
+          }
+        ]
+      },
+      "comment": "S-1: the root MUST be a Ref that resolves in env. `Ghost` is never defined, so the schema's own entry point is dangling -- the same failure mode as S-6 applied to the root position specifically."
+    },
+    {
+      "name": "schema-wellformedness/refs/forward-reference-is-legal",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "parse_schema",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record R {\n    \"next\" [0,1]: Later,\n}\nrecord Later {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "S-6: forward references are explicitly legal. `R` refers to `Later`, which is declared after it -- declaration order does not constrain reference resolution."
+    },
+    {
+      "name": "schema-wellformedness/refs/mutual-recursion-is-legal",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record A {\n    \"b\" [0,1]: B,\n}\nrecord B {\n    \"a\" [0,1]: A,\n}\nroot A\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "S-6: mutual recursion is explicitly legal (env is finite, so every operation in ch.6 still terminates despite the cycle). Both fields are optional, since an all-mandatory mutual cycle would make the schema unsatisfiable (ch.6 Sec6.4) -- a well-formedness question, not this vector's concern."
+    }
+  ]
+}
