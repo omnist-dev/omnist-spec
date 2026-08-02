@@ -1,0 +1,113 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/basic/sequence-becomes-repeated-edges",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "text": "m:\n  - 1\n  - 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "formats-yaml/temporals/native-date-resolves-with-no-schema",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "d: 2024-01-01\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "d",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-01"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "YAML's core schema resolves a bare ISO-8601-looking scalar to date with no schema involved -- unlike JSON, which would leave this as a string until stage 2."
+    },
+    {
+      "name": "formats-yaml/sharp-edges/bare-time-resolves-to-sexagesimal-integer-not-a-time",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "n: 12:00:00\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 43200
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "YAML's core schema has no standalone time type. A bare 12:00:00 resolves to the integer 43200 (twelve hours in seconds) -- YAML's own behavior, not an Omnist choice, and there is no read-side workaround once the parser has already produced an integer. Confirmed live against the reference implementation."
+    },
+    {
+      "name": "formats-yaml/sharp-edges/norway-problem-bare-on-key-resolves-to-boolean-and-is-rejected",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "on:\n  push: true\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.unlabeled-element"
+          }
+        ]
+      },
+      "comment": "YAML 1.1's core schema resolves on/off/yes/no/true/false (in various cases) as booleans, not strings -- a bare `on:` key parses to the boolean true. Since a label MUST be a string, a reader MUST refuse to build a Document from a boolean-keyed mapping rather than silently coercing it. This is the exact failure mode that breaks an unquoted GitHub Actions `on:` trigger block. Confirmed live: the reference implementation reports this as a shape/label error, not a YAML-specific one -- quoting the key (\"on\":) is the only workaround, and there is none on the read side once resolution has already happened."
+    }
+  ]
+}

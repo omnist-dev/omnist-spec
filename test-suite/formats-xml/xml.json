@@ -1,0 +1,131 @@
+{
+  "vectors": [
+    {
+      "name": "formats-xml/basic/interleaved-elements-preserve-order",
+      "spec": "docs/formats/xml.md",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "xml",
+        "text": "<r><m>1</m><x>2</x><m>3</m></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "m",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "1"
+                      }
+                    }
+                  ],
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "2"
+                      }
+                    }
+                  ],
+                  [
+                    "m",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "3"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A map-of-arrays model cannot represent this interleaving; the edge list can. This is the whole reason the Document is an ordered edge list rather than a map -- confirmed against JSON's own parse of the equivalent {\"m\":[...]} shape, which cannot preserve this order at all."
+    },
+    {
+      "name": "formats-xml/basic/attributes-are-dropped-on-read",
+      "spec": "docs/formats/xml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a x=\"1\"><b>hi</b></a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "hi"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The attribute x=\"1\" is gone; there is no path from a Document edge back to an attribute, so writing never produces one either. Confirmed live. D-3 in the divergence ledger notes this is currently dropped silently with no adjustment reported -- omnist-spec#23's error-taxonomy pass should check whether that stays true once format.attribute-dropped is actually emitted."
+    },
+    {
+      "name": "formats-xml/basic/multi-rooted-document-cannot-be-written",
+      "spec": "docs/formats/xml.md",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "format.multiple-roots"
+          }
+        ]
+      },
+      "comment": "An XML document has exactly one top-level element; a Document with several top-level edges (legal in JSON/YAML/TOML) has no XML spelling at all. This is exactly why the worked examples in every format page wrap the Order under a single top-level `order` key -- XML alone requires it."
+    }
+  ]
+}

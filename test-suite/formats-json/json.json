@@ -1,0 +1,150 @@
+{
+  "vectors": [
+    {
+      "name": "formats-json/basic/array-value-becomes-repeated-edges",
+      "spec": "docs/formats/json.md",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "json",
+        "text": "{\"m\":[1,2]}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A JSON array is not a value in the Document model; it is the same label occurring more than once."
+    },
+    {
+      "name": "formats-json/basic/single-element-array-is-indistinguishable-from-a-bare-value",
+      "spec": "docs/formats/json.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"m\":[1]}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "{\"m\":[1]} and {\"m\":1} produce the identical one-edge Document -- there is no way to recover, from the Document alone, which spelling the source used."
+    },
+    {
+      "name": "formats-json/basic/nested-array-is-rejected",
+      "spec": "docs/formats/json.md",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "json",
+        "text": "{\"m\":[[1,2],[3,4]]}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.m[0]",
+            "code": "document.unlabeled-element"
+          }
+        ]
+      },
+      "comment": "An array of arrays has inner elements with no label and therefore no edge to occupy; a reader MUST reject rather than flatten it."
+    },
+    {
+      "name": "formats-json/basic/date-looking-string-stays-a-string",
+      "spec": "docs/formats/json.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"d\":\"2024-01-01\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "d",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "2024-01-01"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "JSON has no temporal types, so a reader MUST NOT produce date/time/datetime on its own -- unlike YAML and TOML, this string only becomes a date if a schema upgrades it in stage 2."
+    },
+    {
+      "name": "formats-json/basic/repeated-edges-regroup-into-one-array-on-write",
+      "spec": "docs/formats/json.md",
+      "operation": "write",
+      "purpose": "happy-path",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"m\": [1, 2]}"
+      },
+      "comment": "The write-side complement of the array-becomes-repeated-edges parse vector above: two edges sharing a label regroup into one JSON array key regardless of what else might have separated them, since a JSON object cannot express cross-label interleaving (Sec7.3's grouping rule). Confirmed live."
+    }
+  ]
+}

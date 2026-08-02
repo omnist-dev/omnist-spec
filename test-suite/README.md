@@ -26,6 +26,10 @@ test-suite/
   extract/                   extract vectors
   infer/                     infer / infer_with_report vectors, including allow_any
   lint/                      lint vectors
+  formats-json/              JSON codec vectors
+  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges
+  formats-toml/              TOML codec vectors
+  formats-xml/               XML codec vectors
 ```
 
 More directories are added per operation as vectors are written. One directory

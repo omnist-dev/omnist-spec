@@ -1,0 +1,131 @@
+{
+  "vectors": [
+    {
+      "name": "formats-toml/basic/array-of-tables-becomes-repeated-edges",
+      "spec": "docs/formats/toml.md",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "toml",
+        "text": "[[x]]\nname = \"a\"\n\n[[x]]\nname = \"b\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "edges": [
+                  [
+                    "name",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "a"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "x",
+              {
+                "edges": [
+                  [
+                    "name",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "b"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "[[x]] is TOML's idiomatic repeated record and lands on the repeated-label shape with no adjustment needed -- of the four non-native formats, TOML's own idiom already matches the Document model."
+    },
+    {
+      "name": "formats-toml/temporals/native-date-time-and-datetime-all-resolve-with-no-schema",
+      "spec": "docs/formats/toml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "d = 2024-01-01\nt = 12:00:00\ndt = 2024-01-01T12:30:00\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "d",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-01"
+                }
+              }
+            ],
+            [
+              "t",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00"
+                }
+              }
+            ],
+            [
+              "dt",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-01T12:30:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "TOML is the one format with native literals for all three temporal kinds -- and, unlike YAML, a bare time-of-day resolves correctly to `time` rather than a sexagesimal integer. Confirmed live."
+    },
+    {
+      "name": "formats-toml/nulls/null-leaf-cannot-be-written-and-is-omitted",
+      "spec": "docs/formats/toml.md",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "format.null-unrepresentable"
+          }
+        ]
+      },
+      "comment": "TOML has no null; the leaf cannot be written, so it's dropped and reported as a write-time adjustment rather than inventing a representation. Confirmed live the write still succeeds (see omnist-spec#28 for an open severity-classification question this vector deliberately doesn't assert on, since Sec8.5.2's diagnostics matching compares only path+code, never severity)."
+    }
+  ]
+}
