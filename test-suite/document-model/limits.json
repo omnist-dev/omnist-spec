@@ -1,0 +1,123 @@
+{
+  "vectors": [
+    {
+      "name": "document-model/limits/depth-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_depth": 3,
+        "text": "a:\n  b:\n    c: 1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            ["a", {"edges": [
+              ["b", {"edges": [
+                ["c", {"scalar": {"kind": "integer", "value": 1}}]
+              ]}]
+            ]}]
+          ]
+        }
+      },
+      "comment": "Three levels of nesting (a > b > c) against a declared limit of 3 -- exactly at the boundary, MUST succeed."
+    },
+    {
+      "name": "document-model/limits/depth-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_depth": 3,
+        "text": "a:\n  b:\n    c:\n      d: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$", "code": "document.limit.depth" }
+        ]
+      },
+      "comment": "One level past the same declared limit. declared_max_depth is a vector-local parameter, not Python's reference default of 200 (§2.4 states the numbers are not normative, only the existence of a finite limit and the error family it MUST produce are). A harness runs the implementation under test with its own limit configured to this value for the vector's duration; an implementation exposing no such configuration surface yet -- true of Python today per §2.4 -- reports this vector as skip, not fail, since it cannot be pointed at 3. Either way this pins the rule: exceeding your own declared limit produces document.limit.depth, never truncation, never a different code."
+    },
+    {
+      "name": "document-model/limits/node-count-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_nodes": 1,
+        "text": "a: 1\nb: 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            ["a", {"scalar": {"kind": "integer", "value": 1}}],
+            ["b", {"scalar": {"kind": "integer", "value": 2}}]
+          ]
+        }
+      },
+      "comment": "One node materialized (the root), at a declared node-count limit of 1 -- exactly at the boundary, MUST succeed. The node cap bounds materialized nodes, not depth or edge count within one node (§2.4): a single flat node with any number of sibling edges is still one node."
+    },
+    {
+      "name": "document-model/limits/node-count-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_nodes": 1,
+        "text": "a:\n  b: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$", "code": "document.limit.nodes" }
+        ]
+      },
+      "comment": "Two nodes materialized (root, plus the nested node under `a`) against the same declared limit of 1. declared_max_nodes is vector-local, not Python's reference default of 1,000,000 -- same skip-not-fail caveat as the depth vector above applies to any implementation with no configuration surface for this limit."
+    },
+    {
+      "name": "document-model/limits/integer-digits-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_int_digits": 3,
+        "text": "n: 999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            ["n", {"scalar": {"kind": "integer", "value": 999}}]
+          ]
+        }
+      },
+      "comment": "Three decimal digits (sign excluded, per §2.4) against a declared limit of 3 -- exactly at the boundary, MUST succeed."
+    },
+    {
+      "name": "document-model/limits/integer-digits-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_int_digits": 3,
+        "text": "n: 1000\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "$.n", "code": "document.limit.int-digits" }
+        ]
+      },
+      "comment": "One digit past the same declared limit. declared_max_int_digits is vector-local, not Python's reference default of 4,300 (which itself matches CPython's sys.set_int_max_str_digits). Same skip-not-fail caveat applies."
+    }
+  ]
+}

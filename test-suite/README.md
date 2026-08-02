@@ -15,6 +15,7 @@ disagree, chapter 8 wins.
 test-suite/
   validate/                  document-against-schema vectors
   algebra-compatibility/     compatible_with / equivalent vectors
+  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits)
 ```
 
 More directories are added per operation as vectors are written. One directory
@@ -22,13 +23,14 @@ per driver; file names group related cases.
 
 ## Vector shape
 
-Every vector is a JSON object with the same five keys.
+Every vector is a JSON object with the same six keys.
 
 | Key | Meaning |
 |---|---|
 | `name` | Unique across the whole suite. Harness results are keyed on it. |
 | `spec` | The section this vector pins, as a repo-relative path plus anchor. |
-| `operation` | Selects the driver: `validate`, `compatible_with`, `parse`, `normalize`, and so on. |
+| `operation` | Selects the driver. MUST be one of the names on the [Operations & Models Reference](../docs/operations-and-models-reference.md) page. |
+| `purpose` | One of `happy-path`, `edge-case`, `error-case`, `determinism-regression`. |
 | `input` | Driver-specific. Schemas are OSD text; documents use the canonical encoding below. |
 | `expect` | Either a success value or `{"ok": false, "diagnostics": [...]}`. |
 

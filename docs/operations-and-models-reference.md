@@ -31,6 +31,7 @@ already normative elsewhere, in the same spirit as the glossary indexing
 
 | Operation | Signature | Purpose | Defined in |
 |---|---|---|---|
+| `parse` | `parse(text, format) -> Document` | Stage 1 of reading: turns format text into an untyped Document. Never consults a schema, never fails because of one. | [§7.1](07-codecs-and-deserialization.md#71-two-stages) |
 | `validate` | `validate(document, S) -> ValidationResult` | Checks whether a Document conforms to a schema; reports every failure, never converts. | [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode) |
 | `materialize` | `materialize(node, S) -> node` (raises with every `ValidationResult` entry on failure) | Validates and upgrades leaves in one pass — the only value-exact, lossless-and-invents-nothing conversions. | [§7.2.1](07-codecs-and-deserialization.md#721-materializenode-schema-pseudocode) |
 | `write` | `write(node, format) -> formatted text` | Renders a Document back out to a concrete format, grouping repeated labels into that format's array convention. | [§7.3.1](07-codecs-and-deserialization.md#731-writenode-format-pseudocode) |
