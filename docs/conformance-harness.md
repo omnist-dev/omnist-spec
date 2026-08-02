@@ -65,7 +65,7 @@ The real conventions, applying to every subcommand:
 |---|---|---|---|
 | `write` | `omnist format INPUT [--compact] [-o FILE]` | canonical OML | 0 |
 | `validate` | `omnist validate INPUT --from oml --schema SCHEMA --json` | `{"ok": true}` | 0 (ok), 1 (validation failure, `errors` populated), 2 (parse/read error, `errors` empty) |
-| `materialize` | `omnist convert INPUT --from oml --to oml --schema SCHEMA` | materialized OML | 0, or non-zero on inexact/shape failure (exact code TBD — not yet checked; use `--report --result-format json` for structured detail) |
+| `materialize` | **blocked — no CLI path exists today** (see below) | — | — |
 | `normalize` | `omnist schema normalize SCHEMA [--compact] [-o FILE]` | OSD | 0 |
 | `prune` | `omnist schema prune SCHEMA [--compact] [-o FILE]` | OSD | 0 |
 | `extract` | `omnist schema extract SCHEMA --keep label1,label2,... [--compact] [-o FILE]` | OSD | 0, non-zero if `keep` invalidates the root (§6.9) |
@@ -85,11 +85,22 @@ infer it from the exit code, since a future implementation (or a future
 Python version) could legitimately choose either convention and this track
 should not be sensitive to which.
 
-**`materialize`'s exact non-zero exit code and `lint`'s exact output line
-format are the two remaining unverified details** — both need a quick check
-against `omnist/cli.py` or `docs/cli.md` before fixtures for those two
-operations are authored. Every other row above was checked directly against
-`omnist/cli.py` source for this revision.
+**`materialize` has no CLI path at all today, confirmed by reading source,
+not assumed.** `omnist convert --from oml --to oml --schema SCHEMA` is
+explicitly refused (`_cmd_convert` checks `from_ == to == "oml"` before even
+reading `args.schema`); `omnist format` and `omnist check` have no
+`--schema` argument at all. There is no way to reach `materialize` — read
+OML, upgrade against a schema, write OML back — through the CLI; only
+through the Python API directly. Tracked as
+[`omnist#277`](https://github.com/omnist-dev/omnist/issues/277), with a
+concrete fix recommended there (only refuse the same-format case when no
+schema is given). **This track's implementation is blocked on #277 landing
+before `materialize` fixtures can be authored** — every other operation in
+the table above is fully CLI-reachable today and unblocked.
+
+Every row above (except `materialize`) was checked directly against
+`omnist/cli.py` source for this revision, including `lint`'s exact `--json`
+output shape, which the previous revision had left as an unverified guess.
 
 `parse` and `materialize`'s stage-1-only variant are intentionally **not**
 listed — this track tests round-trip and schema-directed behavior, not raw
