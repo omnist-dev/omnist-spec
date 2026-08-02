@@ -170,7 +170,7 @@ function compare_schema(actual_osd_text, expected_osd_text, mode):
     if mode == "exact":
         return actual == expected
     if mode == "isomorphic":
-        return omnist.ops.isomorphic.is_isomorphic(actual, expected)
+        return actual.isomorphic_to(expected)  # omnist#279 -- not yet public; see Sec5
 ```
 
 **Document comparison** needs no new capability: `Doc.__eq__` in the Python
@@ -193,10 +193,29 @@ chosen per operation — never one default for everything:**
   exact name matches would fail correct implementations purely on naming
   choices this spec never mandated matching.
 
+**Why `isomorphic` and not `equivalent` (§6.7) for `infer` — this is not an
+arbitrary choice between two available oracles.** `equivalent` is defined
+purely on accepted-document-language and is too permissive for this specific
+check: §6.10 requires `infer` to *never* merge structurally-identical
+generated records (that's `normalize`'s job, explicitly not `infer`'s). An
+`infer` implementation that incorrectly merges two identical generated
+records still accepts exactly the same documents — `equivalent` would
+report it as correct, a false negative that lets a real class of `infer`
+bug through. Isomorphism catches it: the two record sets have different
+cardinality, so no renaming bijection exists between them, regardless of
+naming choices. Isomorphism is the narrowest tool that tolerates the one
+degree of freedom §6.10 actually grants (naming) while still catching
+everything else — not a substitute for `equivalent`, which remains the
+model's canonical definition of schema equality everywhere else.
+
 This requires `Field.__eq__`, `Record.__eq__`, and `Schema.__eq__` to exist
 in the Python library — confirmed, as of this writing, that they do not
-(§5, below). `omnist`'s existing `ops/isomorphic.py` already backs
-`is_isomorphic`, so the `isomorphic` mode needs no new library code.
+(§5, below). Isomorphic comparison is tracked separately as
+[`omnist#279`](https://github.com/omnist-dev/omnist/issues/279), scoped as
+an additional `Schema.isomorphic_to(other)` method — deliberately not a
+change to `equivalent`'s status or definition. Until that lands, this
+track's referee uses the private `_isomorphic` in `omnist/ops/isomorphic.py`
+as a flagged, tracked stopgap.
 
 ## 5. Required Python library change
 
