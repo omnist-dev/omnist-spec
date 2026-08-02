@@ -1,0 +1,2 @@
+edge-case
+One field's scalar kind differs -- must not compare equal.

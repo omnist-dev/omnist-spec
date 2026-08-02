@@ -1,0 +1,2 @@
+error-case
+a label not declared on the closed record must fail validation.

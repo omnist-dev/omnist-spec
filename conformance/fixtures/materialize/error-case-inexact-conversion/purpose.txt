@@ -1,0 +1,2 @@
+error-case
+a string that is not a value-exact date must fail materialization, not silently pass through.

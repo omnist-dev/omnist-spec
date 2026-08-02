@@ -1,0 +1,2 @@
+edge-case
+a mandatory reference cycle with no base case is unsatisfiable -- is_empty must report true.

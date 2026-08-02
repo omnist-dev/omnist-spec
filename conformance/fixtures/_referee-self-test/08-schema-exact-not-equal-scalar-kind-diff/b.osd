@@ -1,0 +1,4 @@
+record R {
+    "x": integer,
+}
+root R

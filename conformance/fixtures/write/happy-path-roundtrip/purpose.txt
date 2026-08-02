@@ -1,0 +1,2 @@
+happy-path
+canonicalizing an already-canonical OML document is a no-op; also proves the runner's compare_document call works end to end.

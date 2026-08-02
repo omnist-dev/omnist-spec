@@ -1,0 +1,2 @@
+happy-path
+A and B are structurally identical -- normalize must merge them to the lexicographically-first name (A) and rewrite every reference.

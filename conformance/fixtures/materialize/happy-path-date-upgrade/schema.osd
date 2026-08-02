@@ -1,0 +1,4 @@
+record R {
+    "d": date,
+}
+root R

@@ -1,0 +1,2 @@
+happy-path
+equivalent is defined on accepted-document-language, not record naming -- a renamed-only schema is still equivalent.

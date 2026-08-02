@@ -1,0 +1,2 @@
+happy-path
+an ordinary satisfiable schema is not empty.

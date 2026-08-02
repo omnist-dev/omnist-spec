@@ -1,0 +1,2 @@
+edge-case
+Fields are an unordered set at the model layer (Sec3.1) -- declaration order must not affect equality.

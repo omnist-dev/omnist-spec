@@ -1,0 +1,2 @@
+edge-case
+Same structure, different record name -- isomorphic mode (used for infer, Sec6.2) must treat these as equal.

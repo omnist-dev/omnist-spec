@@ -1,0 +1,5 @@
+record R {
+    "x": string,
+    "y" [0,1]: string,
+}
+root R

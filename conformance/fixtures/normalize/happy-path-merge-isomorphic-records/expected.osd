@@ -1,0 +1,8 @@
+record A {
+    "x": string,
+}
+record Top {
+    "a": A,
+    "b": A,
+}
+root Top

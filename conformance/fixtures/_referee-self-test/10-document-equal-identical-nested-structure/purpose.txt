@@ -1,0 +1,2 @@
+happy-path
+Two byte-identical nested documents (repeated item labels, same order) -- the baseline case confirming equal really means equal, not just "not obviously different."

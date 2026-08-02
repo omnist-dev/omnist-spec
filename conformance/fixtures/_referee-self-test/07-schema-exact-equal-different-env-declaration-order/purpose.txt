@@ -1,0 +1,2 @@
+edge-case
+Record declaration order in the schema's env is preserved for OSD-text readability (Sec3.1) but is not semantically significant -- equality must not be sensitive to it.

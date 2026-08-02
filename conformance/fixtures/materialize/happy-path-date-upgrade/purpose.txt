@@ -1,0 +1,2 @@
+happy-path
+a schema-valid ISO date string upgrades to a real date leaf, written back unquoted.

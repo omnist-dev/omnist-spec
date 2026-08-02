@@ -1,0 +1,2 @@
+edge-case
+Edge order is data (D-1/D-3, Sec2.3) -- two documents with the same edges in a different order are genuinely different documents, not a false mismatch to paper over.

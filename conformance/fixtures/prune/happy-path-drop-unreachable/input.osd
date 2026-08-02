@@ -1,0 +1,7 @@
+record Root {
+    "x": string,
+}
+record Unreachable {
+    "y": string,
+}
+root Root

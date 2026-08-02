@@ -1,0 +1,4 @@
+record R {
+    "self": R,
+}
+root R

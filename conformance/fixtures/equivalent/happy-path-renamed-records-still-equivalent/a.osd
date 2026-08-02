@@ -1,0 +1,4 @@
+record A {
+    "x": string,
+}
+root A

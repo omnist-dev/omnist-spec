@@ -1,0 +1,2 @@
+edge-case
+Same two schemas as case 03, but exact mode (used for normalize/prune/extract, Sec6.2) must treat a record-name difference as NOT equal -- this is the companion case proving the two modes genuinely differ.

@@ -1,0 +1,2 @@
+edge-case
+One field's nullable flag differs (string vs string?) -- must not compare equal.

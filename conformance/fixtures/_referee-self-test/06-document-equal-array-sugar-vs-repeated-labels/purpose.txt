@@ -1,0 +1,2 @@
+happy-path
+Array sugar desugars into repeated labels at parse time (Sec2) -- both spellings must produce the identical Document.

@@ -1,0 +1,4 @@
+record Root {
+    "x": string,
+}
+root Root

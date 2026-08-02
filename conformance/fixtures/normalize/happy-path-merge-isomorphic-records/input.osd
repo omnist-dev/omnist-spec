@@ -1,0 +1,11 @@
+record A {
+    "x": string,
+}
+record B {
+    "x": string,
+}
+record Top {
+    "a": A,
+    "b": B,
+}
+root Top

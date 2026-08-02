@@ -1,0 +1,2 @@
+happy-path
+a record unreachable from root must be dropped.

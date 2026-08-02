@@ -1,0 +1,4 @@
+record B {
+    "x": string,
+}
+root B

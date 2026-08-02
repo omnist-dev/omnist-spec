@@ -1,0 +1,2 @@
+edge-case
+A has an extra optional field y over closed B. A accepts a document with x and y both present, which B (closed, no y) would reject -- so A is NOT compatible_with B, even though y is optional. This is the direction the spec's own Sec6.6 worked example specifically warns about getting backwards.

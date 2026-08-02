@@ -1,0 +1,2 @@
+edge-case
+One field's cardinality differs ([1,1] vs [0,1]) -- must not compare equal even though everything else matches.

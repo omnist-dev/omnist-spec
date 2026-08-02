@@ -1,0 +1,2 @@
+happy-path
+Reversed: B (closed, x only) is compatible_with A (x plus optional y) -- everything B ever emits, A accepts, and A requires nothing B fails to supply. Companion to the edge-case fixture, proving the direction genuinely matters.

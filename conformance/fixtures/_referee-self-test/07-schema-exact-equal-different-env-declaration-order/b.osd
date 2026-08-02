@@ -1,0 +1,7 @@
+record Root {
+    "z": Zeta,
+}
+record Zeta {
+    "x": string,
+}
+root Root
