@@ -64,7 +64,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.Root.id",
+            "path": "Root.id",
             "code": "algebra.infer-conflicting-scalars"
           }
         ]
@@ -112,7 +112,7 @@
           }
         ]
       },
-      "comment": "Exercises the algebra's own contract directly rather than the omnist CLI, whose `input` argument requires at least one positional file (nargs='+') and so can never actually be invoked with zero samples -- the CLI's argument parser enforces this one step before the algebra would."
+      "comment": "Exercises the algebra's own contract directly rather than the omnist CLI, whose `input` argument requires at least one positional file (nargs='+') and so can never actually be invoked with zero samples -- the CLI's argument parser enforces this one step before the algebra would. Path is $ since no schema exists yet at this failure point -- this is a pre-schema, sample-shape error, not a schema-side one, so Sec8.4's RecordName-based Schema path form doesn't apply."
     },
     {
       "name": "infer/errors/scalar-rooted-sample-is-an-error",
@@ -133,7 +133,7 @@
           }
         ]
       },
-      "comment": "Samples MUST be node-rooted; a bare scalar sample has no labels to infer fields from."
+      "comment": "Samples MUST be node-rooted; a bare scalar sample has no labels to infer fields from. Path is $ for the same reason as infer/errors/zero-samples-is-an-error -- no schema exists yet at this failure point."
     }
   ]
 }

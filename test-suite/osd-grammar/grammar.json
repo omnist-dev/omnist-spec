@@ -76,7 +76,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.a",
+            "path": "R.a",
             "code": "schema.empty-cardinality"
           }
         ]
@@ -94,7 +94,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.a",
+            "path": "R.a",
             "code": "schema.invalid-cardinality"
           }
         ]
@@ -113,7 +113,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.a",
+            "path": "R.a",
             "code": "schema.invalid-cardinality"
           }
         ]
@@ -132,7 +132,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.a",
+            "path": "R.a",
             "code": "schema.non-integer-cardinality"
           }
         ]
@@ -162,7 +162,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.a",
+            "path": "R.a",
             "code": "schema.nullable-ref"
           }
         ]
@@ -181,7 +181,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.data",
+            "path": "R.data",
             "code": "schema.nullable-any"
           }
         ]
@@ -200,7 +200,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.data",
+            "path": "R.data",
             "code": "schema.unknown-type"
           }
         ]
@@ -219,7 +219,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$",
+            "path": "string",
             "code": "schema.reserved-name"
           }
         ]
@@ -238,7 +238,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$",
+            "path": "any",
             "code": "schema.reserved-name"
           }
         ]
@@ -256,7 +256,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$",
+            "path": "R",
             "code": "schema.duplicate-record"
           }
         ]
@@ -278,7 +278,8 @@
             "code": "schema.no-root"
           }
         ]
-      }
+      },
+      "comment": "Sec8.4 defines Schema paths as RecordName/RecordName.label, with no whole-schema form -- there is no specific record to name when the schema has no root at all, so $ is used here as a defensible fallback pending the spec's own clarification of this case."
     },
     {
       "name": "osd-grammar/labels/unquoted-field-name-is-rejected",
@@ -292,7 +293,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R",
+            "path": "R",
             "code": "schema.unquoted-label"
           }
         ]
@@ -323,7 +324,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R",
+            "path": "R",
             "code": "schema.duplicate-field"
           }
         ]

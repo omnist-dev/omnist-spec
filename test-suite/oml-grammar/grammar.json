@@ -13,7 +13,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$",
+            "path": "1:4",
             "code": "parse.unexpected-token"
           }
         ]
@@ -60,7 +60,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$",
+            "path": "1:5",
             "code": "parse.trailing-content"
           }
         ]
@@ -80,7 +80,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.a",
+            "path": "1:6",
             "code": "parse.reserved-word-label"
           }
         ]
@@ -145,7 +145,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.b",
+            "path": "1:4",
             "code": "parse.empty-array"
           }
         ]
@@ -165,7 +165,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.b",
+            "path": "1:5",
             "code": "parse.nested-array"
           }
         ]
@@ -185,12 +185,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.b",
+            "path": "1:7",
             "code": "parse.separator-in-array"
           }
         ]
       },
-      "comment": "Comma is the only element separator inside [...]; a newline (or `;`) there is an error, unlike at the top level where newline and `;` are ordinary edge separators."
+      "comment": "Comma is the only element separator inside [...]; a newline (or `;`) there is an error, unlike at the top level where newline and `;` are ordinary edge separators. NOTE: the reference implementation currently accepts this silently instead of rejecting it -- filed as omnist#284. This vector intentionally asserts the spec-required behavior, not today's buggy behavior, so it is expected to fail against the reference implementation until that issue is fixed. The path 1:7 (the newline's position) is a best-effort estimate since the implementation doesn't currently raise here at all to verify against."
     },
     {
       "name": "oml-grammar/strings/raw-string-performs-no-escape-processing",
@@ -313,7 +313,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.a",
+            "path": "1:14",
             "code": "parse.trailing-content"
           }
         ]
@@ -339,6 +339,106 @@
         }
       },
       "comment": "One of the three legal top-level shapes: the document IS that one leaf, with no wrapper."
+    },
+    {
+      "name": "oml-grammar/errors/bare-word-in-value-position-is-an-error",
+      "spec": "docs/04-oml-grammar.md#43-values",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: hello\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.bare-word"
+          }
+        ]
+      },
+      "comment": "A bare identifier that is not null/true/false is not a string -- OML has no implicit string-from-identifier coercion anywhere."
+    },
+    {
+      "name": "oml-grammar/errors/literal-control-character-in-string-is-an-error",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"hi\nthere\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.control-character"
+          }
+        ]
+      },
+      "comment": "A literal control character below U+0020 -- here a raw newline before the closing quote -- is an error in a double-quoted (Core) string."
+    },
+    {
+      "name": "oml-grammar/errors/unrecognized-escape-is-an-error",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"\\q\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.invalid-escape"
+          }
+        ]
+      },
+      "comment": "Recognized escapes are exactly \\\" \\\\ \\/ \\b \\f \\n \\r \\t and \\uXXXX; \\q is none of these."
+    },
+    {
+      "name": "oml-grammar/errors/unpaired-high-surrogate-is-an-error",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"\\ud800\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.unpaired-surrogate"
+          }
+        ]
+      },
+      "comment": "A \\uXXXX in the high-surrogate range D800-DBFF MUST be immediately followed by a second \\uXXXX in the low-surrogate range DC00-DFFF; this one has no partner."
+    },
+    {
+      "name": "oml-grammar/errors/unterminated-string-is-an-error",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"hello"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.unterminated-string"
+          }
+        ]
+      },
+      "comment": "End of input reached with the string still open -- no closing quote."
     }
   ]
 }

@@ -145,6 +145,39 @@
         "text": "{\"m\": [1, 2]}"
       },
       "comment": "The write-side complement of the array-becomes-repeated-edges parse vector above: two edges sharing a label regroup into one JSON array key regardless of what else might have separated them, since a JSON object cannot express cross-label interleaving (Sec7.3's grouping rule). Confirmed live."
+    },
+    {
+      "name": "formats-json/basic/temporal-leaf-is-stringified-on-write",
+      "spec": "docs/formats/json.md",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "d",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-01"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"d\": \"2024-01-01\"}",
+        "diagnostics": [
+          {
+            "path": "$.d",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "JSON has no temporal types; a writer MUST stringify a temporal leaf to ISO-8601 and report the adjustment. Confirmed live."
     }
   ]
 }

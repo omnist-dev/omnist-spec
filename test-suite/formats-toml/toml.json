@@ -126,6 +126,39 @@
         ]
       },
       "comment": "TOML has no null; the leaf cannot be written, so it's dropped and reported as a write-time adjustment rather than inventing a representation. Confirmed live the write still succeeds (see omnist-spec#28 for an open severity-classification question this vector deliberately doesn't assert on, since Sec8.5.2's diagnostics matching compares only path+code, never severity)."
+    },
+    {
+      "name": "formats-toml/nulls/strict-mode-refuses-to-write-instead-of-omitting",
+      "spec": "docs/formats/toml.md",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        },
+        "strict": true
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "The non-strict companion vector (formats-toml/nulls/null-leaf-cannot-be-written-and-is-omitted) drops the value and reports format.null-unrepresentable, still succeeding. In strict mode the same value refuses the write entirely rather than silently adjusting -- confirmed live via --strict."
     }
   ]
 }

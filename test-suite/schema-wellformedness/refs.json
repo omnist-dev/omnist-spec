@@ -12,7 +12,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R.a",
+            "path": "R.a",
             "code": "schema.unknown-type"
           }
         ]
@@ -36,7 +36,7 @@
           }
         ]
       },
-      "comment": "S-1: the root MUST be a Ref that resolves in env. `Ghost` is never defined, so the schema's own entry point is dangling -- the same failure mode as S-6 applied to the root position specifically."
+      "comment": "S-1: the root MUST be a Ref that resolves in env. `Ghost` is never defined, so the schema's own entry point is dangling -- the same failure mode as S-6 applied to the root position specifically. Path is $ (no specific record to name, same fallback reasoning as osd-grammar/root/missing-root-is-an-error) since Ghost is the undefined name, not a record that exists to be blamed."
     },
     {
       "name": "schema-wellformedness/refs/forward-reference-is-legal",

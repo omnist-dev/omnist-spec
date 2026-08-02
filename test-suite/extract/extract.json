@@ -32,7 +32,7 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.R",
+            "path": "R",
             "code": "algebra.extract-invalidates-root"
           }
         ]
