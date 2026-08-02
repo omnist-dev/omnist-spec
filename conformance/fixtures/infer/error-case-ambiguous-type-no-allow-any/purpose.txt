@@ -1,0 +1,2 @@
+error-case
+conflicting scalar kinds across samples must fail without --allow-any (exit 2).

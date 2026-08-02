@@ -1,0 +1,2 @@
+happy-path
+--allow-any opens a conflicting scalar-kind field to any instead of failing.

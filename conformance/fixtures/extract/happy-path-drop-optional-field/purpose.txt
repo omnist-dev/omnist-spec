@@ -1,0 +1,2 @@
+happy-path
+keeping only a mandatory label drops an optional field and its record entirely; root stays valid.

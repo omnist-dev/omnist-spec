@@ -1,0 +1,7 @@
+record Orphan {
+    "x": string,
+}
+record R {
+    "n": integer,
+}
+root R

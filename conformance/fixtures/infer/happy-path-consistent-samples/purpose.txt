@@ -1,0 +1,2 @@
+happy-path
+samples with a consistent scalar type across all instances infer cleanly.

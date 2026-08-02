@@ -17,12 +17,6 @@ from .referee import compare_document, compare_schema
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
 
-# Operations with real fixtures wired up so far. Others (extract, infer,
-# lint) have directories reserved (per issue #25's scope) but no runner
-# wiring yet -- listed here so `skip` is explicit and visible, not a
-# silent absence.
-WIRED_OPERATIONS = {"write", "validate", "materialize", "normalize", "prune",
-                     "is_empty", "compatible_with", "equivalent"}
 ALL_OPERATIONS = {"write", "validate", "materialize", "normalize", "prune",
                   "extract", "is_empty", "compatible_with", "equivalent",
                   "infer", "lint"}
@@ -120,6 +114,74 @@ def run_equivalent(case_dir: Path) -> tuple[str, str]:
     return _run_boolean(case_dir, cli_runner.equivalent, "equivalent", two_input=True)
 
 
+def run_extract(case_dir: Path) -> tuple[str, str]:
+    keep = [lbl for lbl in _read(case_dir / "keep.txt").strip().split(",") if lbl]
+    stdout, stderr, code = cli_runner.extract(case_dir / "schema.osd", keep)
+    expect_ok = _read(case_dir / "expected" / "ok.txt").strip() == "true"
+    if expect_ok:
+        if code != 0:
+            return "fail", f"expected success, got exit {code}: {stderr.strip()}"
+        expected = _read(case_dir / "expected" / "output.osd")
+        if compare_schema(stdout, expected, mode="exact"):
+            return "pass", "ok"
+        return "fail", "extracted schema does not match expected"
+    else:
+        if code == 0:
+            return "fail", "expected failure (keep set invalidates root), command succeeded"
+        return "pass", "ok"
+
+
+def run_infer(case_dir: Path) -> tuple[str, str]:
+    samples_dir = case_dir / "samples"
+    sample_files = sorted(samples_dir.iterdir())
+    allow_any_file = case_dir / "allow_any.txt"
+    allow_any = allow_any_file.exists() and _read(allow_any_file).strip() == "true"
+
+    stdout, stderr, code = cli_runner.infer(sample_files, allow_any=allow_any)
+    expect_ok = _read(case_dir / "expected" / "ok.txt").strip() == "true"
+    if expect_ok:
+        if code != 0:
+            return "fail", f"expected success, got exit {code}: {stderr.strip()}"
+        expected = _read(case_dir / "expected" / "output.osd")
+        # isomorphic, not exact: Sec6.10 -- infer's generated record names
+        # are implementation-derived, never canonical.
+        if compare_schema(stdout, expected, mode="isomorphic"):
+            return "pass", "ok"
+        return "fail", "inferred schema is not isomorphic to expected"
+    else:
+        if code == 0:
+            return "fail", "expected failure (ambiguous type, no --allow-any), command succeeded"
+        return "pass", "ok"
+
+
+def _drop_messages(payload: dict) -> dict:
+    """Message text is never compared (Sec8.5's own matching rule 1) --
+    strip it so a fixture's expected.json doesn't have to pin exact
+    wording, only code/severity/location."""
+    return {
+        "ok": payload["ok"],
+        "findings": [
+            {k: f[k] for k in ("code", "severity", "location")}
+            for f in payload["findings"]
+        ],
+    }
+
+
+def run_lint(case_dir: Path) -> tuple[str, str]:
+    stdout, stderr, code = cli_runner.lint(case_dir / "input.osd")
+    try:
+        actual = json.loads(stdout)
+    except json.JSONDecodeError:
+        return "fail", f"non-JSON stdout: {stdout!r}"
+    expected = json.loads(_read(case_dir / "expected.json"))
+    # Findings MUST already be sorted deterministically by (code, location)
+    # per Sec6.11 -- a direct list-equality comparison (not set/unordered)
+    # is itself a conformance check, not just convenient.
+    if _drop_messages(actual) == _drop_messages(expected):
+        return "pass", "ok"
+    return "fail", f"expected {expected!r}, got {actual!r}"
+
+
 RUNNERS = {
     "write": run_write,
     "validate": run_validate,
@@ -129,6 +191,9 @@ RUNNERS = {
     "is_empty": run_is_empty,
     "compatible_with": run_compatible_with,
     "equivalent": run_equivalent,
+    "extract": run_extract,
+    "infer": run_infer,
+    "lint": run_lint,
 }
 
 

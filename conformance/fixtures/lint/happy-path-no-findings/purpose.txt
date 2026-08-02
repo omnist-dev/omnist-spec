@@ -1,0 +1,2 @@
+happy-path
+a schema with no lint findings reports ok:true and an empty findings list.

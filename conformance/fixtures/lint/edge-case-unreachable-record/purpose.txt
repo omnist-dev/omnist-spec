@@ -1,0 +1,2 @@
+edge-case
+a record unreachable from the root produces a warning-severity finding and ok:false.

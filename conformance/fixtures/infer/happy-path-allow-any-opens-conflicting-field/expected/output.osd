@@ -1,0 +1,4 @@
+record Root {
+    "n": any,
+}
+root Root

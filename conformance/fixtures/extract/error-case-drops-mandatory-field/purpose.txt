@@ -1,0 +1,2 @@
+error-case
+dropping a mandatory label invalidates the root, extract must fail.

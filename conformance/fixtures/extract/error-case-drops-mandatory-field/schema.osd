@@ -1,0 +1,8 @@
+record Address {
+    "city": string,
+}
+record R {
+    "name": string,
+    "addr" [0,1]: Address,
+}
+root R

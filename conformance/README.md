@@ -37,15 +37,15 @@ python3 -m conformance.orchestrator.runner validate normalize   # a subset
 
 ## Status
 
-`extract`, `infer`, and `lint` have reserved fixture directories but no
-runner wiring yet (`runner.py`'s `RUNNERS` dict) — running them reports
-`skip`, not `pass` or `fail`, per §8.5.5's discipline. Fixture volume beyond
-what's here is a deliberate follow-up, not an oversight — see
+All 11 operations are wired up (`runner.py`'s `RUNNERS` dict) and passing
+against the live CLI: 19 real fixtures plus the 10-case referee self-test.
+Fixture volume beyond what's here is a deliberate follow-up, not an
+oversight — see
 [omnist-spec#25](https://github.com/omnist-dev/omnist-spec/issues/25).
 
 Two `omnist` gaps were found and fixed while building this:
 [omnist#277](https://github.com/omnist-dev/omnist/issues/277) (no CLI path
 to `materialize` — fixed, 0.7.16) and
 [omnist#279](https://github.com/omnist-dev/omnist/issues/279) (isomorphic
-schema comparison has no public API — not blocking, `referee.py` uses the
-private function with a tracked comment pending a public one).
+schema comparison had no public API — fixed, 0.7.17: `Schema.isomorphic_to()`,
+now used directly by `referee.py`).

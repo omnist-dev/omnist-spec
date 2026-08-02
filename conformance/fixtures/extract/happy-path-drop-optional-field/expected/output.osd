@@ -1,0 +1,4 @@
+record R {
+    "name": string,
+}
+root R
