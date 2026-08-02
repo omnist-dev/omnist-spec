@@ -1,0 +1,139 @@
+{
+  "vectors": [
+    {
+      "name": "infer/basic/repeated-label-becomes-unbounded-array",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "happy-path",
+      "input": {
+        "samples": [
+          "tag: \"a\"\ntag: \"b\"\n",
+          "tag: \"c\"\n"
+        ]
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Root {\n    \"tag\" [0,]: string,\n}\nroot Root\n"
+      },
+      "comment": "A label seen more than once in any sample becomes [0,] -- min=0, not the observed minimum count (2 in the first sample). infer is permissive on array length by design."
+    },
+    {
+      "name": "infer/basic/label-absent-from-some-samples-becomes-optional",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "edge-case",
+      "input": {
+        "samples": [
+          "n: 1\n",
+          "n: 1\nopt: \"x\"\n"
+        ]
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Root {\n    \"n\": integer,\n    \"opt\" [0,1]: string,\n}\nroot Root\n"
+      }
+    },
+    {
+      "name": "infer/basic/nested-node-becomes-a-named-record",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "happy-path",
+      "input": {
+        "samples": [
+          "addr: { city: \"Zurich\" }\n"
+        ]
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Addr {\n    \"city\": string,\n}\nrecord Root {\n    \"addr\": Addr,\n}\nroot Root\n"
+      }
+    },
+    {
+      "name": "infer/allow-any/conflicting-scalar-kinds-fail-by-default",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "error-case",
+      "input": {
+        "samples": [
+          "id: 7\n",
+          "id: \"seven\"\n"
+        ],
+        "allow_any": false
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.Root.id",
+            "code": "algebra.infer-conflicting-scalars"
+          }
+        ]
+      },
+      "comment": "integer vs. string is not the one sanctioned integer/number subtype relation, so this is a hard failure without allow_any."
+    },
+    {
+      "name": "infer/allow-any/conflicting-scalar-kinds-open-to-any-when-allowed",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer_with_report",
+      "purpose": "edge-case",
+      "input": {
+        "samples": [
+          "id: 7\n",
+          "id: \"seven\"\n"
+        ],
+        "allow_any": true
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Root {\n    \"id\": any,\n}\nroot Root\n",
+        "fallbacks": [
+          {
+            "location": "Root.id",
+            "reason": "values of more than one scalar kind (integer, string)"
+          }
+        ]
+      },
+      "comment": "infer_with_report's allow_any=true path: opens the field to any AND reports the opening with a location and reason -- never silent."
+    },
+    {
+      "name": "infer/errors/zero-samples-is-an-error",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "error-case",
+      "input": {
+        "samples": []
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "algebra.infer-no-samples"
+          }
+        ]
+      },
+      "comment": "Exercises the algebra's own contract directly rather than the omnist CLI, whose `input` argument requires at least one positional file (nargs='+') and so can never actually be invoked with zero samples -- the CLI's argument parser enforces this one step before the algebra would."
+    },
+    {
+      "name": "infer/errors/scalar-rooted-sample-is-an-error",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "error-case",
+      "input": {
+        "samples": [
+          "42\n"
+        ]
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "algebra.infer-scalar-root"
+          }
+        ]
+      },
+      "comment": "Samples MUST be node-rooted; a bare scalar sample has no labels to infer fields from."
+    }
+  ]
+}

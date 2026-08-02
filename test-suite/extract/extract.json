@@ -1,0 +1,43 @@
+{
+  "vectors": [
+    {
+      "name": "extract/basic/keep-subset-drops-optional-field-and-its-record",
+      "spec": "docs/06-schema-algebra.md#69-extracts-keep",
+      "operation": "extract",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record Address {\n    \"city\": string,\n}\nrecord R {\n    \"name\": string,\n    \"addr\" [0,1]: Address,\n}\nroot R\n",
+        "keep": [
+          "name"
+        ]
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"name\": string,\n}\nroot R\n"
+      }
+    },
+    {
+      "name": "extract/basic/dropping-a-mandatory-label-invalidates-the-root",
+      "spec": "docs/06-schema-algebra.md#69-extracts-keep",
+      "operation": "extract",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Address {\n    \"city\": string,\n}\nrecord R {\n    \"name\": string,\n    \"addr\" [0,1]: Address,\n}\nroot R\n",
+        "keep": [
+          "addr",
+          "city"
+        ]
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R",
+            "code": "algebra.extract-invalidates-root"
+          }
+        ]
+      },
+      "comment": "Dropping the mandatory label 'name' invalidates R; extract MUST fail rather than silently relaxing the field to optional."
+    }
+  ]
+}

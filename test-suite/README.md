@@ -20,6 +20,12 @@ test-suite/
   osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)
   materialize/               schema-directed deserialization vectors (ch.7): upgrades, rejections, any passthrough
+  is-empty/                  is_empty / satisfiability vectors
+  prune/                     prune vectors
+  normalize/                 normalize vectors
+  extract/                   extract vectors
+  infer/                     infer / infer_with_report vectors, including allow_any
+  lint/                      lint vectors
 ```
 
 More directories are added per operation as vectors are written. One directory

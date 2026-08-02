@@ -1,0 +1,96 @@
+{
+  "vectors": [
+    {
+      "name": "lint/basic/clean-schema-has-no-findings",
+      "spec": "docs/06-schema-algebra.md#611-lints",
+      "operation": "lint",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "findings": []
+      }
+    },
+    {
+      "name": "lint/basic/unreachable-record-is-a-warning",
+      "spec": "docs/06-schema-algebra.md#611-lints",
+      "operation": "lint",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Orphan {\n    \"x\": string,\n}\nrecord R {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "findings": [
+          {
+            "code": "lint.unreachable-record",
+            "severity": "warning",
+            "location": "Orphan"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lint/basic/unsatisfiable-reachable-record-is-a-warning",
+      "spec": "docs/06-schema-algebra.md#611-lints",
+      "operation": "lint",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
+      },
+      "expect": {
+        "ok": false,
+        "findings": [
+          {
+            "code": "lint.unsatisfiable-record",
+            "severity": "warning",
+            "location": "Node"
+          }
+        ]
+      },
+      "comment": "reachable is a plain walk following every reference-typed field regardless of cardinality, so Node counts as reached from itself/root even though it's also unsatisfiable -- both facts can be true of the same record."
+    },
+    {
+      "name": "lint/basic/duplicate-records-are-one-finding-per-block-not-per-name",
+      "spec": "docs/06-schema-algebra.md#611-lints",
+      "operation": "lint",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": string,\n}\nrecord R {\n    \"a\": A,\n    \"b\": B,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "findings": [
+          {
+            "code": "lint.duplicate-record",
+            "severity": "warning",
+            "location": "A, B"
+          }
+        ]
+      },
+      "comment": "A and B are structurally identical. This MUST be exactly one finding naming the sorted block (\"A, B\"), never one finding per record name -- a previous edition of the ch.6 pseudocode wrongly specified one-per-name, which never matched the reference implementation (Sec6.11's own history note)."
+    },
+    {
+      "name": "lint/basic/any-field-is-informational-not-a-warning",
+      "spec": "docs/06-schema-algebra.md#611-lints",
+      "operation": "lint",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"data\": any,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "findings": [
+          {
+            "code": "lint.any-field",
+            "severity": "info",
+            "location": "R.data"
+          }
+        ]
+      },
+      "comment": "any-field is advisory only -- it MUST NOT on its own cause ok:false, unlike the three warning-severity finding types above."
+    }
+  ]
+}

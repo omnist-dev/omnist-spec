@@ -1,0 +1,30 @@
+{
+  "vectors": [
+    {
+      "name": "normalize/basic/merges-structurally-identical-records",
+      "spec": "docs/06-schema-algebra.md#68-normalizes",
+      "operation": "normalize",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": string,\n}\nrecord R {\n    \"a\": A,\n    \"b\": B,\n}\nroot R\n"
+      },
+      "expect": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord R {\n    \"a\": A,\n    \"b\": A,\n}\nroot R\n"
+      },
+      "comment": "A and B are structurally identical (target-blind signature, then refined to a fixpoint); the lexicographically smallest name (A) is kept as the representative and every reference to B is rewritten to A."
+    },
+    {
+      "name": "normalize/basic/empty-schema-returned-unchanged",
+      "spec": "docs/06-schema-algebra.md#68-normalizes",
+      "operation": "normalize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
+      },
+      "expect": {
+        "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
+      },
+      "comment": "prune leaves an unsatisfiable root's fields alone (see prune/basic/unsatisfiable-root-keeps-its-own-fields), so there is no 'fewest records' question to answer for a schema that accepts nothing -- normalize returns it unchanged after the is_empty check short-circuits."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "vectors": [
+    {
+      "name": "prune/basic/drops-unreachable-record",
+      "spec": "docs/06-schema-algebra.md#65-prunes",
+      "operation": "prune",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record Orphan {\n    \"x\": string,\n}\nrecord R {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "comment": "Orphan is never reached by following references from the root, so prune removes it entirely."
+    },
+    {
+      "name": "prune/basic/drops-max-zero-field",
+      "spec": "docs/06-schema-algebra.md#65-prunes",
+      "operation": "prune",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n    \"gone\" [0,0]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "comment": "max == 0 means the label can never be emitted, so prune drops the field outright."
+    },
+    {
+      "name": "prune/basic/unsatisfiable-root-keeps-its-own-fields",
+      "spec": "docs/06-schema-algebra.md#65-prunes",
+      "operation": "prune",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
+      },
+      "expect": {
+        "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
+      },
+      "comment": "The root-unsatisfiable special case (Sec6.5, normative): field pruning MUST NOT apply to an unsatisfiable root, since its mandatory fields are exactly what make it unsatisfiable -- stripping them would produce a different, satisfiable schema, breaking prune's language-preservation guarantee."
+    }
+  ]
+}

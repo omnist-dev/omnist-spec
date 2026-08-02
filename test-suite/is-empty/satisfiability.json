@@ -1,0 +1,55 @@
+{
+  "vectors": [
+    {
+      "name": "is_empty/basic/satisfiable-schema-is-not-empty",
+      "spec": "docs/06-schema-algebra.md#64-is_emptys-and-satisfiability",
+      "operation": "is_empty",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "empty": false
+      }
+    },
+    {
+      "name": "is_empty/basic/mandatory-self-cycle-is-empty",
+      "spec": "docs/06-schema-algebra.md#64-is_emptys-and-satisfiability",
+      "operation": "is_empty",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
+      },
+      "expect": {
+        "empty": true
+      },
+      "comment": "A required reference cycle: every document would be infinite, so no finite Document can match it -- the model's canonical unsatisfiable-schema example."
+    },
+    {
+      "name": "is_empty/basic/optional-self-cycle-is-not-empty",
+      "spec": "docs/06-schema-algebra.md#64-is_emptys-and-satisfiability",
+      "operation": "is_empty",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Node {\n    \"child\" [0,1]: Node,\n}\nroot Node\n"
+      },
+      "expect": {
+        "empty": false
+      },
+      "comment": "The same cycle shape as the vector above, but the field is optional (min=0) so the cycle never blocks satisfiability -- optional never blocks, per record_satisfiable."
+    },
+    {
+      "name": "is_empty/basic/any-is-always-satisfiable",
+      "spec": "docs/06-schema-algebra.md#64-is_emptys-and-satisfiability",
+      "operation": "is_empty",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"data\": any,\n}\nroot R\n"
+      },
+      "expect": {
+        "empty": false
+      },
+      "comment": "any is treated as satisfiable since it admits every value."
+    }
+  ]
+}
