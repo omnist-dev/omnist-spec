@@ -4,6 +4,7 @@
       "name": "validate/basic/conforming-document",
       "spec": "docs/03-schema-model.md#36-validation",
       "operation": "validate",
+      "purpose": "happy-path",
       "input": {
         "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"note\" [0,1]: string?,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
         "document": {
@@ -27,6 +28,7 @@
       "name": "validate/basic/order-is-not-a-constraint",
       "spec": "docs/02-document-model.md#23-structural-invariants",
       "operation": "validate",
+      "purpose": "edge-case",
       "input": {
         "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"note\" [0,1]: string?,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
         "document": {
@@ -47,6 +49,7 @@
       "name": "validate/basic/nullable-scalar-accepts-null",
       "spec": "docs/03-schema-model.md#35-nullable-versus-optional",
       "operation": "validate",
+      "purpose": "edge-case",
       "input": {
         "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"note\" [0,1]: string?,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
         "document": {
@@ -67,6 +70,7 @@
       "name": "validate/basic/closed-record-rejects-unknown-label",
       "spec": "docs/03-schema-model.md#36-validation",
       "operation": "validate",
+      "purpose": "error-case",
       "input": {
         "schema": "record Order {\n    \"id\": string,\n}\nroot Order\n",
         "document": {
@@ -88,6 +92,7 @@
       "name": "validate/basic/all-failures-reported-not-just-first",
       "spec": "docs/03-schema-model.md#36-validation",
       "operation": "validate",
+      "purpose": "error-case",
       "input": {
         "schema": "record Item {\n    \"sku\": string,\n    \"qty\": integer,\n}\nrecord Order {\n    \"id\": string,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
         "document": {
@@ -114,6 +119,7 @@
       "name": "validate/basic/cardinality-below-minimum",
       "spec": "docs/03-schema-model.md#34-cardinality",
       "operation": "validate",
+      "purpose": "error-case",
       "input": {
         "schema": "record Item {\n    \"sku\": string,\n}\nrecord Order {\n    \"id\": string,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
         "document": {
@@ -135,6 +141,7 @@
       "name": "validate/basic/integer-does-not-satisfy-string",
       "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
       "operation": "validate",
+      "purpose": "error-case",
       "input": {
         "schema": "record R {\n    \"a\": string,\n}\nroot R\n",
         "document": {
@@ -154,6 +161,7 @@
       "name": "validate/any/descent-stops-at-any",
       "spec": "docs/03-schema-model.md#37-the-any-type",
       "operation": "validate",
+      "purpose": "edge-case",
       "input": {
         "schema": "record Envelope {\n    \"kind\": string,\n    \"payload\": any,\n}\nroot Envelope\n",
         "document": {
@@ -175,6 +183,7 @@
       "name": "validate/any/does-not-open-the-label-alphabet",
       "spec": "docs/03-schema-model.md#37-the-any-type",
       "operation": "validate",
+      "purpose": "error-case",
       "input": {
         "schema": "record Envelope {\n    \"kind\": string,\n    \"payload\": any,\n}\nroot Envelope\n",
         "document": {

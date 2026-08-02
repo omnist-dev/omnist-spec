@@ -243,6 +243,7 @@ JSON, one case per object, grouped into files by operation.
   "name": "unique-vector-id",
   "spec": "docs/03-schema-model.md#36-validation",
   "operation": "validate",
+  "purpose": "happy-path",
   "input": { },
   "expect": { }
 }
@@ -252,7 +253,21 @@ JSON, one case per object, grouped into files by operation.
   on it.
 - `spec` points at the section the vector pins. A vector with no section to
   point at is a vector testing something unspecified, which is a spec defect.
-- `operation` selects the driver.
+- `operation` selects the driver. It MUST be one of the operation names listed
+  on the [Operations & Models Reference](operations-and-models-reference.md)
+  page — that page is the vocabulary's single source, not a free-text field
+  vectors can spell differently across files.
+- `purpose` MUST be one of `happy-path`, `edge-case`, `error-case`, or
+  `determinism-regression` (the same four-way vocabulary the OML/OSD
+  conformance harness uses, [§2](conformance-harness.md) of that page) —
+  what a vector is actually pinning, so a reader doesn't have to
+  reverse-engineer it from the input/expect pair. `happy-path` is an
+  ordinary conforming case with nothing specific being probed;
+  `edge-case` deliberately exercises a specific rule, invariant, or
+  boundary (regardless of whether the outcome is success or failure);
+  `error-case` is primarily testing that an invalid input is correctly
+  rejected; `determinism-regression` pins a specific
+  ordering/reproducibility regression tied to a known bug.
 - `expect` holds either a success value or a `diagnostics` list.
 
 ### 8.5.2 Diagnostics matching
