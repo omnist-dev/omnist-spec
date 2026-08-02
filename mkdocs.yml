@@ -42,6 +42,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - 1. Glossary: 01-glossary.md
+  - Operations & Models Reference: operations-and-models-reference.md
   - 2. Document Model: 02-document-model.md
   - 3. Schema Model: 03-schema-model.md
   - 4. OML Grammar: 04-oml-grammar.md
