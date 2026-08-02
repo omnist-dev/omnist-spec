@@ -1,0 +1,430 @@
+{
+  "vectors": [
+    {
+      "name": "materialize/upgrades/string-to-date",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record R {\n    \"n\": date,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "2024-01-01"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-01"
+                }
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "materialize/upgrades/string-to-time",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record R {\n    \"n\": time,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "12:30:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:30:00"
+                }
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "materialize/upgrades/string-to-datetime",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record R {\n    \"n\": datetime,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "2024-01-01T12:30:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-01T12:30:00"
+                }
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "materialize/upgrades/whole-number-to-integer-is-value-exact",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 1.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "1.0 upgrades to integer because the conversion is value-exact -- it loses nothing. This is the one direction materialize permits between integer and number leaves."
+    },
+    {
+      "name": "materialize/upgrades/integer-to-number-always-yields-a-float-representation",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": number,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 1.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A number-typed field always materializes to a host float, never a host integer, regardless of whether the source value looked whole -- the reverse direction of the row above, easy to miss since a table showing 'Yes' doesn't state the target representation explicitly."
+    },
+    {
+      "name": "materialize/rejections/quoted-numeral-string-does-not-upgrade-to-integer",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "1"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      },
+      "comment": "A string is not a number -- coercion here would invent a numeric interpretation that doesn't already exist in the value, which the value-exact rule forbids."
+    },
+    {
+      "name": "materialize/rejections/non-whole-number-does-not-upgrade-to-integer",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 1.5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      },
+      "comment": "1.5 truncating to 1 would lose information, so materialize refuses rather than silently rounding."
+    },
+    {
+      "name": "materialize/rejections/arbitrary-string-does-not-upgrade-to-boolean",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\": boolean,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "maybe"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      }
+    },
+    {
+      "name": "materialize/collect-all/every-inexact-conversion-is-reported-not-just-the-first",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"a\": integer,\n    \"b\": boolean,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "materialize.inexact-conversion"
+          },
+          {
+            "path": "$.b",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      },
+      "comment": "Materialization MUST collect every problem it finds, not stop at the first, mirroring validate's own collect-all requirement (Sec3.6)."
+    },
+    {
+      "name": "materialize/any/subtree-passes-through-untouched",
+      "spec": "docs/07-codecs-and-deserialization.md#72-materialization-rules",
+      "operation": "materialize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"data\": any,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "data",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "2024-01-01"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "data",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "2024-01-01"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "At an any-typed field, materialization stops: the subtree passes through untouched and no leaf beneath it is upgraded, even one that would otherwise value-exactly upgrade (the string here looks like a date but is left as a string)."
+    },
+    {
+      "name": "materialize/shape/unexpected-field-is-kept-not-dropped",
+      "spec": "docs/03-schema-model.md#361-validatedocument-schema-pseudocode",
+      "operation": "materialize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "extra",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.extra",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "materialize_record appends an unexpected field's (label, child) unchanged to its output rather than dropping it, per Sec7.2.1's pseudocode -- but the call still fails overall since an unexpected field is itself a diagnostic. Shape and cardinality problems during materialization use the validate.* codes, not a separate materialize-specific set (Sec8.3.5)."
+    }
+  ]
+}

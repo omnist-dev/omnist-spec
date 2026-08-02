@@ -19,6 +19,7 @@ test-suite/
   oml-grammar/               OML text-to-Document parse vectors (ch.4)
   osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)
+  materialize/               schema-directed deserialization vectors (ch.7): upgrades, rejections, any passthrough
 ```
 
 More directories are added per operation as vectors are written. One directory
