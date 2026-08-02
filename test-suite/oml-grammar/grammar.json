@@ -179,18 +179,18 @@
       "purpose": "error-case",
       "input": {
         "format": "oml",
-        "text": "b: [1,\n2, 3]\n"
+        "text": "b: [1\n2]\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "1:7",
+            "path": "2:1",
             "code": "parse.separator-in-array"
           }
         ]
       },
-      "comment": "Comma is the only element separator inside [...]; a newline (or `;`) there is an error, unlike at the top level where newline and `;` are ordinary edge separators. NOTE: the reference implementation currently accepts this silently instead of rejecting it -- filed as omnist#284. This vector intentionally asserts the spec-required behavior, not today's buggy behavior, so it is expected to fail against the reference implementation until that issue is fixed. The path 1:7 (the newline's position) is a best-effort estimate since the implementation doesn't currently raise here at all to verify against."
+      "comment": "Comma is the only element separator inside [...]. A newline immediately after a real comma is legal and purely decorative (Sec4.3.1's fourth rule: separators and comments are otherwise insignificant inside [...]) -- this vector's original input mistakenly had a comma present (\"b: [1,\\n2, 3]\\n\"), which never exercised the illegal case its name claimed and was correctly flagged by the omnist-py session (omnist#284, closed not-a-bug) before implementation. This corrected input has NO comma between 1 and 2, so the newline is the only thing standing in for a separator, which is exactly the illegal case. Confirmed live: fails at line 2, col 1 with 'expected , or ] in array'."
     },
     {
       "name": "oml-grammar/strings/raw-string-performs-no-escape-processing",

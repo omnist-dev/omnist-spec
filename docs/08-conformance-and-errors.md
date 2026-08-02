@@ -163,15 +163,24 @@ bare tags MUST become:
 |---|---|---|
 | `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
 | `format.float-special` | error | `NaN` or an infinity was substituted with `null` |
-| `format.null-unrepresentable` | error | A null leaf cannot be written in the target format |
+| `format.null-unrepresentable` | warning | A null leaf cannot be written in the target format, so it is dropped |
 | `format.attribute-dropped` | warning | An XML attribute was discarded on read |
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
 
-Two of these describe behavior that is currently silent — attribute and
-namespace dropping are not reported at all today. Adding the report is a
-behavior change and needs a test vector before it lands.
+Three of these describe behavior that is currently silent in the reference
+implementation — attribute dropping, namespace dropping, and interleaving loss
+are none of them reported today, confirmed live for all three. Adding the
+report is a behavior change and needs a test vector before it lands.
+
+`format.null-unrepresentable`'s severity was previously listed as `error`,
+which never matched the reference implementation: the write still succeeds,
+with the null leaf simply dropped and reported as an adjustment, the same
+"succeeded, but something was adjusted" shape as the other warning-severity
+rows in this table. Corrected to `warning`; `format.float-special` remains the
+one row correctly at `error`, since substituting a value (not just dropping
+one) is a stronger change to what's actually represented.
 
 ### 8.3.9 `write.*`
 
