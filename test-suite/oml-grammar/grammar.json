@@ -1,0 +1,344 @@
+{
+  "vectors": [
+    {
+      "name": "oml-grammar/reserved/nan-bare-is-a-number-token-not-a-label",
+      "spec": "docs/04-oml-grammar.md#422-reserved-words",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "nan: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "`nan` is claimed by the reserved-float-spelling tokenizer rule (rule 7) before IDENT is reached, so it never reaches label position at all -- the failure is a token-level mismatch, not the reserved-word-label error nan/inf never get."
+    },
+    {
+      "name": "oml-grammar/reserved/quoted-nan-is-an-ordinary-label",
+      "spec": "docs/04-oml-grammar.md#422-reserved-words",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "\"nan\": 1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "nan",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Quoting routes `nan` to the STRING tokenizer rule (rule 1) instead of the reserved float spelling, so it is a perfectly ordinary label here."
+    },
+    {
+      "name": "oml-grammar/reserved/null-bare-label-at-top-level-fails-on-trailing-colon",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "null: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "The sharp edge in Sec4.6.1: `null` fails the edge-vs-scalar lookahead test (it IS null/true/false), so the parser takes the scalar branch, consumes `null`, and then fails on the leftover `:` as trailing content -- NOT the reserved-word-label error. Distinguishing these two by code is exactly what Sec4.6.1 says conformance vectors must do."
+    },
+    {
+      "name": "oml-grammar/reserved/null-bare-label-inside-a-node-is-the-reserved-word-error",
+      "spec": "docs/04-oml-grammar.md#44-labels",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: { null: 1 }\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "parse.reserved-word-label"
+          }
+        ]
+      },
+      "comment": "Inside a node, label position is unambiguous (no top-level scalar-or-edge lookahead applies), so this is the specific reserved-word-label error rather than a trailing-content error -- the companion case to the top-level vector above."
+    },
+    {
+      "name": "oml-grammar/arrays/repeated-label-sugar-expands-in-place",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "b: [1, 2, 3]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "[1,2,3] expands at parse time into three repeated `b` edges -- indistinguishable from writing `b: 1; b: 2; b: 3` directly. An array is not a value in the Document model."
+    },
+    {
+      "name": "oml-grammar/arrays/empty-array-is-an-error-not-a-zero-edge-expansion",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "b: []\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.b",
+            "code": "parse.empty-array"
+          }
+        ]
+      },
+      "comment": "An empty array and an absent label are the same Document, and OML deliberately does not offer two spellings for one thing."
+    },
+    {
+      "name": "oml-grammar/arrays/nested-array-is-rejected",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "b: [[1, 2], [3, 4]]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.b",
+            "code": "parse.nested-array"
+          }
+        ]
+      },
+      "comment": "An array element that is itself an array has nothing to nest into -- the Document model has no bare nested list (Sec2.2.3)."
+    },
+    {
+      "name": "oml-grammar/arrays/newline-inside-array-is-an-error",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "b: [1,\n2, 3]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.b",
+            "code": "parse.separator-in-array"
+          }
+        ]
+      },
+      "comment": "Comma is the only element separator inside [...]; a newline (or `;`) there is an error, unlike at the top level where newline and `;` are ordinary edge separators."
+    },
+    {
+      "name": "oml-grammar/strings/raw-string-performs-no-escape-processing",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 'C:\\no\\escapes'\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "C:\\no\\escapes"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Raw strings (Extended, read-only) perform no escape processing at all -- a backslash inside is a literal backslash, unlike the double-quoted Core form."
+    },
+    {
+      "name": "oml-grammar/strings/multiline-string-strips-leading-newline",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"\"\"\nhello\nworld\"\"\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "hello\nworld"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The optional newline immediately after the opening \"\"\" is consumed and is not part of the value."
+    },
+    {
+      "name": "oml-grammar/strings/multiline-string-closes-at-first-run-of-three-quotes",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"\"\"\nsays \"\"hi\"\" there\"\"\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "says \"\"hi\"\" there"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A run of one or two quotes inside a multiline string is literal content; the string only closes at a run of three or more, and only the first three of that run are consumed as the terminator."
+    },
+    {
+      "name": "oml-grammar/temporals/date-then-time-lookahead-yields-one-datetime-token",
+      "spec": "docs/04-oml-grammar.md#42-tokenization",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 2024-01-01T10:30\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-01T10:30:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "At a position where DATE matches, the tokenizer checks whether the next character is T followed by a TIME-shaped lookahead; here it is, so DATETIME is emitted as one token rather than DATE followed by a separate value."
+    },
+    {
+      "name": "oml-grammar/temporals/date-then-non-time-suffix-is-date-plus-trailing-content",
+      "spec": "docs/04-oml-grammar.md#42-tokenization",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 2024-01-01T99\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "The lookahead after DATE fails (T99 does not match TIME), so DATE is emitted alone and whatever follows -- the bare identifier T99 -- is tokenized independently, then rejected as trailing content once the single-value position is already filled."
+    },
+    {
+      "name": "oml-grammar/shape/single-top-level-scalar-is-the-whole-document",
+      "spec": "docs/04-oml-grammar.md#46-document-shapes",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "\"hello\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "scalar": {
+            "kind": "string",
+            "value": "hello"
+          }
+        }
+      },
+      "comment": "One of the three legal top-level shapes: the document IS that one leaf, with no wrapper."
+    }
+  ]
+}

@@ -1,0 +1,346 @@
+{
+  "vectors": [
+    {
+      "name": "osd-grammar/strings/label-unescaping-has-no-named-escape-table",
+      "spec": "docs/05-osd-grammar.md#531-string-unescaping",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\\nb\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "OSD string unescaping replaces every backslash pair \\X with the literal character X; there is no named-escape table, so \\n becomes the letter n, not a newline. The label is the three-character string \"anb\"."
+    },
+    {
+      "name": "osd-grammar/cardinality/bounded-range",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record R {\n    \"a\" [1,5]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      }
+    },
+    {
+      "name": "osd-grammar/cardinality/at-least-m-unbounded",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\" [5,]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "The comma-first-with-trailing-bound form: at least 5, unbounded above."
+    },
+    {
+      "name": "osd-grammar/cardinality/comma-first-at-most-n",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\" [,5]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "The comma-first form: no minimum bound is required before the comma. min=0, max=5."
+    },
+    {
+      "name": "osd-grammar/cardinality/comma-only-any-count",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\" [,]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "Any count, including zero -- min=0, max=unbounded."
+    },
+    {
+      "name": "osd-grammar/cardinality/empty-brackets-is-an-error",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\" []: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.a",
+            "code": "schema.empty-cardinality"
+          }
+        ]
+      }
+    },
+    {
+      "name": "osd-grammar/cardinality/negative-minimum-is-invalid-not-a-syntax-error",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\" [-1]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.a",
+            "code": "schema.invalid-cardinality"
+          }
+        ]
+      },
+      "comment": "[-1] MUST surface as the invalid-cardinality error, never a bare syntax/parse error -- whether the tokenizer rejects the '-' at the token boundary or accepts it and field construction rejects it one step later is an implementation choice, not an observable difference."
+    },
+    {
+      "name": "osd-grammar/cardinality/inverted-range-is-invalid",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\" [1,0]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.a",
+            "code": "schema.invalid-cardinality"
+          }
+        ]
+      },
+      "comment": "[1,0] tokenizes fine (both are plain unsigned ints) and is rejected only at field construction, once max < min is checked."
+    },
+    {
+      "name": "osd-grammar/cardinality/non-integer-bound-is-an-error",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\" [1.5]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.a",
+            "code": "schema.non-integer-cardinality"
+          }
+        ]
+      }
+    },
+    {
+      "name": "osd-grammar/nullable/nullable-scalar-is-legal",
+      "spec": "docs/05-osd-grammar.md#56-types",
+      "operation": "parse_schema",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record R {\n    \"a\": string?,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      }
+    },
+    {
+      "name": "osd-grammar/nullable/question-mark-on-a-reference-is-rejected",
+      "spec": "docs/05-osd-grammar.md#56-types",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record Other {\n    \"x\": string,\n}\nrecord R {\n    \"a\": Other?,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.a",
+            "code": "schema.nullable-ref"
+          }
+        ]
+      },
+      "comment": "? MUST NOT follow a reference; the error MUST point the author at cardinality [0,1] instead -- 'this subtree may be absent' is a cardinality question, not a nullability question."
+    },
+    {
+      "name": "osd-grammar/any/any-with-question-mark-is-rejected",
+      "spec": "docs/05-osd-grammar.md#56-types",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"data\": any?,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.data",
+            "code": "schema.nullable-any"
+          }
+        ]
+      },
+      "comment": "any already includes null, so a nullable-any suffix is redundant rather than meaningful and is rejected outright."
+    },
+    {
+      "name": "osd-grammar/any/capitalized-any-is-an-ordinary-reference",
+      "spec": "docs/05-osd-grammar.md#56-types",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"data\": Any,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R.data",
+            "code": "schema.unknown-type"
+          }
+        ]
+      },
+      "comment": "Only the exact lowercase spelling `any` is reserved. Capitalized `Any` is an ordinary name and therefore a reference -- it fails here only because no record named Any is defined, not because of any reservation."
+    },
+    {
+      "name": "osd-grammar/reserved-names/record-named-after-a-scalar-keyword-is-rejected",
+      "spec": "docs/05-osd-grammar.md#57-reserved-names",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record string {\n    \"a\": string,\n}\nroot string\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "schema.reserved-name"
+          }
+        ]
+      },
+      "comment": "A bare name in type position resolves to the builtin scalar keyword first, so a record named `string` could never be referenced."
+    },
+    {
+      "name": "osd-grammar/reserved-names/record-named-any-is-rejected",
+      "spec": "docs/05-osd-grammar.md#57-reserved-names",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record any {\n    \"a\": string,\n}\nroot any\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "schema.reserved-name"
+          }
+        ]
+      }
+    },
+    {
+      "name": "osd-grammar/reserved-names/duplicate-record-definition-is-an-error",
+      "spec": "docs/05-osd-grammar.md#57-reserved-names",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": string,\n}\nrecord R {\n    \"b\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "schema.duplicate-record"
+          }
+        ]
+      }
+    },
+    {
+      "name": "osd-grammar/root/missing-root-is-an-error",
+      "spec": "docs/05-osd-grammar.md#58-root",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": string,\n}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "schema.no-root"
+          }
+        ]
+      }
+    },
+    {
+      "name": "osd-grammar/labels/unquoted-field-name-is-rejected",
+      "spec": "docs/05-osd-grammar.md#52-the-quoting-rule",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    a: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R",
+            "code": "schema.unquoted-label"
+          }
+        ]
+      },
+      "comment": "The quoting rule has no exceptions: a bare name in label position is always an error, since a bare name is reserved for schema-name position (scalar keyword, any, or a reference)."
+    },
+    {
+      "name": "osd-grammar/records/trailing-comma-after-last-field-is-legal",
+      "spec": "docs/05-osd-grammar.md#54-records-and-fields",
+      "operation": "parse_schema",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record R {\n    \"a\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      }
+    },
+    {
+      "name": "osd-grammar/records/duplicate-field-label-in-one-record-is-an-error",
+      "spec": "docs/05-osd-grammar.md#54-records-and-fields",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": string,\n    \"a\": integer,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.R",
+            "code": "schema.duplicate-field"
+          }
+        ]
+      }
+    },
+    {
+      "name": "osd-grammar/any/cardinality-is-orthogonal-to-any",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"data\" [0,]: any,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "any and cardinality are independent axes; opening a field to any does not restrict what cardinality it may carry."
+    }
+  ]
+}

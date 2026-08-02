@@ -16,6 +16,8 @@ test-suite/
   validate/                  document-against-schema vectors
   algebra-compatibility/     compatible_with / equivalent vectors
   document-model/            parse-stage safety limit vectors (depth/nodes/int-digits)
+  oml-grammar/               OML text-to-Document parse vectors (ch.4)
+  osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
 ```
 
 More directories are added per operation as vectors are written. One directory
