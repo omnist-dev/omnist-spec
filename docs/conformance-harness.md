@@ -65,7 +65,7 @@ The real conventions, applying to every subcommand:
 |---|---|---|---|
 | `write` | `omnist format INPUT [--compact] [-o FILE]` | canonical OML | 0 |
 | `validate` | `omnist validate INPUT --from oml --schema SCHEMA --json` | `{"ok": true}` | 0 (ok), 1 (validation failure, `errors` populated), 2 (parse/read error, `errors` empty) |
-| `materialize` | **blocked — no CLI path exists today** (see below) | — | — |
+| `materialize` | `omnist convert INPUT --from oml --to oml --schema SCHEMA` | materialized OML | 0, or 2 on inexact conversion/shape failure (verified: message format matches §7.2's error text, e.g. `$.d: 'not-a-date' cannot be read as date (not a value-exact conversion)`) |
 | `normalize` | `omnist schema normalize SCHEMA [--compact] [-o FILE]` | OSD | 0 |
 | `prune` | `omnist schema prune SCHEMA [--compact] [-o FILE]` | OSD | 0 |
 | `extract` | `omnist schema extract SCHEMA --keep label1,label2,... [--compact] [-o FILE]` | OSD | 0, non-zero if `keep` invalidates the root (§6.9) |
@@ -85,17 +85,14 @@ infer it from the exit code, since a future implementation (or a future
 Python version) could legitimately choose either convention and this track
 should not be sensitive to which.
 
-**`materialize` has no CLI path at all today, confirmed by reading source,
-not assumed.** `omnist convert --from oml --to oml --schema SCHEMA` is
-explicitly refused (`_cmd_convert` checks `from_ == to == "oml"` before even
-reading `args.schema`); `omnist format` and `omnist check` have no
-`--schema` argument at all. There is no way to reach `materialize` — read
-OML, upgrade against a schema, write OML back — through the CLI; only
-through the Python API directly. Tracked as
-[`omnist#277`](https://github.com/omnist-dev/omnist/issues/277), with a
-concrete fix recommended there (only refuse the same-format case when no
-schema is given). **This track's implementation is blocked on #277 landing
-before `materialize` fixtures can be authored** — every other operation in
+**`materialize` was unreachable via the CLI until `omnist#277` (now closed,
+`omnist` 0.7.16).** `convert` only refuses `--from oml --to oml` now when
+`args.schema` is falsy — verified directly, functionally, not just by
+reading the diff: a `date`-typed field carrying a schema-valid string
+materializes and writes back unquoted (exit 0); the same input with no
+`--schema` still refuses, pointing at `format` (exit 2); an inexact value
+fails with the exact §7.2 error text (exit 2). No longer blocked — every
+operation in
 the table above is fully CLI-reachable today and unblocked.
 
 Every row above (except `materialize`) was checked directly against
