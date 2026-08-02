@@ -1,0 +1,434 @@
+{
+  "vectors": [
+    {
+      "name": "validate/scalar-kinds/integer-satisfies-number-typed-field",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": number,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "The one sanctioned scalar subtyping relation applies at the value level too, not just between schemas: an integer value satisfies a number-typed field directly, with no materialize step needed."
+    },
+    {
+      "name": "validate/scalar-kinds/number-does-not-satisfy-integer-even-when-whole",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 3.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      },
+      "comment": "The subtyping relation is one-directional. A number value of 3.0 is numerically whole but validate checks kind, never value -- and never converts. Materializing this same input against this schema would succeed (Sec7.2's value-exact upgrade table); validating it does not."
+    },
+    {
+      "name": "validate/scalar-kinds/boolean-does-not-satisfy-string",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\": string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "boolean",
+                  "value": true
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      }
+    },
+    {
+      "name": "validate/scalar-kinds/string-does-not-satisfy-boolean",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\": boolean,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      }
+    },
+    {
+      "name": "validate/scalar-kinds/date-does-not-satisfy-datetime",
+      "spec": "docs/06-schema-algebra.md#63-scalar-subtyping",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"n\": datetime,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-01"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      },
+      "comment": "date is not a subtype of datetime -- the only subtyping relation in the model is integer/number (Sec6.3). Materializing this input would succeed (the date-to-datetime upgrade in ch.7's table); validating it does not."
+    },
+    {
+      "name": "validate/shape/scalar-value-where-node-expected",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Inner {\n    \"x\": string,\n}\nrecord R {\n    \"a\": Inner,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "validate.shape-mismatch"
+          }
+        ]
+      }
+    },
+    {
+      "name": "validate/shape/node-where-scalar-expected",
+      "spec": "docs/03-schema-model.md#36-validation",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"a\": string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "validate.shape-mismatch"
+          }
+        ]
+      }
+    },
+    {
+      "name": "validate/cardinality/above-maximum",
+      "spec": "docs/03-schema-model.md#34-cardinality",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"tag\" [,2]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a"
+                }
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "b"
+                }
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "c"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "validate.cardinality"
+          }
+        ]
+      },
+      "comment": "Three `tag` edges against a declared maximum of 2. Like the below-minimum vector already in this suite, the path is the containing node, not the edges themselves."
+    },
+    {
+      "name": "validate/cardinality/exact-count-required-mismatch",
+      "spec": "docs/03-schema-model.md#34-cardinality",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"tag\" [3]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a"
+                }
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "b"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "validate.cardinality"
+          }
+        ]
+      },
+      "comment": "[3] means exactly 3 (min=max=3, the OSD shorthand for a fixed count); two edges is neither too few by min alone nor too many by max alone in isolation, but is wrong against the exact requirement."
+    },
+    {
+      "name": "validate/cardinality/within-bounds-array",
+      "spec": "docs/03-schema-model.md#34-cardinality",
+      "operation": "validate",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record R {\n    \"tag\" [,2]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a"
+                }
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "b"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true
+      }
+    },
+    {
+      "name": "validate/nullable/null-rejected-on-non-nullable-scalar",
+      "spec": "docs/03-schema-model.md#35-nullable-versus-optional",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\": string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "validate.null-not-allowed"
+          }
+        ]
+      },
+      "comment": "No `?` on the field, so null is never checked against kind and is rejected outright -- distinct from a nullable field (already covered by validate/basic/nullable-scalar-accepts-null)."
+    },
+    {
+      "name": "validate/any/any-accepts-null",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"data\": any,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "data",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "any admits null with no nullable-scalar mechanism needed -- any already includes null by definition (Sec3.7), which is also why any? is rejected as redundant."
+    },
+    {
+      "name": "validate/any/any-accepts-a-bare-scalar-not-just-a-subtree",
+      "spec": "docs/03-schema-model.md#37-the-any-type",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"data\": any,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "data",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 42
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "The existing any/descent-stops-at-any vector uses a nested node payload; this companion vector confirms any also accepts a bare scalar directly, since any accepts every legal Document value: any scalar of any kind, null, and any node."
+    }
+  ]
+}
