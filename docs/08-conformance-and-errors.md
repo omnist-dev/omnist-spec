@@ -317,20 +317,45 @@ Matching rules, all normative:
 
 ### 8.5.3 Operation drivers
 
-| `operation` | `input` | `expect` |
+**This table was corrected against `test-suite/`'s actual 140 vectors and
+`omnist`'s `tools/conformance/vector_runner.py`, which passes all of them
+(104 pass, 35 legitimate skip, 0 fail) — an earlier revision of this table
+predated most of those vectors and, checked directly rather than assumed
+correct, disagreed with six of the twelve original rows. The table below
+states what is actually implemented and verified working, not an
+un-exercised ideal.**
+
+| `operation` | `input` | success `expect` |
 |---|---|---|
-| `parse` | `{format, text}` | `{ok, document}` or diagnostics |
-| `validate` | `{schema, document}` | `{ok}` or diagnostics |
-| `materialize` | `{schema, format, text}` | `{ok, document}` or diagnostics |
+| `parse` | `{format, text}` | `{ok, document}` |
+| `parse_schema` | `{text}` | `{ok}` |
+| `validate` | `{schema, document}` | `{ok}` |
+| `materialize` | `{schema, document}` | `{ok, document}` |
+| `write` | `{document, format}` | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
 | `compatible_with` | `{a, b}` | `{result: bool}` |
 | `equivalent` | `{a, b}` | `{result: bool}` |
-| `normalize` | `{schema}` | `{osd}` — canonical OSD text, compared byte for byte |
-| `prune` | `{schema}` | `{osd}` |
-| `is_empty` | `{schema}` | `{result: bool}` |
-| `extract` | `{schema, keep}` | `{osd}` or diagnostics |
-| `infer` | `{samples}` | `{osd}` |
-| `lint` | `{schema}` | `{findings}` — set of `{code, location}` |
-| `write` | `{document, format}` | `{text}` or diagnostics |
+| `normalize` | `{schema}` | `{schema: <canonical OSD text>}` — compared byte for byte per §5.9's canonical-output requirement |
+| `prune` | `{schema}` | `{schema: <canonical OSD text>}` |
+| `is_empty` | `{schema}` | `{empty: bool}` |
+| `extract` | `{schema, keep}` | `{ok, schema}` |
+| `infer` | `{samples, allow_any}` | `{ok, schema}` — `allow_any` defaults to `false` when absent |
+| `infer_with_report` | `{samples, allow_any}` | `{ok, schema, fallbacks}` — `fallbacks` is a list of `{location, reason}`, always present on success (empty when nothing was opened) |
+| `lint` | `{schema}` | `{ok, findings}` — `findings` is a list of `{code, severity, location}`; message text is never compared (§8.5.2 rule 1) so no `message` field is required |
+
+Every operation's failure `expect` is `{ok: false, diagnostics: [...]}`, per
+§8.5.2 — `write` is the only operation where `ok: true` and `diagnostics` can
+coexist, noted above.
+
+**`materialize`'s `input` is a canonical-JSON Document, not raw format text
+plus a `format` field.** This is deliberate, not an oversight: per
+[Operations & Models Reference](operations-and-models-reference.md),
+`materialize`'s abstract signature is `materialize(node, S) -> node` — it
+operates on an already-parsed Document, matching §7.1's two-stage
+separation (stage 1 parses, stage 2 materializes; a vector testing stage 2
+should not silently re-test stage 1's `parse` by embedding it as a hidden
+first step). A vector wanting to exercise the full parse-then-materialize
+pipeline for a specific format uses two vectors — one `parse`, one
+`materialize` — not one vector conflating both stages.
 
 Schemas in `input` are OSD text. Documents are given in the canonical JSON
 encoding of §8.5.4, not in a format-specific text, except where the vector is
