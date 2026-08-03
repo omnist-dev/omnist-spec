@@ -257,15 +257,27 @@ implementation. A small fixture set (10-15 cases) under
 
 ## 7. Orchestrator
 
-A Python script/package under `conformance/orchestrator/`. Reads a manifest
-naming which fixtures to run and which implementation CLI to invoke (a
-command name, e.g. `omnist` — resolved from `PATH`, not hardcoded to a
-location), runs each fixture's operation through that CLI, applies §4's
-comparison, and reports pass/fail/skip per fixture — reusing §8.5.5's
-reporting discipline (skip is a first-class result, never silently folded
-into pass).
+**Each implementation owns its own orchestrator, in its own repo — this
+repo does not ship one.** An orchestrator invokes that implementation's
+CLI per §2's contract, judges the result with §4's comparison (using
+that implementation's own parser/library as the referee, not a
+cross-language dependency on another implementation's), and reports
+pass/fail/skip per fixture, reusing §8.5.5's reporting discipline (skip
+is a first-class result, never silently folded into pass).
 
-**Out of scope for this revision:** wiring the orchestrator against
-TypeScript or Rust CLIs, CI integration, and fixture volume beyond the
-referee self-test set. These are deferred, not declined — tracked
-separately once Python-only support is working end to end.
+This section originally described a `conformance/orchestrator/` living
+in this repo. That was a design mistake, corrected once actually built:
+the orchestrator is inherently implementation-specific code (it imports
+and shells out to one implementation), so keeping it in the
+implementation-agnostic spec repo meant a TypeScript or Rust port could
+never use it without depending on Python cross-language, or rewriting it
+from scratch — precisely the outcome this framework exists to avoid. See
+[omnist#283](https://github.com/omnist-dev/omnist/issues/283) and
+[omnist-spec#27](https://github.com/omnist-dev/omnist-spec/issues/27) for
+the move.
+
+`omnist` (Python)'s orchestrator now lives at `tools/conformance/` in
+that repo, consuming this repo's fixtures via a pinned git submodule and
+wired into `omnist`'s own CI — see that repo's
+`tools/conformance/README.md`. A TypeScript or Rust port will need its
+own equivalent, built the same way, when the time comes.
