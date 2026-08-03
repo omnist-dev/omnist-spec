@@ -216,6 +216,18 @@ proposed.
 `RecordName.label` for a field-level one. This matches what `lint` already
 reports.
 
+**The whole-schema fallback is `$`.** Some diagnostics have no specific
+record or field to name: `schema.no-root` (there is no root declaration at
+all), a dangling root reference (the named root never resolves to a
+defined record), and `algebra.infer-no-samples`/`algebra.infer-scalar-root`
+(these fail before any schema exists, since they're about the shape of
+the input samples, not a schema). All four use `$` — the same sentinel
+Document paths use for the whole node — as the schema-side/pre-schema
+equivalent of "the whole thing, not a part of it." This is a deliberate
+extension of the two path forms above, not a third form: it says what to
+do when neither a specific record nor a specific field applies, rather
+than introducing new path syntax.
+
 **Text-position paths** are for `parse.*` diagnostics (§8.3.1) — stage 1
 fails before any Document exists, so there is no `$`-rooted structure yet
 for a Document path to descend into. The format is `line:col`, 1-based,

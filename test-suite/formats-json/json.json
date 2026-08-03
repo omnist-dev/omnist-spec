@@ -178,6 +178,39 @@
         ]
       },
       "comment": "JSON has no temporal types; a writer MUST stringify a temporal leaf to ISO-8601 and report the adjustment. Confirmed live."
+    },
+    {
+      "name": "formats-json/basic/nan-substituted-with-null-and-reported",
+      "spec": "docs/formats/json.md",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "NaN"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"n\": null}",
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "format.float-special"
+          }
+        ]
+      },
+      "comment": "NaN and Infinity are not valid JSON tokens; the default lenient mode substitutes null and reports the substitution rather than emitting invalid JSON. value:\"NaN\" is the vector-format's string-sentinel convention for this case (test-suite/README.md's canonical encoding section) -- JSON itself has no NaN token, so a vector can't hold one as an ordinary number without becoming invalid JSON itself. Confirmed live: severity is error, the one adjustment-family code that is (Sec8.3.8), since it actually changes the represented value, unlike the warning-severity adjustments."
     }
   ]
 }

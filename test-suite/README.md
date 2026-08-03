@@ -61,6 +61,12 @@ a number.
   Repeated labels are repeated entries.
 - A scalar is `{"scalar": {"kind": K, "value": V}}`, `K` one of the seven kinds.
 - `null` is `{"scalar": {"kind": null, "value": null}}`.
+- A `number` holding `NaN`, `Infinity`, or `-Infinity` is `V = "NaN"`,
+  `"Infinity"`, or `"-Infinity"` — the literal string, not a bare JSON
+  number. JSON itself has no token for any of the three, so a vector can't
+  hold one as an ordinary numeric `V` without making the vector file itself
+  invalid JSON; the string form is unambiguous here because a real
+  `number`'s `V` is always a JSON number, never a JSON string.
 
 ## Matching
 
