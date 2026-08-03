@@ -391,6 +391,33 @@ vectors and reports the count. A run that hides skips as passes is worthless for
 tracking convergence, which is the whole point of
 [chapter 9](09-divergence-ledger.md).
 
+**A skip MUST cite a reason, and the reason determines what else is
+required:**
+
+- **Not yet implemented.** The operation or feature doesn't exist yet in
+  this implementation. Temporary by nature — expected to become a `pass`
+  once the work lands. No ledger entry is required for this category on its
+  own, though the usual issue tracker SHOULD have something open for it.
+- **Documented divergence.** The vector's outcome depends on a capability
+  this implementation's target language or design genuinely cannot provide
+  — not a missing feature, a structural limit (TypeScript's `integer`/
+  `number` collapse, [§9.4 D-6](09-divergence-ledger.md#94-known-open-divergences),
+  is the worked example). This category MUST have a corresponding entry in
+  chapter 9's divergence ledger, and the skip reason a harness reports for
+  the affected vectors MUST cite that entry by number (e.g. `"skip: D-6"`)
+  — a skip with no citable reason, or a reason invented ad hoc instead of
+  pointing at a ledger entry, is not acceptable reporting under this
+  section.
+
+**CI gating.** A conformant CI run MUST fail the build when the fail count
+is nonzero. A conformant CI run MUST NOT fail the build merely because the
+skip count is nonzero — an implementation legitimately at 104 pass / 0 fail
+/ 35 skip has *passed* conformance in the sense this section defines,
+provided every one of those 35 skips carries one of the two reason
+categories above. Passing CI is a statement about `fail`, not about
+reaching zero skips; chapter 9 is where the skip count's honesty is
+checked, not the CI gate.
+
 ## 8.6 OML/OSD conformance harness
 
 §8.5's harness exercises operations through a canonical JSON encoding

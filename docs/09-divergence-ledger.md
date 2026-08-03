@@ -45,7 +45,19 @@ conformance failure, not a design choice.
 **The Document model.** Edge ordering, repeated-label handling, the seven scalar
 kinds, the value/node dichotomy. Adding a scalar kind is the single most
 damaging possible divergence: it changes the subtyping lattice and therefore
-silently changes compatibility answers.
+silently changes compatibility answers. The one narrow, explicitly documented
+exception is [§2.3](02-document-model.md#23-structural-invariants) D-5's
+`integer`/`number` distinction: an implementation whose target language
+genuinely cannot represent it independent of a schema MAY skip **only the
+specific vectors whose outcome actually depends on that distinction**,
+provided it documents the gap as a ledger entry here ([§9.4 D-6](#94-known-open-divergences)
+is the current instance) and its harness cites that entry per §8.5.5. Every
+other Document-model vector — which is most of them, since the collapse is
+narrow — MUST still pass in full; a limited, precisely-scoped, thoroughly
+tested and clearly reported divergence is what this exception permits, not a
+blanket exemption for the surrounding area. This is a structural
+accommodation for one specific, named invariant, not a general license to
+reinterpret "MUST NOT differ."
 
 **Whether a safety limit exists, and what it is called.** All three limits in
 §2.4 (depth, node count, integer digits) MUST be enforced by every
@@ -84,7 +96,7 @@ As of spec v0.1.
 |---|---|---|---|
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha |
 | Maturity | beta, reference | alpha | alpha |
-| Document model | complete | complete | complete |
+| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete |
 | Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) |
 | OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended |
 | OML canonical write | complete | partial | complete |
@@ -144,6 +156,7 @@ These are live discrepancies. Each needs resolution under
 | D-3 | XML attributes and namespace prefixes are dropped silently, with no adjustment reported — and confirmed the same is true of cross-label interleaving lost on write (`format.interleaving-lost`), not just the two XML-specific codes this entry previously named. [§8.3.8](08-conformance-and-errors.md#838-format--codec-adjustments) defines codes for reporting all three. Why this matters in practice, concretely rather than abstractly: [`docs/formats/yaml.md`](formats/yaml.md)'s "Norway problem" is the closest real-world case in the ecosystem of a codec doing something a document author never expected — an unquoted `on:` key silently becoming the boolean `true` under YAML 1.1. That case is *caught*, loudly, as a `DocumentError`, because a boolean key can't become a Document label at all. D-3's cases are the same class of surprise with no error at all — the information is simply gone, and a caller has no way to learn it happened short of reading the source text themselves. | Open. Reporting is a behavior change; vector first. |
 | D-4 | No implementation emits §8.3 codes. Python, TypeScript, and Rust all share undocumented kebab-case validation tags. | Open by design. See [§8.1](08-conformance-and-errors.md#81-status-of-this-chapter) for the migration path. |
 | D-5 | OML-Extended read support (raw and multiline strings): **confirmed complete in both TypeScript and Rust** — implemented and tested in each (TypeScript: `test/oml.test.ts`'s raw-string and multiline-string suites; Rust: `oml/tests.rs`, 988 lines). This entry previously claimed it was Python-only, which was stale for both. | Closed. All three implementations read OML-Extended; only the canonical-writer restriction (write Core only) remains correctly one-sided, and that's already described elsewhere in the spec. |
+| D-6 | TypeScript's Document model cannot represent [§2.3](02-document-model.md#23-structural-invariants) D-5's `integer`/`number` distinction independent of a schema — JS has one numeric type, so `Node`'s scalar union carries no kind tag for numbers, and `valueKind`/`matchesKind` derive `"integer"` vs `"number"` from `Number.isInteger(v)` (shape, not source kind). Confirmed and already documented in `omnist-ts`'s own `docs/python-parity.md` #1 (issue #3 there): `matchesKind(1.0, "integer")` is `true` in TypeScript, `false` in Python. This is a deliberate, target-language-driven design choice there, not drift — but it means any conformance vector whose `document` input depends on this distinction (e.g. `test-suite/validate/scalar-kinds/number-does-not-satisfy-integer-even-when-whole`) cannot be faithfully constructed in TypeScript's model and MUST be reported `skip`, never `fail` or a forced `pass`, by its conformance runner. Rust is unaffected (native `i64`/`f64` distinction). | Open by design, TypeScript-only. Tracked alongside `omnist-ts` issue #85 (building that repo's conformance runners), which specifies this skip requirement explicitly rather than leaving it to be discovered vector-by-vector. |
 
 ## 9.5 Adding a fourth implementation
 
