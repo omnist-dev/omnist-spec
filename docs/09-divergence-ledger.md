@@ -47,16 +47,23 @@ kinds, the value/node dichotomy. Adding a scalar kind is the single most
 damaging possible divergence: it changes the subtyping lattice and therefore
 silently changes compatibility answers. The one narrow, explicitly documented
 exception is [§2.3](02-document-model.md#23-structural-invariants) D-5's
-`integer`/`number` distinction: an implementation whose target language
-genuinely cannot represent it independent of a schema MAY skip **only the
-specific vectors whose outcome actually depends on that distinction**,
-provided it documents the gap as a ledger entry here ([§9.4 D-6](#94-known-open-divergences)
-is the current instance) and its harness cites that entry per §8.5.5. Every
-other Document-model vector — which is most of them, since the collapse is
-narrow — MUST still pass in full; a limited, precisely-scoped, thoroughly
-tested and clearly reported divergence is what this exception permits, not a
-blanket exemption for the surrounding area. This is a structural
-accommodation for one specific, named invariant, not a general license to
+scalar-kind-identity invariant: an implementation whose target language
+genuinely cannot represent a specific kind distinction independent of a
+schema MAY skip **only the specific vectors whose outcome actually depends
+on that distinction**, provided it documents the gap as a ledger entry here
+([§9.4](#94-known-open-divergences) D-6 and D-7(1) are the current instances
+— TypeScript's `integer`/`number` collapse and Rust's missing temporal
+`Scalar` variant, respectively) and its harness cites that entry per §8.5.5.
+Every other Document-model vector — which is most of them in both cases,
+since each collapse is narrow — MUST still pass in full; a limited,
+precisely-scoped, thoroughly tested and clearly reported divergence is what
+this exception permits, not a blanket exemption for the surrounding area.
+**This exception covers a missing distinction being skipped, never an
+incorrect output being produced** — D-7(2) (Rust's OML writer silently
+mis-quoting a plain string because it shape-guesses a missing kind signal)
+is the latter, remains a forbidden-variation bug under "Canonical output"
+below, and gets no exception here. This is a structural accommodation for a
+specific, named invariant, not a general license to
 reinterpret "MUST NOT differ."
 
 **Whether a safety limit exists, and what it is called.** All three limits in
@@ -157,6 +164,7 @@ These are live discrepancies. Each needs resolution under
 | D-4 | No implementation emits §8.3 codes. Python, TypeScript, and Rust all share undocumented kebab-case validation tags. | Open by design. See [§8.1](08-conformance-and-errors.md#81-status-of-this-chapter) for the migration path. |
 | D-5 | OML-Extended read support (raw and multiline strings): **confirmed complete in both TypeScript and Rust** — implemented and tested in each (TypeScript: `test/oml.test.ts`'s raw-string and multiline-string suites; Rust: `oml/tests.rs`, 988 lines). This entry previously claimed it was Python-only, which was stale for both. | Closed. All three implementations read OML-Extended; only the canonical-writer restriction (write Core only) remains correctly one-sided, and that's already described elsewhere in the spec. |
 | D-6 | TypeScript's Document model cannot represent [§2.3](02-document-model.md#23-structural-invariants) D-5's `integer`/`number` distinction independent of a schema — JS has one numeric type, so `Node`'s scalar union carries no kind tag for numbers, and `valueKind`/`matchesKind` derive `"integer"` vs `"number"` from `Number.isInteger(v)` (shape, not source kind). Confirmed and already documented in `omnist-ts`'s own `docs/python-parity.md` #1 (issue #3 there): `matchesKind(1.0, "integer")` is `true` in TypeScript, `false` in Python. This is a deliberate, target-language-driven design choice there, not drift — but it means any conformance vector whose `document` input depends on this distinction (e.g. `test-suite/validate/scalar-kinds/number-does-not-satisfy-integer-even-when-whole`) cannot be faithfully constructed in TypeScript's model and MUST be reported `skip`, never `fail` or a forced `pass`, by its conformance runner. Rust is unaffected (native `i64`/`f64` distinction). | Open by design, TypeScript-only. Tracked alongside `omnist-ts` issue #85 (building that repo's conformance runners), which specifies this skip requirement explicitly rather than leaving it to be discovered vector-by-vector. |
+| D-7 | Rust's `document::Scalar` (`omnist/src/document.rs`) has no `Date`/`Time`/`DateTime` variant at all — five variants only (`Null`/`Bool`/`Int`/`Float`/`Str`), an already-closed architecture decision (`omnist-rs` issue #16). This has two confirmed consequences, one accepted and one not: (1) **Accepted, cited.** `format.temporal-stringified` is structurally unreachable on write — a temporal-kind input leaf is already indistinguishable from a plain string by the time the writer sees it, so no adjustment can be reported. `test-suite/formats-json/basic/temporal-leaf-is-stringified-on-write` is correctly reported `skip` citing `omnist-rs` issue #16 (`omnist-rs` issue #89 did the reclassification, matching this ledger's own §8.5.5 discipline). (2) **Not accepted — a real, unresolved bug.** `oml/writer.rs`'s `write_str_scalar` shape-guesses date/time/datetime from string *content* (`is_iso_date`/`is_iso_time`/`is_iso_datetime`) to decide whether to quote a `Scalar::Str`, since it has no provenance signal to consult instead. Confirmed live: a plain JSON string `"2024-01-01"` (never temporal, no schema involved) is written to OML **unquoted** — `d: 2024-01-01` instead of the correct `d: "2024-01-01"` — silently promoting it to a genuine temporal literal on the next OML read. Python and TypeScript both get this right (confirmed live: `d: "2024-01-01"`, quoted). This is [§9.2](#92-forbidden-variation)'s "canonical output MUST NOT differ" rule being actively violated, not a permitted structural accommodation like (1) or like D-6 — shape-based type inference substituting for tracked provenance is the same anti-pattern already fixed once this cycle (`omnist#288`, Python's XML reader), just on the write side and in a different repo. No vector currently catches this (`test-suite/`'s only related vector tests the read direction, not write); a vector is proposed in `omnist-spec` issue #33. | (1) Closed by design. (2) Open — real bug, tracked as `omnist-rs` issue #99; needs a decision between adding write-side provenance tracking for temporal-shaped strings, or removing the heuristic entirely and accepting that OML's own native bare temporal literals stop round-tripping without a schema, either of which would need this row split or amended once resolved. |
 
 ## 9.5 Adding a fourth implementation
 
