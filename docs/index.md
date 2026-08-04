@@ -1,4 +1,4 @@
-# Omnist Specification, v0.1
+# Omnist Specification, v0.2
 
 ## Abstract
 
