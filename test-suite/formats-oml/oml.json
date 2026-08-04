@@ -1,0 +1,114 @@
+{
+  "vectors": [
+    {
+      "name": "formats-oml/basic/date-shaped-string-stays-quoted-on-write",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["d", {"scalar": {"kind": "string", "value": "2024-01-01"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "d: \"2024-01-01\"\n"
+      },
+      "comment": "A string-kinded value that happens to be date-shaped MUST stay quoted -- writing it bare would produce a different Document on re-read (a genuine temporal literal, ch.4's grammar), silently changing its kind. Confirmed live against the reference implementation. Filed as omnist-spec#33 after this exact case was found unquoted (a real bug, not a permitted divergence) in omnist-rs -- see docs/09-divergence-ledger.md D-7(2)."
+    },
+    {
+      "name": "formats-oml/basic/time-shaped-string-stays-quoted-on-write",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["t", {"scalar": {"kind": "string", "value": "12:00:00"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "t: \"12:00:00\"\n"
+      }
+    },
+    {
+      "name": "formats-oml/basic/datetime-shaped-string-stays-quoted-on-write",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["dt", {"scalar": {"kind": "string", "value": "2024-01-01T12:30:00"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "dt: \"2024-01-01T12:30:00\"\n"
+      }
+    },
+    {
+      "name": "formats-oml/basic/genuine-date-writes-bare",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["d", {"scalar": {"kind": "date", "value": "2024-01-01"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "d: 2024-01-01\n"
+      },
+      "comment": "The companion case: a genuinely date-kinded scalar (e.g. from a schema-directed materialize, or read from a native temporal literal in another format) writes bare, no quotes -- this is the behavior formats-oml/basic/date-shaped-string-stays-quoted-on-write must NOT produce for a plain string. Confirmed live: reading a native OML date literal and writing it back stays bare."
+    },
+    {
+      "name": "formats-oml/basic/genuine-time-writes-bare",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["t", {"scalar": {"kind": "time", "value": "12:00:00"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "t: 12:00:00\n"
+      }
+    },
+    {
+      "name": "formats-oml/basic/genuine-datetime-writes-bare",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["dt", {"scalar": {"kind": "datetime", "value": "2024-01-01T12:30:00"}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "dt: 2024-01-01T12:30:00\n"
+      }
+    }
+  ]
+}

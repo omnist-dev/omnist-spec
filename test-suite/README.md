@@ -30,6 +30,7 @@ test-suite/
   formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges
   formats-toml/              TOML codec vectors
   formats-xml/               XML codec vectors
+  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare
 ```
 
 More directories are added per operation as vectors are written. One directory
