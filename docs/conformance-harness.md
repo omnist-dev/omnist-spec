@@ -279,5 +279,7 @@ the move.
 `omnist` (Python)'s orchestrator now lives at `tools/conformance/` in
 that repo, consuming this repo's fixtures via a pinned git submodule and
 wired into `omnist`'s own CI — see that repo's
-`tools/conformance/README.md`. A TypeScript or Rust port will need its
-own equivalent, built the same way, when the time comes.
+`tools/conformance/README.md`. `omnist-ts` and `omnist-rs` have each since
+built their own equivalents the same way. A fourth port should too —
+see [Porting a Conformance Runner](porting-a-conformance-runner.md) for
+what all three existing ones learned building theirs.

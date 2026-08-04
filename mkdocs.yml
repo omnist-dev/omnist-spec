@@ -61,5 +61,6 @@ nav:
   - Real-World Examples: examples/index.md
   - 8. Conformance & Errors: 08-conformance-and-errors.md
   - OML/OSD Conformance Harness: conformance-harness.md
+  - Porting a Conformance Runner: porting-a-conformance-runner.md
   - 9. Divergence Ledger: 09-divergence-ledger.md
   - 10. Governance & Versioning: 10-governance-and-versioning.md

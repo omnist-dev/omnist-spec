@@ -385,6 +385,10 @@ library to decide whether `1` is an integer or a number.
 
 ### 8.5.5 Reporting
 
+*Building your own runner? [Porting a Conformance Runner](porting-a-conformance-runner.md)
+collects what all three existing ports learned, including this section's
+skip/CI discipline in practice.*
+
 A harness run reports, per vector: pass, fail, or skip. **Skip is a first-class
 result.** An implementation that has not built `extract` yet skips those
 vectors and reports the count. A run that hides skips as passes is worthless for
