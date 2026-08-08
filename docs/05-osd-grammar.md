@@ -198,6 +198,7 @@ Every row MUST hold for a conformant implementation.
 | `record R{"a":string}` twice | error: duplicate definition |
 | `record R{"a":string}` with no `root` | error: a schema must declare a root |
 | `record R{a:string}` | error: expected a quoted field name |
+| `record R{"a": "string"}` | error: a quoted string cannot appear in type position |
 | `record R { "a": string, }` | valid; trailing comma accepted |
 | `record R { "data": any }` | field type is `any` |
 | `record R { "data" [0,]: any }` | valid; cardinality is orthogonal to `any` |

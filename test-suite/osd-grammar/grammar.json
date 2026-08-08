@@ -301,6 +301,25 @@
       "comment": "The quoting rule has no exceptions: a bare name in label position is always an error, since a bare name is reserved for schema-name position (scalar keyword, any, or a reference)."
     },
     {
+      "name": "osd-grammar/labels/quoted-string-in-type-position-is-rejected",
+      "spec": "docs/05-osd-grammar.md#52-the-quoting-rule",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": \"string\",\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "R",
+            "code": "schema.quoted-type"
+          }
+        ]
+      },
+      "comment": "The other direction of the same quoting rule (omnist-spec#35): a quoted string is a data string, reserved for label position -- it can never appear in type position, where only a bare schema name (scalar keyword, any, or a reference) is legal. Confirmed live that the reference implementation already rejects this; schema.quoted-type is the code this vector pins as the target, symmetric with schema.unquoted-label above."
+    },
+    {
       "name": "osd-grammar/records/trailing-comma-after-last-field-is-legal",
       "spec": "docs/05-osd-grammar.md#54-records-and-fields",
       "operation": "parse_schema",

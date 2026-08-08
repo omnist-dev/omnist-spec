@@ -113,8 +113,16 @@ code, never a different one and never silently.
 | `schema.non-integer-cardinality` | A cardinality bound is not a whole number |
 | `schema.empty-cardinality` | `[]` written as a cardinality |
 | `schema.unquoted-label` | A bare name in field-label position |
+| `schema.quoted-type` | A quoted string in type position |
 | `schema.nullable-ref` | `?` applied to a reference |
 | `schema.nullable-any` | `any?` |
+
+`schema.unquoted-label` and `schema.quoted-type` are the two directions of
+[§5.2](05-osd-grammar.md#52-the-quoting-rule)'s quoting rule — a bare name
+belongs only in type position, a quoted string only in label position, and
+each direction gets its own code rather than one code covering both, the
+same way the rule itself states both directions explicitly rather than
+leaving the second implied by the first.
 
 ### 8.3.4 `validate.*` — document against schema
 
