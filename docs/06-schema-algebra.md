@@ -493,13 +493,27 @@ implementations facing the same input produce the same error message.
 - `extract(S, {"order", "id", "status", "total", "address", "street", "city",
   "items", "sku", "qty", "price"})` succeeds and returns a schema with `coupon`
   gone. `coupon` is optional, so dropping it invalidates nothing.
-- `extract(S, {"order", "id", "status"})` fails: `Order.total`, `Order.address`,
-  and `Order.items` are all mandatory and none of their labels is in `keep`, so
-  `Order` is invalidated. Per `first_bad`'s declaration-order rule above, the
-  reported offender is specifically `total` — it's declared before `address`
-  and `items` in the record, so step 1's single pass reaches it first.
-  `Root.order` is mandatory and points at `Order`, so `Root` — the root — is
-  invalidated in turn.
+- `extract(S, {"order", "id", "status", "street", "city", "sku", "qty",
+  "price"})` fails: `Order.total`, `Order.address`, and `Order.items` are all
+  mandatory and none of their labels is in `keep`, so `Order` is invalidated.
+  `Address` and `LineItem` are unaffected here — every one of their own
+  fields (`street`/`city`, `sku`/`qty`/`price`) is in `keep`, so step 1 never
+  touches them. Per `first_bad`'s declaration-order rule above, the reported
+  offender is specifically `total` — it's declared before `address` and
+  `items` in `Order`, so step 1's single pass reaches it first. `Root.order`
+  is mandatory and points at `Order`, so `Root` — the root — is invalidated
+  in turn.
+
+  **`first_bad` is a single pass over the *whole* environment, not scoped to
+  one record — this matters, and the example above is deliberately
+  constructed to avoid it.** Drop `keep` down to just `{"order"}` on the same
+  schema instead, and every field of every record is now unkept: `Address`
+  (declared first in `env`) is invalidated before step 1 even reaches
+  `Order`, so `first_bad` is `street`/`Address`, not anything about `Order`
+  at all — confirmed against the reference implementation. `Order`'s own
+  field order only decides the winner when `Order` is the *first* record
+  step 1 invalidates; when an earlier-declared record is invalidated too,
+  it wins regardless of what `Order` looks like internally.
 
 A real schema makes the same operation more concrete: extracting
 [`pyproject.osd`](examples/pyproject/pyproject.osd) down to just its

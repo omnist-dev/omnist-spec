@@ -38,6 +38,46 @@
         ]
       },
       "comment": "Dropping the mandatory label 'name' invalidates R; extract MUST fail rather than silently relaxing the field to optional."
+    },
+    {
+      "name": "extract/first-bad/within-record-declaration-order-wins",
+      "spec": "docs/06-schema-algebra.md#69-extracts-keep",
+      "operation": "extract",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Address {\n    \"street\": string,\n    \"city\": string,\n}\nrecord LineItem {\n    \"sku\": string,\n    \"qty\": integer,\n    \"price\": number,\n}\nrecord Order {\n    \"id\": string,\n    \"status\": string,\n    \"total\": number,\n    \"address\": Address,\n    \"items\" [1,]: LineItem,\n    \"coupon\" [0,1]: string,\n}\nrecord Root {\n    \"order\": Order,\n}\nroot Root\n",
+        "keep": ["order", "id", "status", "street", "city", "sku", "qty", "price"]
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "Order",
+            "code": "algebra.extract-invalidates-root"
+          }
+        ]
+      },
+      "comment": "first_bad's declaration-order rule, isolated to a single record: Address and LineItem keep every one of their own fields (never invalidated), so Order is the only record step 1 touches, and total wins as Order's first mandatory field not in keep (declared before address/items). Confirmed live against the reference implementation -- omnist-spec#36's corrected docs/06-schema-algebra.md Sec6.9 worked example, verbatim."
+    },
+    {
+      "name": "extract/first-bad/global-pass-not-scoped-to-one-record",
+      "spec": "docs/06-schema-algebra.md#69-extracts-keep",
+      "operation": "extract",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Address {\n    \"street\": string,\n    \"city\": string,\n}\nrecord LineItem {\n    \"sku\": string,\n    \"qty\": integer,\n    \"price\": number,\n}\nrecord Order {\n    \"id\": string,\n    \"status\": string,\n    \"total\": number,\n    \"address\": Address,\n    \"items\" [1,]: LineItem,\n    \"coupon\" [0,1]: string,\n}\nrecord Root {\n    \"order\": Order,\n}\nroot Root\n",
+        "keep": ["order"]
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "Address",
+            "code": "algebra.extract-invalidates-root"
+          }
+        ]
+      },
+      "comment": "The companion case to first-bad/within-record-declaration-order-wins: with nothing but 'order' kept, every record loses every field, so step 1's single global pass over env reaches Address (declared first, Sec3.1's schema) before it ever reaches Order -- first_bad is Address's own first field (street), regardless of what Order's internal field order looks like. This is the exact case omnist-spec#36 found the spec's own worked example getting wrong: first_bad is a whole-environment pass, never scoped to the record that 'looks like' the obvious offender. Confirmed live against the reference implementation."
     }
   ]
 }
