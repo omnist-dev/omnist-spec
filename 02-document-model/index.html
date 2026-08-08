@@ -1,0 +1,1461 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/02-document-model/">
+      
+      
+        <link rel="prev" href="../operations-and-models-reference/">
+      
+      
+        <link rel="next" href="../03-schema-model/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>2. Document Model - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#2-the-document-model" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              2. Document Model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Mental model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-formal-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Formal definition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Formal definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-scalar-kinds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 Scalar kinds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.2 Labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#223-nesting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.3 Nesting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-structural-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Structural invariants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-safety-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Safety limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-oml-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-schema-algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-codecs-and-deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-conformance-and-errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-divergence-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Mental model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-formal-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Formal definition
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 Formal definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-scalar-kinds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.1 Scalar kinds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.2 Labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#223-nesting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2.3 Nesting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-structural-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Structural invariants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-safety-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Safety limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="2-the-document-model">2. The Document model<a class="headerlink" href="#2-the-document-model" title="Permanent link">&para;</a></h1>
+<h2 id="21-mental-model">2.1 Mental model<a class="headerlink" href="#21-mental-model" title="Permanent link">&para;</a></h2>
+<p><em>Non-normative.</em></p>
+<p>Start with a fact about the formats Omnist reads. JSON, YAML, and TOML model an
+object as a map from key to value, and express "many" by making that value a
+list. XML does not. XML expresses "many" by repeating an element, and it lets
+repeated elements interleave with other elements.</p>
+<p>That difference is not cosmetic. Take this XML:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;order&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item&gt;</span>pen<span class="nt">&lt;/item&gt;</span>
+<span class="w">  </span><span class="nt">&lt;note&gt;</span>rush<span class="nt">&lt;/note&gt;</span>
+<span class="w">  </span><span class="nt">&lt;item&gt;</span>pad<span class="nt">&lt;/item&gt;</span>
+<span class="nt">&lt;/order&gt;</span>
+</code></pre></div>
+<p>Read it into a map-of-arrays and you get <code>{"item": ["pen","pad"], "note": "rush"}</code>.
+The note has moved. The original interleaving is gone and cannot be recovered.
+Write it back out and you get a different document.</p>
+<p>So Omnist does not use a map. A node is an <strong>ordered list of labeled edges</strong>:</p>
+<div class="highlight"><pre><span></span><code>[ (item, &quot;pen&quot;), (note, &quot;rush&quot;), (item, &quot;pad&quot;) ]
+</code></pre></div>
+<p>Nothing has been reordered and nothing merged. The same three formats above read
+into exactly this:</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Text</th>
+<th>Document</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON</td>
+<td><code>{"item": ["pen","pad"], "note": "rush"}</code></td>
+<td><code>[(item,"pen"), (item,"pad"), (note,"rush")]</code></td>
+</tr>
+<tr>
+<td>OML</td>
+<td><code>item: "pen"</code> / <code>note: "rush"</code> / <code>item: "pad"</code></td>
+<td><code>[(item,"pen"), (note,"rush"), (item,"pad")]</code></td>
+</tr>
+<tr>
+<td>XML</td>
+<td>the snippet above</td>
+<td><code>[(item,"pen"), (note,"rush"), (item,"pad")]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Two consequences follow, and they are the whole model.</p>
+<p><strong>There is no array.</strong> An array <em>is</em> a repeated label. <code>tags</code> appearing four
+times is a four-element array of tags. Array-of-record and array-of-scalar are
+the same thing, handled by the same mechanism, with no separate type to define.</p>
+<p><strong>Object and array collapse into one thing.</strong> A node is an edge list. The
+object-versus-array distinction that every other data model carries does not
+exist here, so no operation ever has to branch on it.</p>
+<p>Order is preserved because a Document is a faithful record of what was read.
+Order is never <em>checked</em>, because schemas count edges rather than sequencing
+them. A reordered round trip stays valid.</p>
+<hr />
+<h2 id="22-formal-definition">2.2 Formal definition<a class="headerlink" href="#22-formal-definition" title="Permanent link">&para;</a></h2>
+<p>A Document is a node.</p>
+<div class="highlight"><pre><span></span><code>scalar-value = string | integer | number | boolean | date | time | datetime
+value        = scalar-value | null
+edge         = (label, target)          ; label is a string
+target       = value | node
+node         = [ edge, edge, ... ]      ; ordered; labels MAY repeat
+Document     = node | value             ; a bare value is a legal Document
+</code></pre></div>
+<h3 id="221-scalar-kinds">2.2.1 Scalar kinds<a class="headerlink" href="#221-scalar-kinds" title="Permanent link">&para;</a></h3>
+<p>Exactly seven scalar kinds exist:</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Domain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>string</code></td>
+<td>A sequence of Unicode code points</td>
+</tr>
+<tr>
+<td><code>integer</code></td>
+<td>An arbitrary-precision signed integer, subject to §2.4</td>
+</tr>
+<tr>
+<td><code>number</code></td>
+<td>A real number, represented as IEEE 754 binary64</td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td><code>true</code> or <code>false</code></td>
+</tr>
+<tr>
+<td><code>date</code></td>
+<td>A calendar date: year, month, day</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>A time of day, with optional sub-second precision and optional UTC offset</td>
+</tr>
+<tr>
+<td><code>datetime</code></td>
+<td>A date and a time of day, joined</td>
+</tr>
+</tbody>
+</table>
+<p>There is no <code>float</code> kind and no <code>decimal</code> kind. <code>number</code> covers non-integral
+values. Implementations MUST NOT add scalar kinds; adding one changes the
+Schema Algebra's subtyping lattice and therefore changes conformance results.</p>
+<p><code>null</code> is a value but not a kind. It has no scalar kind of its own and is
+admitted only where a schema permits it (§3).</p>
+<h3 id="222-labels">2.2.2 Labels<a class="headerlink" href="#222-labels" title="Permanent link">&para;</a></h3>
+<p>A label is a string. Any Unicode string is a legal label. Two edges in the same
+node MAY carry the same label; nothing in the Document model constrains
+uniqueness, ordering, or the relationship between repeated labels.</p>
+<h3 id="223-nesting">2.2.3 Nesting<a class="headerlink" href="#223-nesting" title="Permanent link">&para;</a></h3>
+<p>A target is either a value or a node. Nothing else. In particular there is no
+bare nested list: a target cannot be a list of unlabeled items, because an
+unlabeled item has no edge to occupy. An input containing one (JSON
+<code>[[1,2],[3,4]]</code>, for instance) MUST be rejected at read time, not silently
+flattened. See <a href="../07-codecs-and-deserialization/">chapter 7</a>.</p>
+<hr />
+<h2 id="23-structural-invariants">2.3 Structural invariants<a class="headerlink" href="#23-structural-invariants" title="Permanent link">&para;</a></h2>
+<p>A conformant implementation MUST maintain all of the following for every
+Document it constructs, reads, or hands back.</p>
+<p><strong>D-1. Edge order is preserved.</strong> The order of edges within a node MUST be the
+order they appeared in the source, for every reader. Implementations MUST NOT
+sort, group, or stabilize edge order at read time.</p>
+<p><strong>D-2. Repeated labels are not merged.</strong> Two edges with the same label remain
+two edges. An implementation MUST NOT collapse them into a single edge carrying
+a list.</p>
+<p><strong>D-3. Order is never a schema constraint.</strong> No operation in
+<a href="../06-schema-algebra/">chapter 6</a> and no validation rule in §3 may consult edge
+order. A permutation of a node's edges MUST produce identical validation and
+identical algebra results. Concretely: <code>[(a,1),(b,2)]</code> and <code>[(b,2),(a,1)]</code> are
+different Documents (edge order is data, preserved faithfully) but validate
+identically against any schema that accepts one of them — the schema counts
+how many <code>a</code> edges and how many <code>b</code> edges exist, never which comes first.</p>
+<p><strong>D-4. A target is a value or a node.</strong> No third case exists. Implementations
+MUST NOT introduce a list-valued target as an internal representation that can
+escape into user-visible Documents.</p>
+<p><strong>D-5. Scalar identity is by kind and value.</strong> Two scalars are equal when their
+kinds and values are equal. An <code>integer</code> and a <code>number</code> of the same magnitude
+are distinct scalars in the Document model, even though <code>integer</code> is a subtype
+of <code>number</code> in the Schema model (§6).</p>
+<p>This invariant is unconditional for the model itself — it is not weakened by
+what any particular host language can represent. An implementation targeting
+a language with no native <code>integer</code>/<code>number</code> distinction (e.g. JavaScript's
+single <code>number</code> type) MAY be structurally unable to preserve this distinction
+independent of a schema. That is a real, accepted implementation constraint,
+not a reason to relax the model: such an implementation MUST still document
+the gap plainly (see <a href="../09-divergence-ledger/#94-known-open-divergences">§9.4 D-6</a>
+for TypeScript's case) and MUST report any conformance vector whose outcome
+depends on this distinction as <em>skipped</em>, never as passing — a vector cannot
+be honestly satisfied by an implementation that cannot construct its input.</p>
+<blockquote>
+<p>D-3 is the invariant most likely to be violated by accident, usually by an
+implementation that validates a node by zipping it against a field list. Zip
+against counts, not positions.</p>
+</blockquote>
+<hr />
+<h2 id="24-safety-limits">2.4 Safety limits<a class="headerlink" href="#24-safety-limits" title="Permanent link">&para;</a></h2>
+<p>A Document is built from untrusted input. Three quantities bound the work an
+implementation will do before refusing to continue: nesting depth, total node
+count, and the digit length of an <code>integer</code> literal. Every conformant
+implementation MUST enforce a finite limit on all three. <strong>No implementation
+MAY be unbounded on any of them.</strong></p>
+<p><strong>What is fixed, and what is not.</strong> The <em>existence</em> and <em>meaning</em> of the three
+limits is normative. The specific <em>numbers</em> are not: this is a deliberate
+change from an earlier draft of this spec, which wrongly treated one platform's
+numbers as universal constants. A limit exists to bound work against untrusted
+input on the hardware actually running the implementation, and that varies
+legitimately by two orders of magnitude between an embedded parser and a
+big-data ingestion engine.</p>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Reference default</th>
+<th>Applies to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maximum nesting depth</td>
+<td>200</td>
+<td>Levels of node nesting, counted from the Document root</td>
+</tr>
+<tr>
+<td>Maximum node count</td>
+<td>1 000 000</td>
+<td>Nodes materialized while building one Document</td>
+</tr>
+<tr>
+<td>Maximum integer digits</td>
+<td>4 300</td>
+<td>Decimal digits in an <code>integer</code> literal, sign excluded</td>
+</tr>
+</tbody>
+</table>
+<p>The reference defaults are what the Python implementation uses today, and what
+a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
+matches CPython's own default for <code>sys.set_int_max_str_digits</code> — conversion
+between an arbitrarily long digit string and a big integer is superlinear, so
+an unbounded literal is a denial-of-service vector regardless of language.</p>
+<p><strong>Choosing different values.</strong> An implementation MAY set any of the three
+lower or higher than the reference default, to fit its deployment target —
+for example a lower depth limit on a mobile or embedded runtime with a small
+call stack, or a higher node count on a system built to ingest large batch
+documents. Whatever values an implementation chooses:</p>
+<ul>
+<li>They MUST be finite. "No limit" is not a legal choice for any of the three.</li>
+<li>They MUST be documented, in the same place a user would look for the rest of
+  the implementation's conformance profile.</li>
+<li>The depth limit MUST match between the Document builder and the OML parser
+  within one implementation (§2.4 note below) — a document that parses MUST
+  NOT then fail to build.</li>
+</ul>
+<p><strong>Where this stands today.</strong> No implementation currently exposes a public
+configuration surface for any of the three limits. Python's <code>_MAX_DEPTH</code>,
+<code>_MAX_NODES</code>, and <code>_MAX_INT_DIGITS</code> are hardcoded module constants with no
+constructor argument, function parameter, or environment variable that lets a
+caller change them — the only place they vary at all is inside Python's own
+test suite, via direct monkeypatching of the private module attribute, which
+is a test technique, not a configuration surface a real caller can use. "MAY
+set any of the three" is written for an implementation that chooses to expose
+one — an embedded or big-data target with an actual reason to deviate — not a
+capability any implementation ships today. A future implementation is free to
+be the first.</p>
+<p><strong>What is fixed regardless of the chosen value: how exceeding it is reported.</strong>
+Exceeding a declared limit — whatever number the implementation chose — MUST
+produce the corresponding standardized error from the <code>document.limit.*</code>
+family defined in <a href="../08-conformance-and-errors/">chapter 8</a>, MUST NOT be
+truncated, clamped, or silently accepted, and MUST NOT be reported as any other
+error category. A conformance test comparing two implementations with
+different configured limits is expected to see different pass/fail points on a
+depth- or size-scaling test; it MUST see the same error code at whichever point
+each of them draws its own line.</p>
+<p><strong>On the node cap.</strong> The node count bounds total materialized nodes, not depth.
+It exists because a shallow document can still be enormous — a million sibling
+edges is depth 1.</p>
+<p><strong>On depth.</strong> Within one implementation, the Document builder's depth limit and
+the OML parser's nesting limit MUST be the same number. A document that the
+parser accepts MUST NOT then fail while the builder walks it. In Python this
+isn't an active synchronization an implementer has to maintain — the builder
+and the parser both import the same module-level constant, so there is
+exactly one number, not two kept equal by discipline. The MUST here is aimed
+at an implementation whose architecture genuinely has two separate places a
+depth limit could be configured; where a single shared constant is the
+natural design, as in Python, the requirement is satisfied automatically.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
