@@ -8,7 +8,7 @@
       "input": {
         "format": "oml",
         "declared_max_depth": 3,
-        "text": "a:\n  b:\n    c: 1\n"
+        "text": "a: { b: { c: 1 } }"
       },
       "expect": {
         "ok": true,
@@ -22,7 +22,7 @@
           ]
         }
       },
-      "comment": "Three levels of nesting (a > b > c) against a declared limit of 3 -- exactly at the boundary, MUST succeed."
+      "comment": "Three levels of nesting (a > b > c) against a declared limit of 3 -- exactly at the boundary, MUST succeed. Nesting is brace-delimited (Sec4.1: indentation is insignificant in OML), not indentation -- confirmed live that the equivalent indentation-only text is a syntax error, not valid input at all."
     },
     {
       "name": "document-model/limits/depth-one-past-declared-limit-fails",
@@ -32,7 +32,7 @@
       "input": {
         "format": "oml",
         "declared_max_depth": 3,
-        "text": "a:\n  b:\n    c:\n      d: 1\n"
+        "text": "a: { b: { c: { d: 1 } } }"
       },
       "expect": {
         "ok": false,
@@ -40,7 +40,7 @@
           { "path": "$", "code": "document.limit.depth" }
         ]
       },
-      "comment": "One level past the same declared limit. declared_max_depth is a vector-local parameter, not Python's reference default of 200 (§2.4 states the numbers are not normative, only the existence of a finite limit and the error family it MUST produce are). A harness runs the implementation under test with its own limit configured to this value for the vector's duration; an implementation exposing no such configuration surface yet -- true of Python today per §2.4 -- reports this vector as skip, not fail, since it cannot be pointed at 3. Either way this pins the rule: exceeding your own declared limit produces document.limit.depth, never truncation, never a different code."
+      "comment": "One level past the same declared limit. declared_max_depth is a vector-local parameter, not Python's reference default of 200 (§2.4 states the numbers are not normative, only the existence of a finite limit and the error family it MUST produce are). A harness runs the implementation under test with its own limit configured to this value for the vector's duration; an implementation exposing no such configuration surface yet -- true of Python today per §2.4 -- reports this vector as skip, not fail, since it cannot be pointed at 3. Either way this pins the rule: exceeding your own declared limit produces document.limit.depth, never truncation, never a different code. Nesting is brace-delimited (Sec4.1), not indentation."
     },
     {
       "name": "document-model/limits/node-count-at-declared-limit-succeeds",
@@ -71,7 +71,7 @@
       "input": {
         "format": "oml",
         "declared_max_nodes": 1,
-        "text": "a:\n  b: 1\n"
+        "text": "a: { b: 1 }"
       },
       "expect": {
         "ok": false,
@@ -79,7 +79,7 @@
           { "path": "$", "code": "document.limit.nodes" }
         ]
       },
-      "comment": "Two nodes materialized (root, plus the nested node under `a`) against the same declared limit of 1. declared_max_nodes is vector-local, not Python's reference default of 1,000,000 -- same skip-not-fail caveat as the depth vector above applies to any implementation with no configuration surface for this limit."
+      "comment": "Two nodes materialized (root, plus the nested node under `a`) against the same declared limit of 1. declared_max_nodes is vector-local, not Python's reference default of 1,000,000 -- same skip-not-fail caveat as the depth vector above applies to any implementation with no configuration surface for this limit. Nesting is brace-delimited (Sec4.1), not indentation."
     },
     {
       "name": "document-model/limits/integer-digits-at-declared-limit-succeeds",
