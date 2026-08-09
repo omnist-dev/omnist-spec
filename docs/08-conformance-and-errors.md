@@ -152,6 +152,7 @@ reason for a second set of names.
 | `algebra.infer-no-samples` | `infer` called with zero samples |
 | `algebra.infer-scalar-root` | A sample's root is a value rather than a node |
 | `algebra.infer-conflicting-scalars` | Samples disagree on a scalar kind, other than integer/number |
+| `algebra.infer-mixed-shape` | Samples disagree on whether a label's value is a node or a scalar |
 
 ### 8.3.7 `lint.*` — schema diagnostics
 

@@ -72,6 +72,29 @@
       "comment": "integer vs. string is not the one sanctioned integer/number subtype relation, so this is a hard failure without allow_any."
     },
     {
+      "name": "infer/allow-any/mixed-object-and-scalar-shapes-fail-by-default",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer",
+      "purpose": "error-case",
+      "input": {
+        "samples": [
+          "id: 7\n",
+          "id: { a: 1 }\n"
+        ],
+        "allow_any": false
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "Root.id",
+            "code": "algebra.infer-mixed-shape"
+          }
+        ]
+      },
+      "comment": "One sample has id as a scalar, the other as a node -- object vs. value is a shape disagreement, distinct from algebra.infer-conflicting-scalars (which is two scalar kinds disagreeing). Verified live: `omnist infer --from oml --json` on these two samples reports \"label 'id' mixes objects and values; cannot infer one type\", the exact algebra.infer-mixed-shape case from Sec8.3.6's pseudocode."
+    },
+    {
       "name": "infer/allow-any/conflicting-scalar-kinds-open-to-any-when-allowed",
       "spec": "docs/06-schema-algebra.md#610-infersamples",
       "operation": "infer_with_report",
