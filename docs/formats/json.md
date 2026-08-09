@@ -11,6 +11,7 @@ is not a value in the model, it is the same label occurring more than once.
 | `{"a":1,"b":2}` | `[(a,1),(b,2)]` |
 | `{"m":[A,B]}` | `[(m,A),(m,B)]` |
 | `{"m":[A]}` | `[(m,A)]` — one edge, indistinguishable from `{"m":A}` |
+| `{"m":[]}` | zero `m` edges — the label is simply absent from the result |
 
 **No temporal types.** JSON has none, so a reader MUST NOT produce `date`,
 `time`, or `datetime` on its own. A date-looking string stays a string unless a
@@ -25,6 +26,17 @@ error-severity adjustment in the format report. A strict mode MAY instead fail.
 **Bare nested arrays are rejected.** `[[1,2],[3,4]]` has inner elements with no
 label and therefore no edge to occupy. A reader MUST reject it rather than
 flatten it.
+
+**An empty array is a legitimate zero-edge encoding, not an error.**
+`{"m":[]}` reads to zero `m` edges: the label simply doesn't appear in the
+result, the same as if the key were absent entirely. This is JSON-specific
+and does not extend to OML's `[...]` array sugar — a bare `m: []` in OML MUST
+be rejected (verified live: `empty array is not allowed`), because OML's
+array syntax is sugar for a *run* of same-label edges and a zero-length run
+is indistinguishable from no sugar being used at all. JSON has no such
+ambiguity: its arrays are a real container independent of the Document
+model's edge-repetition mechanism, so an empty one is just as meaningful as
+a non-empty one.
 
 **Top level.** A JSON document may have many top-level keys, which becomes many
 top-level edges. That is legal, and it is also the shape XML cannot carry.

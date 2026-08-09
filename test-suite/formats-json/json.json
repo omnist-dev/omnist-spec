@@ -64,6 +64,23 @@
       "comment": "{\"m\":[1]} and {\"m\":1} produce the identical one-edge Document -- there is no way to recover, from the Document alone, which spelling the source used."
     },
     {
+      "name": "formats-json/basic/empty-array-value-is-zero-edges-not-an-error",
+      "spec": "docs/formats/json.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"m\":[]}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": []
+        }
+      },
+      "comment": "An empty JSON array is a legitimate zero-edge encoding, not an error -- the label simply doesn't appear in the result. This does not extend to OML's [...] array sugar, where a bare m: [] MUST be rejected (verified live: 'empty array is not allowed') since a zero-length run is indistinguishable from no sugar at all; JSON's array is a real container independent of the edge-repetition mechanism, so an empty one carries meaning."
+    },
+    {
       "name": "formats-json/basic/nested-array-is-rejected",
       "spec": "docs/formats/json.md",
       "operation": "parse",
