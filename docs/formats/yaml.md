@@ -48,6 +48,17 @@ fails at exactly this point) and
 same file with the key quoted, which reads and validates cleanly) in
 [`../examples/`](../examples/index.md#github-actions-workflow).
 
+**This alias set is exactly these six words, not the raw YAML 1.1
+specification's fuller list.** The YAML 1.1 spec itself also resolves bare
+`y`/`Y`/`n`/`N` as booleans; the reference implementation's resolver
+deliberately does not (matching PyYAML's own default `SafeLoader`, which
+omits the single-letter forms specifically because they collide too easily
+with ordinary short keys and values). A bare `n:` or `y:` key stays an ordinary string label here, not a
+Norway-problem case — confirmed live for `n`/`N`/`y`/`Y` in both key and
+value position. Don't assume the full YAML 1.1 alias list transfers; only
+`on`/`off`/`yes`/`no`/`true`/`false` (case variants included) resolve as
+booleans.
+
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.
 
