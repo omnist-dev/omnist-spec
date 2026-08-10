@@ -97,28 +97,47 @@ filesystem order, or wall-clock time.
 
 ## 9.3 Current status
 
-As of spec v0.1.
+As of spec v0.2.0-alpha.
 
-| | Python | TypeScript | Rust |
-|---|---|---|---|
-| Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha |
-| Maturity | beta, reference | alpha | alpha |
-| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete |
-| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) |
-| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended |
-| OML canonical write | complete | partial | complete |
-| OSD read/write | complete | complete | complete |
-| `any` type | yes, v0.5.0 | yes | yes |
-| `validate` | complete | complete | complete |
-| `materialize` | complete | complete | complete |
-| `compatible_with` / `equivalent` | complete | complete | complete |
-| `prune` / `is_empty` | complete | complete | complete |
-| `normalize` | complete | complete | complete |
-| `extract` | complete | complete | complete |
-| `infer` | complete | complete | complete |
-| `lint` | complete | complete | complete |
-| Codecs JSON/YAML/TOML/XML | all four | all four | all four |
-| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags |
+| | Python | TypeScript | Rust | Go |
+|---|---|---|---|---|
+| Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.0.x-alpha |
+| Maturity | beta, reference | alpha | alpha | alpha, built spec-first with no reference-implementation access (§9.5) |
+| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`, per spec §2.4's digit-count requirement) |
+| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | unverified in this table — not yet audited by source inspection the way Python/TS/Rust were |
+| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended (self-reported; not yet independently audited) |
+| OML canonical write | complete | partial | complete | complete (self-reported) |
+| OSD read/write | complete | complete | complete | complete (self-reported) |
+| `any` type | yes, v0.5.0 | yes | yes | yes (self-reported) |
+| `validate` | complete | complete | complete | complete (self-reported) |
+| `materialize` | complete | complete | complete | complete (self-reported) |
+| `compatible_with` / `equivalent` | complete | complete | complete | complete (self-reported) |
+| `prune` / `is_empty` | complete | complete | complete | complete (self-reported) |
+| `normalize` | complete | complete | complete | complete (self-reported) |
+| `extract` | complete | complete | complete | complete (self-reported) |
+| `infer` | complete | complete | complete | complete (self-reported) |
+| `lint` | complete | complete | complete | complete (self-reported) |
+| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four (self-reported) |
+| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags (self-reported) |
+
+**On the Go column.** `omnist-go` (`omnist-dev/omnist-go`) is the fourth
+implementation referenced throughout this spec and built under §9.5's
+process — spec-first, no reference-implementation access except as a
+narrow tie-breaker on already-filed gaps. As of its own `docs/limitations.md`
+(pinned to this spec's commit `896e14e`), its Track 2 (JSON-vector)
+conformance harness reports 147 pass / 3 fail / 1 skip of 151 vectors, with
+the 3 fails attributed to now-fixed spec-vector defects (`omnist-spec#39`,
+fixed in commit `a8a53ca`, already inside the pinned `896e14e`) and one
+claim ("conflates `materialize`'s upgrade rule with `validate`'s stricter
+check") that could not be traced to any open or closed `omnist-spec` issue
+during a 2026-08-10 audit — filed as `omnist-go#59` pending that repo
+re-running its harness against its own already-current pin and correcting
+the citation. Every "complete" cell in this column above is self-reported
+from that repo's own docs, not yet independently source-audited the way the
+Python/TypeScript/Rust columns were (see the note below on those columns'
+own history of being found stale on exactly this kind of unaudited claim) —
+treat this column as provisional until a harness re-run and a source audit
+both confirm it.
 
 **On the TypeScript and Rust columns' upgrade from "partial"/"not yet" to
 "complete."** Two consecutive audits found this table substantially
