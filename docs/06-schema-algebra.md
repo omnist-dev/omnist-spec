@@ -348,9 +348,37 @@ graph LR
    no "fewest records" question to answer for a schema that accepts nothing.
 2. **Partition refinement.** Group record names into structural equivalence
    classes. Start from a local signature — each record's fields as
-   `(label, min, max, is-scalar-or-not)`, target-blind. Then refine to a
+   `(label, min, max, shape)`, target-blind. Then refine to a
    fixpoint: two records stay in the same block only if, for every field, their
    reference targets are in the same block.
+
+   `local_signature` is used three times below (`equivalence_classes`,
+   `refine_key`) but was never itself pinned down precisely — "target-blind"
+   describes what it excludes (a `Ref` field's target *name*), not what it
+   keeps, and an implementation that reads "is-scalar-or-not" as a bare
+   boolean will silently merge a `string` field with an `integer` field,
+   which is wrong: those two records do not accept the same documents.
+   `shape` is:
+
+   ```
+   function local_signature(rec):
+       fields = sorted by label of
+           (f.label, f.min, f.max, shape_of(f.type))
+           for f in rec.fields
+       return ("record", fields)
+
+   function shape_of(t):
+       if t is Any: return ("any",)
+       if t is Ref: return ("ref",)             # target name deliberately excluded
+       return ("scalar", t.kind, t.nullable)     # kind and nullable both included
+   ```
+
+   A scalar field's full kind and nullability are part of the signature from
+   the start; only a `Ref` field's specific target is left for refinement to
+   resolve, since two records can turn out equivalent because their ref
+   targets are themselves equivalent under different names — a signature
+   keyed on the target name up front would prevent them from ever landing in
+   the same starting block.
 3. **Merge.** Pick one representative per block (the lexicographically smallest
    name, so the choice is deterministic), rewrite every reference to it, and
    drop the rest.
