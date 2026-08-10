@@ -2,10 +2,11 @@
 
 ## 8.1 Status of this chapter
 
-**The error-code taxonomy in §8.3 is new normative content. No implementation
-emits it today.** It is written here because conformance testing needs stable,
-language-independent identifiers, and comparing human-readable message strings
-across three languages is not a test, it is a coincidence.
+**The error-code taxonomy in §8.3 is new normative content. Three of the four
+implementations don't emit it yet; the fourth already does.** It is written
+here because conformance testing needs stable, language-independent
+identifiers, and comparing human-readable message strings across four
+languages is not a test, it is a coincidence.
 
 The prior art, stated accurately so the migration cost is visible:
 
@@ -14,6 +15,7 @@ The prior art, stated accurately so the migration cost is visible:
 | Python (reference, beta) | Validation and materialization results carry kebab-case codes: `shape-mismatch`, `unexpected-field`, `cardinality`, `null-not-allowed`, `type-mismatch`. `lint` carries its own: `unsatisfiable-record`, `unreachable-record`, `duplicate-record`, `any-field`. Everything else is a bare exception class (`DocumentError`, `SchemaError`, `ParseError`) with a human message and no code. |
 | TypeScript (alpha) | Diagnostic records carry a `code: string` field using the same kebab-case tags as Python's validation codes. |
 | Rust (alpha) | Top-level `thiserror` structs (`DocumentError`, `ParseError`, `FormatError`, `WriteError`) carry no code. But `SchemaError`'s validation path has an `ErrorCode` enum rendering the identical kebab-case tags Python and TypeScript use (`unexpected-field`, `cardinality`, `type-mismatch`, `null-not-allowed`, `shape-mismatch`), attached to every `ValidationError` produced by both `validate` and `materialize`. An earlier version of this table said "no code field anywhere," which was wrong — Rust has reached the same partial convergence as the other two. |
+| **Go (alpha) — already migrated** | Emits §8.3's namespaced codes directly (`lint.unreachable-record`, `document.limit.depth`, etc.), confirmed via `errors.go`'s `Code` constants and independent inspection during `omnist-spec#42`'s investigation. Built this way from the start, not migrated from a pre-existing kebab-case scheme — the newest implementation had no legacy convention to carry forward, so it adopted the target form directly. This is the existence proof the other three's "SHOULD migrate" below didn't have until 2026-08-10: the namespaced form is implementable, not just theoretical. |
 
 There is a second, separate family of prior art this table previously missed
 entirely: **format-adjustment codes.** Python's format readers/writers already
@@ -29,17 +31,20 @@ directly onto §8.3.8's `format.*` family below — the migration here is
 mostly a rename, not new design, which the original wording of this section
 didn't make clear.
 
-So there is partial, undocumented convergence on validation codes across all
-three implementations, and a second, separate area of already-shipped
-convergence on format-adjustment codes (Python only, so far) — and nothing at
-all outside those two areas. There has never been a cross-language
-convention. This chapter proposes one.
+So there is partial, undocumented convergence on validation codes across
+Python/TypeScript/Rust, a second, separate area of already-shipped
+convergence on format-adjustment codes (Python only, so far), and a fourth
+implementation that skipped the intermediate kebab-case step entirely and
+went straight to §8.3's namespaced form. There has never been a
+cross-language convention among the first three; this chapter proposes one,
+and Go is now living proof it works in practice, not just on paper.
 
-**Migration.** The kebab-case validation tags all three implementations already
-share are the closest prior art and map cleanly onto §8.3's `validate.*` family.
-All three SHOULD migrate to the namespaced form. None of this is required for
-the current release; it is required before a version of this spec declares
-§8.3 mandatory.
+**Migration.** The kebab-case validation tags Python/TypeScript/Rust already
+share are the closest prior art and map cleanly onto §8.3's `validate.*`
+family. All three SHOULD migrate to the namespaced form — Go's adoption
+removes the main reason to delay, since the target form is no longer
+hypothetical. None of this is required for the current release; it is
+required before a version of this spec declares §8.3 mandatory.
 
 Until then, an implementation is conformant on error *behavior* — which inputs
 fail, and where — without being conformant on error *codes*. The test-vector

@@ -146,12 +146,18 @@ either report at face value — both of `omnist-go`'s initial diagnoses
   namespaced code, and PR #61's diff confirms only the comparison logic in
   `tools/conformance/fixtures.go` changed, no fixture or production code.
 
-Every other "complete" cell in this column is still self-reported from that
-repo's own docs, not yet independently source-audited the way the
-Python/TypeScript/Rust columns were (see the note below on those columns'
-own history of being found stale on exactly this kind of unaudited claim) —
-treat the rest of this column as provisional until a full source audit
-confirms it.
+**Source-audited 2026-08-10, not just accepted from the repo's own docs**
+(the other three columns were both found stale exactly this way — see
+below — so this column got the same scrutiny rather than being trusted on
+maturity or a clean conformance run alone): every operation this table
+lists as "complete" has a real implementation, not a stub — `Materialize`,
+`CompatibleWith`/`Equivalent`, `Prune`/`IsEmpty`, `Normalize`, `Extract`,
+`Infer`/`InferWithReport`, `Lint` are all present with substantive logic
+in `algebra/*.go` and `materialize.go`. All four codecs (`formats/{json,
+yaml,toml,xml}/`) have both a reader and a writer, each with its own unit
+tests *and* a fuzz test — `oml/` and `osd/` likewise. `any` is present as
+`AnyType()`. Nothing here is a thin wrapper or a `not implemented` stub.
+This column no longer needs the "provisional, self-reported" caveat.
 
 **On the TypeScript and Rust columns' upgrade from "partial"/"not yet" to
 "complete."** Two consecutive audits found this table substantially
