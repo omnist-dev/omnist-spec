@@ -109,7 +109,7 @@ As of spec v0.2.0-alpha.
 | OML canonical write | complete | partial | complete | complete (self-reported) |
 | OSD read/write | complete | complete | complete | complete (self-reported) |
 | `any` type | yes, v0.5.0 | yes | yes | yes (self-reported) |
-| `validate` | complete | complete | complete | complete (self-reported) |
+| `validate` | complete | complete | complete | pending a fix confirmed needed by this audit — `conformScalar` is missing the `integer <: number` value-level subtype exception (§3.6.1's `matches_kind`, formally defined in commit `40ef979`); tracked in `omnist-go`'s own issue tracker following `omnist-spec#41`'s resolution |
 | `materialize` | complete | complete | complete | complete (self-reported) |
 | `compatible_with` / `equivalent` | complete | complete | complete | complete (self-reported) |
 | `prune` / `is_empty` | complete | complete | complete | complete (self-reported) |
@@ -118,26 +118,37 @@ As of spec v0.2.0-alpha.
 | `infer` | complete | complete | complete | complete (self-reported) |
 | `lint` | complete | complete | complete | complete (self-reported) |
 | Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four (self-reported) |
-| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags (self-reported) |
+| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | **yes** — confirmed via `omnist-spec#42`'s investigation that `omnist-go` already emits §8.3's namespaced codes (e.g. `lint.unreachable-record`), ahead of the other three and ahead of D-4 resolving; the conformance harness's Track 1 comparison rule was updated (commit `40ef979`) specifically because this made it the first column not to match D-4's "no implementation yet" premise |
 
 **On the Go column.** `omnist-go` (`omnist-dev/omnist-go`) is the fourth
 implementation referenced throughout this spec and built under §9.5's
 process — spec-first, no reference-implementation access except as a
-narrow tie-breaker on already-filed gaps. As of its own `docs/limitations.md`
-(pinned to this spec's commit `896e14e`), its Track 2 (JSON-vector)
-conformance harness reports 147 pass / 3 fail / 1 skip of 151 vectors, with
-the 3 fails attributed to now-fixed spec-vector defects (`omnist-spec#39`,
-fixed in commit `a8a53ca`, already inside the pinned `896e14e`) and one
-claim ("conflates `materialize`'s upgrade rule with `validate`'s stricter
-check") that could not be traced to any open or closed `omnist-spec` issue
-during a 2026-08-10 audit — filed as `omnist-go#59` pending that repo
-re-running its harness against its own already-current pin and correcting
-the citation. Every "complete" cell in this column above is self-reported
-from that repo's own docs, not yet independently source-audited the way the
+narrow tie-breaker on already-filed gaps. A 2026-08-10 re-run against its
+already-current pin (`896e14e`) reported 149 pass / 1 fail / 1 skip of 151
+vectors on Track 2, and 18 pass / 1 fail of 19 on Track 1. Both remaining
+fails were independently re-investigated rather than accepted at face value:
+- The Track 2 fail (`validate/scalar-kinds/integer-satisfies-number-typed-field`)
+  was reported as a vector defect (`omnist-spec#41`); verification against
+  the reference implementation showed the vector was correct and the gap was
+  `matches_kind` never being formally defined in §3.6.1 (fixed, commit
+  `40ef979`) — this is now a confirmed real `omnist-go` gap (missing the
+  `integer <: number` value-level exception in `conformScalar`), reflected
+  in the `validate` row above.
+- The Track 1 fail (`lint/edge-case-unreachable-record`) was reported as a
+  fixture defect (`omnist-spec#42`); verification against the reference
+  implementation showed the fixture was correct (Python genuinely emits the
+  bare, pre-namespacing code) and the gap was the harness's Track 1
+  comparison rule never extending §8.5.2 rule 4's code-agnostic comparison
+  the way Track 2 already does (fixed, commit `40ef979`) — `omnist-go` was
+  actually right to emit the namespaced code, reflected in the §8.3 error
+  codes row above.
+
+Every other "complete" cell in this column is still self-reported from that
+repo's own docs, not yet independently source-audited the way the
 Python/TypeScript/Rust columns were (see the note below on those columns'
 own history of being found stale on exactly this kind of unaudited claim) —
-treat this column as provisional until a harness re-run and a source audit
-both confirm it.
+treat the rest of this column as provisional until a full source audit
+confirms it.
 
 **On the TypeScript and Rust columns' upgrade from "partial"/"not yet" to
 "complete."** Two consecutive audits found this table substantially
