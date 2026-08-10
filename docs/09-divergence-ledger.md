@@ -104,7 +104,7 @@ As of spec v0.2.0-alpha.
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.0.x-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha, built spec-first with no reference-implementation access (§9.5) |
 | Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`, per spec §2.4's digit-count requirement) |
-| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | unverified in this table — not yet audited by source inspection the way Python/TS/Rust were |
+| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited: a single shared `LimitChecker` struct (`limits.go`) is constructed identically by every reader (OML, JSON, YAML, TOML, XML), satisfying §2.4's cross-reader consistency requirement by construction rather than by discipline; codes are the `document.limit.*` family, confirmed matching |
 | OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended (self-reported; not yet independently audited) |
 | OML canonical write | complete | partial | complete | complete (self-reported) |
 | OSD read/write | complete | complete | complete | complete (self-reported) |
