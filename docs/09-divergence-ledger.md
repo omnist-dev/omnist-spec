@@ -109,7 +109,7 @@ As of spec v0.2.0-alpha.
 | OML canonical write | complete | partial | complete | complete (self-reported) |
 | OSD read/write | complete | complete | complete | complete (self-reported) |
 | `any` type | yes, v0.5.0 | yes | yes | yes (self-reported) |
-| `validate` | complete | complete | complete | pending a fix confirmed needed by this audit — `conformScalar` is missing the `integer <: number` value-level subtype exception (§3.6.1's `matches_kind`, formally defined in commit `40ef979`); tracked in `omnist-go`'s own issue tracker following `omnist-spec#41`'s resolution |
+| `validate` | complete | complete | complete | complete — `conformScalar`'s missing `integer <: number` exception (§3.6.1's `matches_kind`) was fixed in `omnist-go` PR #61 (main `0a03f30`), verified in the PR diff |
 | `materialize` | complete | complete | complete | complete (self-reported) |
 | `compatible_with` / `equivalent` | complete | complete | complete | complete (self-reported) |
 | `prune` / `is_empty` | complete | complete | complete | complete (self-reported) |
@@ -123,25 +123,26 @@ As of spec v0.2.0-alpha.
 **On the Go column.** `omnist-go` (`omnist-dev/omnist-go`) is the fourth
 implementation referenced throughout this spec and built under §9.5's
 process — spec-first, no reference-implementation access except as a
-narrow tie-breaker on already-filed gaps. A 2026-08-10 re-run against its
-already-current pin (`896e14e`) reported 149 pass / 1 fail / 1 skip of 151
-vectors on Track 2, and 18 pass / 1 fail of 19 on Track 1. Both remaining
-fails were independently re-investigated rather than accepted at face value:
-- The Track 2 fail (`validate/scalar-kinds/integer-satisfies-number-typed-field`)
-  was reported as a vector defect (`omnist-spec#41`); verification against
-  the reference implementation showed the vector was correct and the gap was
-  `matches_kind` never being formally defined in §3.6.1 (fixed, commit
-  `40ef979`) — this is now a confirmed real `omnist-go` gap (missing the
-  `integer <: number` value-level exception in `conformScalar`), reflected
-  in the `validate` row above.
-- The Track 1 fail (`lint/edge-case-unreachable-record`) was reported as a
-  fixture defect (`omnist-spec#42`); verification against the reference
-  implementation showed the fixture was correct (Python genuinely emits the
-  bare, pre-namespacing code) and the gap was the harness's Track 1
-  comparison rule never extending §8.5.2 rule 4's code-agnostic comparison
-  the way Track 2 already does (fixed, commit `40ef979`) — `omnist-go` was
-  actually right to emit the namespaced code, reflected in the §8.3 error
-  codes row above.
+narrow tie-breaker on already-filed gaps. As of `omnist-go` PR #61 (main
+`0a03f30`, 2026-08-10), both conformance tracks report **zero real fails**:
+Track 2 150 pass / 0 fail / 1 skip of 151 vectors, Track 1 19 pass / 0 fail
+of 19 fixtures (the one skip is a known TOML strict-mode write gap, cited
+and out of scope). Getting there required two rounds of independent
+verification against the reference implementation rather than accepting
+either report at face value — both of `omnist-go`'s initial diagnoses
+(`omnist-spec#41`, `#42`) turned out backwards:
+- `#41` was reported as a vector defect; verification showed the vector was
+  correct and the real gap was `matches_kind` never being formally defined
+  in §3.6.1 (fixed, commit `40ef979`) — a genuine `omnist-go` bug
+  (`conformScalar` missing the `integer <: number` value-level exception),
+  since fixed in PR #61 and confirmed in its diff.
+- `#42` was reported as a fixture defect; verification showed the fixture
+  was correct (Python genuinely emits the bare, pre-namespacing code) and
+  the real gap was the harness's Track 1 comparison rule never extending
+  §8.5.2 rule 4's code-agnostic comparison the way Track 2 already does
+  (fixed, commit `40ef979`) — `omnist-go` was actually right to emit the
+  namespaced code, and PR #61's diff confirms only the comparison logic in
+  `tools/conformance/fixtures.go` changed, no fixture or production code.
 
 Every other "complete" cell in this column is still self-reported from that
 repo's own docs, not yet independently source-audited the way the
