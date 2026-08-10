@@ -83,6 +83,21 @@ The real conventions, applying to every subcommand:
 | `infer` | `omnist infer FILE [FILE...] --from oml [--allow-any] [--compact] [-o FILE] [--json]` — **multiple positional document files, one per sample; not a single stdin stream** | OSD. With `--allow-any` and an opened field, a plain-text report prints to **stderr** (not stdout, not JSON): `opened N field(s) as \`any\`:\n  RecordName.label — reason` | **0 (including the `--allow-any` success case), or 2 on ambiguous type without `--allow-any`** — `--json` gives `{"ok": false, "message", "errors": []}` on stdout for the exit-2 case |
 | `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | **1 if any `warning`-severity finding is present, 0 otherwise** — this was previously documented as "0, always," which was flat wrong, not just incomplete |
 
+**`lint` findings' `code` field is compared code-agnostically, like Track
+2's diagnostics.** [§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching)
+rule 4 already establishes this for the JSON-vector suite specifically
+*because* of [§9.4](09-divergence-ledger.md#94-known-open-divergences) D-4:
+no implementation emits real §8.3-namespaced codes yet, so today's reference
+implementation itself still emits the bare pre-namespacing form
+(`unreachable-record`, not `lint.unreachable-record`) — a fixture's
+`expected.json` recorded against the actual reference output necessarily
+carries that same bare form, and an implementation that has already adopted
+§8.3's namespaced codes (ahead of D-4 resolving) MUST NOT be marked failing
+for that; compare `severity` and `location` exactly, and treat `code` as
+informational only until D-4 closes. This applies to every operation whose
+fixture carries a `code` field, not lint alone — the same reasoning that
+produced §8.5.2 rule 4 for Track 2 applies identically here.
+
 **`is_empty`/`compatible_with`/`equivalent`'s exit-code convention is a real
 finding that changes §5.1's general contract**, not a minor detail: this
 track's original draft assumed boolean-result commands always exit 0 and

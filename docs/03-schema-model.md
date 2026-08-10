@@ -237,7 +237,14 @@ edges; it never sequences them.
 **Validation checks, it never converts.** A value either has the declared kind
 or it does not. Converting a value to match a declared type is materialization,
 a separate operation defined in
-[chapter 7](07-codecs-and-deserialization.md).
+[chapter 7](07-codecs-and-deserialization.md). This is distinct from
+**subtyping**, which is not conversion: the one sanctioned scalar subtype
+relation ([§6.3](06-schema-algebra.md#63-scalar-subtyping), `integer <:
+number`) applies at the value level inside `validate` too, via
+`matches_kind` below -- an integer-kinded value already *has* a kind that
+satisfies a `number`-typed field, with nothing upgraded or changed. Verified
+against the reference implementation: `validate` on an integer value against
+a `number`-typed field returns `ok: true` with no diagnostics.
 
 **Validation MUST report every failure**, not just the first. A validation
 result is a list of `(path, code, message)` entries; an empty list means valid.
@@ -273,6 +280,17 @@ function conform_scalar(node, s, path, result):
         return                                  # null never checked against kind
     if not matches_kind(node.value, s.kind):
         result.add(path, "type-mismatch", "value does not match declared kind")
+
+function matches_kind(value, declared_kind):
+    if value.kind == declared_kind:
+        return true
+    # The one sanctioned scalar subtype relation (§6.3) applies here too,
+    # not only between schemas: an integer VALUE satisfies a number-typed
+    # field directly. This is not materialization -- no conversion happens,
+    # the value's own kind is simply a subtype of the declared one.
+    if value.kind == "integer" and declared_kind == "number":
+        return true
+    return false
 
 function conform_record(node, S, rec, path, result):
     if node is a leaf (not a node):
