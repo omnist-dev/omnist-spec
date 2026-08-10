@@ -118,6 +118,25 @@
         ]
       },
       "comment": "One digit past the same declared limit. declared_max_int_digits is vector-local, not Python's reference default of 4,300 (which itself matches CPython's sys.set_int_max_str_digits). Same skip-not-fail caveat applies."
+    },
+    {
+      "name": "document-model/limits/integer-beyond-fixed-width-still-parses-under-default-limit",
+      "spec": "docs/02-document-model.md#22-values",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 9999999999999999999999999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            ["n", {"scalar": {"kind": "integer", "value": 9999999999999999999999999}}]
+          ]
+        }
+      },
+      "comment": "25 decimal digits -- comfortably under the 4,300-digit reference default (no declared_max_int_digits override, unlike the sibling vectors above) but past every fixed-width integer type's range (i64 tops out around 19 digits). Sec2.2 defines `integer` as arbitrary-precision, not `int64`-sized; an implementation backing its integer Scalar with a fixed-width type will reject this outright rather than skip it -- that is a Grammar-acceptance / Document-model forbidden-variation bug (Sec9.2), not a permitted narrower-limit configuration, since no declared_max_int_digits is in play here at all. Verified live against the Python reference: parses and round-trips unchanged at default settings."
     }
   ]
 }
