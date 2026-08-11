@@ -182,6 +182,12 @@ bare tags MUST become:
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
+| `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
+| `format.shape-empty-ambiguous` | warning | An empty internal node was written as a self-closing tag, which reads back as an empty-string leaf, not an empty node |
+| `format.key-sanitized` | warning | A label isn't a legal tag name in the target format and was written sanitized |
+| `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
+| `format.string-illegal-char` | error | A string contains a character the target format cannot represent and it was replaced (e.g. `U+FFFD` for a C0 control XML 1.0 forbids) |
+| `format.string-cr-normalized` | warning | A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as `\n`, not the original byte |
 
 Three of these describe behavior that is currently silent in the reference
 implementation — attribute dropping, namespace dropping, and interleaving loss
@@ -195,6 +201,20 @@ with the null leaf simply dropped and reported as an adjustment, the same
 rows in this table. Corrected to `warning`; `format.float-special` remains the
 one row correctly at `error`, since substituting a value (not just dropping
 one) is a stronger change to what's actually represented.
+
+**The last six rows were referenced in §8.1's prior-art discussion as
+prior art that "maps directly onto this family... mostly a rename," but
+were never actually given their renamed form here** — a promise made and
+never finished, found while porting a fourth implementation (`omnist-j`).
+Verified against the reference implementation's real, live behavior
+(`omnist/formats.py`) before naming and scoping each: `string.line-break-char`
+(YAML), `shape.empty_ambiguous`/`key.sanitized`/`value.stringified`/
+`string.illegal_xml_char`/`string.cr_normalized` (all XML). Severity for
+each matches what the reference implementation actually reports today,
+not a guess — `string.illegal_xml_char` is the one other row at `error`
+alongside `format.float-special`, for the same reason: replacing a
+character's identity is a stronger change than dropping or stringifying
+a whole leaf.
 
 ### 8.3.9 `write.*`
 
