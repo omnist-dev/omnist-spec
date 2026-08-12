@@ -97,28 +97,31 @@ filesystem order, or wall-clock time.
 
 ## 9.3 Current status
 
-As of spec v0.2.0-alpha.
+As of spec v0.2.2-alpha.
 
-| | Python | TypeScript | Rust | Go |
-|---|---|---|---|---|
-| Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.0.x-alpha |
-| Maturity | beta, reference | alpha | alpha | alpha, built spec-first with no reference-implementation access (§9.5) |
-| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`, per spec §2.4's digit-count requirement) |
-| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited: a single shared `LimitChecker` struct (`limits.go`) is constructed identically by every reader (OML, JSON, YAML, TOML, XML), satisfying §2.4's cross-reader consistency requirement by construction rather than by discipline; codes are the `document.limit.*` family, confirmed matching |
-| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended (self-reported; not yet independently audited) |
-| OML canonical write | complete | partial | complete | complete (self-reported) |
-| OSD read/write | complete | complete | complete | complete (self-reported) |
-| `any` type | yes, v0.5.0 | yes | yes | yes (self-reported) |
-| `validate` | complete | complete | complete | complete — `conformScalar`'s missing `integer <: number` exception (§3.6.1's `matches_kind`) was fixed in `omnist-go` PR #61 (main `0a03f30`), verified in the PR diff |
-| `materialize` | complete | complete | complete | complete (self-reported) |
-| `compatible_with` / `equivalent` | complete | complete | complete | complete (self-reported) |
-| `prune` / `is_empty` | complete | complete | complete | complete (self-reported) |
-| `normalize` | complete | complete | complete | complete (self-reported) |
-| `extract` | complete | complete | complete | complete (self-reported) |
-| `infer` | complete | complete | complete | complete (self-reported) |
-| `lint` | complete | complete | complete | complete (self-reported) |
-| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four (self-reported) |
-| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | **yes** — confirmed via `omnist-spec#42`'s investigation that `omnist-go` already emits §8.3's namespaced codes (e.g. `lint.unreachable-record`), ahead of the other three and ahead of D-4 resolving; the conformance harness's Track 1 comparison rule was updated (commit `40ef979`) specifically because this made it the first column not to match D-4's "no implementation yet" premise |
+| | Python | TypeScript | Rust | Go | Java |
+|---|---|---|---|---|---|
+| Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-SNAPSHOT |
+| Maturity | beta, reference | alpha | alpha | alpha | alpha, built spec-first with no reference-implementation access (§9.5), guided step-by-step through an external agent rather than autonomously |
+| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`); grammar's `Document = node \| value` modeled explicitly as a sealed `Document`/`Value`/`Target` hierarchy mirroring §2.2's production rules directly, source-audited |
+| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three, source-audited (depth/node-count/int-digit limits enforced in `OmlLexer`/`OsdReader` and every codec reader) |
+| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended, source-audited — a real priority-ordered tokenizer (§4.2's 9-rule scheme) after an initial ad-hoc attempt was caught failing the grammar's own worked examples and rebuilt |
+| OML canonical write | complete | partial | complete | complete | complete, source-audited (label-quoting asymmetry and NUMBER-vs-INTEGER round-trip fidelity both verified against §4.4/§4.5 directly) |
+| OSD read/write | complete | complete | complete | complete | complete, source-audited (§5.3.1's deliberately-weaker string-unescaping rule, cardinality forms, and bare-name type resolution all verified against §5's grammar text) |
+| `any` type | yes, v0.5.0 | yes | yes | yes | yes, source-audited |
+| `validate` | complete | complete | complete | complete | complete, source-audited against §3.6.1's pseudocode directly, including the easy-to-miss repeated-label path-indexing rule (first occurrence unindexed) |
+| `materialize` | complete | complete | complete | complete | complete, source-audited against §7.2's pseudocode, including the "a `number`-typed field always materializes to a host float, never an integer" case the spec calls out as easy to miss |
+| `compatible_with` / `equivalent` | complete | complete | complete | complete | complete, source-audited against §6.6/§6.7's coinductive pseudocode, including the field-skip pre-filter and the "no structural shortcut" requirement for `equivalent` |
+| `prune` / `is_empty` | complete | complete | complete | complete | complete, source-audited against §6.4/§6.5, including the root-unsatisfiable special case |
+| `normalize` | complete | complete | complete | complete | complete, source-audited — surfaced a real spec gap (`local_signature` referenced but never formally defined, §9.4 below) during implementation, fixed on this spec before the port proceeded |
+| `extract` | complete | complete | complete | complete | complete, source-audited against §6.9, including the `first_bad` whole-environment single-pass rule the spec's own worked example is deliberately constructed to catch implementations getting wrong |
+| `infer` | complete | complete | complete | complete | complete, source-audited (both `infer` MUST NOT requirements — no normalization, no `any` by default — confirmed directly in source) |
+| `lint` | complete | complete | complete | complete | complete, source-audited against §6.11, including the three traps in one section: a reachability walk deliberately separate from `prune`'s, one finding per duplicate-record block (not per name), and the `(code, location)` sort order |
+| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four | all four, source-audited (JSON's array/NaN/temporal edge cases, YAML's Norway-problem and bare-y/n handling, TOML's native temporal types and 4300-digit cap, all confirmed against source) |
+| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes — built to §8.3's namespaced form from the start, same as Go; also the port that found and closed the gap where six `format.*` codes (§8.3.8) were promised in §8.1's prior-art discussion but never actually added to the table |
+| Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** — full two-track harness (fixtures + JSON-vector suite), independently reproduced by the spec maintainer, not just self-reported |
+| Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes (jqwik, 70,000 iterations across all 6 format readers) — found and fixed one real infinite-loop bug (`TomlCodec`, a `Character.isDigit` vs. ASCII-only `isTokenChar` mismatch on non-ASCII Unicode digits), independently reproduced via a live thread dump by the spec maintainer before the fix was confirmed |
+| Test coverage | — | — | 100%, gated | — | measured, not yet a gated target: 60.0% line / 53.0% branch overall as of this entry; `cli` package notably lower (37.5%/28.8%), tracked as a known gap |
 
 **On the Go column.** `omnist-go` (`omnist-dev/omnist-go`) is the fourth
 implementation referenced throughout this spec and built under §9.5's
@@ -158,6 +161,30 @@ yaml,toml,xml}/`) have both a reader and a writer, each with its own unit
 tests *and* a fuzz test — `oml/` and `osd/` likewise. `any` is present as
 `AnyType()`. Nothing here is a thin wrapper or a `not implemented` stub.
 This column no longer needs the "provisional, self-reported" caveat.
+
+**On the Java column.** `omnist-j` (`omnist-dev/omnist-j`) is the fifth
+implementation, built spec-first under §9.5 like Go, but through an
+external coding agent guided step-by-step by the spec maintainer rather
+than working autonomously — every operation's plan was checked against
+this spec's actual text (not the agent's paraphrase of it) before
+implementation, and every "done" report was independently re-verified
+(fresh build, fresh conformance run, source read) before being accepted,
+catching several real problems a self-report alone would have missed:
+an unpushed-commit gap (work existed only in a local clone, never reached
+GitHub, twice), self-reported test/conformance numbers that didn't match
+reality (once by a small margin, once by a large one — 170/4 self-reported
+vs. 135/46 on independent re-run), and a live infinite-loop bug in
+`TomlCodec` found by reproducing a reported hang with an actual thread
+dump rather than accepting "should be fixed" at face value. The port
+itself, once verified, is genuinely solid: 181/181 conformance vectors
+pass for real (both tracks, independently reproduced), and building it
+surfaced one genuine spec gap — `local_signature` (used three times in
+§6.8's `normalize` pseudocode but never itself formally defined, with
+prose imprecise enough to read as "merge a `string` field with an
+`integer` field") and six `format.*` codes §8.1 promised would be added
+to §8.3.8 but never were — both fixed on this spec (commits `f6ec180`,
+`ebe10e2`) before the port proceeded, the same discipline applied to
+every other port's real findings this session.
 
 **On the TypeScript and Rust columns' upgrade from "partial"/"not yet" to
 "complete."** Two consecutive audits found this table substantially
