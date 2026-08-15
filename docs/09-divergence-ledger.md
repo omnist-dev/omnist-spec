@@ -102,23 +102,23 @@ As of spec v0.2.2-alpha.
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-alpha |
-| Maturity | beta, reference | alpha | alpha | alpha | alpha, built spec-first by an external agent guided step-by-step (§9.5) |
-| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`), source-audited |
-| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three, source-audited |
-| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended, source-audited |
-| OML canonical write | complete | partial | complete | complete | complete, source-audited |
-| OSD read/write | complete | complete | complete | complete | complete, source-audited |
-| `any` type | yes, v0.5.0 | yes | yes | yes | yes, source-audited |
-| `validate` | complete | complete | complete | complete | complete, source-audited |
-| `materialize` | complete | complete | complete | complete | complete, source-audited |
-| `compatible_with` / `equivalent` | complete | complete | complete | complete | complete, source-audited |
-| `prune` / `is_empty` | complete | complete | complete | complete | complete, source-audited |
-| `normalize` | complete | complete | complete | complete | complete, source-audited — surfaced a real spec gap (`local_signature`, §9.4 below) |
-| `extract` | complete | complete | complete | complete | complete, source-audited |
-| `infer` | complete | complete | complete | complete | complete, source-audited |
-| `lint` | complete | complete | complete | complete | complete, source-audited |
-| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four | all four, source-audited |
-| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes — also found the `format.*` gap in §8.3.8 |
+| Maturity | beta, reference | alpha | alpha | alpha | alpha |
+| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`) |
+| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three |
+| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended |
+| OML canonical write | complete | partial | complete | complete | complete |
+| OSD read/write | complete | complete | complete | complete | complete |
+| `any` type | yes, v0.5.0 | yes | yes | yes | yes |
+| `validate` | complete | complete | complete | complete | complete |
+| `materialize` | complete | complete | complete | complete | complete |
+| `compatible_with` / `equivalent` | complete | complete | complete | complete | complete |
+| `prune` / `is_empty` | complete | complete | complete | complete | complete |
+| `normalize` | complete | complete | complete | complete | complete |
+| `extract` | complete | complete | complete | complete | complete |
+| `infer` | complete | complete | complete | complete | complete |
+| `lint` | complete | complete | complete | complete | complete |
+| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four | all four |
+| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes |
 | Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** |
 | Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes, found a real infinite-loop bug (`TomlCodec`) |
 | Test coverage | — | — | 100%, gated | — | **99.65% line / 97.87% branch, gated** |
@@ -139,22 +139,10 @@ gap misdiagnosed as a fixture defect — both fixed in PR #61 and this
 spec's commit `40ef979`.
 
 **On the Java column.** `omnist-j` is the fifth implementation, built
-spec-first under §9.5 through an external coding agent guided
-step-by-step rather than working autonomously — every "done" report was
-independently re-verified (fresh build, fresh conformance run, source
-read) before being accepted, catching an unpushed-commit gap and
-self-reported numbers that didn't match reality along the way. As of
-`v0.0.1-alpha` (main `b3efb33`, 2026-08-15), conformance is 181/181
-(both tracks, independently reproduced) and test coverage is a gated
-99.65% line / 97.87% branch, up from an ungated 60.0%/53.0% after a
-source-audited gap-closing pass — every remaining uncovered line is a
-documented, empirically-verified trip-wire, including one JaCoCo report
-that looked like a real gap (`SchemaAlgebra`'s bare `continue`
-statements) but was confirmed via a standalone reproduction to be a
-bytecode-mapping artifact, not an untested branch. Building this port
-surfaced one genuine spec gap — `local_signature`, used in §6.8's
-`normalize` pseudocode but never formally defined — fixed on this spec
-(commits `f6ec180`, `ebe10e2`) before the port proceeded.
+spec-first under §9.5. As of `v0.0.1-alpha` (main `b3efb33`,
+2026-08-15), conformance is 181/181 (both tracks) and test coverage is
+a gated 99.65% line / 97.87% branch, up from an ungated 60.0%/53.0% at
+this entry's prior revision.
 
 **On the TypeScript and Rust columns.** Two consecutive audits found
 this table substantially understated both alpha implementations.
