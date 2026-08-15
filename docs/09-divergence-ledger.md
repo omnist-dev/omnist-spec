@@ -123,112 +123,53 @@ As of spec v0.2.2-alpha.
 | Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes (jqwik, 70,000 iterations across all 6 format readers) — found and fixed one real infinite-loop bug (`TomlCodec`, a `Character.isDigit` vs. ASCII-only `isTokenChar` mismatch on non-ASCII Unicode digits), independently reproduced via a live thread dump by the spec maintainer before the fix was confirmed |
 | Test coverage | — | — | 100%, gated | — | **99.65% line / 97.87% branch, gated** (JaCoCo CI fails below 99.6%/97.8%; scope excludes the conformance-harness package, verified against the reference implementation instead, and `CliMain`'s one-line `System.exit` entry point) — up from 60.0%/53.0% ungated at this entry's prior revision, after a dedicated gap-closing pass source-audited this session: every remaining uncovered line is a documented trip-wire (verified unreachable given the real runtime behavior of the underlying libraries, not assumed), and every branch previously reported "covered but every combination not real" for JaCoCo's own compound-condition instrumentation artifact was checked, not just accepted |
 
-**On the Go column.** `omnist-go` (`omnist-dev/omnist-go`) is the fourth
-implementation referenced throughout this spec and built under §9.5's
-process — spec-first, no reference-implementation access except as a
-narrow tie-breaker on already-filed gaps. As of `omnist-go` PR #61 (main
-`0a03f30`, 2026-08-10), both conformance tracks report **zero real fails**:
-Track 2 150 pass / 0 fail / 1 skip of 151 vectors, Track 1 19 pass / 0 fail
-of 19 fixtures (the one skip is a known TOML strict-mode write gap, cited
-and out of scope; Go's own `*big.Int`-backed integer representation is
-confirmed correct against D-9, found the same day). Getting there
-required two rounds of independent
-verification against the reference implementation rather than accepting
-either report at face value — both of `omnist-go`'s initial diagnoses
-(`omnist-spec#41`, `#42`) turned out backwards:
-- `#41` was reported as a vector defect; verification showed the vector was
-  correct and the real gap was `matches_kind` never being formally defined
-  in §3.6.1 (fixed, commit `40ef979`) — a genuine `omnist-go` bug
-  (`conformScalar` missing the `integer <: number` value-level exception),
-  since fixed in PR #61 and confirmed in its diff.
-- `#42` was reported as a fixture defect; verification showed the fixture
-  was correct (Python genuinely emits the bare, pre-namespacing code) and
-  the real gap was the harness's Track 1 comparison rule never extending
-  §8.5.2 rule 4's code-agnostic comparison the way Track 2 already does
-  (fixed, commit `40ef979`) — `omnist-go` was actually right to emit the
-  namespaced code, and PR #61's diff confirms only the comparison logic in
-  `tools/conformance/fixtures.go` changed, no fixture or production code.
+**On the Go column.** `omnist-go` is the fourth implementation, built
+spec-first under §9.5 with no reference-implementation access except as
+a narrow, already-filed-gap tie-breaker. As of PR #61 (main `0a03f30`,
+2026-08-10), both conformance tracks report zero real fails — Track 2
+150/151 (1 known TOML strict-mode skip, out of scope), Track 1 19/19 —
+source-audited against the real `algebra/*.go`, `formats/*/`, `oml/`,
+and `osd/` implementations rather than accepted from the repo's own
+docs. Getting a clean report took two rounds of independent
+verification: both of `omnist-go`'s initial gap diagnoses
+(`omnist-spec#41`, `#42`) were reported backwards — #41 was a genuine
+`omnist-go` bug misdiagnosed as a vector defect (missing `integer <:
+number` exception in `conformScalar`), #42 was a harness comparison-rule
+gap misdiagnosed as a fixture defect — both fixed in PR #61 and this
+spec's commit `40ef979`.
 
-**Source-audited 2026-08-10, not just accepted from the repo's own docs**
-(the other three columns were both found stale exactly this way — see
-below — so this column got the same scrutiny rather than being trusted on
-maturity or a clean conformance run alone): every operation this table
-lists as "complete" has a real implementation, not a stub — `Materialize`,
-`CompatibleWith`/`Equivalent`, `Prune`/`IsEmpty`, `Normalize`, `Extract`,
-`Infer`/`InferWithReport`, `Lint` are all present with substantive logic
-in `algebra/*.go` and `materialize.go`. All four codecs (`formats/{json,
-yaml,toml,xml}/`) have both a reader and a writer, each with its own unit
-tests *and* a fuzz test — `oml/` and `osd/` likewise. `any` is present as
-`AnyType()`. Nothing here is a thin wrapper or a `not implemented` stub.
-This column no longer needs the "provisional, self-reported" caveat.
+**On the Java column.** `omnist-j` is the fifth implementation, built
+spec-first under §9.5 through an external coding agent guided
+step-by-step rather than working autonomously — every "done" report was
+independently re-verified (fresh build, fresh conformance run, source
+read) before being accepted, catching an unpushed-commit gap and
+self-reported numbers that didn't match reality along the way. As of
+`v0.0.1-alpha` (main `b3efb33`, 2026-08-15), conformance is 181/181
+(both tracks, independently reproduced) and test coverage is a gated
+99.65% line / 97.87% branch, up from an ungated 60.0%/53.0% after a
+source-audited gap-closing pass — every remaining uncovered line is a
+documented, empirically-verified trip-wire, including one JaCoCo report
+that looked like a real gap (`SchemaAlgebra`'s bare `continue`
+statements) but was confirmed via a standalone reproduction to be a
+bytecode-mapping artifact, not an untested branch. Building this port
+surfaced one genuine spec gap — `local_signature`, used in §6.8's
+`normalize` pseudocode but never formally defined — fixed on this spec
+(commits `f6ec180`, `ebe10e2`) before the port proceeded.
 
-**On the Java column.** `omnist-j` (`omnist-dev/omnist-j`) is the fifth
-implementation, built spec-first under §9.5 like Go, but through an
-external coding agent guided step-by-step by the spec maintainer rather
-than working autonomously — every operation's plan was checked against
-this spec's actual text (not the agent's paraphrase of it) before
-implementation, and every "done" report was independently re-verified
-(fresh build, fresh conformance run, source read) before being accepted,
-catching several real problems a self-report alone would have missed:
-an unpushed-commit gap (work existed only in a local clone, never reached
-GitHub, twice), self-reported test/conformance numbers that didn't match
-reality (once by a small margin, once by a large one — 170/4 self-reported
-vs. 135/46 on independent re-run), and a live infinite-loop bug in
-`TomlCodec` found by reproducing a reported hang with an actual thread
-dump rather than accepting "should be fixed" at face value. The port
-itself, once verified, is genuinely solid: 181/181 conformance vectors
-pass for real (both tracks, independently reproduced), and building it
-surfaced one genuine spec gap — `local_signature` (used three times in
-§6.8's `normalize` pseudocode but never itself formally defined, with
-prose imprecise enough to read as "merge a `string` field with an
-`integer` field") and six `format.*` codes §8.1 promised would be added
-to §8.3.8 but never were — both fixed on this spec (commits `f6ec180`,
-`ebe10e2`) before the port proceeded, the same discipline applied to
-every other port's real findings this session.
-
-As of `omnist-j` `v0.0.1-alpha` (main `b3efb33`, 2026-08-15), test
-coverage moved from an ungated 60.0%/53.0% to a gated 99.65% line /
-97.87% branch after a dedicated gap-closing pass, source-audited rather
-than accepted from a self-report: the remaining ~10 uncovered lines
-across the whole codebase are each a documented trip-wire (verified
-empirically unreachable given the real runtime behavior of the specific
-libraries in use — e.g. a TOML parser error path unreachable without a
-malformed upstream parser result, an XML DOM node-type check ruled out
-by `setCoalescing(true)` before the DOM is exposed), and one JaCoCo
-line-coverage report that looked like a real gap (`SchemaAlgebra`'s two
-bare `continue` statements in cycle-detection, reported `mi=1` despite
-their enclosing `if`'s own branch coverage showing the true path taken)
-was confirmed via a standalone line-by-line reproduction of the same
-algorithm against the same schema to be a JaCoCo bytecode-mapping
-artifact for single-statement `continue`/`break` blocks, not a real
-untested branch, before being accepted with an inline comment rather
-than chased further or silently ignored. Conformance was re-verified at
-181/181 (both tracks) after the coverage and version-bump changes,
-including catching a second hardcoded jar-version path (in the `omnist`
-CLI wrapper script) that the first version-bump pass missed and would
-have silently broken the harness.
-
-**On the TypeScript and Rust columns' upgrade from "partial"/"not yet" to
-"complete."** Two consecutive audits found this table substantially
-understated both alpha implementations. TypeScript's `OML read`,
-`materialize`, `compatible_with`/`equivalent`, `prune`/`is_empty`,
-`normalize`, `extract`, `infer`, `lint`, and codec coverage were confirmed
-present and under test, not merely claimed. The same was then found true of
-Rust, across nearly the entire column — `compatible_with`/`equivalent`,
-`prune`/`is_empty`, `normalize`, `extract`, `infer`, `lint`, all four codecs,
-`validate`, `materialize`, and OML read/write are all implemented and tested
-in `omnist-rs`, not "not yet"/"partial"/"JSON only" as this table previously
-claimed. Rust's error-code row was also wrong in the same way as its TS
-counterpart: `omnist-rs`'s `ErrorCode` enum renders the identical kebab-case
-strings Python and TypeScript already use. Per this chapter's own authority
-rule (§9.3, "this table is a summary and MUST NOT be treated as one; the
-conformance harness's skip counts are"), all of these cells should be treated
-as provisionally corrected pending a full harness run — replace "complete"
-with a more specific note if the harness's actual skip counts turn out
-nonzero for any of them. Given this table has now been found stale twice in a
-row for the two alpha implementations, whoever next revises it should
-strongly consider re-verifying every cell directly rather than editing around
-the existing claims.
+**On the TypeScript and Rust columns.** Two consecutive audits found
+this table substantially understated both alpha implementations.
+TypeScript's `OML read`, `materialize`, `compatible_with`/`equivalent`,
+`prune`/`is_empty`, `normalize`, `extract`, `infer`, `lint`, and codec
+coverage were confirmed present and under test, not merely claimed —
+the same was then found true of nearly all of Rust's column. Both
+error-code rows were also wrong the same way: `omnist-ts` and
+`omnist-rs` both render the identical kebab-case strings Python already
+uses. Per this chapter's own authority rule (§9.3 — this table is a
+summary, not the source of truth; the harness's skip counts are), these
+cells are provisionally corrected pending a full harness run per port.
+Given this table has now been found stale twice in a row for these two
+columns, treat every cell here with the same skepticism until it's been
+source-audited directly rather than edited around the existing claims.
 
 **On `any` in Rust.** Rust supports `any`. It is present as `FieldType::Any` in
 the OSD parser, is written back out as `any`, and rejects `any?` the same way

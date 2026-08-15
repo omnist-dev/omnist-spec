@@ -83,6 +83,33 @@ all capitals.
 Text in blockquotes, and any section marked *Non-normative*, is commentary. It
 explains reasoning and does not impose requirements.
 
+## Implementations
+
+Five official ports, all built against this specification. Version and
+maturity are as of the current [divergence ledger](09-divergence-ledger.md)
+revision — read it for exact conformance numbers, test coverage, and
+per-port audit notes; this table is a summary, not the source of truth.
+
+| Language | Version | Maturity | Docs |
+|---|---|---|---|
+| [Python](https://github.com/omnist-dev/omnist) | 0.7.12 | beta, reference implementation | [py.omnist.dev](https://py.omnist.dev) |
+| [TypeScript](https://github.com/omnist-dev/omnist-ts) | 0.0.4-alpha | alpha | — |
+| [Rust](https://github.com/omnist-dev/omnist-rs) | 0.0.1-alpha | alpha | — |
+| [Go](https://github.com/omnist-dev/omnist-go) | 0.1.0-alpha | alpha | [go.omnist.dev](https://go.omnist.dev) |
+| [Java](https://github.com/omnist-dev/omnist-j) | 0.0.1-alpha | alpha | [j.omnist.dev](https://j.omnist.dev) |
+
+**Python** is the reference implementation — the oldest and most complete
+port, and the tie-breaker of last resort when this spec's prose is
+ambiguous.
+
+**TypeScript**, **Rust**, **Go**, and **Java** are independent, spec-first
+ports: each is built from this document alone, consulting sibling ports'
+source only as a narrow, after-the-fact tie-breaker once a spec gap is
+already filed, never as a primary source. Every gap one of them hits by
+that process is treated as a defect in this spec to fix, not a
+port-specific note — see [§9.5](09-divergence-ledger.md) for the full
+policy.
+
 ## Reading order
 
 | Chapter | Read it for |
