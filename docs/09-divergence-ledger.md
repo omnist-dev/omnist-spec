@@ -101,7 +101,7 @@ As of spec v0.2.2-alpha.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-SNAPSHOT |
+| Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha, built spec-first with no reference-implementation access (§9.5), guided step-by-step through an external agent rather than autonomously |
 | Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`); grammar's `Document = node \| value` modeled explicitly as a sealed `Document`/`Value`/`Target` hierarchy mirroring §2.2's production rules directly, source-audited |
 | Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three, source-audited (depth/node-count/int-digit limits enforced in `OmlLexer`/`OsdReader` and every codec reader) |
@@ -121,7 +121,7 @@ As of spec v0.2.2-alpha.
 | §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes — built to §8.3's namespaced form from the start, same as Go; also the port that found and closed the gap where six `format.*` codes (§8.3.8) were promised in §8.1's prior-art discussion but never actually added to the table |
 | Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** — full two-track harness (fixtures + JSON-vector suite), independently reproduced by the spec maintainer, not just self-reported |
 | Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes (jqwik, 70,000 iterations across all 6 format readers) — found and fixed one real infinite-loop bug (`TomlCodec`, a `Character.isDigit` vs. ASCII-only `isTokenChar` mismatch on non-ASCII Unicode digits), independently reproduced via a live thread dump by the spec maintainer before the fix was confirmed |
-| Test coverage | — | — | 100%, gated | — | measured, not yet a gated target: 60.0% line / 53.0% branch overall as of this entry; `cli` package notably lower (37.5%/28.8%), tracked as a known gap |
+| Test coverage | — | — | 100%, gated | — | **99.65% line / 97.87% branch, gated** (JaCoCo CI fails below 99.6%/97.8%; scope excludes the conformance-harness package, verified against the reference implementation instead, and `CliMain`'s one-line `System.exit` entry point) — up from 60.0%/53.0% ungated at this entry's prior revision, after a dedicated gap-closing pass source-audited this session: every remaining uncovered line is a documented trip-wire (verified unreachable given the real runtime behavior of the underlying libraries, not assumed), and every branch previously reported "covered but every combination not real" for JaCoCo's own compound-condition instrumentation artifact was checked, not just accepted |
 
 **On the Go column.** `omnist-go` (`omnist-dev/omnist-go`) is the fourth
 implementation referenced throughout this spec and built under §9.5's
@@ -185,6 +185,28 @@ prose imprecise enough to read as "merge a `string` field with an
 to §8.3.8 but never were — both fixed on this spec (commits `f6ec180`,
 `ebe10e2`) before the port proceeded, the same discipline applied to
 every other port's real findings this session.
+
+As of `omnist-j` `v0.0.1-alpha` (main `b3efb33`, 2026-08-15), test
+coverage moved from an ungated 60.0%/53.0% to a gated 99.65% line /
+97.87% branch after a dedicated gap-closing pass, source-audited rather
+than accepted from a self-report: the remaining ~10 uncovered lines
+across the whole codebase are each a documented trip-wire (verified
+empirically unreachable given the real runtime behavior of the specific
+libraries in use — e.g. a TOML parser error path unreachable without a
+malformed upstream parser result, an XML DOM node-type check ruled out
+by `setCoalescing(true)` before the DOM is exposed), and one JaCoCo
+line-coverage report that looked like a real gap (`SchemaAlgebra`'s two
+bare `continue` statements in cycle-detection, reported `mi=1` despite
+their enclosing `if`'s own branch coverage showing the true path taken)
+was confirmed via a standalone line-by-line reproduction of the same
+algorithm against the same schema to be a JaCoCo bytecode-mapping
+artifact for single-statement `continue`/`break` blocks, not a real
+untested branch, before being accepted with an inline comment rather
+than chased further or silently ignored. Conformance was re-verified at
+181/181 (both tracks) after the coverage and version-bump changes,
+including catching a second hardcoded jar-version path (in the `omnist`
+CLI wrapper script) that the first version-bump pass missed and would
+have silently broken the harness.
 
 **On the TypeScript and Rust columns' upgrade from "partial"/"not yet" to
 "complete."** Two consecutive audits found this table substantially
