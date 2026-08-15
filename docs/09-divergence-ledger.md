@@ -102,26 +102,26 @@ As of spec v0.2.2-alpha.
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-alpha |
-| Maturity | beta, reference | alpha | alpha | alpha | alpha, built spec-first with no reference-implementation access (§9.5), guided step-by-step through an external agent rather than autonomously |
-| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`); grammar's `Document = node \| value` modeled explicitly as a sealed `Document`/`Value`/`Target` hierarchy mirroring §2.2's production rules directly, source-audited |
-| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three, source-audited (depth/node-count/int-digit limits enforced in `OmlLexer`/`OsdReader` and every codec reader) |
-| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended, source-audited — a real priority-ordered tokenizer (§4.2's 9-rule scheme) after an initial ad-hoc attempt was caught failing the grammar's own worked examples and rebuilt |
-| OML canonical write | complete | partial | complete | complete | complete, source-audited (label-quoting asymmetry and NUMBER-vs-INTEGER round-trip fidelity both verified against §4.4/§4.5 directly) |
-| OSD read/write | complete | complete | complete | complete | complete, source-audited (§5.3.1's deliberately-weaker string-unescaping rule, cardinality forms, and bare-name type resolution all verified against §5's grammar text) |
+| Maturity | beta, reference | alpha | alpha | alpha | alpha, built spec-first by an external agent guided step-by-step (§9.5) |
+| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`), source-audited |
+| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three, source-audited |
+| OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended, source-audited |
+| OML canonical write | complete | partial | complete | complete | complete, source-audited |
+| OSD read/write | complete | complete | complete | complete | complete, source-audited |
 | `any` type | yes, v0.5.0 | yes | yes | yes | yes, source-audited |
-| `validate` | complete | complete | complete | complete | complete, source-audited against §3.6.1's pseudocode directly, including the easy-to-miss repeated-label path-indexing rule (first occurrence unindexed) |
-| `materialize` | complete | complete | complete | complete | complete, source-audited against §7.2's pseudocode, including the "a `number`-typed field always materializes to a host float, never an integer" case the spec calls out as easy to miss |
-| `compatible_with` / `equivalent` | complete | complete | complete | complete | complete, source-audited against §6.6/§6.7's coinductive pseudocode, including the field-skip pre-filter and the "no structural shortcut" requirement for `equivalent` |
-| `prune` / `is_empty` | complete | complete | complete | complete | complete, source-audited against §6.4/§6.5, including the root-unsatisfiable special case |
-| `normalize` | complete | complete | complete | complete | complete, source-audited — surfaced a real spec gap (`local_signature` referenced but never formally defined, §9.4 below) during implementation, fixed on this spec before the port proceeded |
-| `extract` | complete | complete | complete | complete | complete, source-audited against §6.9, including the `first_bad` whole-environment single-pass rule the spec's own worked example is deliberately constructed to catch implementations getting wrong |
-| `infer` | complete | complete | complete | complete | complete, source-audited (both `infer` MUST NOT requirements — no normalization, no `any` by default — confirmed directly in source) |
-| `lint` | complete | complete | complete | complete | complete, source-audited against §6.11, including the three traps in one section: a reachability walk deliberately separate from `prune`'s, one finding per duplicate-record block (not per name), and the `(code, location)` sort order |
-| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four | all four, source-audited (JSON's array/NaN/temporal edge cases, YAML's Norway-problem and bare-y/n handling, TOML's native temporal types and 4300-digit cap, all confirmed against source) |
-| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes — built to §8.3's namespaced form from the start, same as Go; also the port that found and closed the gap where six `format.*` codes (§8.3.8) were promised in §8.1's prior-art discussion but never actually added to the table |
-| Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** — full two-track harness (fixtures + JSON-vector suite), independently reproduced by the spec maintainer, not just self-reported |
-| Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes (jqwik, 70,000 iterations across all 6 format readers) — found and fixed one real infinite-loop bug (`TomlCodec`, a `Character.isDigit` vs. ASCII-only `isTokenChar` mismatch on non-ASCII Unicode digits), independently reproduced via a live thread dump by the spec maintainer before the fix was confirmed |
-| Test coverage | — | — | 100%, gated | — | **99.65% line / 97.87% branch, gated** (JaCoCo CI fails below 99.6%/97.8%; scope excludes the conformance-harness package, verified against the reference implementation instead, and `CliMain`'s one-line `System.exit` entry point) — up from 60.0%/53.0% ungated at this entry's prior revision, after a dedicated gap-closing pass source-audited this session: every remaining uncovered line is a documented trip-wire (verified unreachable given the real runtime behavior of the underlying libraries, not assumed), and every branch previously reported "covered but every combination not real" for JaCoCo's own compound-condition instrumentation artifact was checked, not just accepted |
+| `validate` | complete | complete | complete | complete | complete, source-audited |
+| `materialize` | complete | complete | complete | complete | complete, source-audited |
+| `compatible_with` / `equivalent` | complete | complete | complete | complete | complete, source-audited |
+| `prune` / `is_empty` | complete | complete | complete | complete | complete, source-audited |
+| `normalize` | complete | complete | complete | complete | complete, source-audited — surfaced a real spec gap (`local_signature`, §9.4 below) |
+| `extract` | complete | complete | complete | complete | complete, source-audited |
+| `infer` | complete | complete | complete | complete | complete, source-audited |
+| `lint` | complete | complete | complete | complete | complete, source-audited |
+| Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four | all four, source-audited |
+| §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes — also found the `format.*` gap in §8.3.8 |
+| Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** |
+| Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes, found a real infinite-loop bug (`TomlCodec`) |
+| Test coverage | — | — | 100%, gated | — | **99.65% line / 97.87% branch, gated** |
 
 **On the Go column.** `omnist-go` is the fourth implementation, built
 spec-first under §9.5 with no reference-implementation access except as
