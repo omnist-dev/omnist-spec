@@ -1,5 +1,7 @@
 # Omnist Specification, v0.2
 
+Project home: [omnist.dev](https://omnist.dev)
+
 ## Abstract
 
 Omnist is a data-modeling system built on one small formalism. A **Document** is
@@ -96,7 +98,7 @@ per-port audit notes; this table is a summary, not the source of truth.
 | [TypeScript](https://github.com/omnist-dev/omnist-ts) | 0.0.4-alpha | alpha | [ts.omnist.dev](https://ts.omnist.dev) |
 | [Rust](https://github.com/omnist-dev/omnist-rs) | 0.0.1-alpha | alpha | [rs.omnist.dev](https://rs.omnist.dev) |
 | [Go](https://github.com/omnist-dev/omnist-go) | 0.1.0-alpha | alpha | [go.omnist.dev](https://go.omnist.dev) |
-| [Java](https://github.com/omnist-dev/omnist-j) | 0.0.1-alpha | alpha | [j.omnist.dev](https://j.omnist.dev) |
+| [Java](https://github.com/omnist-dev/omnist-j) | 0.0.2-alpha | alpha | [j.omnist.dev](https://j.omnist.dev) |
 
 **Python** is the reference implementation — the oldest and most complete
 port, and the tie-breaker of last resort when this spec's prose is
