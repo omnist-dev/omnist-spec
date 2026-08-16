@@ -121,7 +121,7 @@ As of spec v0.2.2-alpha.
 | §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes |
 | Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** |
 | Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes, found a real infinite-loop bug (`TomlCodec`) |
-| Test coverage | — | — | 100%, gated | — | **99.65% line / 97.87% branch, gated** |
+| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | **99.65% line / 97.87% branch, gated (not yet 100% — the one port below the ecosystem's standard)** |
 
 **On the Go column.** `omnist-go` is the fourth implementation, built
 spec-first under §9.5 with no reference-implementation access except as
