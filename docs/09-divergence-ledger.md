@@ -121,7 +121,7 @@ As of spec v0.2.2-alpha.
 | §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes |
 | Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** |
 | Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes, found a real infinite-loop bug (`TomlCodec`) |
-| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | **99.65% line / 97.87% branch, gated (not yet 100% — the one port below the ecosystem's standard)** |
+| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.8% line / 99.8% branch, gated (remaining gap is confirmed-unreachable defensive code, documented in place; JaCoCo has no line-level exclusion mechanism) |
 
 **On the Go column.** `omnist-go` is the fourth implementation, built
 spec-first under §9.5 with no reference-implementation access except as
@@ -139,10 +139,15 @@ gap misdiagnosed as a fixture defect — both fixed in PR #61 and this
 spec's commit `40ef979`.
 
 **On the Java column.** `omnist-j` is the fifth implementation, built
-spec-first under §9.5. As of `v0.0.1-alpha` (main `b3efb33`,
-2026-08-15), conformance is 181/181 (both tracks) and test coverage is
-a gated 99.65% line / 97.87% branch, up from an ungated 60.0%/53.0% at
-this entry's prior revision.
+spec-first under §9.5. As of `v0.0.1-alpha` (main `ad6681a`,
+2026-08-16), conformance is 181/181 (both tracks) and test coverage is
+a gated 99.8% line / 99.8% branch, matching the other four ports'
+100%-standard bar in practice: the remaining ~1% is confirmed-unreachable
+defensive code (regex/DOM/library-contract guarantees), documented
+in-place, since JaCoCo has no line-level exclusion mechanism the way
+`cargo-llvm-cov`/Go's scripted check do — only class-level, already used
+for CLI-entry-point and conformance-harness code the same way the other
+ports exclude theirs.
 
 **On the TypeScript and Rust columns.** Two consecutive audits found
 this table substantially understated both alpha implementations.
