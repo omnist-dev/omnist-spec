@@ -104,7 +104,7 @@ As of spec v0.2.2-alpha.
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`) |
-| Resource caps | all three | depth + int-digits; **no node-count limit** (§9.4 D-1) | depth + int-digits; **no general node-count limit** (§9.4 D-1) | all three, source-audited | all three |
+| Resource caps | all three | all three (D-1 closed, `MAX_NODES` in `document.ts`) | all three (D-1 closed, `MAX_NODES` in `document.rs`) | all three, source-audited | all three |
 | OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended |
 | OML canonical write | complete | partial | complete | complete | complete |
 | OSD read/write | complete | complete | complete | complete | complete |
@@ -119,8 +119,8 @@ As of spec v0.2.2-alpha.
 | `lint` | complete | complete | complete | complete | complete |
 | Codecs JSON/YAML/TOML/XML | all four | all four | all four | all four | all four |
 | §8.3 error codes | no — partial kebab-case tags | no — partial kebab-case tags | no — partial kebab-case tags | yes | yes |
-| Conformance | reference | — | — | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** |
-| Fuzz testing | yes | — | yes, found real bugs | yes, found real bugs | yes, found a real infinite-loop bug (`TomlCodec`) |
+| Conformance | reference | 116/152 real vectors (0 real fails, 36 skips) + 19/19 fixtures | 130/152 real vectors (0 real fails, 22 skips) + 19/19 fixtures | 151/151 real vectors (0 real fails) | **181/181, zero real fails, zero skips** |
+| Fuzz testing | yes | yes (fast-check) | yes, found real bugs | yes, found real bugs | yes, found a real infinite-loop bug (`TomlCodec`) |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.8% line / 99.8% branch, gated (remaining gap is confirmed-unreachable defensive code, documented in place; JaCoCo has no line-level exclusion mechanism) |
 
 **On the Go column.** `omnist-go` is the fourth implementation, built
