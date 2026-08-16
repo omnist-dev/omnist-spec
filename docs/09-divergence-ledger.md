@@ -103,10 +103,10 @@ As of spec v0.2.2-alpha.
 |---|---|---|---|---|---|
 | Version | 0.7.12 | 0.0.4-alpha | 0.0.1-alpha | 0.1.0-alpha | 0.0.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
-| Document model | complete | complete except `integer`/`number` kind distinction independent of a schema (§9.4 D-6) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`) |
+| Document model | complete | complete, `integer`/`number` natively distinguished (`bigint` for `integer` since D-6/D-9) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`) |
 | Resource caps | all three | all three (D-1 closed, `MAX_NODES` in `document.ts`) | all three (D-1 closed, `MAX_NODES` in `document.rs`) | all three, source-audited | all three |
 | OML read | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended | complete, Core + Extended |
-| OML canonical write | complete | partial | complete | complete | complete |
+| OML canonical write | complete | complete | complete | complete | complete |
 | OSD read/write | complete | complete | complete | complete | complete |
 | `any` type | yes, v0.5.0 | yes | yes | yes | yes |
 | `validate` | complete | complete | complete | complete | complete |
