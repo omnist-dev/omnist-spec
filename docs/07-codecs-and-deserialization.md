@@ -27,6 +27,30 @@ untouched. There is no third mode. Implementations MUST NOT offer a `strict`
 switch: either a schema is supplied and the result is guaranteed to conform, or
 one is not and nothing is checked.
 
+**XML is the one documented exception to "stage 1 never consults a schema."**
+Every other format Omnist reads has *some* native way to write a typed
+literal — JSON/YAML/TOML numbers and booleans, OML/OSD's own grammar — so a
+leaf arriving as a string in those formats reflects the author's actual
+choice: they wrote a string, not a number, and materialization respects
+that (§7.2). XML has no typed-literal syntax at all; `<qty>3</qty>` and
+`<sku>3</sku>` are lexically identical, and a reader cannot tell "the
+author meant an integer" from "the author meant the string `3`" without
+outside information. The schema is the only source of that information XML
+has. So: an XML reader given a schema MAY consult it to pre-type a leaf's
+text into the scalar kind stage 1 would otherwise have been unable to
+produce — using exactly the same value-exact rules §7.2 defines for
+materialization (a text leaf becomes `integer`/`number`/`boolean` only when
+its text is an exact, unambiguous literal of that kind; anything else stays
+a string and is left for the standard stage 2 shape/cardinality check to
+accept or reject). This pretyping step is not stage 1 in the sense every
+other format's stage 1 is — it exists only because XML's stage 1 has
+strictly less information than every sibling format's stage 1 does, and it
+never substitutes for stage 2's record-shape and cardinality checking, which
+still runs afterward exactly as it does for every other format. No other
+format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
+after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
+rule.
+
 ## 7.2 Materialization rules
 
 Materialization upgrades a leaf **only when the conversion is value-exact.**
@@ -155,9 +179,19 @@ function try_upgrade(value, kind):
 **Materialization never invents and never loses.** `1.0 -> integer 1` is
 value-exact; `1.5 -> integer` is not, and is an error, not a truncation.
 `"1" -> integer` is not attempted at all: a string is never upgraded to a
-numeric kind regardless of its contents, because doing so would make
-materialization behave differently depending on which format produced the
-untyped Document, and format-independence (§2.1) is not optional.
+numeric kind by this stage regardless of its contents, because doing so
+would make materialization behave differently depending on which format
+produced the untyped Document, and format-independence (§2.1) is not
+optional. **This is the general rule for every leaf that reached stage 2
+still a string because its source format could have written something
+else and didn't.** It does not apply to a leaf XML's schema-aware pretyping
+already converted before this stage ran (§7.1's documented exception) —
+that pretyping used these exact value-exact rules itself, at the one point
+where a format has no other way to signal type at all. By the time stage 2
+runs, an XML-sourced leaf that's still a string is a string for the same
+reason any other format's is: nothing pretyped it, so §7.2 treats it
+identically to a JSON/YAML/TOML/OML/OSD string. There is no second,
+looser numeric-coercion path inside stage 2 itself, for any format.
 
 Everything under an `any` field is skipped by `materialize_type`'s first
 branch, at every depth — an `any` field one level deep and one a hundred

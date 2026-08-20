@@ -79,13 +79,25 @@ exists so that the Document has exactly one top-level edge. Without it, JSON,
 YAML, and TOML would all still round-trip and XML alone would fail. Every other
 format tolerates the wrapper; XML requires it.
 
-**Stage 1 output differs here, stage 2 output does not.** Parsing that XML
-yields `total` as the string `"29.97"` and `qty` as the string `"3"`, because
-XML text is untyped. It is materialization against `"total": number` and
-`"qty": integer` that produces the numbers shown above. Read the same order
-from JSON and stage 1 already has them typed. The two paths converge only after
-stage 2 — which is precisely why the schema is applied on the read side and
-never on the write side.
+**This is XML's documented pretyping exception, not the general stage-2
+rule.** Parsing that XML with no schema yields `total` and `qty` as the
+plain strings `"29.97"` and `"3"`, because XML text carries no type
+information at all — `<qty>3</qty>` looks identical whether the schema
+wants an integer or a string. Handed the schema, an XML reader is
+specifically permitted (only for XML — see
+[§7.1](../07-codecs-and-deserialization.md#71-two-stages)) to pre-type
+those leaves into `number 29.97` and `integer 3` before the standard
+record-shape check runs, because there is no other way for a schema-typed
+XML field to ever become non-string: XML has no literal syntax to
+distinguish "the author wrote a number" from "the author wrote a string
+that happens to look like one," unlike JSON/YAML/TOML, where a leaf that's
+still a string after stage 1 is a string because the author chose to write
+one, and stays a string — materialization does not coerce it
+([§7.2](../07-codecs-and-deserialization.md#72-materialization-rules)).
+Read the same order from JSON and stage 1 already has `total`/`qty` typed,
+with nothing for pretyping or materialization to do. Both paths land on
+the same final Document; only XML needed the schema to get there, and only
+XML is allowed to use it that way.
 
 Note also that `<items>` elements do not sit inside an `<items>` wrapper. There
 is no wrapper element in this profile, on either side.
