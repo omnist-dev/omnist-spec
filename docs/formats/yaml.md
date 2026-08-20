@@ -62,6 +62,14 @@ booleans.
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.
 
+**Duplicate keys: last one wins**, matching JSON's policy
+([§ JSON, "Duplicate keys"](json.md)) rather than the YAML 1.1 spec's own
+stance — YAML 1.1 actually calls duplicate mapping keys an error, but no
+mainstream implementation library enforces that, all silently resolving to
+last-key-wins in practice. Omnist follows the implementations, not the
+unenforced spec text, for the same reason as JSON: consistency with what
+every reader is already going to do, at zero cost.
+
 ### Worked example
 
 The schema:
