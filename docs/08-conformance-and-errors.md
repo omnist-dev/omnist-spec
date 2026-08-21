@@ -88,6 +88,22 @@ Every diagnostic carries at least:
 | `parse.nested-array` | An array element that is itself an array |
 | `parse.separator-in-array` | A newline or `;` used as an array separator |
 
+**These six codes also cover OSD's own lexical stage**:
+`parse.unexpected-token`, `parse.trailing-content`,
+`parse.unterminated-string`, `parse.invalid-escape`,
+`parse.unpaired-surrogate`, `parse.control-character`. OSD produces a
+Schema rather than a Document, but tokenizing OSD source text is the same
+kind of operation as tokenizing OML source text — a lexical failure
+before any semantic well-formedness checking has begun (§8.3.3 covers
+well-formedness, not lexing) is the same class of error regardless of
+what stage-2 structure a successfully-tokenized input eventually becomes.
+An unterminated string or an unexpected character in OSD source MUST be
+reported with the matching `parse.*` code above, not a `schema.*` code
+and not an implementation-invented code outside this taxonomy. The
+remaining five codes in this table (`reserved-word-label`, `bare-word`,
+`empty-array`, `nested-array`, `separator-in-array`) describe OML's value
+grammar specifically and have no OSD equivalent.
+
 ### 8.3.2 `document.*` — building and limits
 
 | Code | Raised when |
