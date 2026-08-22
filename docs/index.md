@@ -95,7 +95,7 @@ per-port audit notes; this table is a summary, not the source of truth.
 | Language | Version | Maturity | Docs |
 |---|---|---|---|
 | [Python](https://github.com/omnist-dev/omnist) | 0.8.4 | beta, reference implementation | [py.omnist.dev](https://py.omnist.dev) |
-| [TypeScript](https://github.com/omnist-dev/omnist-ts) | 0.1.1-alpha | alpha | [ts.omnist.dev](https://ts.omnist.dev) |
+| [TypeScript](https://github.com/omnist-dev/omnist-ts) | 0.2.0-alpha | alpha | [ts.omnist.dev](https://ts.omnist.dev) |
 | [Rust](https://github.com/omnist-dev/omnist-rs) | 0.2.0-alpha | alpha | [rs.omnist.dev](https://rs.omnist.dev) |
 | [Go](https://github.com/omnist-dev/omnist-go) | 0.2.0-alpha | alpha | [go.omnist.dev](https://go.omnist.dev) |
 | [Java](https://github.com/omnist-dev/omnist-j) | 0.2.0-alpha | alpha | [j.omnist.dev](https://j.omnist.dev) |

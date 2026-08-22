@@ -101,7 +101,7 @@ As of spec v0.2.2-alpha.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.8.4 | 0.1.1-alpha | 0.2.0-alpha | 0.2.0-alpha | 0.2.0-alpha |
+| Version | 0.8.4 | 0.2.0-alpha | 0.2.0-alpha | 0.2.0-alpha | 0.2.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete, `integer`/`number` natively distinguished (`bigint` for `integer` since D-6/D-9) | complete | complete, all seven scalar kinds natively distinguished (`math/big.Int` for `integer`) | complete, all seven scalar kinds natively distinguished (`BigInteger` for `integer`) |
 | Resource caps | all three | all three (D-1 closed, `MAX_NODES` in `document.ts`) | all three (D-1 closed, `MAX_NODES` in `document.rs`) | all three, source-audited | all three |
