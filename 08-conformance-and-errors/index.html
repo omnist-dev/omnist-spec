@@ -1,0 +1,2293 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/08-conformance-and-errors/">
+      
+      
+        <link rel="prev" href="../examples/">
+      
+      
+        <link rel="next" href="../conformance-harness/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>8. Conformance & Errors - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#8-conformance-and-errors" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              8. Conformance & Errors
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-document-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-oml-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-schema-algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-codecs-and-deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#81-status-of-this-chapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Status of this chapter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#82-code-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Code format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#83-the-taxonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 The taxonomy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.3 The taxonomy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#831-parse-text-to-document-stage-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.1 parse.* — text to Document, stage 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#832-document-building-and-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.2 document.* — building and limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#833-schema-schema-well-formedness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.3 schema.* — schema well-formedness
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#834-validate-document-against-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.4 validate.* — document against schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#835-materialize-schema-directed-deserialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.5 materialize.* — schema-directed deserialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#836-algebra-operations-over-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.6 algebra.* — operations over schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#837-lint-schema-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.7 lint.* — schema diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#838-format-codec-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.8 format.* — codec adjustments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#839-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.9 write.*
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#84-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Paths
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#85-conformance-harness-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 Conformance harness protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.5 Conformance harness protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#851-common-envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.1 Common envelope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#852-diagnostics-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.2 Diagnostics matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#853-operation-drivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.3 Operation drivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#854-canonical-document-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.4 Canonical document encoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#855-reporting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.5 Reporting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#86-omlosd-conformance-harness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 OML/OSD conformance harness
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-divergence-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#81-status-of-this-chapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Status of this chapter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#82-code-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Code format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#83-the-taxonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 The taxonomy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.3 The taxonomy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#831-parse-text-to-document-stage-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.1 parse.* — text to Document, stage 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#832-document-building-and-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.2 document.* — building and limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#833-schema-schema-well-formedness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.3 schema.* — schema well-formedness
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#834-validate-document-against-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.4 validate.* — document against schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#835-materialize-schema-directed-deserialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.5 materialize.* — schema-directed deserialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#836-algebra-operations-over-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.6 algebra.* — operations over schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#837-lint-schema-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.7 lint.* — schema diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#838-format-codec-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.8 format.* — codec adjustments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#839-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3.9 write.*
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#84-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Paths
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#85-conformance-harness-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 Conformance harness protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.5 Conformance harness protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#851-common-envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.1 Common envelope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#852-diagnostics-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.2 Diagnostics matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#853-operation-drivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.3 Operation drivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#854-canonical-document-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.4 Canonical document encoding
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#855-reporting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5.5 Reporting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#86-omlosd-conformance-harness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.6 OML/OSD conformance harness
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="8-conformance-and-errors">8. Conformance and errors<a class="headerlink" href="#8-conformance-and-errors" title="Permanent link">&para;</a></h1>
+<h2 id="81-status-of-this-chapter">8.1 Status of this chapter<a class="headerlink" href="#81-status-of-this-chapter" title="Permanent link">&para;</a></h2>
+<p><strong>The error-code taxonomy in §8.3 is new normative content. Three of the four
+implementations don't emit it yet; the fourth already does.</strong> It is written
+here because conformance testing needs stable, language-independent
+identifiers, and comparing human-readable message strings across four
+languages is not a test, it is a coincidence.</p>
+<p>The prior art, stated accurately so the migration cost is visible:</p>
+<table>
+<thead>
+<tr>
+<th>Implementation</th>
+<th>What exists now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python (reference, beta)</td>
+<td>Validation and materialization results carry kebab-case codes: <code>shape-mismatch</code>, <code>unexpected-field</code>, <code>cardinality</code>, <code>null-not-allowed</code>, <code>type-mismatch</code>. <code>lint</code> carries its own: <code>unsatisfiable-record</code>, <code>unreachable-record</code>, <code>duplicate-record</code>, <code>any-field</code>. Everything else is a bare exception class (<code>DocumentError</code>, <code>SchemaError</code>, <code>ParseError</code>) with a human message and no code.</td>
+</tr>
+<tr>
+<td>TypeScript (alpha)</td>
+<td>Diagnostic records carry a <code>code: string</code> field using the same kebab-case tags as Python's validation codes.</td>
+</tr>
+<tr>
+<td>Rust (alpha)</td>
+<td>Top-level <code>thiserror</code> structs (<code>DocumentError</code>, <code>ParseError</code>, <code>FormatError</code>, <code>WriteError</code>) carry no code. But <code>SchemaError</code>'s validation path has an <code>ErrorCode</code> enum rendering the identical kebab-case tags Python and TypeScript use (<code>unexpected-field</code>, <code>cardinality</code>, <code>type-mismatch</code>, <code>null-not-allowed</code>, <code>shape-mismatch</code>), attached to every <code>ValidationError</code> produced by both <code>validate</code> and <code>materialize</code>. An earlier version of this table said "no code field anywhere," which was wrong — Rust has reached the same partial convergence as the other two.</td>
+</tr>
+<tr>
+<td><strong>Go (alpha) — already migrated</strong></td>
+<td>Emits §8.3's namespaced codes directly (<code>lint.unreachable-record</code>, <code>document.limit.depth</code>, etc.), confirmed via <code>errors.go</code>'s <code>Code</code> constants and independent inspection during <code>omnist-spec#42</code>'s investigation. Built this way from the start, not migrated from a pre-existing kebab-case scheme — the newest implementation had no legacy convention to carry forward, so it adopted the target form directly. This is the existence proof the other three's "SHOULD migrate" below didn't have until 2026-08-10: the namespaced form is implementable, not just theoretical.</td>
+</tr>
+</tbody>
+</table>
+<p>There is a second, separate family of prior art this table previously missed
+entirely: <strong>format-adjustment codes.</strong> Python's format readers/writers already
+emit dotted (not namespaced) codes on their <code>WriteReport</code>/<code>check_*</code> results —
+<code>temporal.stringified</code> (a temporal leaf stringified to ISO-8601 for a format
+with no native temporal type), <code>null.omitted</code> (TOML/XML, a null-valued leaf
+dropped since the format can't represent it), <code>float.special</code> (JSON, a
+<code>NaN</code>/<code>Infinity</code>/<code>-Infinity</code> substituted with <code>null</code> in lenient mode),
+<code>key.sanitized</code> (XML), <code>string.ambiguous</code> (XML, a string value that would
+read back as a different type), <code>shape.empty_ambiguous</code>, <code>string.illegal_xml_char</code>,
+<code>string.cr_normalized</code>, and <code>string.line-break-char</code> (all XML). These map
+directly onto §8.3.8's <code>format.*</code> family below — the migration here is
+mostly a rename, not new design, which the original wording of this section
+didn't make clear.</p>
+<p>So there is partial, undocumented convergence on validation codes across
+Python/TypeScript/Rust, a second, separate area of already-shipped
+convergence on format-adjustment codes (Python only, so far), and a fourth
+implementation that skipped the intermediate kebab-case step entirely and
+went straight to §8.3's namespaced form. There has never been a
+cross-language convention among the first three; this chapter proposes one,
+and Go is now living proof it works in practice, not just on paper.</p>
+<p><strong>Migration.</strong> The kebab-case validation tags Python/TypeScript/Rust already
+share are the closest prior art and map cleanly onto §8.3's <code>validate.*</code>
+family. All three SHOULD migrate to the namespaced form — Go's adoption
+removes the main reason to delay, since the target form is no longer
+hypothetical. None of this is required for the current release; it is
+required before a version of this spec declares §8.3 mandatory.</p>
+<p>Until then, an implementation is conformant on error <em>behavior</em> — which inputs
+fail, and where — without being conformant on error <em>codes</em>. The test-vector
+format in §8.5 separates the two so that can be measured.</p>
+<h2 id="82-code-format">8.2 Code format<a class="headerlink" href="#82-code-format" title="Permanent link">&para;</a></h2>
+<p>A code is a lowercase, dot-separated path. Each segment is
+<code>[a-z][a-z0-9-]*</code>. The first segment is the family. Codes are stable
+identifiers: once published, a code's meaning MUST NOT change. Retiring a code
+means adding a new one and leaving the old one documented as retired.</p>
+<p>Codes are not messages. An implementation MUST emit a human-readable message
+alongside the code, and the message MAY be localized, reworded, or improved at
+any time. Conformance tests match on codes and paths, never on message text.</p>
+<p>Every diagnostic carries at least:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>code</code></td>
+<td>The identifier from §8.3</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>Location in the Document or schema; see §8.4</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>Human-readable, actionable, unversioned</td>
+</tr>
+<tr>
+<td><code>severity</code></td>
+<td><code>error</code>, <code>warning</code>, or <code>info</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="83-the-taxonomy">8.3 The taxonomy<a class="headerlink" href="#83-the-taxonomy" title="Permanent link">&para;</a></h2>
+<h3 id="831-parse-text-to-document-stage-1">8.3.1 <code>parse.*</code> — text to Document, stage 1<a class="headerlink" href="#831-parse-text-to-document-stage-1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parse.unexpected-token</code></td>
+<td>A token appears where the grammar does not allow it</td>
+</tr>
+<tr>
+<td><code>parse.trailing-content</code></td>
+<td>Content remains after the document's single node</td>
+</tr>
+<tr>
+<td><code>parse.unterminated-string</code></td>
+<td>A string is not closed before end of input</td>
+</tr>
+<tr>
+<td><code>parse.invalid-escape</code></td>
+<td>An unrecognized backslash escape</td>
+</tr>
+<tr>
+<td><code>parse.unpaired-surrogate</code></td>
+<td>A <code>\uXXXX</code> surrogate escape without its partner</td>
+</tr>
+<tr>
+<td><code>parse.control-character</code></td>
+<td>A literal control character in a context that forbids it</td>
+</tr>
+<tr>
+<td><code>parse.reserved-word-label</code></td>
+<td><code>null</code>, <code>true</code>, or <code>false</code> used as a bare label</td>
+</tr>
+<tr>
+<td><code>parse.bare-word</code></td>
+<td>A bare identifier in value position that is not <code>null</code>/<code>true</code>/<code>false</code></td>
+</tr>
+<tr>
+<td><code>parse.empty-array</code></td>
+<td><code>[]</code> in OML value position</td>
+</tr>
+<tr>
+<td><code>parse.nested-array</code></td>
+<td>An array element that is itself an array</td>
+</tr>
+<tr>
+<td><code>parse.separator-in-array</code></td>
+<td>A newline or <code>;</code> used as an array separator</td>
+</tr>
+</tbody>
+</table>
+<p><strong>These six codes also cover OSD's own lexical stage</strong>:
+<code>parse.unexpected-token</code>, <code>parse.trailing-content</code>,
+<code>parse.unterminated-string</code>, <code>parse.invalid-escape</code>,
+<code>parse.unpaired-surrogate</code>, <code>parse.control-character</code>. OSD produces a
+Schema rather than a Document, but tokenizing OSD source text is the same
+kind of operation as tokenizing OML source text — a lexical failure
+before any semantic well-formedness checking has begun (§8.3.3 covers
+well-formedness, not lexing) is the same class of error regardless of
+what stage-2 structure a successfully-tokenized input eventually becomes.
+An unterminated string or an unexpected character in OSD source MUST be
+reported with the matching <code>parse.*</code> code above, not a <code>schema.*</code> code
+and not an implementation-invented code outside this taxonomy. The
+remaining five codes in this table (<code>reserved-word-label</code>, <code>bare-word</code>,
+<code>empty-array</code>, <code>nested-array</code>, <code>separator-in-array</code>) describe OML's value
+grammar specifically and have no OSD equivalent.</p>
+<h3 id="832-document-building-and-limits">8.3.2 <code>document.*</code> — building and limits<a class="headerlink" href="#832-document-building-and-limits" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>document.limit.depth</code></td>
+<td>Nesting exceeds the implementation's configured depth limit</td>
+</tr>
+<tr>
+<td><code>document.limit.nodes</code></td>
+<td>Node count exceeds the implementation's configured node limit</td>
+</tr>
+<tr>
+<td><code>document.limit.int-digits</code></td>
+<td>An integer literal exceeds the implementation's configured digit limit</td>
+</tr>
+<tr>
+<td><code>document.unlabeled-element</code></td>
+<td>An input construct has no label to become an edge</td>
+</tr>
+</tbody>
+</table>
+<p>The three <code>document.limit.*</code> codes correspond to the three quantities in
+<a href="../02-document-model/#24-safety-limits">§2.4</a>. There are three, they are flat,
+and no implementation may add a fourth or split one into tiers. <strong>The codes are
+fixed; the threshold that triggers each one is not</strong> — an implementation MAY
+configure any of the three limits to a value other than the reference default,
+per §2.4, but whatever value it configures, crossing it MUST raise exactly this
+code, never a different one and never silently.</p>
+<h3 id="833-schema-schema-well-formedness">8.3.3 <code>schema.*</code> — schema well-formedness<a class="headerlink" href="#833-schema-schema-well-formedness" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema.no-root</code></td>
+<td>No <code>root</code> declaration</td>
+</tr>
+<tr>
+<td><code>schema.unknown-type</code></td>
+<td>A type name resolves to neither a scalar nor a defined record</td>
+</tr>
+<tr>
+<td><code>schema.duplicate-record</code></td>
+<td>A record name is defined twice</td>
+</tr>
+<tr>
+<td><code>schema.duplicate-field</code></td>
+<td>A label is used by two fields in one record</td>
+</tr>
+<tr>
+<td><code>schema.reserved-name</code></td>
+<td>A record is named after a scalar kind or <code>any</code></td>
+</tr>
+<tr>
+<td><code>schema.invalid-cardinality</code></td>
+<td>Negative minimum, or maximum below minimum</td>
+</tr>
+<tr>
+<td><code>schema.non-integer-cardinality</code></td>
+<td>A cardinality bound is not a whole number</td>
+</tr>
+<tr>
+<td><code>schema.empty-cardinality</code></td>
+<td><code>[]</code> written as a cardinality</td>
+</tr>
+<tr>
+<td><code>schema.unquoted-label</code></td>
+<td>A bare name in field-label position</td>
+</tr>
+<tr>
+<td><code>schema.quoted-type</code></td>
+<td>A quoted string in type position</td>
+</tr>
+<tr>
+<td><code>schema.nullable-ref</code></td>
+<td><code>?</code> applied to a reference</td>
+</tr>
+<tr>
+<td><code>schema.nullable-any</code></td>
+<td><code>any?</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>schema.unquoted-label</code> and <code>schema.quoted-type</code> are the two directions of
+<a href="../05-osd-grammar/#52-the-quoting-rule">§5.2</a>'s quoting rule — a bare name
+belongs only in type position, a quoted string only in label position, and
+each direction gets its own code rather than one code covering both, the
+same way the rule itself states both directions explicitly rather than
+leaving the second implied by the first.</p>
+<h3 id="834-validate-document-against-schema">8.3.4 <code>validate.*</code> — document against schema<a class="headerlink" href="#834-validate-document-against-schema" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+<th>Existing tag it replaces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>validate.shape-mismatch</code></td>
+<td>A value where a node is expected, or the reverse</td>
+<td><code>shape-mismatch</code></td>
+</tr>
+<tr>
+<td><code>validate.type-mismatch</code></td>
+<td>A value of the wrong scalar kind</td>
+<td><code>type-mismatch</code></td>
+</tr>
+<tr>
+<td><code>validate.null-not-allowed</code></td>
+<td><code>null</code> at a non-nullable scalar</td>
+<td><code>null-not-allowed</code></td>
+</tr>
+<tr>
+<td><code>validate.unexpected-field</code></td>
+<td>A label no field of the closed record names</td>
+<td><code>unexpected-field</code></td>
+</tr>
+<tr>
+<td><code>validate.cardinality</code></td>
+<td>An edge count outside <code>[min, max]</code></td>
+<td><code>cardinality</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="835-materialize-schema-directed-deserialization">8.3.5 <code>materialize.*</code> — schema-directed deserialization<a class="headerlink" href="#835-materialize-schema-directed-deserialization" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>materialize.inexact-conversion</code></td>
+<td>A leaf cannot be converted to the declared type without loss or invention</td>
+</tr>
+</tbody>
+</table>
+<p>Shape and cardinality problems found during materialization use the
+<code>validate.*</code> codes above. Materialization performs the same checks; there is no
+reason for a second set of names.</p>
+<h3 id="836-algebra-operations-over-schemas">8.3.6 <code>algebra.*</code> — operations over schemas<a class="headerlink" href="#836-algebra-operations-over-schemas" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>algebra.extract-invalidates-root</code></td>
+<td><code>extract</code>'s <code>keep</code> set removes a label the root needs</td>
+</tr>
+<tr>
+<td><code>algebra.infer-no-samples</code></td>
+<td><code>infer</code> called with zero samples</td>
+</tr>
+<tr>
+<td><code>algebra.infer-scalar-root</code></td>
+<td>A sample's root is a value rather than a node</td>
+</tr>
+<tr>
+<td><code>algebra.infer-conflicting-scalars</code></td>
+<td>Samples disagree on a scalar kind, other than integer/number</td>
+</tr>
+<tr>
+<td><code>algebra.infer-mixed-shape</code></td>
+<td>Samples disagree on whether a label's value is a node or a scalar</td>
+</tr>
+</tbody>
+</table>
+<h3 id="837-lint-schema-diagnostics">8.3.7 <code>lint.*</code> — schema diagnostics<a class="headerlink" href="#837-lint-schema-diagnostics" title="Permanent link">&para;</a></h3>
+<p>These are the only codes that already exist in namespaced-adjacent form. The
+bare tags MUST become:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lint.unsatisfiable-record</code></td>
+<td>warning</td>
+</tr>
+<tr>
+<td><code>lint.unreachable-record</code></td>
+<td>warning</td>
+</tr>
+<tr>
+<td><code>lint.duplicate-record</code></td>
+<td>warning</td>
+</tr>
+<tr>
+<td><code>lint.any-field</code></td>
+<td>info</td>
+</tr>
+</tbody>
+</table>
+<h3 id="838-format-codec-adjustments">8.3.8 <code>format.*</code> — codec adjustments<a class="headerlink" href="#838-format-codec-adjustments" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Severity</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>format.temporal-stringified</code></td>
+<td>warning</td>
+<td>A temporal leaf was written as an ISO-8601 string</td>
+</tr>
+<tr>
+<td><code>format.float-special</code></td>
+<td>error</td>
+<td><code>NaN</code> or an infinity was substituted with <code>null</code></td>
+</tr>
+<tr>
+<td><code>format.null-unrepresentable</code></td>
+<td>warning</td>
+<td>A null leaf cannot be written in the target format, so it is dropped</td>
+</tr>
+<tr>
+<td><code>format.attribute-dropped</code></td>
+<td>warning</td>
+<td>An XML attribute was discarded on read</td>
+</tr>
+<tr>
+<td><code>format.namespace-dropped</code></td>
+<td>warning</td>
+<td>An XML namespace prefix was discarded on read</td>
+</tr>
+<tr>
+<td><code>format.interleaving-lost</code></td>
+<td>warning</td>
+<td>Cross-label interleaving could not be written</td>
+</tr>
+<tr>
+<td><code>format.multiple-roots</code></td>
+<td>error</td>
+<td>A multi-root Document cannot be written to a single-root format</td>
+</tr>
+<tr>
+<td><code>format.string-line-break-char</code></td>
+<td>warning</td>
+<td>A label or value contains U+0085 (NEL); written quoted so it round-trips</td>
+</tr>
+<tr>
+<td><code>format.shape-empty-ambiguous</code></td>
+<td>warning</td>
+<td>An empty internal node was written as a self-closing tag, which reads back as an empty-string leaf, not an empty node</td>
+</tr>
+<tr>
+<td><code>format.key-sanitized</code></td>
+<td>warning</td>
+<td>A label isn't a legal tag name in the target format and was written sanitized</td>
+</tr>
+<tr>
+<td><code>format.value-stringified</code></td>
+<td>warning</td>
+<td>A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string</td>
+</tr>
+<tr>
+<td><code>format.string-illegal-char</code></td>
+<td>error</td>
+<td>A string contains a character the target format cannot represent and it was replaced (e.g. <code>U+FFFD</code> for a C0 control XML 1.0 forbids)</td>
+</tr>
+<tr>
+<td><code>format.string-cr-normalized</code></td>
+<td>warning</td>
+<td>A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as <code>\n</code>, not the original byte</td>
+</tr>
+</tbody>
+</table>
+<p>Three of these describe behavior that is currently silent in the reference
+implementation — attribute dropping, namespace dropping, and interleaving loss
+are none of them reported today, confirmed live for all three. Adding the
+report is a behavior change and needs a test vector before it lands.</p>
+<p><code>format.null-unrepresentable</code>'s severity was previously listed as <code>error</code>,
+which never matched the reference implementation: the write still succeeds,
+with the null leaf simply dropped and reported as an adjustment, the same
+"succeeded, but something was adjusted" shape as the other warning-severity
+rows in this table. Corrected to <code>warning</code>; <code>format.float-special</code> remains the
+one row correctly at <code>error</code>, since substituting a value (not just dropping
+one) is a stronger change to what's actually represented.</p>
+<p><strong>The last six rows were referenced in §8.1's prior-art discussion as
+prior art that "maps directly onto this family... mostly a rename," but
+were never actually given their renamed form here</strong> — a promise made and
+never finished, found while porting a fourth implementation (<code>omnist-j</code>).
+Verified against the reference implementation's real, live behavior
+(<code>omnist/formats.py</code>) before naming and scoping each: <code>string.line-break-char</code>
+(YAML), <code>shape.empty_ambiguous</code>/<code>key.sanitized</code>/<code>value.stringified</code>/
+<code>string.illegal_xml_char</code>/<code>string.cr_normalized</code> (all XML). Severity for
+each matches what the reference implementation actually reports today,
+not a guess — <code>string.illegal_xml_char</code> is the one other row at <code>error</code>
+alongside <code>format.float-special</code>, for the same reason: replacing a
+character's identity is a stronger change than dropping or stringifying
+a whole leaf.</p>
+<h3 id="839-write">8.3.9 <code>write.*</code><a class="headerlink" href="#839-write" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>write.unsupported-value</code></td>
+<td>A value has no representation in the target format and strict mode is in force</td>
+</tr>
+</tbody>
+</table>
+<h2 id="84-paths">8.4 Paths<a class="headerlink" href="#84-paths" title="Permanent link">&para;</a></h2>
+<p>A path locates a diagnostic. Paths are normative and MUST be byte-identical
+across implementations, because conformance vectors match on them.</p>
+<p><strong>Document paths</strong> start at <code>$</code> and descend by label. A repeated label is
+disambiguated by a zero-based occurrence index in brackets.</p>
+<div class="highlight"><pre><span></span><code>$                        the root node
+$.name                   the single edge labeled `name`
+$.item[0]                the first edge labeled `item`
+$.item[2].sku            `sku` inside the third `item`
+</code></pre></div>
+<p>The index MUST be present when the label occurs more than once in that node, and
+MUST be absent when it occurs exactly once. This keeps the common case readable.</p>
+<p>Unlike the codes above, this path format is <strong>not</strong> new: it is the format the
+Python reference already emits, verified directly — a failure at the second of
+two <code>i</code> edges reports <code>$.i[1].q</code>, and a failure at a singly-occurring label
+reports <code>$.name</code> with no index. The rule is documented here rather than
+proposed.</p>
+<p><strong>Schema paths</strong> are <code>RecordName</code> for a record-level diagnostic and
+<code>RecordName.label</code> for a field-level one. This matches what <code>lint</code> already
+reports.</p>
+<p><strong>The whole-schema fallback is <code>$</code>.</strong> Some diagnostics have no specific
+record or field to name: <code>schema.no-root</code> (there is no root declaration at
+all), a dangling root reference (the named root never resolves to a
+defined record), and <code>algebra.infer-no-samples</code>/<code>algebra.infer-scalar-root</code>
+(these fail before any schema exists, since they're about the shape of
+the input samples, not a schema). All four use <code>$</code> — the same sentinel
+Document paths use for the whole node — as the schema-side/pre-schema
+equivalent of "the whole thing, not a part of it." This is a deliberate
+extension of the two path forms above, not a third form: it says what to
+do when neither a specific record nor a specific field applies, rather
+than introducing new path syntax.</p>
+<p><strong>Text-position paths</strong> are for <code>parse.*</code> diagnostics (§8.3.1) — stage 1
+fails before any Document exists, so there is no <code>$</code>-rooted structure yet
+for a Document path to descend into. The format is <code>line:col</code>, 1-based,
+computed from the byte offset of the failure:</p>
+<div class="highlight"><pre><span></span><code>1:1                      the very first character
+14:8                      line 14, column 8
+</code></pre></div>
+<p><strong>This is new normative content, unlike the two path forms above.</strong> Python
+already computes 1-based <code>(line, col)</code> from a byte offset internally
+(<code>oml.py</code>'s <code>line_col</code>) but only ever embeds it in the diagnostic's
+human-readable <em>message</em> string ("line 14, col 8: ..."), never as a
+structured path — which is exactly why no cross-implementation convention
+exists yet to document. This section specifies one rather than describing
+one already in use, the same way §8.3's code taxonomy does.</p>
+<p>A <code>parse.*</code> diagnostic's <code>path</code> MUST be a text-position path. A <code>document.*</code>,
+<code>schema.*</code>, <code>validate.*</code>, <code>materialize.*</code>, <code>algebra.*</code>, or <code>lint.*</code> diagnostic's
+<code>path</code> MUST be a Document or Schema path, per the two forms above — never a
+text-position path, since a Document or Schema already exists by the time any
+of those families can fire.</p>
+<h2 id="85-conformance-harness-protocol">8.5 Conformance harness protocol<a class="headerlink" href="#85-conformance-harness-protocol" title="Permanent link">&para;</a></h2>
+<p>A conformant implementation passes the vectors in <code>test-suite/</code>. Vectors are
+JSON, one case per object, grouped into files by operation.</p>
+<h3 id="851-common-envelope">8.5.1 Common envelope<a class="headerlink" href="#851-common-envelope" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unique-vector-id"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"spec"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docs/03-schema-model.md#36-validation"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"operation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"validate"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"purpose"</span><span class="p">:</span><span class="w"> </span><span class="s2">"happy-path"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"input"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"expect"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>name</code> MUST be unique across the whole suite. A harness reports results keyed
+  on it.</li>
+<li><code>spec</code> points at the section the vector pins. A vector with no section to
+  point at is a vector testing something unspecified, which is a spec defect.</li>
+<li><code>operation</code> selects the driver. It MUST be one of the operation names listed
+  on the <a href="../operations-and-models-reference/">Operations &amp; Models Reference</a>
+  page — that page is the vocabulary's single source, not a free-text field
+  vectors can spell differently across files.</li>
+<li><code>purpose</code> MUST be one of <code>happy-path</code>, <code>edge-case</code>, <code>error-case</code>, or
+  <code>determinism-regression</code> (the same four-way vocabulary the OML/OSD
+  conformance harness uses, <a href="../conformance-harness/">§2</a> of that page) —
+  what a vector is actually pinning, so a reader doesn't have to
+  reverse-engineer it from the input/expect pair. <code>happy-path</code> is an
+  ordinary conforming case with nothing specific being probed;
+  <code>edge-case</code> deliberately exercises a specific rule, invariant, or
+  boundary (regardless of whether the outcome is success or failure);
+  <code>error-case</code> is primarily testing that an invalid input is correctly
+  rejected; <code>determinism-regression</code> pins a specific
+  ordering/reproducibility regression tied to a known bug.</li>
+<li><code>expect</code> holds either a success value or a <code>diagnostics</code> list.</li>
+</ul>
+<h3 id="852-diagnostics-matching">8.5.2 Diagnostics matching<a class="headerlink" href="#852-diagnostics-matching" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nt">"expect"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"ok"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.port"</span><span class="p">,</span><span class="w"> </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"validate.type-mismatch"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Matching rules, all normative:</p>
+<ol>
+<li>Message text MUST NOT be compared.</li>
+<li>The diagnostic list MUST be compared as a <strong>set</strong>, not a sequence. Ordering
+   of diagnostics is not specified and implementations may find problems in any
+   order.</li>
+<li>Every expected diagnostic MUST be present, and no unexpected diagnostic may
+   be. Partial matching is not permitted; an implementation reporting three
+   problems where the vector expects two has failed.</li>
+<li>A harness MAY be run in <strong>code-agnostic mode</strong>, comparing only <code>ok</code> and the
+   set of paths. This is the mode implementations that have not yet adopted
+   §8.3 run in. A run MUST state which mode produced its results.</li>
+</ol>
+<h3 id="853-operation-drivers">8.5.3 Operation drivers<a class="headerlink" href="#853-operation-drivers" title="Permanent link">&para;</a></h3>
+<p><strong>This table was corrected against <code>test-suite/</code>'s actual 140 vectors and
+<code>omnist</code>'s <code>tools/conformance/vector_runner.py</code>, which passes all of them
+(104 pass, 35 legitimate skip, 0 fail) — an earlier revision of this table
+predated most of those vectors and, checked directly rather than assumed
+correct, disagreed with six of the twelve original rows. The table below
+states what is actually implemented and verified working, not an
+un-exercised ideal.</strong></p>
+<table>
+<thead>
+<tr>
+<th><code>operation</code></th>
+<th><code>input</code></th>
+<th>success <code>expect</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parse</code></td>
+<td><code>{format, text}</code></td>
+<td><code>{ok, document}</code></td>
+</tr>
+<tr>
+<td><code>parse_schema</code></td>
+<td><code>{text}</code></td>
+<td><code>{ok}</code></td>
+</tr>
+<tr>
+<td><code>validate</code></td>
+<td><code>{schema, document}</code></td>
+<td><code>{ok}</code></td>
+</tr>
+<tr>
+<td><code>materialize</code></td>
+<td><code>{schema, document}</code></td>
+<td><code>{ok, document}</code></td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td><code>{document, format}</code></td>
+<td><code>{ok, text}</code> — <code>diagnostics</code> MAY be present alongside a successful <code>{ok: true, ...}</code> result (a write can succeed with a reported adjustment, e.g. <code>format.temporal-stringified</code>; success and a diagnostics list are not mutually exclusive here the way they are for every other operation)</td>
+</tr>
+<tr>
+<td><code>compatible_with</code></td>
+<td><code>{a, b}</code></td>
+<td><code>{result: bool}</code></td>
+</tr>
+<tr>
+<td><code>equivalent</code></td>
+<td><code>{a, b}</code></td>
+<td><code>{result: bool}</code></td>
+</tr>
+<tr>
+<td><code>normalize</code></td>
+<td><code>{schema}</code></td>
+<td><code>{schema: &lt;canonical OSD text&gt;}</code> — compared byte for byte per §5.9's canonical-output requirement</td>
+</tr>
+<tr>
+<td><code>prune</code></td>
+<td><code>{schema}</code></td>
+<td><code>{schema: &lt;canonical OSD text&gt;}</code></td>
+</tr>
+<tr>
+<td><code>is_empty</code></td>
+<td><code>{schema}</code></td>
+<td><code>{empty: bool}</code></td>
+</tr>
+<tr>
+<td><code>extract</code></td>
+<td><code>{schema, keep}</code></td>
+<td><code>{ok, schema}</code></td>
+</tr>
+<tr>
+<td><code>infer</code></td>
+<td><code>{samples, allow_any}</code></td>
+<td><code>{ok, schema}</code> — <code>allow_any</code> defaults to <code>false</code> when absent</td>
+</tr>
+<tr>
+<td><code>infer_with_report</code></td>
+<td><code>{samples, allow_any}</code></td>
+<td><code>{ok, schema, fallbacks}</code> — <code>fallbacks</code> is a list of <code>{location, reason}</code>, always present on success (empty when nothing was opened)</td>
+</tr>
+<tr>
+<td><code>lint</code></td>
+<td><code>{schema}</code></td>
+<td><code>{ok, findings}</code> — <code>findings</code> is a list of <code>{code, severity, location}</code>; message text is never compared (§8.5.2 rule 1) so no <code>message</code> field is required</td>
+</tr>
+</tbody>
+</table>
+<p>Every operation's failure <code>expect</code> is <code>{ok: false, diagnostics: [...]}</code>, per
+§8.5.2 — <code>write</code> is the only operation where <code>ok: true</code> and <code>diagnostics</code> can
+coexist, noted above.</p>
+<p><strong><code>materialize</code>'s <code>input</code> is a canonical-JSON Document, not raw format text
+plus a <code>format</code> field.</strong> This is deliberate, not an oversight: per
+<a href="../operations-and-models-reference/">Operations &amp; Models Reference</a>,
+<code>materialize</code>'s abstract signature is <code>materialize(node, S) -&gt; node</code> — it
+operates on an already-parsed Document, matching §7.1's two-stage
+separation (stage 1 parses, stage 2 materializes; a vector testing stage 2
+should not silently re-test stage 1's <code>parse</code> by embedding it as a hidden
+first step). A vector wanting to exercise the full parse-then-materialize
+pipeline for a specific format uses two vectors — one <code>parse</code>, one
+<code>materialize</code> — not one vector conflating both stages.</p>
+<p>Schemas in <code>input</code> are OSD text. Documents are given in the canonical JSON
+encoding of §8.5.4, not in a format-specific text, except where the vector is
+specifically testing a parser.</p>
+<h3 id="854-canonical-document-encoding">8.5.4 Canonical document encoding<a class="headerlink" href="#854-canonical-document-encoding" title="Permanent link">&para;</a></h3>
+<p>A Document must be written into a JSON vector file without JSON's own
+map-and-array shape smuggling assumptions back in. The encoding is explicit:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"scalar"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">}}</span>
+<span class="p">{</span><span class="nt">"edges"</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="nt">"scalar"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ann"</span><span class="p">}}],</span>
+<span class="w">           </span><span class="p">[</span><span class="s2">"tag"</span><span class="p">,</span><span class="w">  </span><span class="p">{</span><span class="nt">"scalar"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"x"</span><span class="p">}}],</span>
+<span class="w">           </span><span class="p">[</span><span class="s2">"tag"</span><span class="p">,</span><span class="w">  </span><span class="p">{</span><span class="nt">"scalar"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"y"</span><span class="p">}}]]}</span>
+</code></pre></div>
+<ul>
+<li>A node is <code>{"edges": [[label, target], ...]}</code>. The outer array preserves
+  order; repeated labels appear as repeated entries.</li>
+<li>A scalar is <code>{"scalar": {"kind": K, "value": V}}</code> where <code>K</code> is one of the
+  seven kinds. Temporal values are ISO-8601 strings. <code>integer</code> values are JSON
+  numbers when they fit exactly and decimal strings otherwise.</li>
+<li><code>null</code> is <code>{"scalar": {"kind": null, "value": null}}</code>.</li>
+</ul>
+<p>This is verbose on purpose. A vector file must not depend on the reader's JSON
+library to decide whether <code>1</code> is an integer or a number.</p>
+<h3 id="855-reporting">8.5.5 Reporting<a class="headerlink" href="#855-reporting" title="Permanent link">&para;</a></h3>
+<p><em>Building your own runner? <a href="../porting-a-conformance-runner/">Porting a Conformance Runner</a>
+collects what all three existing ports learned, including this section's
+skip/CI discipline in practice.</em></p>
+<p>A harness run reports, per vector: pass, fail, or skip. <strong>Skip is a first-class
+result.</strong> An implementation that has not built <code>extract</code> yet skips those
+vectors and reports the count. A run that hides skips as passes is worthless for
+tracking convergence, which is the whole point of
+<a href="../09-divergence-ledger/">chapter 9</a>.</p>
+<p><strong>A skip MUST cite a reason, and the reason determines what else is
+required:</strong></p>
+<ul>
+<li><strong>Not yet implemented.</strong> The operation or feature doesn't exist yet in
+  this implementation. Temporary by nature — expected to become a <code>pass</code>
+  once the work lands. No ledger entry is required for this category on its
+  own, though the usual issue tracker SHOULD have something open for it.</li>
+<li><strong>Documented divergence.</strong> The vector's outcome depends on a capability
+  this implementation's target language or design genuinely cannot provide
+  — not a missing feature, a structural limit (TypeScript's <code>integer</code>/
+  <code>number</code> collapse, <a href="../09-divergence-ledger/#94-known-open-divergences">§9.4 D-6</a>,
+  is the worked example). This category MUST have a corresponding entry in
+  chapter 9's divergence ledger, and the skip reason a harness reports for
+  the affected vectors MUST cite that entry by number (e.g. <code>"skip: D-6"</code>)
+  — a skip with no citable reason, or a reason invented ad hoc instead of
+  pointing at a ledger entry, is not acceptable reporting under this
+  section.</li>
+</ul>
+<p><strong>CI gating.</strong> A conformant CI run MUST fail the build when the fail count
+is nonzero. A conformant CI run MUST NOT fail the build merely because the
+skip count is nonzero — an implementation legitimately at 104 pass / 0 fail
+/ 35 skip has <em>passed</em> conformance in the sense this section defines,
+provided every one of those 35 skips carries one of the two reason
+categories above. Passing CI is a statement about <code>fail</code>, not about
+reaching zero skips; chapter 9 is where the skip count's honesty is
+checked, not the CI gate.</p>
+<h2 id="86-omlosd-conformance-harness">8.6 OML/OSD conformance harness<a class="headerlink" href="#86-omlosd-conformance-harness" title="Permanent link">&para;</a></h2>
+<p>§8.5's harness exercises operations through a canonical JSON encoding
+(§8.5.4) specifically to avoid the representational ambiguity of format
+text — the same Document can be written as OML or OSD in more than one way
+(indentation, array sugar versus repeated labels, field declaration order)
+and still be the identical model. That is the right design for testing
+<strong>operation correctness</strong>, but it never touches the OML/OSD text an
+implementation actually reads and writes, which is a second, independent
+thing worth testing on its own: <strong>codec fidelity</strong> at the surface a human or
+another tool actually uses.</p>
+<p><strong><a href="../conformance-harness/">conformance-harness.md</a></strong> specifies a second,
+complementary conformance track for exactly that: a CLI wrapper contract
+every implementation exposes one command per operation under, a
+directory-per-fixture format for OML/OSD input and expected output, and a
+structural-equality comparison algorithm (not text diffing) for judging
+whether an implementation's actual output matches. It reuses this chapter's
+operation vocabulary (§8.5.3) and diagnostic envelope (§8.2) rather than
+defining either a second time.</p>
+<p>This track's fixtures and orchestrator live in this repository, under
+<code>conformance/</code>, not in a separate repository — alongside the spec text they
+pin, for the same reason <code>test-suite/</code> does: chapter 10's Spec-TDD workflow
+(§10.2) requires a vector and the prose it tests to land in the same PR, and
+that is only practical when both live in one place.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

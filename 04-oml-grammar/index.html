@@ -1,0 +1,1594 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/04-oml-grammar/">
+      
+      
+        <link rel="prev" href="../03-schema-model/">
+      
+      
+        <link rel="next" href="../05-osd-grammar/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>4. OML Grammar - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#4-oml-grammar" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              4. OML Grammar
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-document-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#41-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#42-tokenization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Tokenization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Tokenization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421-separators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.1 Separators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422-reserved-words" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.2 Reserved words
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#43-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-arrays-are-sugar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.1 Arrays are sugar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#44-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#45-strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Strings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#46-document-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 Document shapes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.6 Document shapes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#461-top-level-disambiguation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6.1 Top-level disambiguation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#47-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.7 Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#48-worked-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.8 Worked examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-schema-algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-codecs-and-deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-conformance-and-errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-divergence-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#41-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#42-tokenization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Tokenization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 Tokenization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421-separators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.1 Separators
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422-reserved-words" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2.2 Reserved words
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#43-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-arrays-are-sugar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3.1 Arrays are sugar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#44-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Labels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#45-strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Strings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#46-document-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6 Document shapes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.6 Document shapes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#461-top-level-disambiguation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.6.1 Top-level disambiguation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#47-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.7 Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#48-worked-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.8 Worked examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="4-oml-grammar">4. OML grammar<a class="headerlink" href="#4-oml-grammar" title="Permanent link">&para;</a></h1>
+<p><strong>OML</strong> (Omnist Markup Language) is the native text format for Documents. It is
+the only format whose syntax <em>is</em> the Document model rather than a projection
+onto it, so every Document shape round-trips through OML exactly.</p>
+<p>Two levels are defined:</p>
+<ul>
+<li><strong>OML-Core</strong> — what the canonical writer emits. Every conformant reader MUST
+  accept all of it.</li>
+<li><strong>OML-Extended</strong> — additional read-only spellings. Every conformant reader
+  MUST accept them; a canonical writer MUST NOT emit them.</li>
+</ul>
+<p>The machine-readable grammar is <a href="../grammars/oml.abnf"><code>grammars/oml.abnf</code></a>,
+written in ABNF (<a href="https://www.rfc-editor.org/rfc/rfc5234">RFC 5234</a>). This
+chapter is its normative prose companion; where the two disagree, that is a
+defect to be fixed, not a choice.</p>
+<h2 id="41-shape">4.1 Shape<a class="headerlink" href="#41-shape" title="Permanent link">&para;</a></h2>
+<p>OML nesting is <strong>brace-delimited</strong>. Indentation is insignificant. Newlines and
+semicolons are both edge separators and are interchangeable.</p>
+<div class="highlight"><pre><span></span><code># a comment runs to end of line
+name: "Ann"
+address: {
+  city: "Zurich"
+  postcode: "8001"
+}
+tag: "x"
+tag: "y"
+</code></pre></div>
+<p>That document is:</p>
+<div class="highlight"><pre><span></span><code>[ (name,"Ann"),
+  (address, [(city,"Zurich"), (postcode,"8001")]),
+  (tag,"x"),
+  (tag,"y") ]
+</code></pre></div>
+<p>The same thing on one line, which is what the compact writer emits:</p>
+<div class="highlight"><pre><span></span><code>name: "Ann"; address: { city: "Zurich"; postcode: "8001" }; tag: "x"; tag: "y"
+</code></pre></div>
+<h2 id="42-tokenization">4.2 Tokenization<a class="headerlink" href="#42-tokenization" title="Permanent link">&para;</a></h2>
+<p>A conformant tokenizer MUST scan with <strong>maximal munch under a fixed priority
+order</strong>. At each position it tries rules in this order and the first that
+matches wins, consuming the longest match for that rule. There is no backtracking
+between rules.</p>
+<ol>
+<li>STRING family, pinned to a leading <code>"</code> or <code>'</code></li>
+<li>Punctuation: <code>{</code> <code>}</code> <code>[</code> <code>]</code> <code>:</code> <code>,</code></li>
+<li><code>DATETIME</code></li>
+<li><code>DATE</code>, only when not followed by <code>T</code> plus a TIME-shaped lookahead</li>
+<li><code>TIME</code></li>
+<li><code>NUMBER</code> (decimal or exponent form)</li>
+<li>The reserved float spellings <code>nan</code>, <code>inf</code>, <code>-inf</code>, emitted as <code>NUMBER</code></li>
+<li><code>INTEGER</code></li>
+<li><code>IDENT</code></li>
+</ol>
+<p>Anything matching none of these is an error.</p>
+<p>Two consequences of the order are normative and MUST be reproduced.</p>
+<p><strong><code>nan</code> and <code>inf</code> can never be bare labels.</strong> They are claimed by rule 7 before
+<code>IDENT</code> is reached, so <code>nan: 1</code> is an error. <code>"nan": 1</code> is fine, since quoting
+routes it to rule 1.</p>
+<p><strong>DATE versus DATETIME needs one lookahead.</strong> At a position where <code>DATE</code>
+matches, the tokenizer MUST check whether the next character is <code>T</code> and the text
+after it matches <code>TIME</code>. If so, it emits <code>DATETIME</code>. If not, it emits <code>DATE</code>,
+and whatever follows is tokenized independently. So <code>2024-01-01T10:30</code> is one
+<code>DATETIME</code>, while <code>2024-01-01T99</code> is a <code>DATE</code> followed by the <code>IDENT</code> <code>T99</code> —
+which then fails as trailing content.</p>
+<h3 id="421-separators">4.2.1 Separators<a class="headerlink" href="#421-separators" title="Permanent link">&para;</a></h3>
+<p>Horizontal space and comments are skipped and emit no token. A run containing at
+least one newline or <code>;</code> collapses into a single separator token. A separator is
+required between adjacent edges and is otherwise insignificant.</p>
+<h3 id="422-reserved-words">4.2.2 Reserved words<a class="headerlink" href="#422-reserved-words" title="Permanent link">&para;</a></h3>
+<p><code>null</code>, <code>true</code>, and <code>false</code> tokenize as ordinary <code>IDENT</code>. They are excluded from
+label position by the <strong>parser</strong>, not the tokenizer. This differs from
+<code>nan</code>/<code>inf</code>/<code>-inf</code>, which are excluded by the tokenizer. The difference matters
+if you write a tokenizer-only consumer.</p>
+<h2 id="43-values">4.3 Values<a class="headerlink" href="#43-values" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>value = scalar | "{" node-edges "}" | array
+</code></pre></div>
+<p><code>{}</code> is a legal value: the empty edge list.</p>
+<p>A bare identifier that is not <code>null</code>, <code>true</code>, or <code>false</code> is <strong>not</strong> a string. It
+is an error. OML has no implicit string-from-identifier coercion anywhere.</p>
+<h3 id="431-arrays-are-sugar">4.3.1 Arrays are sugar<a class="headerlink" href="#431-arrays-are-sugar" title="Permanent link">&para;</a></h3>
+<p><code>[...]</code> in value position is expanded at <strong>parse time</strong> into repeated edges at
+that exact position:</p>
+<div class="highlight"><pre><span></span><code>b: [1, 2, 3]
+</code></pre></div>
+<p>produces <code>[(b,1), (b,2), (b,3)]</code> — indistinguishable from three separate <code>b:</code>
+edges. An array is not a value in the Document model, which is why array
+elements MUST NOT themselves be arrays: there is nothing to nest into.</p>
+<p>Rules:</p>
+<ul>
+<li>Comma is the only element separator. A newline or <code>;</code> inside <code>[...]</code> is an
+  error.</li>
+<li>A trailing comma before <code>]</code> is legal.</li>
+<li><code>[]</code> is an error, not a zero-edge expansion. An empty array and an absent
+  label are the same Document, and OML does not offer two spellings for one
+  thing.</li>
+<li>Separators and comments are otherwise insignificant inside <code>[...]</code>.</li>
+</ul>
+<h2 id="44-labels">4.4 Labels<a class="headerlink" href="#44-labels" title="Permanent link">&para;</a></h2>
+<p>A label is written either as a <code>STRING</code> or as a bare <code>IDENT</code>. A bare label MUST
+NOT be <code>null</code>, <code>true</code>, or <code>false</code>; those three, and only those three, are
+rejected in bare-label position. That is the complete reserved set at the parser
+level.</p>
+<p>The canonical writer MUST emit a bare label only when the label text matches
+<code>IDENT</code> <strong>and</strong> is not one of <code>null</code>, <code>true</code>, <code>false</code>, <code>nan</code>, <code>inf</code>. It MUST
+quote otherwise. <code>nan</code> and <code>inf</code> are in the writer's quote list even though they
+are not parser-level reserved words, because emitting them bare would produce
+text the tokenizer reads back as a number.</p>
+<h2 id="45-strings">4.5 Strings<a class="headerlink" href="#45-strings" title="Permanent link">&para;</a></h2>
+<p>Three spellings.</p>
+<p><strong>Double-quoted (Core).</strong> Recognized escapes are exactly <code>\"</code>, <code>\\</code>, <code>\/</code>, <code>\b</code>,
+<code>\f</code>, <code>\n</code>, <code>\r</code>, <code>\t</code>, and <code>\uXXXX</code> with four hex digits. A <code>\uXXXX</code> in the
+high-surrogate range <code>D800</code>–<code>DBFF</code> MUST be immediately followed by a second
+<code>\uXXXX</code> in the low-surrogate range <code>DC00</code>–<code>DFFF</code>; the pair combines into one
+code point. Any other escape, and any unpaired surrogate escape, is an error. A
+literal control character below <code>U+0020</code> is an error.</p>
+<p><strong>Raw (Extended, read-only).</strong> <code>'...'</code> performs no escape processing at all. A
+backslash inside is a literal backslash. There is no way to include a <code>'</code>; the
+first one closes the string.</p>
+<p><strong>Multiline (Extended, read-only).</strong> <code>"""..."""</code>. An optional newline
+immediately after the opening delimiter is consumed and is not part of the
+value. The string closes at the <strong>first</strong> run of three or more <code>"</code> characters;
+only the first three are consumed as the terminator, and any further quotes in
+that run are returned to the scanner. A run of one or two quotes is literal
+content. Tab and newline are legal inside; other control characters are not.</p>
+<p>The canonical writer MUST emit only <code>\"</code>, <code>\\</code>, <code>\n</code>, <code>\r</code>, <code>\t</code>, and <code>\u00XX</code>
+for other control characters. It MUST NOT emit <code>\/</code>, <code>\b</code>, <code>\f</code>, surrogate
+pairs, raw strings, or multiline strings. Non-ASCII characters are emitted
+literally.</p>
+<h2 id="46-document-shapes">4.6 Document shapes<a class="headerlink" href="#46-document-shapes" title="Permanent link">&para;</a></h2>
+<p>An OML document is exactly one node. Unlike most formats there is no requirement
+of a single root object. Three shapes are legal:</p>
+<ul>
+<li>a single top-level scalar — <code>42</code>, <code>"hello"</code>, <code>null</code>. The document <em>is</em> that
+  leaf.</li>
+<li>zero or more top-level edges, repeats permitted, with no implicit wrapper.</li>
+<li>the empty document, which is the empty edge list.</li>
+</ul>
+<p>Anything else — two bare scalars in a row, for instance — is an error.</p>
+<h3 id="461-top-level-disambiguation">4.6.1 Top-level disambiguation<a class="headerlink" href="#461-top-level-disambiguation" title="Permanent link">&para;</a></h3>
+<p>The grammar is ambiguous on paper: a leading <code>IDENT</code> or <code>STRING</code> could begin
+either a scalar or an edge. A conformant parser MUST resolve it with <strong>one token
+of lookahead</strong> before committing. If the current token is a <code>STRING</code>, or an
+<code>IDENT</code> that is not <code>null</code>/<code>true</code>/<code>false</code>, and the next token is <code>:</code>, parse as
+an edge list. Otherwise parse as a single scalar.</p>
+<p>This lookahead fires only at the start of a document and at the start of each
+value inside <code>{ }</code>.</p>
+<p>One sharp edge follows from it. At top level, <code>null: 1</code> is not the reserved-word
+error: <code>null</code> fails the lookahead test, so the parser takes the scalar branch,
+consumes <code>null</code>, and then fails on the leftover <code>:</code> as trailing content. Written
+inside a node — <code>a: { null: 1 }</code> — label position is unambiguous and the
+specific reserved-word error is produced instead. Both are errors; conformance
+vectors distinguish them by code.</p>
+<h2 id="47-limits">4.7 Limits<a class="headerlink" href="#47-limits" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+<th>Enforced at</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Integer literal digits, sign excluded</td>
+<td>4300</td>
+<td>tokenize time</td>
+</tr>
+<tr>
+<td>Nesting depth, <code>{</code> levels</td>
+<td>200</td>
+<td>parse time</td>
+</tr>
+</tbody>
+</table>
+<p>Both match the Document model's caps (§2.4), deliberately: a document that
+parses MUST NOT then fail to build. Both MUST raise a parse error rather than
+letting a pathological input exhaust stack or memory.</p>
+<p>Boundary behavior is normative and covered by conformance vectors: 4300 digits
+and 200 levels parse; 4301 digits and 201 levels do not.</p>
+<h2 id="48-worked-examples">4.8 Worked examples<a class="headerlink" href="#48-worked-examples" title="Permanent link">&para;</a></h2>
+<p>Every row below MUST hold for a conformant implementation, and the ABNF in
+<code>grammars/oml.abnf</code> accepts every accepted input shown.</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2024-01-01T10:30</code></td>
+<td>one <code>DATETIME</code> value</td>
+</tr>
+<tr>
+<td><code>2024-01-01T99</code></td>
+<td><code>DATE</code> then <code>IDENT</code> <code>T99</code>, then a trailing-content error</td>
+</tr>
+<tr>
+<td><code>a: 'C:\no\escapes'</code></td>
+<td>raw string; value is that literal text, backslashes intact</td>
+</tr>
+<tr>
+<td><code>a: """</code> + newline + <code>hello</code> + newline + <code>world"""</code></td>
+<td>value <code>hello\nworld</code>; the leading newline is stripped</td>
+</tr>
+<tr>
+<td><code>a: """</code> + newline + <code>says ""hi"" there"""</code></td>
+<td>two-quote runs are literal content</td>
+</tr>
+<tr>
+<td><code>a: """</code> + newline + <code>x""""</code> (four closing quotes)</td>
+<td>first three close the string; the fourth opens an unterminated string, error</td>
+</tr>
+<tr>
+<td><code>nan: 1</code></td>
+<td>error; <code>nan</code> is a <code>NUMBER</code> token and never reaches label position</td>
+</tr>
+<tr>
+<td><code>"nan": 1</code></td>
+<td>valid; the edge <code>(nan, 1)</code></td>
+</tr>
+<tr>
+<td><code>null: 1</code> at top level</td>
+<td>error on the leftover <code>:</code> as trailing content</td>
+</tr>
+<tr>
+<td><code>a: { null: 1 }</code></td>
+<td>reserved-word error naming <code>null</code></td>
+</tr>
+<tr>
+<td><code>tag: "x"</code> newline <code>tag: "y"</code></td>
+<td><code>[(tag,"x"), (tag,"y")]</code></td>
+</tr>
+<tr>
+<td><code>b: [1, 2, 3]</code></td>
+<td><code>[(b,1), (b,2), (b,3)]</code></td>
+</tr>
+<tr>
+<td><code>[]</code> in value position</td>
+<td>error, empty array</td>
+</tr>
+<tr>
+<td><code>a: {}</code></td>
+<td><code>[(a, [])]</code></td>
+</tr>
+<tr>
+<td><code>"hello"</code> alone</td>
+<td>the document is the single scalar <code>hello</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
