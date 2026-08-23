@@ -140,10 +140,11 @@ a language with no native `integer`/`number` distinction (e.g. JavaScript's
 single `number` type) MAY be structurally unable to preserve this distinction
 independent of a schema. That is a real, accepted implementation constraint,
 not a reason to relax the model: such an implementation MUST still document
-the gap plainly (see [§9.4 D-6](09-divergence-ledger.md#94-known-open-divergences)
-for TypeScript's case) and MUST report any conformance vector whose outcome
-depends on this distinction as *skipped*, never as passing — a vector cannot
-be honestly satisfied by an implementation that cannot construct its input.
+the gap plainly as a numbered entry in
+[§9.4](09-divergence-ledger.md#94-known-open-divergences) and MUST report
+any conformance vector whose outcome depends on this distinction as
+*skipped*, never as passing — a vector cannot be honestly satisfied by an
+implementation that cannot construct its input.
 
 > D-3 is the invariant most likely to be violated by accident, usually by an
 > implementation that validates a node by zipping it against a field list. Zip

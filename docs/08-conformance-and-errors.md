@@ -454,14 +454,16 @@ required:**
   own, though the usual issue tracker SHOULD have something open for it.
 - **Documented divergence.** The vector's outcome depends on a capability
   this implementation's target language or design genuinely cannot provide
-  — not a missing feature, a structural limit (TypeScript's `integer`/
-  `number` collapse, [§9.4 D-6](09-divergence-ledger.md#94-known-open-divergences),
-  is the worked example). This category MUST have a corresponding entry in
-  chapter 9's divergence ledger, and the skip reason a harness reports for
-  the affected vectors MUST cite that entry by number (e.g. `"skip: D-6"`)
-  — a skip with no citable reason, or a reason invented ad hoc instead of
+  — not a missing feature, a structural limit. This category MUST have a
+  corresponding entry in [chapter 9](09-divergence-ledger.md)'s divergence
+  ledger (see [§9.4](09-divergence-ledger.md#94-known-open-divergences) for
+  the current open entries), and the skip reason a harness reports for the
+  affected vectors MUST cite that entry by number (e.g. `"skip: D-2"`) — a
+  skip with no citable reason, or a reason invented ad hoc instead of
   pointing at a ledger entry, is not acceptable reporting under this
-  section.
+  section. A divergence this narrow is closed, and its entry removed from
+  the ledger, once the implementation adds real support — it doesn't stay
+  listed once resolved.
 
 **CI gating.** A conformant CI run MUST fail the build when the fail count
 is nonzero. A conformant CI run MUST NOT fail the build merely because the

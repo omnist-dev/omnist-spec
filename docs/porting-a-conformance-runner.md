@@ -83,12 +83,14 @@ every skip cites a real reason. Two categories:
 - **Documented divergence.** Your target language or design genuinely
   cannot provide something a vector depends on — not a missing feature, a
   structural limit. This requires a numbered entry in
-  [chapter 9](09-divergence-ledger.md)'s divergence ledger (D-6 and D-7 are
-  the two existing worked examples — TypeScript's `integer`/`number`
-  collapse, Rust's missing temporal `Scalar` variant), and your runner's
-  skip reason **MUST cite that entry by number**. Don't invent an ungrounded
-  skip reason, and don't silently rewrite a vector to route around a real
-  divergence instead of documenting it.
+  [chapter 9](09-divergence-ledger.md)'s divergence ledger (see
+  [§9.4](09-divergence-ledger.md#94-known-open-divergences) for the current
+  open entries), and your runner's skip reason **MUST cite that entry by
+  number**. Don't invent an ungrounded skip reason, and don't silently
+  rewrite a vector to route around a real divergence instead of documenting
+  it. A divergence this narrow — one language, one scalar-kind distinction —
+  is closed once the implementation adds real type support and its entry is
+  removed from the ledger; it doesn't stay listed as historical record.
 
 If you find a genuinely new divergence category building your own runner,
 follow the same pattern: file it as a new `D-`-numbered entry in this repo

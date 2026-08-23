@@ -121,12 +121,9 @@ its two fixtures in [`../examples/`](../examples/index.md#packagejson).
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-"all four" for Python, TypeScript, and Rust alike — every implementation has
-every codec.
+is the authority. Its "Codecs (JSON/YAML/TOML/XML)" row reads "all four" for
+every current implementation.
 
 There is no JSON-specific entry in
-[§9.4](../09-divergence-ledger.md#94-known-open-divergences). The general
-divergences that also apply here are D-1 (resource caps unverified outside
-Python) and D-4 (no implementation emits §8.3 error codes yet), neither of
-which is about JSON.
+[§9.4](../09-divergence-ledger.md#94-known-open-divergences) — see that
+section for whatever's currently open.

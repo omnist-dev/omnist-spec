@@ -86,17 +86,19 @@ The real conventions, applying to every subcommand:
 **`lint` findings' `code` field is compared code-agnostically, like Track
 2's diagnostics.** [§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching)
 rule 4 already establishes this for the JSON-vector suite specifically
-*because* of [§9.4](09-divergence-ledger.md#94-known-open-divergences) D-4:
-no implementation emits real §8.3-namespaced codes yet, so today's reference
-implementation itself still emits the bare pre-namespacing form
-(`unreachable-record`, not `lint.unreachable-record`) — a fixture's
-`expected.json` recorded against the actual reference output necessarily
-carries that same bare form, and an implementation that has already adopted
-§8.3's namespaced codes (ahead of D-4 resolving) MUST NOT be marked failing
-for that; compare `severity` and `location` exactly, and treat `code` as
-informational only until D-4 closes. This applies to every operation whose
-fixture carries a `code` field, not lint alone — the same reasoning that
-produced §8.5.2 rule 4 for Track 2 applies identically here.
+because §8.3-namespaced code adoption is still rolling out across
+implementations — see the `§8.3 error codes` row in
+[§9.3](09-divergence-ledger.md#93-current-status) for current per-port
+status. The reference implementation itself still emits the bare
+pre-namespacing form in places (`unreachable-record`, not
+`lint.unreachable-record`), so a fixture's `expected.json` recorded
+against it necessarily carries that same bare form — an implementation
+that has already adopted §8.3's namespaced codes MUST NOT be marked
+failing for that; compare `severity` and `location` exactly, and treat
+`code` as informational only until every implementation's row in §9.3
+reads "yes." This applies to every operation whose fixture carries a
+`code` field, not lint alone — the same reasoning that produced §8.5.2
+rule 4 for Track 2 applies identically here.
 
 **`is_empty`/`compatible_with`/`equivalent`'s exit-code convention is a real
 finding that changes §5.1's general contract**, not a minor detail: this
