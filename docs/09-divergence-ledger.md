@@ -96,24 +96,24 @@ way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
 **Last source-audited: 2026-08-23**, directly against each port's own code
-after Python/TypeScript/Rust's `omnist#316`/`omnist-ts#120`/`omnist-rs#153`
-closed the remaining `validate.*`/`materialize.*`/`lint.*` namespacing gap
-(D-10) — not carried forward from a prior edit.
+and a live conformance run, after all five ports closed D-2 (`omnist#319`,
+`omnist-ts#122`, `omnist-rs#155`, `omnist-go#92`, `omnist-j#83`) —
+not carried forward from a prior edit.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.8.10 | 0.2.0-alpha | 0.2.1-alpha | 0.2.0-alpha | 0.2.1-alpha |
+| Version | 0.8.11 | 0.2.0-alpha | 0.2.1-alpha | 0.2.0-alpha | 0.2.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps | all three | all three | all three | all three | all three |
 | OML read/write | complete | complete | complete | complete | complete |
-| OSD read/write | complete | complete | complete | complete | complete |
+| OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete | complete | complete | complete | complete |
 | Codecs (JSON/YAML/TOML/XML) | all four | all four | all four | all four | all four |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors, of 152) | reference | 116 pass / 0 fail / 36 skip | 146 pass / 0 fail / 6 skip | 151 pass / 0 fail / 1 skip | 181 pass / 0 fail / 0 skip |
+| Conformance (vectors, of 153) | reference | 116 pass / 0 fail / 37 skip | 147 pass / 0 fail / 6 skip | 152 pass / 0 fail / 1 skip | 182 pass / 0 fail / 0 skip |
 | Conformance (fixtures, of 19) | reference | 19/19 | 19/19 | 19/19 | 19/19 |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.8%/99.5%, gated |
@@ -126,7 +126,6 @@ not as a growing paragraph in this file.
 
 | # | Issue | Status |
 |---|---|---|
-| D-2 | OSD: a duplicate `root` declaration — Python lets the later one silently win. [§5.8](05-osd-grammar.md#58-root) now MUSTs `schema.duplicate-root` as an error (2026-08-23), with a conformance vector. | Open, per-port rollout (tracked in each repo's own issues, not duplicated here). |
 | D-3 | Silent codec adjustments with no diagnostic reported: XML attributes and namespace prefixes dropped on read, and cross-label interleaving lost writing to any JSON-family format (JSON/YAML/TOML). [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)'s three codes for these now MUST be emitted (2026-08-23), each with a conformance vector. | Open, per-port rollout (tracked in each repo's own issues, not duplicated here). |
 
 ## 9.5 Adding a sixth implementation
