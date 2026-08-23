@@ -7,12 +7,13 @@ not alternatives.*
 
 ## Status
 
-**Scope for this revision: `omnist` (Python) only.** The CLI wrapper
-contract below is written implementation-agnostically, since TypeScript and
-Rust are expected to adopt it later, but nothing in this document requires
-them to yet. Everywhere a design choice was made against a specific
-implementation's real behavior, it names Python explicitly rather than
-implying a claim about the other two.
+All five current implementations have adopted this track — see the
+`Conformance (fixtures, of 19)` row in
+[§9.3](09-divergence-ledger.md#93-current-status) for current pass counts.
+The CLI wrapper contract below is written implementation-agnostically;
+where a design choice was made against one implementation's specific real
+behavior, that implementation is named explicitly rather than implying a
+claim about the others.
 
 ## 1. Purpose
 
@@ -27,12 +28,9 @@ the spec never constrains.
 
 ## 2. The wrapper CLI contract
 
-**This section describes `omnist`'s (Python's) real, already-existing CLI
-(`omnist/cli.py`), verified directly against source — it does not invent a
-new convention.** The harness targets what already exists rather than
-requiring CLI changes beyond what §5 already calls for. A prior draft of
-this section specified an idealized stdin-only contract that did not match
-Python's actual CLI; that draft is replaced below.
+**This section describes `omnist`'s (Python's) real CLI (`omnist/cli.py`)
+— it does not invent a new convention.** The harness targets what already
+exists rather than requiring CLI changes beyond what §5 already calls for.
 
 The real conventions, applying to every subcommand:
 
@@ -60,11 +58,9 @@ The real conventions, applying to every subcommand:
   emits the full §8.3 taxonomy yet — Python's `--json` output is real,
   existing, partial convergence, not yet full §8.2 compliance, and this
   track does not require Python to close that gap before being usable.
-- **`--json` failure payloads print to stdout, not stderr.** Verified
-  functionally across `validate`, `extract`, `infer`, and `convert`
-  (materialize) — `_fail()`'s own docstring in `cli.py` confirms this is
-  deliberate, not an accident of one command. An earlier revision of this
-  section said stderr; that was wrong for every command in this table.
+- **`--json` failure payloads print to stdout, not stderr**, across every
+  command in this table (`validate`, `extract`, `infer`, `convert`) — this
+  is deliberate, not an accident of one command.
 - **One diagnostic in this whole contract is not JSON:** `infer
   --allow-any`'s report of which fields it opened prints to **stderr as
   plain text**, not stdout JSON — see the `infer` row below.
@@ -81,7 +77,7 @@ The real conventions, applying to every subcommand:
 | `compatible_with` | `omnist schema compatible-with A B --result-format json` | `{"compatible": bool}` | 0 if `true`, 1 if `false` — same exit-code-carries-the-boolean pattern |
 | `equivalent` | `omnist schema equivalent A B --result-format json` | `{"equivalent": bool}` | 0 if `true`, 1 if `false` |
 | `infer` | `omnist infer FILE [FILE...] --from oml [--allow-any] [--compact] [-o FILE] [--json]` — **multiple positional document files, one per sample; not a single stdin stream** | OSD. With `--allow-any` and an opened field, a plain-text report prints to **stderr** (not stdout, not JSON): `opened N field(s) as \`any\`:\n  RecordName.label — reason` | **0 (including the `--allow-any` success case), or 2 on ambiguous type without `--allow-any`** — `--json` gives `{"ok": false, "message", "errors": []}` on stdout for the exit-2 case |
-| `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | **1 if any `warning`-severity finding is present, 0 otherwise** — this was previously documented as "0, always," which was flat wrong, not just incomplete |
+| `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | **1 if any `warning`-severity finding is present, 0 otherwise** |
 
 **`lint` findings' `code` field is compared code-agnostically, like Track
 2's diagnostics.** [§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching)
@@ -100,32 +96,14 @@ reads "yes." This applies to every operation whose fixture carries a
 `code` field, not lint alone — the same reasoning that produced §8.5.2
 rule 4 for Track 2 applies identically here.
 
-**`is_empty`/`compatible_with`/`equivalent`'s exit-code convention is a real
-finding that changes §5.1's general contract**, not a minor detail: this
-track's original draft assumed boolean-result commands always exit 0 and
-carry the answer only in stdout. Python's real CLI instead encodes the
-boolean in the exit code as well (0 = true, 1 = false) — the orchestrator
-MUST read the boolean from stdout's `--result-format json` payload, not
-infer it from the exit code, since a future implementation (or a future
-Python version) could legitimately choose either convention and this track
-should not be sensitive to which.
+**`is_empty`/`compatible_with`/`equivalent` encode their boolean result in
+the exit code too** (0 = true, 1 = false), not just in stdout. The
+orchestrator MUST read the boolean from stdout's `--result-format json`
+payload, not infer it from the exit code — a different implementation
+could legitimately choose either convention, and this track should not be
+sensitive to which.
 
-**`materialize` was unreachable via the CLI until `omnist#277` (now closed,
-`omnist` 0.7.16).** `convert` only refuses `--from oml --to oml` now when
-`args.schema` is falsy — verified directly, functionally, not just by
-reading the diff: a `date`-typed field carrying a schema-valid string
-materializes and writes back unquoted (exit 0); the same input with no
-`--schema` still refuses, pointing at `format` (exit 2); an inexact value
-fails with the exact §7.2 error text (exit 2). No longer blocked — every
-operation in
-the table above is fully CLI-reachable today and unblocked.
-
-Every row above was checked directly against real command output, not just
-source reading — `extract`, `infer`, and `lint`'s exact exit codes and
-`--json`/stderr shapes (including `lint`'s incorrect "always 0" claim in an
-earlier revision, and the stdout-not-stderr correction that applies to every
-`--json` failure in this table) were only found by actually running each
-command, the same way `materialize`'s CLI gap was.
+Every operation in the table above is fully CLI-reachable.
 
 `parse` and `materialize`'s stage-1-only variant are intentionally **not**
 listed — this track tests round-trip and schema-directed behavior, not raw
