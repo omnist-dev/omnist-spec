@@ -96,13 +96,13 @@ way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
 **Last source-audited: 2026-08-23**, directly against each port's own code
-and a live conformance run, after all five ports closed D-2 (`omnist#319`,
-`omnist-ts#122`, `omnist-rs#155`, `omnist-go#92`, `omnist-j#83`) —
+and a live conformance run, after all five ports closed D-3 (`omnist#321`,
+`omnist-ts#124`, `omnist-rs#157`, `omnist-go#94`, `omnist-j#86`) —
 not carried forward from a prior edit.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.8.11 | 0.2.0-alpha | 0.2.1-alpha | 0.2.0-alpha | 0.2.1-alpha |
+| Version | 0.9.0 | 0.2.0-alpha | 0.2.1-alpha | 0.2.0-alpha | 0.2.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps | all three | all three | all three | all three | all three |
@@ -111,9 +111,9 @@ not carried forward from a prior edit.
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete | complete | complete | complete | complete |
-| Codecs (JSON/YAML/TOML/XML) | all four | all four | all four | all four | all four |
+| Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors, of 153) | reference | 116 pass / 0 fail / 37 skip | 147 pass / 0 fail / 6 skip | 152 pass / 0 fail / 1 skip | 182 pass / 0 fail / 0 skip |
+| Conformance (vectors, of 155) | reference | 118 pass / 0 fail / 37 skip | 149 pass / 0 fail / 6 skip | 154 pass / 0 fail / 1 skip | 184 pass / 0 fail / 0 skip |
 | Conformance (fixtures, of 19) | reference | 19/19 | 19/19 | 19/19 | 19/19 |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.8%/99.5%, gated |
@@ -124,9 +124,7 @@ Only genuinely unresolved items belong here. A closed item is removed
 entirely once fixed — its resolution lives in the fixing repo's own issue,
 not as a growing paragraph in this file.
 
-| # | Issue | Status |
-|---|---|---|
-| D-3 | Silent codec adjustments with no diagnostic reported: XML attributes and namespace prefixes dropped on read, and cross-label interleaving lost writing to any JSON-family format (JSON/YAML/TOML). [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)'s three codes for these now MUST be emitted (2026-08-23), each with a conformance vector. | Open, per-port rollout (tracked in each repo's own issues, not duplicated here). |
+None currently open.
 
 ## 9.5 Adding a sixth implementation
 

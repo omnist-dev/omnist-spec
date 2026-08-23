@@ -366,7 +366,7 @@ required:**
   corresponding entry in [chapter 9](09-divergence-ledger.md)'s divergence
   ledger (see [§9.4](09-divergence-ledger.md#94-known-open-divergences) for
   the current open entries), and the skip reason a harness reports for the
-  affected vectors MUST cite that entry by number (e.g. `"skip: D-2"`) — a
+  affected vectors MUST cite that entry by number (e.g. `"skip: D-N"`) — a
   skip with no citable reason, or a reason invented ad hoc instead of
   pointing at a ledger entry, is not acceptable reporting under this
   section. A divergence this narrow is closed, and its entry removed from
