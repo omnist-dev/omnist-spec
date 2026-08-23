@@ -2,53 +2,19 @@
 
 ## 8.1 Status of this chapter
 
-**The error-code taxonomy in §8.3 is new normative content. Three of the four
-implementations don't emit it yet; the fourth already does.** It is written
-here because conformance testing needs stable, language-independent
-identifiers, and comparing human-readable message strings across four
-languages is not a test, it is a coincidence.
+**The error-code taxonomy in §8.3 is normative content that implementations
+are still migrating onto.** It exists because conformance testing needs
+stable, language-independent identifiers — comparing human-readable message
+strings across languages is not a test, it is a coincidence. See the
+`§8.3 error codes` row in [§9.3](09-divergence-ledger.md#93-current-status)
+for current per-port adoption status.
 
-The prior art, stated accurately so the migration cost is visible:
-
-| Implementation | What exists now |
-|---|---|
-| Python (reference, beta) | Validation and materialization results carry kebab-case codes: `shape-mismatch`, `unexpected-field`, `cardinality`, `null-not-allowed`, `type-mismatch`. `lint` carries its own: `unsatisfiable-record`, `unreachable-record`, `duplicate-record`, `any-field`. Everything else is a bare exception class (`DocumentError`, `SchemaError`, `ParseError`) with a human message and no code. |
-| TypeScript (alpha) | Diagnostic records carry a `code: string` field using the same kebab-case tags as Python's validation codes. |
-| Rust (alpha) | Top-level `thiserror` structs (`DocumentError`, `ParseError`, `FormatError`, `WriteError`) carry no code. But `SchemaError`'s validation path has an `ErrorCode` enum rendering the identical kebab-case tags Python and TypeScript use (`unexpected-field`, `cardinality`, `type-mismatch`, `null-not-allowed`, `shape-mismatch`), attached to every `ValidationError` produced by both `validate` and `materialize`. An earlier version of this table said "no code field anywhere," which was wrong — Rust has reached the same partial convergence as the other two. |
-| **Go (alpha) — already migrated** | Emits §8.3's namespaced codes directly (`lint.unreachable-record`, `document.limit.depth`, etc.), confirmed via `errors.go`'s `Code` constants and independent inspection during `omnist-spec#42`'s investigation. Built this way from the start, not migrated from a pre-existing kebab-case scheme — the newest implementation had no legacy convention to carry forward, so it adopted the target form directly. This is the existence proof the other three's "SHOULD migrate" below didn't have until 2026-08-10: the namespaced form is implementable, not just theoretical. |
-
-There is a second, separate family of prior art this table previously missed
-entirely: **format-adjustment codes.** Python's format readers/writers already
-emit dotted (not namespaced) codes on their `WriteReport`/`check_*` results —
-`temporal.stringified` (a temporal leaf stringified to ISO-8601 for a format
-with no native temporal type), `null.omitted` (TOML/XML, a null-valued leaf
-dropped since the format can't represent it), `float.special` (JSON, a
-`NaN`/`Infinity`/`-Infinity` substituted with `null` in lenient mode),
-`key.sanitized` (XML), `string.ambiguous` (XML, a string value that would
-read back as a different type), `shape.empty_ambiguous`, `string.illegal_xml_char`,
-`string.cr_normalized`, and `string.line-break-char` (all XML). These map
-directly onto §8.3.8's `format.*` family below — the migration here is
-mostly a rename, not new design, which the original wording of this section
-didn't make clear.
-
-So there is partial, undocumented convergence on validation codes across
-Python/TypeScript/Rust, a second, separate area of already-shipped
-convergence on format-adjustment codes (Python only, so far), and a fourth
-implementation that skipped the intermediate kebab-case step entirely and
-went straight to §8.3's namespaced form. There has never been a
-cross-language convention among the first three; this chapter proposes one,
-and Go is now living proof it works in practice, not just on paper.
-
-**Migration.** The kebab-case validation tags Python/TypeScript/Rust already
-share are the closest prior art and map cleanly onto §8.3's `validate.*`
-family. All three SHOULD migrate to the namespaced form — Go's adoption
-removes the main reason to delay, since the target form is no longer
-hypothetical. None of this is required for the current release; it is
-required before a version of this spec declares §8.3 mandatory.
-
-Until then, an implementation is conformant on error *behavior* — which inputs
-fail, and where — without being conformant on error *codes*. The test-vector
-format in §8.5 separates the two so that can be measured.
+**None of this is required for the current release; it is required before a
+version of this spec declares §8.3 mandatory.** Until then, an
+implementation is conformant on error *behavior* — which inputs fail, and
+where — without being conformant on error *codes*. §8.5 separates the two
+so that can be measured, and §8.5.2 rule 4 lets a harness run in
+code-agnostic mode for exactly this reason.
 
 ## 8.2 Code format
 
@@ -88,21 +54,21 @@ Every diagnostic carries at least:
 | `parse.nested-array` | An array element that is itself an array |
 | `parse.separator-in-array` | A newline or `;` used as an array separator |
 
-**These six codes also cover OSD's own lexical stage**:
+**Six of these codes also cover OSD's own lexical stage**:
 `parse.unexpected-token`, `parse.trailing-content`,
 `parse.unterminated-string`, `parse.invalid-escape`,
 `parse.unpaired-surrogate`, `parse.control-character`. OSD produces a
 Schema rather than a Document, but tokenizing OSD source text is the same
-kind of operation as tokenizing OML source text — a lexical failure
-before any semantic well-formedness checking has begun (§8.3.3 covers
-well-formedness, not lexing) is the same class of error regardless of
-what stage-2 structure a successfully-tokenized input eventually becomes.
-An unterminated string or an unexpected character in OSD source MUST be
-reported with the matching `parse.*` code above, not a `schema.*` code
-and not an implementation-invented code outside this taxonomy. The
-remaining five codes in this table (`reserved-word-label`, `bare-word`,
-`empty-array`, `nested-array`, `separator-in-array`) describe OML's value
-grammar specifically and have no OSD equivalent.
+kind of operation as tokenizing OML source text — a lexical failure before
+any semantic well-formedness checking has begun (§8.3.3 covers
+well-formedness, not lexing) is the same class of error regardless of what
+stage-2 structure a successfully-tokenized input eventually becomes. An
+unterminated string or an unexpected character in OSD source MUST be
+reported with the matching `parse.*` code above, never a `schema.*` code
+and never an implementation-invented code outside this taxonomy. The
+remaining five codes (`reserved-word-label`, `bare-word`, `empty-array`,
+`nested-array`, `separator-in-array`) describe OML's value grammar
+specifically and have no OSD equivalent.
 
 ### 8.3.2 `document.*` — building and limits
 
@@ -113,13 +79,13 @@ grammar specifically and have no OSD equivalent.
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-The three `document.limit.*` codes correspond to the three quantities in
-[§2.4](02-document-model.md#24-safety-limits). There are three, they are flat,
-and no implementation may add a fourth or split one into tiers. **The codes are
-fixed; the threshold that triggers each one is not** — an implementation MAY
-configure any of the three limits to a value other than the reference default,
-per §2.4, but whatever value it configures, crossing it MUST raise exactly this
-code, never a different one and never silently.
+These three `document.limit.*` codes correspond exactly to the three
+quantities in [§2.4](02-document-model.md#24-safety-limits) — no fourth, no
+tiers. **The codes are fixed; the threshold that triggers each one is not**
+— an implementation MAY configure any of the three limits to a value other
+than the reference default, per §2.4, but whatever value it configures,
+crossing it MUST raise exactly this code, never a different one and never
+silently.
 
 ### 8.3.3 `schema.*` — schema well-formedness
 
@@ -141,19 +107,17 @@ code, never a different one and never silently.
 `schema.unquoted-label` and `schema.quoted-type` are the two directions of
 [§5.2](05-osd-grammar.md#52-the-quoting-rule)'s quoting rule — a bare name
 belongs only in type position, a quoted string only in label position, and
-each direction gets its own code rather than one code covering both, the
-same way the rule itself states both directions explicitly rather than
-leaving the second implied by the first.
+each direction gets its own code.
 
 ### 8.3.4 `validate.*` — document against schema
 
-| Code | Raised when | Existing tag it replaces |
-|---|---|---|
-| `validate.shape-mismatch` | A value where a node is expected, or the reverse | `shape-mismatch` |
-| `validate.type-mismatch` | A value of the wrong scalar kind | `type-mismatch` |
-| `validate.null-not-allowed` | `null` at a non-nullable scalar | `null-not-allowed` |
-| `validate.unexpected-field` | A label no field of the closed record names | `unexpected-field` |
-| `validate.cardinality` | An edge count outside `[min, max]` | `cardinality` |
+| Code | Raised when |
+|---|---|
+| `validate.shape-mismatch` | A value where a node is expected, or the reverse |
+| `validate.type-mismatch` | A value of the wrong scalar kind |
+| `validate.null-not-allowed` | `null` at a non-nullable scalar |
+| `validate.unexpected-field` | A label no field of the closed record names |
+| `validate.cardinality` | An edge count outside `[min, max]` |
 
 ### 8.3.5 `materialize.*` — schema-directed deserialization
 
@@ -162,8 +126,8 @@ leaving the second implied by the first.
 | `materialize.inexact-conversion` | A leaf cannot be converted to the declared type without loss or invention |
 
 Shape and cardinality problems found during materialization use the
-`validate.*` codes above. Materialization performs the same checks; there is no
-reason for a second set of names.
+`validate.*` codes above — materialization performs the same checks, so
+there is no separate set of names for them.
 
 ### 8.3.6 `algebra.*` — operations over schemas
 
@@ -176,9 +140,6 @@ reason for a second set of names.
 | `algebra.infer-mixed-shape` | Samples disagree on whether a label's value is a node or a scalar |
 
 ### 8.3.7 `lint.*` — schema diagnostics
-
-These are the only codes that already exist in namespaced-adjacent form. The
-bare tags MUST become:
 
 | Code | Severity |
 |---|---|
@@ -205,32 +166,11 @@ bare tags MUST become:
 | `format.string-illegal-char` | error | A string contains a character the target format cannot represent and it was replaced (e.g. `U+FFFD` for a C0 control XML 1.0 forbids) |
 | `format.string-cr-normalized` | warning | A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as `\n`, not the original byte |
 
-Three of these describe behavior that is currently silent in the reference
-implementation — attribute dropping, namespace dropping, and interleaving loss
-are none of them reported today, confirmed live for all three. Adding the
-report is a behavior change and needs a test vector before it lands.
-
-`format.null-unrepresentable`'s severity was previously listed as `error`,
-which never matched the reference implementation: the write still succeeds,
-with the null leaf simply dropped and reported as an adjustment, the same
-"succeeded, but something was adjusted" shape as the other warning-severity
-rows in this table. Corrected to `warning`; `format.float-special` remains the
-one row correctly at `error`, since substituting a value (not just dropping
-one) is a stronger change to what's actually represented.
-
-**The last six rows were referenced in §8.1's prior-art discussion as
-prior art that "maps directly onto this family... mostly a rename," but
-were never actually given their renamed form here** — a promise made and
-never finished, found while porting a fourth implementation (`omnist-j`).
-Verified against the reference implementation's real, live behavior
-(`omnist/formats.py`) before naming and scoping each: `string.line-break-char`
-(YAML), `shape.empty_ambiguous`/`key.sanitized`/`value.stringified`/
-`string.illegal_xml_char`/`string.cr_normalized` (all XML). Severity for
-each matches what the reference implementation actually reports today,
-not a guess — `string.illegal_xml_char` is the one other row at `error`
-alongside `format.float-special`, for the same reason: replacing a
-character's identity is a stronger change than dropping or stringifying
-a whole leaf.
+**Reporting `format.attribute-dropped`, `format.namespace-dropped`, and
+`format.interleaving-lost` is a behavior change from the current silent
+default** — see [§9.4](09-divergence-ledger.md#94-known-open-divergences)
+D-3. A vector is needed before any implementation is required to emit
+these three.
 
 ### 8.3.9 `write.*`
 
@@ -254,53 +194,32 @@ $.item[2].sku            `sku` inside the third `item`
 ```
 
 The index MUST be present when the label occurs more than once in that node, and
-MUST be absent when it occurs exactly once. This keeps the common case readable.
-
-Unlike the codes above, this path format is **not** new: it is the format the
-Python reference already emits, verified directly — a failure at the second of
-two `i` edges reports `$.i[1].q`, and a failure at a singly-occurring label
-reports `$.name` with no index. The rule is documented here rather than
-proposed.
+MUST be absent when it occurs exactly once.
 
 **Schema paths** are `RecordName` for a record-level diagnostic and
-`RecordName.label` for a field-level one. This matches what `lint` already
-reports.
+`RecordName.label` for a field-level one.
 
 **The whole-schema fallback is `$`.** Some diagnostics have no specific
-record or field to name: `schema.no-root` (there is no root declaration at
-all), a dangling root reference (the named root never resolves to a
-defined record), and `algebra.infer-no-samples`/`algebra.infer-scalar-root`
-(these fail before any schema exists, since they're about the shape of
-the input samples, not a schema). All four use `$` — the same sentinel
-Document paths use for the whole node — as the schema-side/pre-schema
-equivalent of "the whole thing, not a part of it." This is a deliberate
-extension of the two path forms above, not a third form: it says what to
-do when neither a specific record nor a specific field applies, rather
-than introducing new path syntax.
+record or field to name: `schema.no-root`, a dangling root reference, and
+`algebra.infer-no-samples`/`algebra.infer-scalar-root` (these fail before
+any schema exists). All four use `$` — the same sentinel Document paths use
+for the whole node — as the schema-side/pre-schema equivalent of "the whole
+thing, not a part of it."
 
 **Text-position paths** are for `parse.*` diagnostics (§8.3.1) — stage 1
-fails before any Document exists, so there is no `$`-rooted structure yet
-for a Document path to descend into. The format is `line:col`, 1-based,
-computed from the byte offset of the failure:
+fails before any Document exists, so there is no `$`-rooted structure for a
+Document path to descend into. The format is `line:col`, 1-based, computed
+from the byte offset of the failure:
 
 ```
 1:1                      the very first character
-14:8                      line 14, column 8
+14:8                     line 14, column 8
 ```
-
-**This is new normative content, unlike the two path forms above.** Python
-already computes 1-based `(line, col)` from a byte offset internally
-(`oml.py`'s `line_col`) but only ever embeds it in the diagnostic's
-human-readable *message* string ("line 14, col 8: ..."), never as a
-structured path — which is exactly why no cross-implementation convention
-exists yet to document. This section specifies one rather than describing
-one already in use, the same way §8.3's code taxonomy does.
 
 A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
 `schema.*`, `validate.*`, `materialize.*`, `algebra.*`, or `lint.*` diagnostic's
-`path` MUST be a Document or Schema path, per the two forms above — never a
-text-position path, since a Document or Schema already exists by the time any
-of those families can fire.
+`path` MUST be a Document or Schema path — never a text-position path, since a
+Document or Schema already exists by the time any of those families can fire.
 
 ## 8.5 Conformance harness protocol
 
@@ -329,16 +248,14 @@ JSON, one case per object, grouped into files by operation.
   page — that page is the vocabulary's single source, not a free-text field
   vectors can spell differently across files.
 - `purpose` MUST be one of `happy-path`, `edge-case`, `error-case`, or
-  `determinism-regression` (the same four-way vocabulary the OML/OSD
-  conformance harness uses, [§2](conformance-harness.md) of that page) —
-  what a vector is actually pinning, so a reader doesn't have to
-  reverse-engineer it from the input/expect pair. `happy-path` is an
-  ordinary conforming case with nothing specific being probed;
-  `edge-case` deliberately exercises a specific rule, invariant, or
+  `determinism-regression` — what a vector is actually pinning, so a reader
+  doesn't have to reverse-engineer it from the input/expect pair.
+  `happy-path` is an ordinary conforming case with nothing specific being
+  probed; `edge-case` deliberately exercises a specific rule, invariant, or
   boundary (regardless of whether the outcome is success or failure);
   `error-case` is primarily testing that an invalid input is correctly
-  rejected; `determinism-regression` pins a specific
-  ordering/reproducibility regression tied to a known bug.
+  rejected; `determinism-regression` pins a specific ordering/reproducibility
+  regression tied to a known bug.
 - `expect` holds either a success value or a `diagnostics` list.
 
 ### 8.5.2 Diagnostics matching
@@ -367,14 +284,6 @@ Matching rules, all normative:
 
 ### 8.5.3 Operation drivers
 
-**This table was corrected against `test-suite/`'s actual 140 vectors and
-`omnist`'s `tools/conformance/vector_runner.py`, which passes all of them
-(104 pass, 35 legitimate skip, 0 fail) — an earlier revision of this table
-predated most of those vectors and, checked directly rather than assumed
-correct, disagreed with six of the twelve original rows. The table below
-states what is actually implemented and verified working, not an
-un-exercised ideal.**
-
 | `operation` | `input` | success `expect` |
 |---|---|---|
 | `parse` | `{format, text}` | `{ok, document}` |
@@ -397,13 +306,11 @@ Every operation's failure `expect` is `{ok: false, diagnostics: [...]}`, per
 coexist, noted above.
 
 **`materialize`'s `input` is a canonical-JSON Document, not raw format text
-plus a `format` field.** This is deliberate, not an oversight: per
+plus a `format` field.** This is deliberate: per
 [Operations & Models Reference](operations-and-models-reference.md),
 `materialize`'s abstract signature is `materialize(node, S) -> node` — it
 operates on an already-parsed Document, matching §7.1's two-stage
-separation (stage 1 parses, stage 2 materializes; a vector testing stage 2
-should not silently re-test stage 1's `parse` by embedding it as a hidden
-first step). A vector wanting to exercise the full parse-then-materialize
+separation. A vector wanting to exercise the full parse-then-materialize
 pipeline for a specific format uses two vectors — one `parse`, one
 `materialize` — not one vector conflating both stages.
 
@@ -467,12 +374,10 @@ required:**
 
 **CI gating.** A conformant CI run MUST fail the build when the fail count
 is nonzero. A conformant CI run MUST NOT fail the build merely because the
-skip count is nonzero — an implementation legitimately at 104 pass / 0 fail
-/ 35 skip has *passed* conformance in the sense this section defines,
-provided every one of those 35 skips carries one of the two reason
-categories above. Passing CI is a statement about `fail`, not about
-reaching zero skips; chapter 9 is where the skip count's honesty is
-checked, not the CI gate.
+skip count is nonzero — an implementation with real, cited reasons for
+every skip has *passed* conformance in the sense this section defines.
+Passing CI is a statement about `fail`, not about reaching zero skips;
+chapter 9 is where the skip count's honesty is checked, not the CI gate.
 
 ## 8.6 OML/OSD conformance harness
 

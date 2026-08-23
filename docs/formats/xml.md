@@ -127,7 +127,7 @@ XML is also the one format with its own open divergence.
 attributes and namespace prefixes are dropped *silently*, with no adjustment
 reported — the information loss described above is not surfaced in a format
 report at all, so a caller has no way to learn it happened.
-[§8.3.8](../08-conformance-and-errors.md#838-format--codec-adjustments) already
+[§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments) already
 defines codes for reporting it; emitting them is a behavior change and needs a
 conformance vector first. Until that lands, implementations MUST behave
 identically here: dropping, silently, in the same places.

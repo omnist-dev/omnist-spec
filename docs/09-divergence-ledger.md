@@ -125,7 +125,7 @@ not as a growing paragraph in this file.
 | # | Issue | Status |
 |---|---|---|
 | D-2 | OSD: a duplicate `root` declaration — Python lets the later one silently win. [§5.8](05-osd-grammar.md#58-root) declines to bless this. | Open. Proposed: `schema.duplicate-root`, an error. Needs a conformance vector first. |
-| D-3 | XML: attributes, namespace prefixes, and cross-label interleaving are all dropped silently on read/write with no adjustment reported, despite [§8.3.8](08-conformance-and-errors.md#838-format--codec-adjustments) defining codes for exactly this. | Open. Reporting is a behavior change; needs a vector first. |
+| D-3 | XML: attributes, namespace prefixes, and cross-label interleaving are all dropped silently on read/write with no adjustment reported, despite [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments) defining codes for exactly this. | Open. Reporting is a behavior change; needs a vector first. |
 | D-10 | Raw OSD tokenizer/syntax errors had no §8.3 code family until [§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1) was extended to cover OSD's lexical stage (2026-08-22). Each port needs to converge its OSD-lexer error codes onto the now-normative `parse.*` codes — tracked per-port (see each repo's own open issues), not duplicated here. | Open, per-port rollout in progress. |
 
 ## 9.5 Adding a sixth implementation

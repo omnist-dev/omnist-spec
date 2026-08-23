@@ -1,7 +1,7 @@
 # OML/OSD Conformance Harness
 
 *Normative for any implementation that opts into this track. See
-[§8.6](08-conformance-and-errors.md#86-omloscd-conformance-harness) for how
+[§8.6](08-conformance-and-errors.md#86-omlosd-conformance-harness) for how
 this relates to the §8.5 JSON-vector harness — the two are complementary,
 not alternatives.*
 

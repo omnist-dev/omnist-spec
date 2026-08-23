@@ -91,7 +91,7 @@ and report them together. Each entry carries a path, a code, and a message. See
 
 ### 7.2.1 `materialize(node, schema)` — pseudocode
 
-Structurally this is [§3.6.1](03-schema-model.md#361-validatedocument-schema--pseudocode)'s
+Structurally this is [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
 `validate` with every leaf replaced by its upgrade result instead of discarded.
 The two MUST stay in lockstep: whatever this function accepts at a leaf,
 `validate` must also accept there, and vice versa. They are two different
