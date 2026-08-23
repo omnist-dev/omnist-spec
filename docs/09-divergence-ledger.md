@@ -95,8 +95,10 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last source-audited: 2026-08-23**, directly against each port's own code and
-a live conformance/coverage run — not carried forward from a prior edit.
+**Last source-audited: 2026-08-23**, directly against each port's own code
+after Python/TypeScript/Rust's `omnist#316`/`omnist-ts#120`/`omnist-rs#153`
+closed the remaining `validate.*`/`materialize.*`/`lint.*` namespacing gap
+(D-10) — not carried forward from a prior edit.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
@@ -110,7 +112,7 @@ a live conformance/coverage run — not carried forward from a prior edit.
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete | complete | complete | complete | complete |
 | Codecs (JSON/YAML/TOML/XML) | all four | all four | all four | all four | all four |
-| §8.3 error codes | partial (`schema.*`/`parse.*` only) | partial (`schema.*`/`parse.*`, OML lexer only) | partial (`schema.*`/`algebra.*`/`parse.*` only) | yes | yes |
+| §8.3 error codes | yes | yes | yes | yes | yes |
 | Conformance (vectors, of 152) | reference | 116 pass / 0 fail / 36 skip | 146 pass / 0 fail / 6 skip | 151 pass / 0 fail / 1 skip | 181 pass / 0 fail / 0 skip |
 | Conformance (fixtures, of 19) | reference | 19/19 | 19/19 | 19/19 | 19/19 |
 | Fuzz testing | yes | yes | yes | yes | yes |
@@ -126,7 +128,6 @@ not as a growing paragraph in this file.
 |---|---|---|
 | D-2 | OSD: a duplicate `root` declaration — Python lets the later one silently win. [§5.8](05-osd-grammar.md#58-root) declines to bless this. | Open. Proposed: `schema.duplicate-root`, an error. Needs a conformance vector first. |
 | D-3 | XML: attributes, namespace prefixes, and cross-label interleaving are all dropped silently on read/write with no adjustment reported, despite [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments) defining codes for exactly this. | Open. Reporting is a behavior change; needs a vector first. |
-| D-10 | Raw OSD tokenizer/syntax errors had no §8.3 code family until [§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1) was extended to cover OSD's lexical stage (2026-08-22). Each port needs to converge its OSD-lexer error codes onto the now-normative `parse.*` codes — tracked per-port (see each repo's own open issues), not duplicated here. | Open, per-port rollout in progress. |
 
 ## 9.5 Adding a sixth implementation
 
