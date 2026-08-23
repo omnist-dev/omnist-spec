@@ -207,7 +207,9 @@ as it is. Schema awareness is one-directional, on the read side only.
 **Grouping.** Edges sharing a label are grouped into one key, regardless of
 position: `[(m,A),(x,X),(m,B)]` writes as `{"m":[A,B], "x":X}`. Within-label
 order is preserved. Cross-label interleaving is lost, because no format in the
-JSON family can express it. Only OML and XML preserve it.
+JSON family (JSON, YAML, TOML) can express it — only OML and XML preserve it —
+and a writer that loses it MUST report `format.interleaving-lost`
+([§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)).
 
 **The count-1 rule.** A label appearing exactly once MUST be written as a bare
 value. A label appearing more than once MUST be written as a list. This is

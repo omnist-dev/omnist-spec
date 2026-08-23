@@ -21,11 +21,14 @@ so its Document has exactly one top-level edge. A Document with several
 top-level edges cannot be written as XML. To share one Document across all
 formats, wrap the data under a single top-level key.
 
-**Attributes and namespace prefixes are dropped.** `<a x="1"><b>hi</b></a>`
-reads as `[(a,[(b,"hi")])]`; the attribute is gone. A prefixed tag `<ns:b>`
-reads as the local name `b`, with the prefix and any namespace binding
-discarded. There is no path from a Document edge back to an attribute, so
-writing never produces one.
+**Attributes and namespace prefixes are dropped, and the drop MUST be
+reported.** `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the
+attribute is gone, and a reader MUST report `format.attribute-dropped`
+(at the element the attribute was lost from) when it does. A prefixed tag
+`<ns:b>` reads as the local name `b`, with the prefix and any namespace
+binding discarded, reported the same way with `format.namespace-dropped`.
+There is no path from a Document edge back to an attribute, so writing
+never produces one.
 
 ### Worked example
 
@@ -122,12 +125,8 @@ is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
 "all four" for Python, TypeScript, and Rust alike — every implementation has
 an XML codec.
 
-XML is also the one format with its own open divergence.
-[D-3](../09-divergence-ledger.md#94-known-open-divergences) records that
-attributes and namespace prefixes are dropped *silently*, with no adjustment
-reported — the information loss described above is not surfaced in a format
-report at all, so a caller has no way to learn it happened.
-[§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments) already
-defines codes for reporting it; emitting them is a behavior change and needs a
-conformance vector first. Until that lands, implementations MUST behave
-identically here: dropping, silently, in the same places.
+XML also has its own tracked divergence, [D-3](../09-divergence-ledger.md#94-known-open-divergences):
+attribute and namespace-prefix drops MUST now be reported via
+`format.attribute-dropped`/`format.namespace-dropped`
+([§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments)),
+not silently — per-port rollout is still in progress.

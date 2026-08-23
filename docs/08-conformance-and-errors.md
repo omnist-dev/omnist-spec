@@ -167,11 +167,11 @@ there is no separate set of names for them.
 | `format.string-illegal-char` | error | A string contains a character the target format cannot represent and it was replaced (e.g. `U+FFFD` for a C0 control XML 1.0 forbids) |
 | `format.string-cr-normalized` | warning | A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as `\n`, not the original byte |
 
-**Reporting `format.attribute-dropped`, `format.namespace-dropped`, and
-`format.interleaving-lost` is a behavior change from the current silent
-default** — see [§9.4](09-divergence-ledger.md#94-known-open-divergences)
-D-3. A vector is needed before any implementation is required to emit
-these three.
+**`format.attribute-dropped`, `format.namespace-dropped`, and
+`format.interleaving-lost` MUST be emitted** wherever the codec adjustment
+they describe occurs, with a conformance vector for each — see
+[§9.4](09-divergence-ledger.md#94-known-open-divergences) D-3 for
+per-port rollout status.
 
 ### 8.3.9 `write.*`
 

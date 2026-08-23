@@ -228,6 +228,57 @@
         ]
       },
       "comment": "NaN and Infinity are not valid JSON tokens; the default lenient mode substitutes null and reports the substitution rather than emitting invalid JSON. value:\"NaN\" is the vector-format's string-sentinel convention for this case (test-suite/README.md's canonical encoding section) -- JSON itself has no NaN token, so a vector can't hold one as an ordinary number without becoming invalid JSON itself. Confirmed live: severity is error, the one adjustment-family code that is (Sec8.3.8), since it actually changes the represented value, unlike the warning-severity adjustments."
+    },
+    {
+      "name": "formats-json/basic/cross-label-interleaving-lost-and-reported",
+      "spec": "docs/formats/json.md",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            ],
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "X"
+                }
+              }
+            ],
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "B"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"m\": [\"A\", \"B\"], \"x\": \"X\"}",
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "format.interleaving-lost"
+          }
+        ]
+      },
+      "comment": "D-3 (closed 2026-08-23): Sec7.3's grouping rule already MUST group same-label edges regardless of position ([(m,A),(x,X),(m,B)] -> {\"m\":[A,B],\"x\":X}) -- no format in the JSON family (JSON/YAML/TOML) can express cross-label interleaving. What was missing was reporting the loss; format.interleaving-lost (Sec8.3.8) now MUST be emitted whenever a written Document actually had more than one distinct label AND at least one label's edges were not all contiguous, i.e. grouping changed relative order. Path is $, the whole document, since the loss isn't localized to one label's edges -- it's the interleaving between labels. This vector uses JSON as the representative case; the same MUST applies to YAML and TOML writers for the identical reason."
     }
   ]
 }

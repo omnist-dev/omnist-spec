@@ -127,7 +127,7 @@ not as a growing paragraph in this file.
 | # | Issue | Status |
 |---|---|---|
 | D-2 | OSD: a duplicate `root` declaration — Python lets the later one silently win. [§5.8](05-osd-grammar.md#58-root) now MUSTs `schema.duplicate-root` as an error (2026-08-23), with a conformance vector. | Open, per-port rollout (tracked in each repo's own issues, not duplicated here). |
-| D-3 | XML: attributes, namespace prefixes, and cross-label interleaving are all dropped silently on read/write with no adjustment reported, despite [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments) defining codes for exactly this. | Open. Reporting is a behavior change; needs a vector first. |
+| D-3 | Silent codec adjustments with no diagnostic reported: XML attributes and namespace prefixes dropped on read, and cross-label interleaving lost writing to any JSON-family format (JSON/YAML/TOML). [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)'s three codes for these now MUST be emitted (2026-08-23), each with a conformance vector. | Open, per-port rollout (tracked in each repo's own issues, not duplicated here). |
 
 ## 9.5 Adding a sixth implementation
 
