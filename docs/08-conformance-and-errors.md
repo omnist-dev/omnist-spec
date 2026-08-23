@@ -92,6 +92,7 @@ silently.
 | Code | Raised when |
 |---|---|
 | `schema.no-root` | No `root` declaration |
+| `schema.duplicate-root` | More than one `root` declaration |
 | `schema.unknown-type` | A type name resolves to neither a scalar nor a defined record |
 | `schema.duplicate-record` | A record name is defined twice |
 | `schema.duplicate-field` | A label is used by two fields in one record |
@@ -200,11 +201,11 @@ MUST be absent when it occurs exactly once.
 `RecordName.label` for a field-level one.
 
 **The whole-schema fallback is `$`.** Some diagnostics have no specific
-record or field to name: `schema.no-root`, a dangling root reference, and
-`algebra.infer-no-samples`/`algebra.infer-scalar-root` (these fail before
-any schema exists). All four use `$` — the same sentinel Document paths use
-for the whole node — as the schema-side/pre-schema equivalent of "the whole
-thing, not a part of it."
+record or field to name: `schema.no-root`, `schema.duplicate-root`, a
+dangling root reference, and `algebra.infer-no-samples`/
+`algebra.infer-scalar-root` (these fail before any schema exists). All five
+use `$` — the same sentinel Document paths use for the whole node — as the
+schema-side/pre-schema equivalent of "the whole thing, not a part of it."
 
 **Text-position paths** are for `parse.*` diagnostics (§8.3.1) — stage 1
 fails before any Document exists, so there is no `$`-rooted structure for a

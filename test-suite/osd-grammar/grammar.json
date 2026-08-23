@@ -282,6 +282,25 @@
       "comment": "Sec8.4 defines Schema paths as RecordName/RecordName.label, with no whole-schema form -- there is no specific record to name when the schema has no root at all, so $ is used here as a defensible fallback pending the spec's own clarification of this case."
     },
     {
+      "name": "osd-grammar/root/duplicate-root-is-an-error",
+      "spec": "docs/05-osd-grammar.md#58-root",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\": string,\n}\nrecord S {\n    \"b\": string,\n}\nroot R\nroot S\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "schema.duplicate-root"
+          }
+        ]
+      },
+      "comment": "D-2 (closed): a second root declaration used to be permitted to silently win over the first in at least one implementation. Sec5.8 now MUSTs a schema have exactly one root declaration; a second is an error, not an override. Path is $ for the same reason as osd-grammar/root/missing-root-is-an-error -- there is no specific record to blame, the schema itself is malformed."
+    },
+    {
       "name": "osd-grammar/labels/unquoted-field-name-is-rejected",
       "spec": "docs/05-osd-grammar.md#52-the-quoting-rule",
       "operation": "parse_schema",

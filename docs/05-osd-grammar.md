@@ -154,13 +154,9 @@ Defining the same record name twice is an error.
 ## 5.8 Root
 
 Exactly one `root` declaration MUST be present. A schema with no root is an
-error.
-
-> Implementations currently differ on a second `root` declaration: the Python
-> reference silently lets the later one win. This spec does not bless that. See
-> [chapter 9](09-divergence-ledger.md); the resolution proposed there is to
-> make a duplicate root an error, which is a spec-level change requiring a test
-> vector first.
+error (`schema.no-root`). A schema with more than one `root` declaration is
+also an error (`schema.duplicate-root`): a second `root` MUST NOT silently
+override the first.
 
 ## 5.9 Canonical output
 
@@ -205,6 +201,7 @@ Every row MUST hold for a conformant implementation.
 | `record any { "a": string }` | error: reserved type name |
 | `record R{"a":string}` twice | error: duplicate definition |
 | `record R{"a":string}` with no `root` | error: a schema must declare a root |
+| `record R{"a":string} record S{"b":string}` with two `root` declarations | error: a schema MUST NOT declare more than one root |
 | `record R{a:string}` | error: expected a quoted field name |
 | `record R{"a": "string"}` | error: a quoted string cannot appear in type position |
 | `record R { "a": string, }` | valid; trailing comma accepted |
