@@ -87,18 +87,18 @@ explains reasoning and does not impose requirements.
 
 ## Implementations
 
-Five official ports, all built against this specification. Version and
-maturity are as of the current [divergence ledger](09-divergence-ledger.md)
-revision — read it for exact conformance numbers, test coverage, and
-per-port audit notes; this table is a summary, not the source of truth.
+Five official ports, all built against this specification.
+[§9.3](09-divergence-ledger.md#93-current-status) is the single source for
+current version, maturity, and conformance numbers per port — not
+duplicated here, so there is only one place for that table to go stale.
 
-| Language | Version | Maturity | Docs |
-|---|---|---|---|
-| [Python](https://github.com/omnist-dev/omnist) | 0.8.4 | beta, reference implementation | [py.omnist.dev](https://py.omnist.dev) |
-| [TypeScript](https://github.com/omnist-dev/omnist-ts) | 0.2.0-alpha | alpha | [ts.omnist.dev](https://ts.omnist.dev) |
-| [Rust](https://github.com/omnist-dev/omnist-rs) | 0.2.0-alpha | alpha | [rs.omnist.dev](https://rs.omnist.dev) |
-| [Go](https://github.com/omnist-dev/omnist-go) | 0.2.0-alpha | alpha | [go.omnist.dev](https://go.omnist.dev) |
-| [Java](https://github.com/omnist-dev/omnist-j) | 0.2.0-alpha | alpha | [j.omnist.dev](https://j.omnist.dev) |
+| Language | Repo | Docs |
+|---|---|---|
+| Python | [github.com/omnist-dev/omnist](https://github.com/omnist-dev/omnist) | [py.omnist.dev](https://py.omnist.dev) |
+| TypeScript | [github.com/omnist-dev/omnist-ts](https://github.com/omnist-dev/omnist-ts) | [ts.omnist.dev](https://ts.omnist.dev) |
+| Rust | [github.com/omnist-dev/omnist-rs](https://github.com/omnist-dev/omnist-rs) | [rs.omnist.dev](https://rs.omnist.dev) |
+| Go | [github.com/omnist-dev/omnist-go](https://github.com/omnist-dev/omnist-go) | [go.omnist.dev](https://go.omnist.dev) |
+| Java | [github.com/omnist-dev/omnist-j](https://github.com/omnist-dev/omnist-j) | [j.omnist.dev](https://j.omnist.dev) |
 
 **Python** is the reference implementation — the oldest and most complete
 port, and the tie-breaker of last resort when this spec's prose is
