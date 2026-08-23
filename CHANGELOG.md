@@ -3,6 +3,28 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.4.0-beta (2026-08-23)
+
+**Normative (minor)**
+
+- §5.8: a schema with more than one `root` declaration is now an error
+  (`schema.duplicate-root`), closing D-2 — previously implementation-
+  defined (Python silently let the later one win).
+- §8.3.8: `format.attribute-dropped`, `format.namespace-dropped` (XML
+  read), and `format.interleaving-lost` (JSON-family write) MUST now be
+  emitted, closing D-3 — previously dropped with no diagnostic at all.
+
+**First beta.** [§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)
+has no open entries for the first time: D-2 and D-3 (above) are closed,
+and D-10 (the OSD-lexer `parse.*` code migration) finished rolling out
+across all five ports this same day. Two independent from-scratch ports
+(Go, Java) have already been built against this spec with every gap
+treated as a defect and fixed here rather than worked around — the
+condition this project has used informally as its alpha exit bar. Beta
+means: no known churn, not that churn is impossible — a new gap found by
+a future port is still a real spec defect and still gets fixed, the same
+process as ever.
+
 ## v0.3.0-alpha (2026-08-23)
 
 **Normative (minor)**
