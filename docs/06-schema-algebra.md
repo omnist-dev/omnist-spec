@@ -723,12 +723,7 @@ Computation:
   duplicates are reported as authored rather than after pruning. **One finding
   per block, not one per name.** The block's names, sorted, are joined into a
   single `location` string (`"Addr, Location"`); the message names every
-  member relative to the sorted-minimum representative. This was corrected
-  after a Rust-implementation audit found the previous edition of this
-  pseudocode specified one-finding-per-name — that specification never
-  matched the reference implementation (Python's `ops/lint.py` has always
-  emitted one joined finding per block), so the earlier text was the actual
-  bug, not the implementations that disagreed with it.
+  member relative to the sorted-minimum representative.
 - `any-field` is advisory. It MUST NOT on its own cause a non-zero exit status
   in a command-line tool.
 
