@@ -1,7 +1,7 @@
 # 5. OSD grammar
 
 **OSD** (Omnist Schema Definition) is the text format for Schemas. The
-machine-readable grammar is [`grammars/osd.abnf`](../grammars/osd.abnf). This
+machine-readable grammar is [`grammars/osd.abnf`](https://github.com/omnist-dev/omnist-spec/blob/master/grammars/osd.abnf). This
 chapter is its normative prose companion.
 
 ## 5.1 Shape

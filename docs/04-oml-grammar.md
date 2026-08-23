@@ -11,7 +11,7 @@ Two levels are defined:
 - **OML-Extended** — additional read-only spellings. Every conformant reader
   MUST accept them; a canonical writer MUST NOT emit them.
 
-The machine-readable grammar is [`grammars/oml.abnf`](../grammars/oml.abnf),
+The machine-readable grammar is [`grammars/oml.abnf`](https://github.com/omnist-dev/omnist-spec/blob/master/grammars/oml.abnf),
 written in ABNF ([RFC 5234](https://www.rfc-editor.org/rfc/rfc5234)). This
 chapter is its normative prose companion; where the two disagree, that is a
 defect to be fixed, not a choice.
