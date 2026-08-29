@@ -14,17 +14,17 @@
       "comment": "Orphan is never reached by following references from the root, so prune removes it entirely."
     },
     {
-      "name": "prune/basic/drops-max-zero-field",
+      "name": "prune/basic/drops-optional-field-with-unsatisfiable-type",
       "spec": "docs/06-schema-algebra.md#65-prunes",
       "operation": "prune",
       "purpose": "edge-case",
       "input": {
-        "schema": "record R {\n    \"n\": integer,\n    \"gone\" [0,0]: string,\n}\nroot R\n"
+        "schema": "record Dead {\n    \"self\": Dead,\n}\nrecord R {\n    \"n\": integer,\n    \"gone\" [0,1]: Dead,\n}\nroot R\n"
       },
       "expect": {
         "schema": "record R {\n    \"n\": integer,\n}\nroot R\n"
       },
-      "comment": "max == 0 means the label can never be emitted, so prune drops the field outright."
+      "comment": "An optional field (min == 0) whose type is an unsatisfiable record can never be emitted -- Dead requires a mandatory self-reference, so no finite Document ever satisfies it, and Sec6.5 prunes such a field outright, then drops Dead itself since nothing else reaches it. This vector previously exercised the same 'field can never be emitted' idea via a max == 0 field (`\"gone\" [0,0]: string`), but [0,0] became illegal OSD source in the 2026-08-29 audit (Sec5.5, schema.invalid-cardinality, commit cea3b3e) -- a field that can never appear is now indistinguishable, at the syntax level, from one that was never declared, so the old fixture no longer parses at all. This replacement exercises prune's other, still-legal route to the same observable behavior (Sec6.5's second bullet, optional-field-with-unsatisfiable-type) instead of the now-unreachable max == 0 route. Confirmed live against the reference implementation (commit 3294ff7, all 4 2026-08-29 audit PRs merged) that this input prunes to exactly the expected output. See omnist-spec#50."
     },
     {
       "name": "prune/basic/unsatisfiable-root-keeps-its-own-fields",
