@@ -255,14 +255,18 @@ presentational gap being closed.
 ## 7.4 Format reports
 
 A reader or writer SHOULD be able to report the adjustments a given conversion
-would make — a temporal value stringified, a special float substituted, a null
-dropped — without performing it. This is what makes lossiness auditable ahead of
-time rather than discovered afterward.
+would make — a temporal value stringified, a non-string scalar stringified,
+cross-label interleaving lost — without performing it. This is what makes
+lossiness auditable ahead of time rather than discovered afterward.
 
-The report's contents are format-specific. Its codes belong to the
-`format.adjustment.*` family in
-[chapter 8](08-conformance-and-errors.md), which is new material and which no
-implementation currently emits.
+The report's contents are format-specific. Its codes belong to the `format.*`
+family in [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments),
+which is new material and which no implementation currently emits. Note that
+not every `format.*`-adjacent behavior belongs in this report: a value that
+`format.*` now rejects outright as `write.unsupported-value` (§8.3.9) —
+an illegal-character label, an unrepresentable null, a special float, an
+empty internal node — is a write **failure**, not a lossy-but-successful
+adjustment, so it has nothing to preview here.
 
 ## 7.5 Per-format pages
 
