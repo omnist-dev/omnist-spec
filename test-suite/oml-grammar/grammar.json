@@ -533,6 +533,160 @@
         }
       },
       "comment": "A bare 0 is exactly one digit, so it's never a leading zero; a fraction less than 1 legitimately starts with 0.; a negative sign does not change int-part's own leading-zero rule since it applies after the optional minus."
+    },
+    {
+      "name": "oml-grammar/temporals/date-with-out-of-range-month-is-an-error",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 2024-13-01\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.invalid-date"
+          }
+        ]
+      },
+      "comment": "ABNF's 2DIGIT for the month component permits 00-99; only 01-12 are calendar-valid, and that range check is normative even though ABNF cannot express it."
+    },
+    {
+      "name": "oml-grammar/temporals/date-with-day-invalid-for-month-is-an-error",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 2024-02-30\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.invalid-date"
+          }
+        ]
+      },
+      "comment": "February never has a 30th day regardless of leap year, distinguishing this from the leap-year-specific case below."
+    },
+    {
+      "name": "oml-grammar/temporals/february-29-in-a-non-leap-year-is-an-error",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 1900-02-29\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.invalid-date"
+          }
+        ]
+      },
+      "comment": "1900 is divisible by 100 but not 400, so it is not a leap year in the proleptic Gregorian calendar -- distinct from 2000-02-29 (the happy-path vector below), which is."
+    },
+    {
+      "name": "oml-grammar/temporals/february-29-in-a-leap-year-is-valid",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "n: 2000-02-29\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2000-02-29"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "2000 is divisible by 400, so it is a leap year -- the one case the div-by-100 exception itself has an exception for."
+    },
+    {
+      "name": "oml-grammar/temporals/leap-second-is-an-error",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 23:59:60\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.invalid-time"
+          }
+        ]
+      },
+      "comment": "OML has no leap-second spelling; second is 00-59 with no exception, unlike ISO 8601 which permits 60 in some contexts."
+    },
+    {
+      "name": "oml-grammar/temporals/tz-offset-minute-out-of-range-is-an-error",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 2024-01-01T10:30+00:60\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.invalid-time"
+          }
+        ]
+      },
+      "comment": "tz-offset MUST use the same minute range as TIME (00-59), not a wider one. This is the case that surfaced the gap: an implementation that validates tz-offset via a separate code path from TIME can end up normalizing +00:60 to a 1-hour offset instead of rejecting it, silently colliding it with a document that legitimately wrote +01:00 -- confirmed live against a pre-fix reference implementation. The offset MUST be rejected outright, not normalized."
+    },
+    {
+      "name": "oml-grammar/temporals/tz-offset-within-range-is-valid",
+      "spec": "docs/04-oml-grammar.md#424-date-time-and-datetime-value-ranges",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "n: 2024-01-01T10:30+05:30\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-01T10:30+05:30"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A legitimate, in-range offset (e.g. India Standard Time) parses normally -- confirms the tz-offset fix in the vector above doesn't reject valid input, only out-of-range minutes."
     }
   ]
 }

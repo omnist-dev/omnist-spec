@@ -72,6 +72,26 @@ Two consequences of the order are normative and MUST be reproduced.
 `IDENT` is reached, so `nan: 1` is an error. `"nan": 1` is fine, since quoting
 routes it to rule 1.
 
+**DATE versus DATETIME needs one lookahead.** At a position where `DATE`
+matches, the tokenizer MUST check whether the next character is `T` and the text
+after it matches `TIME`. If so, it emits `DATETIME`. If not, it emits `DATE`,
+and whatever follows is tokenized independently. So `2024-01-01T10:30` is one
+`DATETIME`, while `2024-01-01T99` is a `DATE` followed by the `IDENT` `T99` —
+which then fails as trailing content.
+
+### 4.2.1 Separators
+
+Horizontal space and comments are skipped and emit no token. A run containing at
+least one newline or `;` collapses into a single separator token. A separator is
+required between adjacent edges and is otherwise insignificant.
+
+### 4.2.2 Reserved words
+
+`null`, `true`, and `false` tokenize as ordinary `IDENT`. They are excluded from
+label position by the **parser**, not the tokenizer. This differs from
+`nan`/`inf`/`-inf`, which are excluded by the tokenizer. The difference matters
+if you write a tokenizer-only consumer.
+
 ### 4.2.3 NUMBER and INTEGER
 
 ```abnf
@@ -98,25 +118,37 @@ between `NUMBER` and `INTEGER` — that distinction is entirely rule priority
 (§4.2's ordered list): `NUMBER` requires a fraction or exponent to match at
 all, so a bare `int-part` only ever falls through to `INTEGER`.
 
-**DATE versus DATETIME needs one lookahead.** At a position where `DATE`
-matches, the tokenizer MUST check whether the next character is `T` and the text
-after it matches `TIME`. If so, it emits `DATETIME`. If not, it emits `DATE`,
-and whatever follows is tokenized independently. So `2024-01-01T10:30` is one
-`DATETIME`, while `2024-01-01T99` is a `DATE` followed by the `IDENT` `T99` —
-which then fails as trailing content.
+### 4.2.4 DATE, TIME, and DATETIME value ranges
 
-### 4.2.1 Separators
+ABNF constrains `DATE`/`TIME`/`DATETIME` (§4's grammar) to digit *counts*
+only — it cannot express that a month digit pair must be `01`–`12`, for
+instance. That range checking is still normative and MUST be enforced, at
+parse time, as part of tokenizing these three rules, not deferred to some
+later validation pass:
 
-Horizontal space and comments are skipped and emit no token. A run containing at
-least one newline or `;` collapses into a single separator token. A separator is
-required between adjacent edges and is otherwise insignificant.
+- **`DATE`** MUST be a valid proleptic Gregorian calendar date: month `01`–`12`;
+  day valid for that month and year, including leap years (`2000-02-29` is
+  valid, `1900-02-29` is not — 1900 is not a leap year).
+- **`TIME`** and the time portion of `DATETIME` MUST have hour `00`–`23`,
+  minute `00`–`59`, and second `00`–`59`. OML has no leap-second spelling:
+  `23:59:60` is an error, not a valid 61st second.
+- **`tz-offset`** MUST have the same hour and minute ranges as `TIME` —
+  `00`–`23` and `00`–`59` respectively. This is the same rule as `TIME`'s,
+  applied to the same two digit pairs; an implementation MUST NOT accept a
+  wider range for the offset than it accepts for `TIME` itself. (This is
+  called out explicitly because it is easy to implement the offset as a
+  separate code path from `TIME` and let the two drift apart — an
+  implementation that does that can end up with `+00:60` normalizing to a
+  1-hour offset instead of being rejected, which is wrong twice over: `:60`
+  is out of range the same way it is in `TIME`, and even where a normalizing
+  interpretation might seem convenient, silently folding it to `+01:00`
+  makes two different, both out-of-spec author inputs collide into one
+  written form with no diagnostic — the same failure shape §8.3.8 already
+  rejects for codec writers, here on the read side instead.)
 
-### 4.2.2 Reserved words
-
-`null`, `true`, and `false` tokenize as ordinary `IDENT`. They are excluded from
-label position by the **parser**, not the tokenizer. This differs from
-`nan`/`inf`/`-inf`, which are excluded by the tokenizer. The difference matters
-if you write a tokenizer-only consumer.
+Any of these out-of-range values is `parse.invalid-date` (for `DATE` and the
+date portion of `DATETIME`) or `parse.invalid-time` (for `TIME`, the time
+portion of `DATETIME`, and `tz-offset`).
 
 ## 4.3 Values
 

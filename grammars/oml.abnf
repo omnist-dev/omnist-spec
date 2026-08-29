@@ -13,6 +13,10 @@
 ;   (T2) bare-label MUST NOT be the text "null", "true", or "false".
 ;   (T3) One-token lookahead selects `node-edges` over `scalar` at the start
 ;        of a document or of a braced value (sec 4.6.1).
+;   (T4) DATE/TIME/DATETIME/tz-offset value ranges (sec 4.2.4): ABNF only
+;        constrains digit counts below, not calendar/clock validity -- month
+;        01-12, day valid for month/year, hour 00-23, minute/second 00-59
+;        (no leap seconds) are normative and enforced at parse time.
 ; Limits (sec 4.7): INTEGER digit count <= 4300; brace nesting depth <= 200.
 
 ; ---------------------------------------------------------------- document
@@ -90,10 +94,14 @@ reserved-number = %s"nan" / %s"inf" / "-" %s"inf"
                 ; claimed before IDENT by (T1); never a bare label.
 
 DATE          = 4DIGIT "-" 2DIGIT "-" 2DIGIT   ; subject to (T1) lookahead
+                                                ; and (T4) calendar validity
 TIME          = 2DIGIT ":" 2DIGIT [ ":" 2DIGIT [ "." 1*6DIGIT ] ] [ tz-offset ]
+                                                ; subject to (T4) clock validity
 DATETIME      = DATE "T" 2DIGIT ":" 2DIGIT
                 [ ":" 2DIGIT [ "." 1*6DIGIT ] ] [ tz-offset ]
 tz-offset     = ( "+" / "-" ) 2DIGIT ":" 2DIGIT
+                                                ; subject to (T4), same ranges
+                                                ; as TIME's hour/minute
 
 ; ------------------------------------------------------------------ strings
 

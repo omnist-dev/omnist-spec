@@ -54,6 +54,8 @@ Every diagnostic carries at least:
 | `parse.nested-array` | An array element that is itself an array |
 | `parse.separator-in-array` | A newline or `;` used as an array separator |
 | `parse.leading-zero` | A `NUMBER`/`INTEGER` literal's integer part has a leading zero |
+| `parse.invalid-date` | A `DATE` or the date portion of a `DATETIME` is not a valid calendar date |
+| `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
 
 **Six of these codes also cover OSD's own lexical stage**:
 `parse.unexpected-token`, `parse.trailing-content`,
