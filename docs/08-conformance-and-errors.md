@@ -161,7 +161,6 @@ there is no separate set of names for them.
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
 | `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
 | `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
-| `format.string-cr-normalized` | warning | A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as `\n`, not the original byte |
 
 **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
@@ -215,6 +214,20 @@ simply failing on that case, rather than disabling the format broadly:
 A previous version of this spec had all five succeed anyway. The correct
 behavior for all five is `write.unsupported-value` (below): the write
 fails, unconditionally, not only under `strict`.
+
+A sixth code, `format.string-cr-normalized`, used to exist in this table
+for a related reason — XML mandates line-ending normalization on parse, so
+a literal `\r` byte and a literal `\n` byte, written as-is, are
+indistinguishable on read-back, the same collision shape as the five
+above. That code no longer exists, but not because the write now fails:
+**a literal `\r` MUST be written as the numeric character reference
+`&#13;`, not as a raw byte.** XML's mandatory normalization applies only to
+literal line-ending bytes in the source text, not to a numeric character
+reference — confirmed live that `&#13;` (and `&#13;\n` for `\r\n`) survives
+a compliant parser and reads back as the exact original byte sequence.
+Once the writer does this, the write is genuinely lossless, not merely
+reported-as-lossy — there is nothing left to adjust or warn about, so no
+diagnostic code is needed for this case at all.
 
 ### 8.3.9 `write.*`
 
