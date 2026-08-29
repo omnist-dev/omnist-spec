@@ -155,13 +155,11 @@ there is no separate set of names for them.
 | Code | Severity | Meaning |
 |---|---|---|
 | `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
-| `format.float-special` | error | `NaN` or an infinity was substituted with `null` |
 | `format.attribute-dropped` | warning | An XML attribute was discarded on read |
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
 | `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
-| `format.shape-empty-ambiguous` | warning | An empty internal node was written as a self-closing tag, which reads back as an empty-string leaf, not an empty node |
 | `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
 | `format.string-cr-normalized` | warning | A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as `\n`, not the original byte |
 
@@ -171,40 +169,58 @@ they describe occurs, with a conformance vector for each — see
 [§9.4](09-divergence-ledger.md#94-known-open-divergences) D-3 for
 per-port rollout status.
 
-Every code above describes a write that still succeeds — the document was
-written, with a note about what changed. Three adjustments that used to be
-in this table are not like that, and MUST NOT be treated as ones a writer
-can choose an arbitrary fallback for and still succeed:
+Every code above describes a write that still succeeds, and — this is the
+test that matters, not merely "is there only one available fallback" —
+none of them can produce output indistinguishable from some other,
+genuinely different, independently-valid Document. `format.value-stringified`
+and `format.temporal-stringified` look like exceptions on the surface (XML
+has no typed literals at all, so an integer and the string that looks like
+it *do* write identically, with no way to tell them apart even with a
+schema at read time — confirmed live), but that ambiguity is unavoidable
+for *every* typed scalar XML ever writes, not a choice Omnist's writer is
+making; failing here would mean XML could never write a single typed value,
+not that it handles a rare edge case more strictly. That's the same
+category `format.interleaving-lost` is already in.
+
+Five adjustments that used to be in this table are not like that, and MUST
+NOT be treated as ones a writer can choose an arbitrary fallback for and
+still succeed — each one collides with a genuinely different,
+independently-valid input, in a way that is narrow (it doesn't affect
+every write of that kind, only a specific case) and therefore avoidable by
+simply failing on that case, rather than disabling the format broadly:
 
 - **A label isn't a legal identifier in the target format** (e.g. a space in
-  an XML tag name).
+  an XML tag name) — `format.key-sanitized`. Confirmed live: two different
+  labels can sanitize to the same tag (`"my label"` and `"my_label"` both
+  becoming `<my_label>`), producing, on read-back, a Document that looks
+  like one label legitimately repeated twice.
 - **A string contains a character the target format cannot represent at all**
-  (e.g. a raw C0 control character XML 1.0 forbids).
+  (e.g. a raw C0 control character XML 1.0 forbids) — `format.string-illegal-char`.
 - **A null leaf cannot be represented in the target format at all** (e.g.
-  TOML, which has no null token of any kind).
+  TOML, which has no null token of any kind) — `format.null-unrepresentable`.
+  There is no substitute value at all here, only the option to silently
+  drop the edge entirely, which erases the edge's existence rather than
+  merely altering its value.
+- **`NaN` or an infinity has no legal spelling in the target format**
+  (e.g. JSON, whose only sentinel for this is `null`) — `format.float-special`.
+  Confirmed live: writing a genuine `null` value and writing `NaN` produce
+  the identical JSON token, and both read back as the identical Document
+  value — there is no way, after the fact, to tell a substituted `NaN` from
+  an original `null`.
+- **An empty internal node has no distinct spelling from an empty string
+  leaf** in the target format (e.g. XML's self-closing `<x/>`) —
+  `format.shape-empty-ambiguous`. Confirmed live: the internal-node-ness is
+  gone on read-back, silently, with no way to recover it.
 
-None of these three have a single well-defined substitute the way `null`
-is the one legal JSON spelling for `NaN`. The first two mean inventing
-content — sanitizing a label or replacing a character — with more than one
-equally arbitrary way to do it. The third is worse: there is no substitute
-value at all, only the option to silently drop the edge entirely, which
-does not just alter what a Document says at that position, it erases the
-edge's existence — closer to structural data loss than a value adjustment.
-A previous version of this spec had all three succeed anyway
-(`format.key-sanitized`, `format.string-illegal-char`, and
-`format.null-unrepresentable`) — that was found to be genuinely unsafe, not
-just imprecise: two *different* labels can sanitize to the *same* result
-in XML (`"my label"` and `"my_label"` both becoming `<my_label>`), silently
-producing a Document, on read-back, that looks like one label repeated
-twice, with no diagnostic anywhere indicating a collision occurred. The
-correct behavior for all three is `write.unsupported-value` (below): the
-write fails, unconditionally, not only under `strict`.
+A previous version of this spec had all five succeed anyway. The correct
+behavior for all five is `write.unsupported-value` (below): the write
+fails, unconditionally, not only under `strict`.
 
 ### 8.3.9 `write.*`
 
 | Code | Raised when |
 |---|---|
-| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf cannot be represented at all in the target format's own syntax (unconditional, regardless of `strict`) |
+| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf/special-float/empty-node cannot be represented at all in the target format's own syntax without colliding with some other, distinct, valid input (unconditional, regardless of `strict`) |
 
 ## 8.4 Paths
 

@@ -197,10 +197,10 @@
       "comment": "JSON has no temporal types; a writer MUST stringify a temporal leaf to ISO-8601 and report the adjustment. Confirmed live."
     },
     {
-      "name": "formats-json/basic/nan-substituted-with-null-and-reported",
+      "name": "formats-json/basic/nan-cannot-be-written",
       "spec": "docs/formats/json.md",
       "operation": "write",
-      "purpose": "edge-case",
+      "purpose": "error-case",
       "input": {
         "format": "json",
         "document": {
@@ -218,16 +218,15 @@
         }
       },
       "expect": {
-        "ok": true,
-        "text": "{\"n\": null}",
+        "ok": false,
         "diagnostics": [
           {
             "path": "$.n",
-            "code": "format.float-special"
+            "code": "write.unsupported-value"
           }
         ]
       },
-      "comment": "NaN and Infinity are not valid JSON tokens; the default lenient mode substitutes null and reports the substitution rather than emitting invalid JSON. value:\"NaN\" is the vector-format's string-sentinel convention for this case (test-suite/README.md's canonical encoding section) -- JSON itself has no NaN token, so a vector can't hold one as an ordinary number without becoming invalid JSON itself. Confirmed live: severity is error, the one adjustment-family code that is (Sec8.3.8), since it actually changes the represented value, unlike the warning-severity adjustments."
+      "comment": "value:\"NaN\" is the vector-format's string-sentinel convention for this case (test-suite/README.md's canonical encoding section) -- JSON itself has no NaN token, so a vector can't hold one as an ordinary number without becoming invalid JSON itself. NaN and Infinity used to be substituted with null and reported as format.float-special, still succeeding (2026-08-24: found to collide with a genuine null value -- writing both to the same object produces the identical {\"n\": null} for either, with no way to tell them apart after the fact, confirmed live). The write now fails unconditionally instead."
     },
     {
       "name": "formats-json/basic/cross-label-interleaving-lost-and-reported",

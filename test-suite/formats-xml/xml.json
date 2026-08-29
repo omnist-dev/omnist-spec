@@ -90,7 +90,7 @@
           }
         ]
       },
-      "comment": "D-3 (closed 2026-08-23): the attribute x=\"1\" is gone -- there is no path from a Document edge back to an attribute, so writing never produces one either -- and that drop MUST now be reported via format.attribute-dropped (Sec8.3.8), not silent. Path is $.a: the element the attribute was lost from, the same convention format.float-special uses for the value it substituted."
+      "comment": "D-3 (closed 2026-08-23): the attribute x=\"1\" is gone -- there is no path from a Document edge back to an attribute, so writing never produces one either -- and that drop MUST now be reported via format.attribute-dropped (Sec8.3.8), not silent. Path is $.a: the element the attribute was lost from."
     },
     {
       "name": "formats-xml/basic/namespace-prefix-is-dropped-on-read",
@@ -211,6 +211,42 @@
         ]
       },
       "comment": "A space is not legal in an XML name, and there is no single well-defined substitute -- sanitizing it means inventing content, and (confirmed separately) can even make two genuinely different labels collide into the same written tag with no way to detect it happened. The write fails, unconditionally, not just under strict -- this is not a format.* adjustment a caller can opt out of checking for."
+    },
+    {
+      "name": "formats-xml/basic/empty-internal-node-cannot-be-written",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "root",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "edges": []
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.root.x",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "An empty internal node (zero edges) and an empty-string leaf have no distinct XML spelling -- both would be written as the self-closing <x />, and confirmed live that reading it back always produces the empty-string leaf, never the empty internal node, with no diagnostic distinguishing the two cases that collided. The write fails, unconditionally, not just under strict -- same principle as the label and NaN cases above, not a format.* adjustment that still succeeds."
     }
   ]
 }
