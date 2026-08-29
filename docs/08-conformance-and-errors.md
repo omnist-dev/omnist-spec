@@ -163,9 +163,7 @@ there is no separate set of names for them.
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
 | `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
 | `format.shape-empty-ambiguous` | warning | An empty internal node was written as a self-closing tag, which reads back as an empty-string leaf, not an empty node |
-| `format.key-sanitized` | warning | A label isn't a legal tag name in the target format and was written sanitized |
 | `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
-| `format.string-illegal-char` | error | A string contains a character the target format cannot represent and it was replaced (e.g. `U+FFFD` for a C0 control XML 1.0 forbids) |
 | `format.string-cr-normalized` | warning | A string contains a carriage return; the target format's own parse-time line-ending normalization means it will read back as `\n`, not the original byte |
 
 **`format.attribute-dropped`, `format.namespace-dropped`, and
@@ -174,11 +172,34 @@ they describe occurs, with a conformance vector for each — see
 [§9.4](09-divergence-ledger.md#94-known-open-divergences) D-3 for
 per-port rollout status.
 
+Every code above describes a write that still succeeds — the document was
+written, with a note about what changed. Two adjustments that used to be in
+this table are not like that, and MUST NOT be treated as ones a writer can
+choose an arbitrary fallback for and still succeed:
+
+- **A label isn't a legal identifier in the target format** (e.g. a space in
+  an XML tag name).
+- **A string contains a character the target format cannot represent at all**
+  (e.g. a raw C0 control character XML 1.0 forbids).
+
+In both cases, there is no single well-defined substitute the way `null`
+is the one legal JSON spelling for `NaN` — sanitizing a label or replacing a
+character means inventing content, and there is more than one equally
+arbitrary way to do it. A previous version of this spec had these succeed
+anyway (`format.key-sanitized`, `format.string-illegal-char`, warning and
+error severity respectively) — that was found to be genuinely unsafe, not
+just imprecise: two *different* labels can sanitize to the *same* result
+(`"my label"` and `"my_label"` both becoming `<my_label>`), silently
+producing a Document, on read-back, that looks like one label repeated
+twice, with no diagnostic anywhere indicating a collision occurred. The
+correct behavior is `write.unsupported-value` (below): the write fails,
+unconditionally, not only under `strict`.
+
 ### 8.3.9 `write.*`
 
 | Code | Raised when |
 |---|---|
-| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force |
+| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string cannot be represented at all in the target format's own syntax (unconditional, regardless of `strict`) |
 
 ## 8.4 Paths
 

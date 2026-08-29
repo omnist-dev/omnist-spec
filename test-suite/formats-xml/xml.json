@@ -172,6 +172,45 @@
         ]
       },
       "comment": "An XML document has exactly one top-level element; a Document with several top-level edges (legal in JSON/YAML/TOML) has no XML spelling at all. This is exactly why the worked examples in every format page wrap the Order under a single top-level `order` key -- XML alone requires it."
+    },
+    {
+      "name": "formats-xml/basic/label-with-illegal-xml-characters-cannot-be-written",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "root",
+              {
+                "edges": [
+                  [
+                    "my label",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "hi"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.root.my label",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "A space is not legal in an XML name, and there is no single well-defined substitute -- sanitizing it means inventing content, and (confirmed separately) can even make two genuinely different labels collide into the same written tag with no way to detect it happened. The write fails, unconditionally, not just under strict -- this is not a format.* adjustment a caller can opt out of checking for."
     }
   ]
 }
