@@ -89,6 +89,18 @@ empty label names nothing a caller could ever reference, and any real input
 that produced one represents a data-quality problem, not an intentional
 schema. `"": string` is rejected with `schema.empty-label`.
 
+**A field label MUST NOT contain `[` or `]`.** [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
+diagnostic-path convention appends `[i]` to a repeated label's second and
+later occurrences (the first occurrence of `"a"` paths as `$.a`, the second
+as `$.a[1]`). A label that itself contains a literal bracket — `"a[1]": string`
+declared as its own field, alongside a repeatable `"a"` — can produce that
+exact same path for a genuinely different field, making the two
+indistinguishable in a diagnostic. This is rejected outright with
+`schema.bracket-in-label`, the same "don't allow two different things to
+collide into one spelling" principle as `schema.empty-label` above and the
+`format.*` write-side fixes in [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments) —
+here applied to the label vocabulary itself rather than to a written value.
+
 ## 5.5 Cardinality
 
 ```abnf

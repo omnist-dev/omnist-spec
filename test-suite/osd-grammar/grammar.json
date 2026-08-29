@@ -418,6 +418,44 @@
         "ok": true
       },
       "comment": "any and cardinality are independent axes; opening a field to any does not restrict what cardinality it may carry."
+    },
+    {
+      "name": "osd-grammar/labels/bracket-in-label-is-rejected",
+      "spec": "docs/05-osd-grammar.md#54-records-and-fields",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a[1]\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "R",
+            "code": "schema.bracket-in-label"
+          }
+        ]
+      },
+      "comment": "A label containing a literal bracket could collide with Sec3.6.1's diagnostic-path convention, which appends [i] to a repeated label's second and later occurrences -- a repeatable field \"a\" and a separately-declared field literally named \"a[1]\" would both stringify to the path $.a[1] for genuinely different problems. Path is R (the label-itself-is-the-problem case), same convention as the empty-label vector."
+    },
+    {
+      "name": "osd-grammar/labels/closing-bracket-alone-in-label-is-rejected",
+      "spec": "docs/05-osd-grammar.md#54-records-and-fields",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"total]\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "R",
+            "code": "schema.bracket-in-label"
+          }
+        ]
+      },
+      "comment": "Either bracket character alone is enough to reject -- the rule is not specifically about a matched [i] pair, it's about the character vocabulary the diagnostic-path convention relies on being unambiguous."
     }
   ]
 }
