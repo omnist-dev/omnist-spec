@@ -72,6 +72,32 @@ Two consequences of the order are normative and MUST be reproduced.
 `IDENT` is reached, so `nan: 1` is an error. `"nan": 1` is fine, since quoting
 routes it to rule 1.
 
+### 4.2.3 NUMBER and INTEGER
+
+```abnf
+INTEGER  = ["-"] int-part
+int-part = "0" / (%x31-39 *DIGIT)
+NUMBER   = ["-"] int-part "." 1*DIGIT [exponent]
+         / ["-"] int-part exponent
+         / %s"nan" / %s"inf" / "-" %s"inf"
+exponent = ("e" / "E") ["+" / "-"] 1*DIGIT
+```
+
+**A numeric literal's integer part MUST NOT have a leading zero.** `int-part`
+only permits a single `0`, or a nonzero digit followed by any digits — never a
+`0` followed by more digits. `01` and `00` are errors
+(`parse.leading-zero`); `0`, `0.5`, and `-0` are fine. This matches every
+target format OML round-trips through (JSON, TOML) forbidding the same thing,
+and closes what was previously undefined behavior — nothing in this spec
+constrained `NUMBER`/`INTEGER` lexically before this section existed, so a
+leading zero silently tokenized as if it were not there, with no normative
+text saying whether that was required or merely one implementation's choice.
+
+`int-part` alone (no `.`, no exponent) is not itself sufficient to choose
+between `NUMBER` and `INTEGER` — that distinction is entirely rule priority
+(§4.2's ordered list): `NUMBER` requires a fraction or exponent to match at
+all, so a bare `int-part` only ever falls through to `INTEGER`.
+
 **DATE versus DATETIME needs one lookahead.** At a position where `DATE`
 matches, the tokenizer MUST check whether the next character is `T` and the text
 after it matches `TIME`. If so, it emits `DATETIME`. If not, it emits `DATE`,

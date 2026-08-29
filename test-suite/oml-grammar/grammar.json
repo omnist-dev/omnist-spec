@@ -439,6 +439,100 @@
         ]
       },
       "comment": "End of input reached with the string still open -- no closing quote."
+    },
+    {
+      "name": "oml-grammar/numbers/leading-zero-integer-is-an-error",
+      "spec": "docs/04-oml-grammar.md#423-number-and-integer",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 01\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.leading-zero"
+          }
+        ]
+      },
+      "comment": "int-part only permits a single 0, or a nonzero digit followed by more digits -- never a 0 followed by more digits. This closes previously-undefined behavior: nothing in this spec constrained NUMBER/INTEGER lexically before Sec4.2.3 existed."
+    },
+    {
+      "name": "oml-grammar/numbers/leading-zero-in-decimal-is-an-error",
+      "spec": "docs/04-oml-grammar.md#423-number-and-integer",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "n: 00.5\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.leading-zero"
+          }
+        ]
+      },
+      "comment": "The leading-zero restriction on int-part applies identically whether the literal ends up tokenized as INTEGER or NUMBER -- a fractional part does not exempt the integer part from the same rule."
+    },
+    {
+      "name": "oml-grammar/numbers/single-zero-and-negative-forms-are-valid",
+      "spec": "docs/04-oml-grammar.md#423-number-and-integer",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "a: 0\nb: -0\nc: 0.5\nd: -12\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 0
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 0
+                }
+              }
+            ],
+            [
+              "c",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.5
+                }
+              }
+            ],
+            [
+              "d",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": -12
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A bare 0 is exactly one digit, so it's never a leading zero; a fraction less than 1 legitimately starts with 0.; a negative sign does not change int-part's own leading-zero rule since it applies after the optional minus."
     }
   ]
 }
