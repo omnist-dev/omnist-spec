@@ -184,8 +184,17 @@ except the last, which it rejects with a specific error. In particular the
 comma-first forms `[,n]` and `[,]` are legal: a minimum bound before the comma
 is not required.
 
-A field with `max = 0` is legal to write and means the label may never appear.
-`prune` removes such fields (§6.5).
+A field with `max = 0` means the label may never appear. `min <= max` forces
+`min = 0` too, so `max = 0` only ever means `[0,0]` — and `[0,0]` MUST NOT be
+written directly in OSD source ([§5.5](05-osd-grammar.md#55-cardinality),
+`schema.invalid-cardinality`): a field that can never appear is
+indistinguishable from one that was never declared, so allowing both would be
+a second spelling for one thing. `max = 0` can still arise as a *derived*
+value — an intermediate result of algebra operations that narrow a
+cardinality range, before that result is itself normalized — which is exactly
+the state `prune` (§6.5) is defined to clean up: it is a step other
+operations MAY need to run over their own output, not a shape an author
+writes by hand.
 
 ---
 
