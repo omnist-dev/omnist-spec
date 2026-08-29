@@ -121,6 +121,25 @@
       "comment": "[1,0] tokenizes fine (both are plain unsigned ints) and is rejected only at field construction, once max < min is checked."
     },
     {
+      "name": "osd-grammar/cardinality/zero-max-is-invalid-redundant-with-absence",
+      "spec": "docs/05-osd-grammar.md#55-cardinality",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\" [0,0]: string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "R.a",
+            "code": "schema.invalid-cardinality"
+          }
+        ]
+      },
+      "comment": "[0,0] tokenizes fine and passes the negative/inverted-range checks (0 is non-negative, max == min is not inverted), but is rejected anyway: a field that must occur exactly zero times is indistinguishable, in every observable respect, from a field that was never declared -- an undeclared label present in a document is already validate.unexpected-field. [0,0] would be a second spelling for that same thing, which this spec does not permit anywhere else (Sec4.3.1's empty-array-vs-absent-label rule is the same principle)."
+    },
+    {
       "name": "osd-grammar/cardinality/non-integer-bound-is-an-error",
       "spec": "docs/05-osd-grammar.md#55-cardinality",
       "operation": "parse_schema",

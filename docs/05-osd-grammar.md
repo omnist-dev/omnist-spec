@@ -117,6 +117,17 @@ Three further checks sit above the grammar, and MUST be applied:
   invalid-cardinality error, not a parse failure.
 - An inverted range, `max < min`, is rejected. `[1,0]` tokenizes fine and is
   rejected on field construction.
+- **A cardinality of exactly `[0,0]` is rejected.** A field that must occur
+  zero times is indistinguishable, in every observable respect, from a field
+  that was never declared at all — records are closed by default, so an
+  undeclared label present in a document is already an error
+  ([§8.3.4](08-conformance-and-errors.md#834-validate-document-against-schema)'s
+  `validate.unexpected-field`). `[0,0]` would be a second spelling for that
+  same thing, which this spec does not permit anywhere else (an empty array
+  and an absent label are likewise never two different things — [§4.3.1](04-oml-grammar.md#431-arrays-are-sugar)).
+  `[0,0]` tokenizes fine and is rejected at field construction, the same
+  `schema.invalid-cardinality` error as a negative bound or an inverted
+  range.
 
 ## 5.6 Types
 
@@ -194,6 +205,7 @@ Every row MUST hold for a conformant implementation.
 | `"a" []: string` | error: empty cardinality |
 | `"a" [-1]: string` | error: invalid cardinality |
 | `"a" [1,0]: string` | error: invalid cardinality |
+| `"a" [0,0]: string` | error: invalid cardinality (redundant with not declaring the field) |
 | `"a" [1.5]: string` | error: cardinality must be a whole number |
 | `"a": string?` | nullable scalar field |
 | `"a": Other?` | error: `?` cannot apply to a reference; use `[0,1]` |
