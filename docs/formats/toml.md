@@ -18,9 +18,10 @@ formats, TOML is the one whose own idiom already matches the model.
 the matching types with no schema needed, and write back the same way. TOML is
 the one format with no temporal stringification in either direction.
 
-**TOML has no `null`.** A null-valued leaf cannot be written. Implementations
-MUST report this as a write-time adjustment rather than inventing a
-representation.
+**TOML has no `null`.** A null-valued leaf cannot be written, and there is no
+substitute value to fall back to — dropping the edge silently would erase
+its existence, not just its value. Writing one MUST fail
+(`write.unsupported-value`), not silently omit it.
 
 **Top level must be a table.** A bare scalar Document cannot be written as
 TOML.
@@ -89,8 +90,8 @@ case, one edge.
 
 A `coupon` field would be a plain key inside `[order]`. Because TOML has no
 `null`, an *absent* coupon is written by omitting the key, which is what
-`[0,1]` cardinality already means. A `null` coupon has no TOML spelling at all
-and is a write-time adjustment.
+`[0,1]` cardinality already means. A `null` coupon has no TOML spelling at
+all — writing one fails, it is not written as if it had been omitted.
 
 **A real-world example.** `pyproject.toml` is the canonical case of a
 spec'd-open format: its core tables are specified, but `[tool.*]` is

@@ -96,10 +96,10 @@
       "comment": "TOML is the one format with native literals for all three temporal kinds -- and, unlike YAML, a bare time-of-day resolves correctly to `time` rather than a sexagesimal integer. Confirmed live."
     },
     {
-      "name": "formats-toml/nulls/null-leaf-cannot-be-written-and-is-omitted",
+      "name": "formats-toml/nulls/null-leaf-cannot-be-written",
       "spec": "docs/formats/toml.md",
       "operation": "write",
-      "purpose": "edge-case",
+      "purpose": "error-case",
       "input": {
         "format": "toml",
         "document": {
@@ -117,18 +117,18 @@
         }
       },
       "expect": {
-        "ok": true,
+        "ok": false,
         "diagnostics": [
           {
             "path": "$.n",
-            "code": "format.null-unrepresentable"
+            "code": "write.unsupported-value"
           }
         ]
       },
-      "comment": "TOML has no null; the leaf cannot be written, so it's dropped and reported as a write-time adjustment rather than inventing a representation. Confirmed live the write still succeeds (see omnist-spec#28 for an open severity-classification question this vector deliberately doesn't assert on, since Sec8.5.2's diagnostics matching compares only path+code, never severity)."
+      "comment": "TOML has no null, and there is no substitute value to fall back to -- dropping the edge would erase its existence, not just its value, silently. The write fails unconditionally, not only under strict (2026-08-24: this vector previously expected ok:true with format.null-unrepresentable and a still-succeeding write; that was found to be the same class of problem as the XML label-sanitization collision bug -- silent, unrecoverable data loss with no way to detect it happened)."
     },
     {
-      "name": "formats-toml/nulls/strict-mode-refuses-to-write-instead-of-omitting",
+      "name": "formats-toml/nulls/null-leaf-cannot-be-written-strict-is-the-same",
       "spec": "docs/formats/toml.md",
       "operation": "write",
       "purpose": "error-case",
@@ -158,7 +158,7 @@
           }
         ]
       },
-      "comment": "The non-strict companion vector (formats-toml/nulls/null-leaf-cannot-be-written-and-is-omitted) drops the value and reports format.null-unrepresentable, still succeeding. In strict mode the same value refuses the write entirely rather than silently adjusting -- confirmed live via --strict."
+      "comment": "Companion to formats-toml/nulls/null-leaf-cannot-be-written, differing only in strict:true -- confirms the failure is unconditional, not a strict-mode-only behavior. Both vectors MUST produce the identical result."
     }
   ]
 }

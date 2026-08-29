@@ -156,7 +156,6 @@ there is no separate set of names for them.
 |---|---|---|
 | `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
 | `format.float-special` | error | `NaN` or an infinity was substituted with `null` |
-| `format.null-unrepresentable` | warning | A null leaf cannot be written in the target format, so it is dropped |
 | `format.attribute-dropped` | warning | An XML attribute was discarded on read |
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
@@ -173,33 +172,39 @@ they describe occurs, with a conformance vector for each — see
 per-port rollout status.
 
 Every code above describes a write that still succeeds — the document was
-written, with a note about what changed. Two adjustments that used to be in
-this table are not like that, and MUST NOT be treated as ones a writer can
-choose an arbitrary fallback for and still succeed:
+written, with a note about what changed. Three adjustments that used to be
+in this table are not like that, and MUST NOT be treated as ones a writer
+can choose an arbitrary fallback for and still succeed:
 
 - **A label isn't a legal identifier in the target format** (e.g. a space in
   an XML tag name).
 - **A string contains a character the target format cannot represent at all**
   (e.g. a raw C0 control character XML 1.0 forbids).
+- **A null leaf cannot be represented in the target format at all** (e.g.
+  TOML, which has no null token of any kind).
 
-In both cases, there is no single well-defined substitute the way `null`
-is the one legal JSON spelling for `NaN` — sanitizing a label or replacing a
-character means inventing content, and there is more than one equally
-arbitrary way to do it. A previous version of this spec had these succeed
-anyway (`format.key-sanitized`, `format.string-illegal-char`, warning and
-error severity respectively) — that was found to be genuinely unsafe, not
+None of these three have a single well-defined substitute the way `null`
+is the one legal JSON spelling for `NaN`. The first two mean inventing
+content — sanitizing a label or replacing a character — with more than one
+equally arbitrary way to do it. The third is worse: there is no substitute
+value at all, only the option to silently drop the edge entirely, which
+does not just alter what a Document says at that position, it erases the
+edge's existence — closer to structural data loss than a value adjustment.
+A previous version of this spec had all three succeed anyway
+(`format.key-sanitized`, `format.string-illegal-char`, and
+`format.null-unrepresentable`) — that was found to be genuinely unsafe, not
 just imprecise: two *different* labels can sanitize to the *same* result
-(`"my label"` and `"my_label"` both becoming `<my_label>`), silently
+in XML (`"my label"` and `"my_label"` both becoming `<my_label>`), silently
 producing a Document, on read-back, that looks like one label repeated
 twice, with no diagnostic anywhere indicating a collision occurred. The
-correct behavior is `write.unsupported-value` (below): the write fails,
-unconditionally, not only under `strict`.
+correct behavior for all three is `write.unsupported-value` (below): the
+write fails, unconditionally, not only under `strict`.
 
 ### 8.3.9 `write.*`
 
 | Code | Raised when |
 |---|---|
-| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string cannot be represented at all in the target format's own syntax (unconditional, regardless of `strict`) |
+| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf cannot be represented at all in the target format's own syntax (unconditional, regardless of `strict`) |
 
 ## 8.4 Paths
 
