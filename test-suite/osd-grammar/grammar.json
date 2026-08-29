@@ -140,6 +140,25 @@
       "comment": "[0,0] tokenizes fine and passes the negative/inverted-range checks (0 is non-negative, max == min is not inverted), but is rejected anyway: a field that must occur exactly zero times is indistinguishable, in every observable respect, from a field that was never declared -- an undeclared label present in a document is already validate.unexpected-field. [0,0] would be a second spelling for that same thing, which this spec does not permit anywhere else (Sec4.3.1's empty-array-vs-absent-label rule is the same principle)."
     },
     {
+      "name": "osd-grammar/labels/empty-label-is-rejected",
+      "spec": "docs/05-osd-grammar.md#54-records-and-fields",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "R",
+            "code": "schema.empty-label"
+          }
+        ]
+      },
+      "comment": "\"\" is a legal *value* for an OML/OSD string generally, but a label is an identifier, not a value -- an empty label names nothing a caller could ever reference. Path is R (the label-itself-is-the-problem case), the same convention osd-grammar/labels/unquoted-field-name-is-rejected already uses, since there's no usable label to append as R.<label>."
+    },
+    {
       "name": "osd-grammar/cardinality/non-integer-bound-is-an-error",
       "spec": "docs/05-osd-grammar.md#55-cardinality",
       "operation": "parse_schema",

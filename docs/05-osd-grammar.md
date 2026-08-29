@@ -83,6 +83,12 @@ emits. Fields are otherwise comma-separated, with no leading comma.
 An empty record body — `record R { }` — is legal. It describes a node with no
 edges.
 
+**A field label MUST NOT be the empty string.** `""` is a legal *value* for an
+OML/OSD string generally, but a label is an identifier, not a value — an
+empty label names nothing a caller could ever reference, and any real input
+that produced one represents a data-quality problem, not an intentional
+schema. `"": string` is rejected with `schema.empty-label`.
+
 ## 5.5 Cardinality
 
 ```abnf
@@ -215,6 +221,7 @@ Every row MUST hold for a conformant implementation.
 | `record R{"a":string}` with no `root` | error: a schema must declare a root |
 | `record R{"a":string} record S{"b":string}` with two `root` declarations | error: a schema MUST NOT declare more than one root |
 | `record R{a:string}` | error: expected a quoted field name |
+| `record R{"": string}` | error: a field label MUST NOT be empty |
 | `record R{"a": "string"}` | error: a quoted string cannot appear in type position |
 | `record R { "a": string, }` | valid; trailing comma accepted |
 | `record R { "data": any }` | field type is `any` |
