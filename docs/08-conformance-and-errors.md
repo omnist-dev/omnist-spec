@@ -379,6 +379,33 @@ Schemas in `input` are OSD text. Documents are given in the canonical JSON
 encoding of §8.5.4, not in a format-specific text, except where the vector is
 specifically testing a parser.
 
+**`write` vector `text` comparison for XML MUST ignore insignificant
+inter-tag whitespace.** Unlike JSON/YAML/TOML/OML, this spec places no
+normative requirement anywhere on XML writer output formatting (no
+indentation, no line-break convention) — codecs and deserialization (§7.3)
+and the XML format page (`docs/formats/xml.md`) both describe only the
+*structure* a writer must produce, never its whitespace. Two conformant
+writers may legitimately disagree on this and both be correct. Before
+comparing a `write` vector's `text` against a target's actual output for
+XML, a harness MUST first strip whitespace that occurs strictly between `>`
+and `<` from both strings, then compare what remains. Whitespace inside
+actual element text content (the content between an element's own opening
+and closing tags, with no nested elements) MUST NOT be touched — that is
+data, not formatting, and stripping it would corrupt what's being compared.
+
+This is safe specifically because an omnist writer never produces XML with
+mixed content — the Document model (§2) gives every node either child
+edges or a single scalar value, never both at once, so an element's content
+is always either entirely sub-elements or entirely one text value, and
+"whitespace strictly between `>` and `<`" can only ever be inter-tag
+formatting, never a fragment of real text data. (General XML documents with
+mixed content don't have this guarantee, which is why this rule is scoped
+to XML vectors in this conformance suite, not stated as a general-purpose
+XML-comparison algorithm.) One reference implementation: strip via
+`text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
+the existing outer-whitespace trim every `write` vector comparison already
+does.
+
 ### 8.5.4 Canonical document encoding
 
 A Document must be written into a JSON vector file without JSON's own

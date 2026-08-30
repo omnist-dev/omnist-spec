@@ -280,7 +280,7 @@
         "ok": true,
         "text": "<root>\n  <x>a&#13;b</x>\n</root>\n"
       },
-      "comment": "XML mandates line-ending normalization on parse -- a literal \\r byte and a literal \\n byte, written as-is, are indistinguishable on read-back (confirmed live, this used to be format.string-cr-normalized, a lossy warning-severity adjustment). A numeric character reference is exempt from that normalization, so writing \\r as &#13; instead of a raw byte is genuinely lossless, not merely reported-as-lossy -- confirmed live that &#13; survives a compliant parser and reads back as the exact original byte. No diagnostic is needed for this case at all once the writer does this."
+      "comment": "XML mandates line-ending normalization on parse -- a literal \\r byte and a literal \\n byte, written as-is, are indistinguishable on read-back (confirmed live, this used to be format.string-cr-normalized, a lossy warning-severity adjustment). A numeric character reference is exempt from that normalization, so writing \\r as &#13; instead of a raw byte is genuinely lossless, not merely reported-as-lossy -- confirmed live that &#13; survives a compliant parser and reads back as the exact original byte. No diagnostic is needed for this case at all once the writer does this. Per omnist-spec#52: this vector's expect.text is indented, matching the Python reference's own writer default, but that indentation is not itself normative (Sec8.5.3) -- a compact-output writer (e.g. omnist-go's) is equally conformant, and a harness MUST strip insignificant inter-tag whitespace from both sides before comparing, per the new rule in Sec8.5.3. The escaping (&#13;, not a raw byte) is what this vector actually tests; the indentation shown here is incidental."
     }
   ]
 }
