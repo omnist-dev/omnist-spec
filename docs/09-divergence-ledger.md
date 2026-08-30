@@ -106,7 +106,7 @@ grammar) via `omnist-rs` PRs #167-170, now at version 0.2.2-alpha.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.9.0 | 0.2.0-alpha | 0.2.2-alpha | 0.2.0-alpha | 0.2.1-alpha |
+| Version | 0.9.0 | 0.3.0-alpha | 0.2.2-alpha | 0.2.0-alpha | 0.2.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps | all three | all three | all three | all three | all three |
