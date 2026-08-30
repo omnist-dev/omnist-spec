@@ -95,14 +95,18 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last source-audited: 2026-08-23**, directly against each port's own code
-and a live conformance run, after all five ports closed D-3 (`omnist#321`,
-`omnist-ts#124`, `omnist-rs#157`, `omnist-go#94`, `omnist-j#86`) —
-not carried forward from a prior edit.
+**Last source-audited: 2026-08-30**, directly against each port's own code
+and a live conformance run — not carried forward from a prior edit. Prior
+audit (2026-08-23) covered all five ports closing D-3 (`omnist#321`,
+`omnist-ts#124`, `omnist-rs#157`, `omnist-go#94`, `omnist-j#86`); this
+update reflects Rust additionally closing the #158-166 batch (write-side
+unconditional-failure fixes for unrepresentable values, XML carriage-return
+escaping, OSD schema-construction-time validation, OML numeric/temporal
+grammar) via `omnist-rs` PRs #167-170, now at version 0.2.2-alpha.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.9.0 | 0.2.0-alpha | 0.2.1-alpha | 0.2.0-alpha | 0.2.1-alpha |
+| Version | 0.9.0 | 0.2.0-alpha | 0.2.2-alpha | 0.2.0-alpha | 0.2.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps | all three | all three | all three | all three | all three |
@@ -113,7 +117,7 @@ not carried forward from a prior edit.
 | Schema algebra (all 6 ops) | complete | complete | complete | complete | complete |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors, of 155) | reference | 118 pass / 0 fail / 37 skip | 149 pass / 0 fail / 6 skip | 154 pass / 0 fail / 1 skip | 184 pass / 0 fail / 0 skip |
+| Conformance (vectors, of 155; Rust of 172 — ahead on the vendored omnist-spec pin) | reference | 118 pass / 0 fail / 37 skip | 165 pass / 1 fail / 6 skip (1 fail is `omnist-spec#51`, a test-suite defect, not a Rust gap) | 154 pass / 0 fail / 1 skip | 184 pass / 0 fail / 0 skip |
 | Conformance (fixtures, of 19) | reference | 19/19 | 19/19 | 19/19 | 19/19 |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.8%/99.5%, gated |
