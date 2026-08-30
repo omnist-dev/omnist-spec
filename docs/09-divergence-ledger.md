@@ -102,11 +102,16 @@ audit (2026-08-23) covered all five ports closing D-3 (`omnist#321`,
 update reflects Rust additionally closing the #158-166 batch (write-side
 unconditional-failure fixes for unrepresentable values, XML carriage-return
 escaping, OSD schema-construction-time validation, OML numeric/temporal
-grammar) via `omnist-rs` PRs #167-170, now at version 0.2.2-alpha.
+grammar) via `omnist-rs` PRs #167-170, now at version 0.2.2-alpha, and Java
+closing the equivalent #87-95 batch (submodule bumped to `0ac1eac`;
+[0,0]-cardinality, empty/bracket label rejection, OML leading-zero and
+DATE/TIME/DATETIME/tz-offset range validation, write-side unconditional
+failures for unrepresentable values, and XML carriage-return escaping) via
+`omnist-j` PRs #96-100, now at version 0.2.2-alpha.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.9.0 | 0.3.0-alpha | 0.2.2-alpha | 0.2.0-alpha | 0.2.1-alpha |
+| Version | 0.9.0 | 0.3.0-alpha | 0.2.2-alpha | 0.2.0-alpha | 0.2.2-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps | all three | all three | all three | all three | all three |
@@ -117,10 +122,10 @@ grammar) via `omnist-rs` PRs #167-170, now at version 0.2.2-alpha.
 | Schema algebra (all 6 ops) | complete | complete | complete | complete | complete |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors, of 155; Rust of 172 — ahead on the vendored omnist-spec pin) | reference | 118 pass / 0 fail / 37 skip | 165 pass / 1 fail / 6 skip (1 fail is `omnist-spec#51`, a test-suite defect, not a Rust gap) | 154 pass / 0 fail / 1 skip | 184 pass / 0 fail / 0 skip |
+| Conformance (vectors, of 155; Rust of 172, Java of 201 — ahead on the vendored omnist-spec pin) | reference | 118 pass / 0 fail / 37 skip | 165 pass / 1 fail / 6 skip (1 fail is `omnist-spec#51`, a test-suite defect, not a Rust gap) | 154 pass / 0 fail / 1 skip | 201 pass / 0 fail / 0 skip |
 | Conformance (fixtures, of 19) | reference | 19/19 | 19/19 | 19/19 | 19/19 |
 | Fuzz testing | yes | yes | yes | yes | yes |
-| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.8%/99.5%, gated |
+| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.6%/99.3%, gated |
 
 ## 9.4 Known open divergences
 
