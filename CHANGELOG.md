@@ -3,6 +3,61 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.5.0-beta (2026-08-30)
+
+**Normative (minor)** — a systematic spec-correctness audit (two
+techniques: adversarial-collision testing on already-shipped codec
+writers, and checking for grammar productions referenced by name but
+never formally defined) found and fixed 11 real defects:
+
+- §8.3.8: illegal-character labels, unrepresentable TOML nulls,
+  NaN/Infinity, and empty internal XML nodes now fail the write
+  outright (`write.unsupported-value`), unconditionally — previously
+  silently substituted/dropped with only a warning, which could make
+  two genuinely different, independently-valid inputs collide into
+  identical output with no diagnostic. Retires `format.key-sanitized`,
+  `format.string-illegal-char`, `format.null-unrepresentable`,
+  `format.float-special`, `format.shape-empty-ambiguous`.
+- §8.3.8 / XML: a `\r` byte is now escaped as `&#13;` on write instead
+  of written raw — XML's mandatory line-ending normalization made a
+  raw `\r` and a raw `\n` indistinguishable on read-back; the numeric
+  character reference survives intact. Retires
+  `format.string-cr-normalized` (a genuine fix, not a new failure
+  case).
+- §4.2.3: `NUMBER`/`INTEGER` literals with a leading zero (`01`, `00.5`)
+  are now rejected (`parse.leading-zero`) — this lexical grammar was
+  referenced by name but never formally defined anywhere in the spec.
+- §4.2.4: `DATE`/`TIME`/`DATETIME`/`tz-offset` calendar and clock
+  ranges are now normative (month 01-12, day valid for month/leap
+  year, hour/minute/second in range, no leap-second spelling, tz-offset
+  sharing `TIME`'s exact minute range) — also undefined before this.
+  Closes a real collision: a 60-minute tz-offset (`+00:60`) was
+  previously indistinguishable from a valid `+01:00` once silently
+  normalized instead of rejected.
+- §5.4/§5.5: `[0,0]` cardinality, an empty-string field label, and a
+  field label containing `[`/`]` are all now rejected at
+  schema-construction time — each was either a redundant second
+  spelling for "undeclared" or (for brackets) could collide with
+  §3.6.1's repeated-label diagnostic-path convention.
+- §8.5.3: a harness comparing a `write` vector's text for XML MUST now
+  strip insignificant inter-tag whitespace before comparing — the spec
+  places no requirement on XML writer whitespace, so a byte-exact
+  vector was accidentally pinning one implementation's formatting
+  choice as if it were normative.
+
+**Patch** — two prose corrections (§3.4 no longer contradicts the
+`[0,0]` rule; §7.4 no longer cites a `format.adjustment.*` family that
+was never real) and two test-suite vector fixes found during port
+rollout of the above (a `prune` fixture that depended on now-illegal
+`[0,0]` syntax; a temporal vector's expected value missing seconds
+canonicalization, invisible to a semantic-equality harness but wrong
+for a string-backed one).
+
+All 9 behavioral fixes above were implemented and merged across all 5
+ports (Python, TypeScript, Rust, Go, Java) the same day — see
+[§9.3](docs/09-divergence-ledger.md#93-current-status) for current
+per-port versions and conformance counts.
+
 ## v0.4.0-beta (2026-08-23)
 
 **Normative (minor)**
