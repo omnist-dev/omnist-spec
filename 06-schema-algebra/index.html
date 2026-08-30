@@ -1,0 +1,2046 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/06-schema-algebra/">
+      
+      
+        <link rel="prev" href="../05-osd-grammar/">
+      
+      
+        <link rel="next" href="../07-codecs-and-deserialization/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>6. Schema Algebra - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#6-the-schema-algebra" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              6. Schema Algebra
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-document-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-oml-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#61-where-this-comes-from-and-what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Where this comes from, and what changed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-notation-used-in-the-pseudocode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Notation used in the pseudocode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-scalar-subtyping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Scalar subtyping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#64-is_emptys-and-satisfiability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 is_empty(S) and satisfiability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#65-prunes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 prune(S)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#66-compatible_witha-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 compatible_with(A, B)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#67-equivalenta-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.7 equivalent(A, B)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#68-normalizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.8 normalize(S)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#69-extracts-keep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.9 extract(S, keep)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#610-infersamples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.10 infer(samples)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#611-lints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.11 lint(S)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#612-termination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.12 Termination
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-codecs-and-deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-conformance-and-errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-divergence-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#61-where-this-comes-from-and-what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Where this comes from, and what changed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-notation-used-in-the-pseudocode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Notation used in the pseudocode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-scalar-subtyping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Scalar subtyping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#64-is_emptys-and-satisfiability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 is_empty(S) and satisfiability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#65-prunes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 prune(S)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#66-compatible_witha-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 compatible_with(A, B)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#67-equivalenta-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.7 equivalent(A, B)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#68-normalizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.8 normalize(S)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#69-extracts-keep" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.9 extract(S, keep)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#610-infersamples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.10 infer(samples)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#611-lints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.11 lint(S)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#612-termination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.12 Termination
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="6-the-schema-algebra">6. The Schema Algebra<a class="headerlink" href="#6-the-schema-algebra" title="Permanent link">&para;</a></h1>
+<h2 id="61-where-this-comes-from-and-what-changed">6.1 Where this comes from, and what changed<a class="headerlink" href="#61-where-this-comes-from-and-what-changed" title="Permanent link">&para;</a></h2>
+<p>The operations in this chapter descend from Lee and Cheung, <em>XML Schema
+Computations</em> (CIKM 2010), which models a schema as a <strong>schema automaton</strong> and
+derives algorithms over it: <code>MakeUsefulSA</code> (useless-state removal), <code>MinimizeSA</code>
+(partition-refinement minimization), <code>SubschemaSA</code> (language inclusion), and
+<code>ExtractSubschema</code>. Omnist keeps the algorithms and their proof obligations. It
+changes the object they operate on, in four specific ways. A reader who knows
+the paper should be able to check off exactly these and nothing else.</p>
+<p><strong>Generalization: the model is format-agnostic, not XML-only.</strong> The paper's
+automaton reads XML elements. Omnist's operates over the Document model of
+<a href="../02-document-model/">chapter 2</a>, which JSON, YAML, TOML, XML, and OML all read
+into. The algorithms did not need to change for this. What it buys is that a
+compatibility answer computed on a schema is valid regardless of which format
+the documents arrive in.</p>
+<p><strong>Simplification: cardinality ranges replace regular child-sequence languages.</strong>
+The paper constrains a state's children by a regular language over the label
+alphabet, which admits order and arbitrary sequencing. Omnist constrains each
+label by a count range <code>[min, max]</code>, and ignores order entirely. This is
+strictly less expressive. The gain is threefold: inclusion between two count
+ranges is an integer comparison rather than a regular-language containment test,
+schemas stay human-writable, and validation results become order-independent,
+which is what lets an XML document and a reordered JSON document validate
+identically.</p>
+<p><strong>Simplification: a named record graph replaces anonymous automaton states.</strong>
+The paper's states are anonymous and identified structurally. Omnist's records
+have names, and every reference is by name. Recursion and reuse become the same
+mechanism. The practical consequence is that <code>normalize</code>'s output is a schema an
+author can read and diff, not an automaton they must decompile — minimization
+merges names rather than renumbering states.</p>
+<p><strong>Simplification: seven fixed scalar kinds replace an open value domain.</strong> The
+paper leaves the leaf value domain open. Omnist fixes it at seven kinds, with
+exactly one subtyping relation between them (§6.3). A closed, tiny lattice is
+what makes scalar inclusion a table lookup and keeps schema-directed
+materialization unambiguous.</p>
+<p>One further discipline is inherited rather than modified: the paper's refusal to
+add flexibility that costs decidability. Omnist's version of that refusal — no
+unions, no enums, no open maps — is stated once, with its reason, in
+<a href="../03-schema-model/#32-what-this-model-refuses-and-why">§3.2</a>.</p>
+<p><strong>Where <code>any</code> fits.</strong> <code>any</code> (v0.5.0) is not in the paper. It is a top type at a
+declared field. Every operation below halts its descent at an <code>any</code> boundary.
+That halting is what keeps decidability intact, and it is also the feature's
+cost: nothing beneath an <code>any</code> is compared, so nothing beneath it is protected.</p>
+<hr />
+<h2 id="62-notation-used-in-the-pseudocode">6.2 Notation used in the pseudocode<a class="headerlink" href="#62-notation-used-in-the-pseudocode" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>S.root                 the schema's root Ref
+S.env[name]            the record bound to `name`
+S.resolve(t)           t if t is a Scalar or Any; S.env[t.name] if t is a Ref
+R.fields               the record's fields, in declaration order
+R.field(label)         the field with that label, or none
+f.min, f.max           cardinality; f.max may be unbounded
+le(x, y)               x &lt;= y, with unbounded treated as +infinity
+</code></pre></div>
+<p><code>le</code> is used wherever a maximum is compared, and is normative:</p>
+<div class="highlight"><pre><span></span><code>function le(x, y):
+    if y is unbounded: return true
+    if x is unbounded: return false
+    return x &lt;= y
+</code></pre></div>
+<hr />
+<h2 id="63-scalar-subtyping">6.3 Scalar subtyping<a class="headerlink" href="#63-scalar-subtyping" title="Permanent link">&para;</a></h2>
+<p>There is exactly <strong>one</strong> subtyping relation between scalar kinds:</p>
+<blockquote>
+<p><code>integer</code> is a subtype of <code>number</code>. Nothing else.</p>
+</blockquote>
+<p>Formally, <code>Scalar(ka, na)</code> is a subtype of <code>Scalar(kb, nb)</code> when:</p>
+<div class="highlight"><pre><span></span><code>function scalar_sub(a, b):
+    if a.nullable and not b.nullable: return false
+    if a.kind == b.kind: return true
+    return a.kind == "integer" and b.kind == "number"
+</code></pre></div>
+<p><code>date</code> is not a subtype of <code>datetime</code>. <code>string</code> is not a supertype of anything.
+Implementations MUST NOT add relations; each one added changes every
+compatibility answer in the system.</p>
+<hr />
+<h2 id="64-is_emptys-and-satisfiability">6.4 <code>is_empty(S)</code> and satisfiability<a class="headerlink" href="#64-is_emptys-and-satisfiability" title="Permanent link">&para;</a></h2>
+<p>A record is <strong>satisfiable</strong> if at least one finite Document can match it. A
+record with a mandatory field pointing at an unsatisfiable record is itself
+unsatisfiable — most commonly, a required reference cycle.</p>
+<div class="highlight"><pre><span></span><code>record Node { "child": Node }   # every document would be infinite
+root Node
+</code></pre></div>
+<p><code>satisfiable_set</code> is a least fixpoint. Start with nothing known satisfiable, and
+repeatedly add any record whose mandatory fields are all satisfiable. <code>env</code> is
+finite and the set only grows, so this terminates.</p>
+<div class="highlight"><pre><span></span><code>function satisfiable_set(S):
+    sat = {}
+    repeat until no change:
+        for (name, rec) in S.env:
+            if name in sat: continue
+            if record_satisfiable(rec, sat):
+                add name to sat
+    return sat
+
+function record_satisfiable(rec, sat):
+    for f in rec.fields:
+        if f.min &lt; 1: continue              # optional never blocks
+        if f.type is Scalar or Any: continue
+        if f.type.name not in sat: return false
+    return true
+
+function is_empty(S):
+    return S.root.name not in satisfiable_set(S)
+</code></pre></div>
+<p>Note that <code>any</code> is treated as satisfiable, since it admits every value.</p>
+<p>Iteration over <code>env</code> MUST be deterministic. <code>env</code> is ordered by declaration;
+implementations MUST NOT iterate an unordered set where the result's ordering is
+observable.</p>
+<hr />
+<h2 id="65-prunes">6.5 <code>prune(S)</code><a class="headerlink" href="#65-prunes" title="Permanent link">&para;</a></h2>
+<p><code>prune</code> returns a schema equivalent to <code>S</code> with everything that can never match
+removed. It is a normalization step, not a semantic change: <code>prune(S)</code> and <code>S</code>
+accept exactly the same Documents.</p>
+<p>What it removes:</p>
+<ul>
+<li>records unreachable from the root by following references;</li>
+<li>fields with <code>max == 0</code>, which can never be emitted;</li>
+<li>optional fields (<code>min == 0</code>) whose type is an unsatisfiable record, which can
+  never be emitted either;</li>
+<li>records left unreachable after the above.</li>
+</ul>
+<p><strong>The root-unsatisfiable case is special and is normative.</strong> If the root record
+is itself unsatisfiable, field pruning MUST NOT be applied to the root. Its
+mandatory fields are exactly what make it unsatisfiable; stripping them would
+produce a different, satisfiable schema, breaking the guarantee that <code>prune</code>
+preserves the language. Instead the root is kept as written, and only the rest
+of the environment is reduced to what is reachable from it.</p>
+<div class="highlight"><pre><span></span><code>function prune(S):
+    sat     = satisfiable_set(S)
+    root_ok = S.root.name in sat
+    keep    = reachable(S, sat, root_ok)
+
+    new_env = ordered map
+    for name in S.env (in declaration order):
+        if name not in keep: continue
+        if not root_ok and name == S.root.name:
+            new_env[name] = S.env[name]          # keep the bad root intact
+        else:
+            new_env[name] = prune_record(S.env[name], sat)
+    return Schema(Ref(S.root.name), new_env)
+
+function prune_record(rec, sat):
+    kept = []
+    for f in rec.fields:
+        if f.max == 0: continue
+        if f.min == 0 and f.type is Ref and f.type.name not in sat: continue
+        append f to kept
+    return Record(kept)
+</code></pre></div>
+<p><code>reachable</code> walks from the root following references through fields that
+survive <code>prune_record</code> — except at an unsatisfiable root, where every field is
+followed.</p>
+<p><strong>Determinism requirement.</strong> The output environment's key order MUST be derived
+by iterating <code>S.env</code> in declaration order and filtering by the reachable set,
+never by iterating the reachable set. Iterating an unordered set makes the
+output order depend on hash seeding, which makes canonical output
+non-reproducible across runs. This has bitten a real implementation; it is a
+conformance requirement, not a style note.</p>
+<hr />
+<h2 id="66-compatible_witha-b">6.6 <code>compatible_with(A, B)</code><a class="headerlink" href="#66-compatible_witha-b" title="Permanent link">&para;</a></h2>
+<p><strong>Meaning.</strong> True when every Document <code>A</code> accepts is also accepted by <code>B</code>. In
+release terms: <code>A</code> is the new schema, <code>B</code> is the old one, and true means the
+change is backward-compatible for readers holding <code>B</code>.</p>
+<p><strong>Worked example.</strong></p>
+<p>Schema <code>A</code>:</p>
+<div class="highlight"><pre><span></span><code>record User {
+    "id":         string,
+    "name":       string,
+    "nick" [0,1]: string,
+}
+root User
+</code></pre></div>
+<p>Schema <code>B</code>:</p>
+<div class="highlight"><pre><span></span><code>record User {
+    "id":   string,
+    "name": string,
+}
+root User
+</code></pre></div>
+<p><code>compatible_with(A, B)</code> is <strong>false</strong>: <code>A</code> may emit a <code>nick</code> edge, and <code>B</code> is
+closed with no such field. Reverse the arguments and <code>compatible_with(B, A)</code> is
+<strong>true</strong>: everything <code>B</code> emits, <code>A</code> accepts, and <code>A</code>'s extra field is optional
+so <code>A</code> requires nothing <code>B</code> fails to supply.</p>
+<p>Adding an optional field is safe for <em>readers of the new schema</em>, and unsafe for
+<em>readers of the old</em>. The direction of the call is the whole question.</p>
+<p><strong>Algorithm.</strong> This is the paper's Algorithm 4, restricted to counting
+cardinality languages. Algorithm 4 assumes <code>MakeUsefulSA</code> has already run: the
+coinductive cycle rule below only coincides with real language inclusion once
+every A-side record is known satisfiable. Rather than requiring callers to prune
+first, <code>compatible_with</code> computes <code>A</code>'s satisfiable set once up front and
+consults it directly. An unsatisfiable A-side record is vacuously a subschema of
+anything, since it emits no documents at all.</p>
+<p>Recursive schemas are handled by <strong>coinduction</strong>: on entering a pair of records
+already on the stack, assume true, then let the surrounding checks refute it.
+Memoization on the resolved-definition pair makes this terminate.</p>
+<div class="highlight"><pre><span></span><code>function compatible_with(A, B):
+    sat_a = satisfiable_set(A)
+    return sub(A, A.root, B, B.root, sat_a, memo = {})
+
+function sub(SA, ta, SB, tb, sat_a, memo):
+    if ta is Ref and ta.name not in sat_a:
+        return true                       # vacuous: A emits nothing here
+    da = SA.resolve(ta)
+    db = SB.resolve(tb)
+    key = (identity of da, identity of db)
+    if key in memo: return memo[key]
+    memo[key] = true                      # coinductive assumption
+
+    if db is Any:                result = true       # any absorbs all
+    else if da is Any:           result = false      # only any holds any
+    else if da,db both Scalar:   result = scalar_sub(da, db)
+    else if da,db both Record:   result = record_sub(SA, da, SB, db, sat_a, memo)
+    else:                        result = false      # value versus object
+
+    memo[key] = result
+    return result
+
+function record_sub(SA, a, SB, b, sat_a, memo):
+    # 1. Every label A may emit must be allowed by B.
+    for fa in a.fields:
+        if fa.max == 0: continue                     # A never emits it
+        if fa.min == 0 and fa.type is Ref and fa.type.name not in sat_a:
+            continue                                 # A never emits it either
+        fb = b.field(fa.label)
+        if fb is none: return false                  # B is closed
+        if not (fb.min &lt;= fa.min and le(fa.max, fb.max)): return false
+        if not sub(SA, fa.type, SB, fb.type, sat_a, memo): return false
+
+    # 2. Every label B requires must be guaranteed by A.
+    for fb in b.fields:
+        if fb.min &gt;= 1:
+            fa = a.field(fb.label)
+            if fa is none or fa.min &lt; fb.min: return false
+    return true
+</code></pre></div>
+<p>The memo key MUST be the identity of the <em>resolved definitions</em>, not the
+reference names. Two names bound to the same record definition are the same
+node in the graph, and keying on names would defeat cycle detection where
+aliasing is present.</p>
+<p><strong>The <code>any</code> blind spot.</strong> By the two <code>Any</code> clauses above, <code>compatible_with</code> is
+vacuously true inside a right-hand <code>any</code>. If <code>B</code> declares a field <code>any</code> and <code>A</code>
+restructures everything beneath it, the answer is still true. That is correct —
+<code>B</code> really does accept it — and it is also a real loss of protection. This is
+the cost <code>any</code> buys, and it is why <code>lint</code> reports every <code>any</code> field.</p>
+<p>A real schema shows how concentrated this cost can get. <a href="../examples/pyproject/pyproject.osd"><code>pyproject.osd</code></a>
+(one of the <a href="../examples/#pyprojecttoml">real-world examples</a>) types
+seven fields <code>any</code> — <code>readme</code>, <code>license</code>, and five open-key-set sections —
+to model a format whose own spec has a real union and real open key sets
+neither OSD nor <code>compatible_with</code> can see through. A union typed <code>any</code>
+shifts risk rather than removing it, since <code>compatible_with</code> can no longer
+tell a compatible payload shape from an incompatible one inside that field.</p>
+<hr />
+<h2 id="67-equivalenta-b">6.7 <code>equivalent(A, B)</code><a class="headerlink" href="#67-equivalenta-b" title="Permanent link">&para;</a></h2>
+<p>Two schemas are equivalent when they accept exactly the same set of Documents.</p>
+<div class="highlight"><pre><span></span><code>function equivalent(A, B):
+    return compatible_with(A, B) and compatible_with(B, A)
+</code></pre></div>
+<p>There is no cheaper structural shortcut, and implementations MUST NOT
+substitute one. Structural equality is strictly stronger than equivalence: two
+schemas can differ in record names, declaration order, and the presence of
+unreachable records while accepting exactly the same documents.</p>
+<hr />
+<h2 id="68-normalizes">6.8 <code>normalize(S)</code><a class="headerlink" href="#68-normalizes" title="Permanent link">&para;</a></h2>
+<p><code>normalize</code> returns the canonical minimal schema equivalent to <code>S</code>: the fewest
+records, unique up to record naming. This is the paper's <code>MinimizeSA</code>.</p>
+<p>Three steps.</p>
+<pre class="mermaid"><code>graph LR
+    S["Schema S"] --&gt; P["prune (§6.5)&lt;br/&gt;drop unreachable / unsatisfiable"]
+    P --&gt; E{"is_empty?"}
+    E --&gt;|yes| Done1["return unchanged"]
+    E --&gt;|no| R["partition refinement&lt;br/&gt;group records by structural signature"]
+    R --&gt; M["merge each block to one&lt;br/&gt;representative, rewrite refs"]
+    M --&gt; Done2["canonical minimal schema"]</code></pre>
+<ol>
+<li><strong>Prune</strong> (§6.5). If the result is empty (<code>is_empty</code>), return it unchanged —
+   <code>prune</code> deliberately leaves an unsatisfiable root's fields alone, so there is
+   no "fewest records" question to answer for a schema that accepts nothing.</li>
+<li><strong>Partition refinement.</strong> Group record names into structural equivalence
+   classes. Start from a local signature — each record's fields as
+   <code>(label, min, max, shape)</code>, target-blind. Then refine to a
+   fixpoint: two records stay in the same block only if, for every field, their
+   reference targets are in the same block.</li>
+</ol>
+<p><code>local_signature</code> is used three times below (<code>equivalence_classes</code>,
+   <code>refine_key</code>) but was never itself pinned down precisely — "target-blind"
+   describes what it excludes (a <code>Ref</code> field's target <em>name</em>), not what it
+   keeps, and an implementation that reads "is-scalar-or-not" as a bare
+   boolean will silently merge a <code>string</code> field with an <code>integer</code> field,
+   which is wrong: those two records do not accept the same documents.
+   <code>shape</code> is:</p>
+<div class="highlight"><pre><span></span><code>function local_signature(rec):
+    fields = sorted by label of
+        (f.label, f.min, f.max, shape_of(f.type))
+        for f in rec.fields
+    return ("record", fields)
+
+function shape_of(t):
+    if t is Any: return ("any",)
+    if t is Ref: return ("ref",)             # target name deliberately excluded
+    return ("scalar", t.kind, t.nullable)     # kind and nullable both included
+</code></pre></div>
+<p>A scalar field's full kind and nullability are part of the signature from
+   the start; only a <code>Ref</code> field's specific target is left for refinement to
+   resolve, since two records can turn out equivalent because their ref
+   targets are themselves equivalent under different names — a signature
+   keyed on the target name up front would prevent them from ever landing in
+   the same starting block.
+3. <strong>Merge.</strong> Pick one representative per block (the lexicographically smallest
+   name, so the choice is deterministic), rewrite every reference to it, and
+   drop the rest.</p>
+<div class="highlight"><pre><span></span><code>function equivalence_classes(S):
+    names    = sorted(S.env keys)
+    blocks   = group_by(names, name -&gt; local_signature(S.env[name]))
+    block_of = index of each name's block
+    repeat until the block count stops changing:
+        new_blocks = []
+        for block in blocks:
+            for sub in group_by(block, name -&gt; refine_key(S.env[name], block_of)):
+                append sub to new_blocks
+        blocks   = new_blocks
+        block_of = reindex(new_blocks)
+    return blocks
+
+function refine_key(rec, block_of):
+    fields = sorted by label of
+        (f.label, f.min, f.max,
+         block_of[f.type.name] if f.type is Ref else none)
+        for f in rec.fields
+    return (local_signature(rec), fields)
+
+function normalize(S):
+    S = prune(S)
+    if is_empty(S): return S
+    rep = {}
+    for block in equivalence_classes(S):
+        keep = min(block)                  # lexicographic; deterministic
+        for n in block: rep[n] = keep
+    new_env = { name: remap(S.env[name], rep)
+                for name in sorted(S.env keys) if rep[name] == name }
+    return Schema(Ref(rep[S.root.name]), new_env)
+</code></pre></div>
+<p>Names MUST be sorted before grouping, and the representative MUST be the
+minimum of its block. Both requirements exist so that two implementations
+produce the same canonical output, not merely equivalent output.</p>
+<p><code>equivalence_classes</code> operates on <code>S.env</code> exactly as given. It does <strong>not</strong>
+prune first. <code>normalize</code> prunes before calling it; <code>lint</code> calls it on the raw
+schema so that duplicates are reported as the author wrote them.</p>
+<p><strong>Worked example.</strong></p>
+<div class="highlight"><pre><span></span><code>record A { "x": string }
+record B { "x": string }
+record Top { "a": A, "b": B }
+root Top
+</code></pre></div>
+<p><code>A</code> and <code>B</code> have identical local signatures and no reference fields, so they
+merge on the first pass. <code>normalize</code> returns:</p>
+<div class="highlight"><pre><span></span><code>record A { "x": string }
+record Top { "a": A, "b": A }
+root Top
+</code></pre></div>
+<hr />
+<h2 id="69-extracts-keep">6.9 <code>extract(S, keep)</code><a class="headerlink" href="#69-extracts-keep" title="Permanent link">&para;</a></h2>
+<p>Given a set of permissible labels, <code>extract</code> returns the minimal subschema that
+recognizes only Documents built from those labels. This is the paper's
+<code>ExtractSubschema</code>; its headline application there was trimming a large shared
+industry schema down to what one document type actually needs.</p>
+<p>Steps:</p>
+<ol>
+<li>For every record, delete any field whose label is not in <code>keep</code>.</li>
+<li>If a deleted field was mandatory (<code>min &gt;= 1</code>), that record is <strong>invalidated</strong>.
+   No document can be built at that record's shape without a label that is no
+   longer available.</li>
+<li>Propagate. A record with a mandatory field typed to an invalidated record is
+   itself invalidated. Least fixpoint, same shape as §6.4.</li>
+<li>If the root is invalidated, there is no valid subschema for this <code>keep</code> set.
+   <code>extract</code> MUST fail with an error naming the first offending label and
+   record, so the failure is actionable.</li>
+<li>Otherwise run the result through <code>prune</code> and then <code>normalize</code>, landing in the
+   same canonical form <code>normalize</code> produces everywhere else.</li>
+</ol>
+<p><strong>Deleting a mandatory field is an error, not a silent relaxation.</strong> An
+implementation MUST NOT relax the deleted field to optional instead. Doing so
+would make <code>extract</code> return a schema weaker than the input rather than a
+subschema of it, and it would hide what is far more often a mistake in the
+caller's <code>keep</code> set than an intended change. A caller who wants the relaxed
+behavior can edit cardinalities before calling <code>extract</code>.</p>
+<div class="highlight"><pre><span></span><code>function extract(S, keep):
+    trimmed     = {}                        # name -&gt; Record, fields filtered
+    invalidated = {}                        # set of record names
+    first_bad   = none                      # (label, record_name), for the error message
+
+    for (name, rec) in S.env:               # step 1 + 2
+        kept = []
+        for f in rec.fields:
+            if f.label in keep:
+                append f to kept
+            else if f.min &gt;= 1:
+                if first_bad is none: first_bad = (f.label, name)
+                add name to invalidated
+        trimmed[name] = Record(kept)
+
+    repeat until no change:                 # step 3: propagate, least fixpoint
+        for (name, rec) in trimmed:
+            if name in invalidated: continue
+            for f in rec.fields:
+                if f.min &gt;= 1 and f.type is Ref and f.type.name in invalidated:
+                    add name to invalidated
+                    break
+
+    if S.root.name in invalidated:          # step 4
+        (label, record_name) = first_bad
+        fail: "removing label " + label + " deletes a mandatory field of " + record_name
+
+    new_env = {}                            # step 5: drop invalidated records and
+    for (name, rec) in trimmed:              # any field (mandatory or not) still
+        if name in invalidated: continue     # pointing at one
+        fields = [f for f in rec.fields
+                  if not (f.type is Ref and f.type.name in invalidated)]
+        new_env[name] = Record(fields)
+
+    return normalize(prune(Schema(Ref(S.root.name), new_env)))
+</code></pre></div>
+<p><code>first_bad</code> records the <em>first</em> offender encountered during step 1's single
+pass over <code>S.env</code> in declaration order — not the first one propagation later
+discovers. Implementations MUST report this one specifically, so that two
+implementations facing the same input produce the same error message.</p>
+<p><strong>Worked example.</strong> With the <code>Root</code>/<code>Order</code>/<code>Address</code>/<code>LineItem</code> schema from
+<a href="../03-schema-model/#31-mental-model">§3.1</a>:</p>
+<ul>
+<li><code>extract(S, {"order", "id", "status", "total", "address", "street", "city",
+  "items", "sku", "qty", "price"})</code> succeeds and returns a schema with <code>coupon</code>
+  gone. <code>coupon</code> is optional, so dropping it invalidates nothing.</li>
+<li><code>extract(S, {"order", "id", "status", "street", "city", "sku", "qty",
+  "price"})</code> fails: <code>Order.total</code>, <code>Order.address</code>, and <code>Order.items</code> are all
+  mandatory and none of their labels is in <code>keep</code>, so <code>Order</code> is invalidated.
+  <code>Address</code> and <code>LineItem</code> are unaffected here — every one of their own
+  fields (<code>street</code>/<code>city</code>, <code>sku</code>/<code>qty</code>/<code>price</code>) is in <code>keep</code>, so step 1 never
+  touches them. Per <code>first_bad</code>'s declaration-order rule above, the reported
+  offender is specifically <code>total</code> — it's declared before <code>address</code> and
+  <code>items</code> in <code>Order</code>, so step 1's single pass reaches it first. <code>Root.order</code>
+  is mandatory and points at <code>Order</code>, so <code>Root</code> — the root — is invalidated
+  in turn.</li>
+</ul>
+<p><strong><code>first_bad</code> is a single pass over the <em>whole</em> environment, not scoped to
+  one record — this matters, and the example above is deliberately
+  constructed to avoid it.</strong> Drop <code>keep</code> down to just <code>{"order"}</code> on the same
+  schema instead, and every field of every record is now unkept: <code>Address</code>
+  (declared first in <code>env</code>) is invalidated before step 1 even reaches
+  <code>Order</code>, so <code>first_bad</code> is <code>street</code>/<code>Address</code>, not anything about <code>Order</code>
+  at all — confirmed against the reference implementation. <code>Order</code>'s own
+  field order only decides the winner when <code>Order</code> is the <em>first</em> record
+  step 1 invalidates; when an earlier-declared record is invalidated too,
+  it wins regardless of what <code>Order</code> looks like internally.</p>
+<p>A real schema makes the same operation more concrete: extracting
+<a href="../examples/pyproject/pyproject.osd"><code>pyproject.osd</code></a> down to just its
+<code>[project.name]</code>/<code>[project.version]</code> fields drops every <code>any</code>-typed field
+along the way — <code>readme</code>, <code>license</code>, and the open-key-set sections all
+disappear from the result, since <code>keep</code> never named their labels. The
+mandatory-field invalidation rule above applies identically whether the
+dropped field was a plain scalar or an <code>any</code>.</p>
+<hr />
+<h2 id="610-infersamples">6.10 <code>infer(samples)</code><a class="headerlink" href="#610-infersamples" title="Permanent link">&para;</a></h2>
+<p><code>infer</code> drafts a schema that accepts a set of sample Documents. It is a
+convenience for getting started, not part of the algebra's decidability story,
+and its output is expected to be edited by a human.</p>
+<p>Rules:</p>
+<ul>
+<li>A label present in every sample exactly once becomes <code>[1,1]</code>.</li>
+<li>A label absent from some samples becomes <code>[0,1]</code>.</li>
+<li><strong>A label seen more than once in any sample becomes <code>[0,]</code></strong> — cardinality
+  <code>min = 0</code>, not the observed minimum count. <code>infer</code> is permissive on array
+  length by design: it drafts a schema loose enough that a plausible sixth
+  sample with a shorter (or empty) array wouldn't need hand-editing just to
+  keep passing. Do not infer <code>min</code> from the smallest count seen; that is a
+  common and wrong assumption to carry over from validating a fixed sample set.</li>
+<li>Scalar children become one scalar kind, nullable if any sample was <code>null</code>.</li>
+<li>Samples disagreeing on scalar kind are an error, with one exception:
+  <code>integer</code> mixed with <code>number</code> collapses to <code>number</code>. That exception exists
+  because it is the one subtyping relation the model has (§6.3).</li>
+<li>Node children become nested named records, recursively. Since the model has
+  no inline records, generated names are derived from the label and MUST be
+  made unique.</li>
+</ul>
+<p><strong><code>allow_any</code> — the two cases, both specified.</strong> By default (<code>allow_any =
+false</code>), a field <code>infer</code> cannot reduce to one precise type is a hard failure
+— opening a field to <code>any</code> is a decision an author makes deliberately, never
+one the tool makes silently on their behalf. An implementation MAY offer an
+opt-in mode (<code>allow_any = true</code>) that instead opens exactly that one field to
+<code>any</code> and <em>reports having done so</em> — a location and a reason, one entry per
+opening, never silent. Both modes share the same traversal; only the two
+failure points below branch on <code>allow_any</code>.</p>
+<div class="highlight"><pre><span></span><code>struct AnyFallback:
+    location   # "RecordName.label"
+    reason     # "mixes objects and values" | "values of more than one scalar kind (k1, k2, ...)"
+
+function infer_with_report(samples, root_name = "Root", allow_any = false):
+    if samples is empty: fail: "cannot infer a schema from zero samples"
+    for s in samples:
+        if s is not a node: fail: "infer expects object (record) samples at the root"
+    env = {}
+    used = {}                                # names already assigned, for uniqueness
+    fallbacks = []                           # one AnyFallback per any-opened field
+    infer_record(samples, root_name, env, used, allow_any, fallbacks)
+    return Schema(Ref(root_name), env), fallbacks   # schema NOT normalized -- see below
+
+function infer(samples, root_name = "Root", allow_any = false):
+    (schema, fallbacks) = infer_with_report(samples, root_name, allow_any)
+    return schema                            # convenience wrapper; report discarded
+
+function infer_record(nodes, name, env, used, allow_any, fallbacks):
+    add name to used
+    # Pass 1: collect every label that appears in ANY sample, in first-seen
+    # order across samples. Pass 2: for every sample, count every label from
+    # pass 1, defaulting to 0 if absent. Two passes, not one, so a label
+    # missing from sample 1 but present in sample 5 still comes out [0,1] --
+    # the result must not depend on which sample happens to be examined first.
+    order = []
+    for node in nodes:
+        for (label, _) in node.edges:
+            if label not seen before: append label to order
+
+    children = { label: [] for label in order }        # label -&gt; list of child values
+    per_sample_counts = { label: [] for label in order } # label -&gt; list of one count per sample
+    for node in nodes:
+        counts_here = {}
+        for (label, child) in node.edges:
+            append child to children[label]
+            counts_here[label] = counts_here.get(label, 0) + 1
+        for label in order:
+            append counts_here.get(label, 0) to per_sample_counts[label]
+
+    fields = []
+    for label in order:
+        counts = per_sample_counts[label]
+        if max(counts) &gt; 1:
+            cmin, cmax = 0, unbounded          # array: permissive, see rule above
+        else:
+            cmin, cmax = min(counts), 1        # 0 or 1 across samples -&gt; optional/required
+        typ = infer_type(children[label], label, name, env, used, allow_any, fallbacks)
+        append Field(label, typ, cmin, cmax) to fields
+    env[name] = Record(fields)
+
+function infer_type(child_values, label, record_name, env, used, allow_any, fallbacks):
+    if all child_values are nodes:
+        rec_name = unique_name_from(label, used)
+        infer_record(child_values, rec_name, env, used, allow_any, fallbacks)
+        return Ref(rec_name)
+    if some but not all child_values are nodes:
+        if allow_any:
+            append AnyFallback(record_name + "." + label, "mixes objects and values") to fallbacks
+            return Any
+        fail: "label " + label + " mixes objects and values; cannot infer one type"
+    kinds = {}
+    saw_null = false
+    for v in child_values:
+        if v is null: saw_null = true
+        else: add value_kind(v) to kinds
+    if "number" in kinds: remove "integer" from kinds   # the one subtype relation, §6.3
+    if kinds is empty: return Scalar("string", nullable = saw_null)  # no non-null sample
+    if size(kinds) &gt; 1:
+        if allow_any:
+            reason = "values of more than one scalar kind (" + join(sort(kinds), ", ") + ")"
+            append AnyFallback(record_name + "." + label, reason) to fallbacks
+            return Any
+        fail: "label " + label + " has values of more than one scalar kind"
+    return Scalar(the one kind in kinds, nullable = saw_null)
+</code></pre></div>
+<p><strong>Worked example.</strong> Two samples for the same label, <code>"id"</code>, disagreeing on
+scalar kind — one sample has <code>"id": 7</code>, the other <code>"id": "seven"</code> (integer
+vs. string, not the one sanctioned integer/number subtype relation):</p>
+<ul>
+<li><code>infer(samples)</code> (default, <code>allow_any = false</code>): fails —
+  <code>label "id" has values of more than one scalar kind</code>.</li>
+<li><code>infer_with_report(samples, allow_any = true)</code>: succeeds. The returned
+  schema has <code>"id": any</code>, and the returned <code>fallbacks</code> list contains exactly
+  one <code>AnyFallback("Root.id", "values of more than one scalar kind (integer, string)")</code>.
+  <code>infer(samples, allow_any = true)</code> (the plain wrapper) returns the same
+  schema but discards the fallback list — a caller who wants to know what was
+  opened MUST call <code>infer_with_report</code> directly.</li>
+</ul>
+<p>Two requirements:</p>
+<p><strong><code>infer</code> MUST NOT normalize its output.</strong> The raw result keeps a one-to-one
+correspondence between sample labels and generated record names, which is what
+makes it readable and hand-editable. It may therefore contain structurally
+identical duplicate records. A caller who wants the canonical form calls
+<code>normalize</code> explicitly.</p>
+<p><strong><code>infer</code> MUST NOT emit <code>any</code> by default.</strong> Opening a field is a decision the
+author makes, never one the tool makes for them. An implementation MAY offer an
+opt-in mode; when it does, it MUST report every opening it introduced, with a
+location and a reason — <code>infer_with_report</code> above, not a silent side channel.</p>
+<p>Samples MUST be node-rooted. Inferring from a bare scalar, or from zero
+samples, is an error.</p>
+<hr />
+<h2 id="611-lints">6.11 <code>lint(S)</code><a class="headerlink" href="#611-lints" title="Permanent link">&para;</a></h2>
+<p><code>lint</code> diagnoses the schema itself. <code>validate</code> checks a document against a
+schema; <code>lint</code> checks a schema for structures that parse fine but can never do
+anything.</p>
+<p><strong><code>lint</code> reports and MUST NOT mutate.</strong> That line is the whole design. <code>prune</code>
+and <code>normalize</code> are the transforms that fix these problems; <code>lint</code> only names
+them.</p>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Severity</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unsatisfiable-record</code></td>
+<td>warning</td>
+<td>A record reachable from the root that no finite Document can match.</td>
+</tr>
+<tr>
+<td><code>unreachable-record</code></td>
+<td>warning</td>
+<td>A record defined in <code>env</code> but not reachable from the root by any reference.</td>
+</tr>
+<tr>
+<td><code>duplicate-record</code></td>
+<td>warning</td>
+<td>One finding per oversized equivalence-class block, naming every record in it. Not one finding per record name.</td>
+</tr>
+<tr>
+<td><code>any-field</code></td>
+<td>info</td>
+<td>An inventory entry for every <code>any</code>-typed field, so a human can audit the schema's openings.</td>
+</tr>
+</tbody>
+</table>
+<p>Computation:</p>
+<ul>
+<li><code>unsatisfiable-record</code> is the reachable set minus the satisfiable set.</li>
+<li><code>unreachable-record</code> uses a plain reachability walk that follows <strong>every</strong>
+  reference-typed field regardless of cardinality. A record reachable only
+  through an optional or unsatisfiable field still counts as referenced. This is
+  deliberately different from <code>prune</code>'s reachability, which is language-aware.</li>
+<li><code>duplicate-record</code> uses <code>equivalence_classes</code> on the <strong>raw</strong> schema, so
+  duplicates are reported as authored rather than after pruning. <strong>One finding
+  per block, not one per name.</strong> The block's names, sorted, are joined into a
+  single <code>location</code> string (<code>"Addr, Location"</code>); the message names every
+  member relative to the sorted-minimum representative.</li>
+<li><code>any-field</code> is advisory. It MUST NOT on its own cause a non-zero exit status
+  in a command-line tool.</li>
+</ul>
+<p>Findings MUST be sorted deterministically by <code>(code, location)</code>.</p>
+<div class="highlight"><pre><span></span><code>function lint(S):
+    findings  = []
+    reach     = reachable(S)              # plain walk, defined below -- not prune's walk
+    sat       = satisfiable_set(S)         # §6.4
+
+    for name in (reach - sat):
+        add Finding("unsatisfiable-record", "warning", name) to findings
+
+    for name in (S.env.keys - reach):
+        add Finding("unreachable-record", "warning", name) to findings
+
+    for block in equivalence_classes(S):   # §6.8, run on S as authored -- not pruned first
+        if size(block) &gt; 1:
+            group = sort(block)                      # deterministic representative choice
+            location = join(group, ", ")              # ONE finding per block, not per name
+            keep = group[0]
+            others = join([name for name in group[1:]], ", ")
+            add Finding("duplicate-record", "warning", location) to findings
+            # message names every other member relative to `keep`, the
+            # sorted-minimum representative -- e.g. "records 'B', 'C' are
+            # structurally identical to 'A'; merge them with normalize"
+
+    for (name, rec) in S.env:
+        for f in rec.fields:
+            if f.type is Any:
+                add Finding("any-field", "info", name + "." + f.label) to findings
+
+    sort findings by (code, location)
+    return findings
+
+function reachable(S):
+    seen  = {}
+    stack = [S.root.name]
+    while stack is not empty:
+        name = pop stack
+        if name in seen or name not in S.env: continue
+        add name to seen
+        for f in S.env[name].fields:
+            if f.type is Ref: push f.type.name to stack
+    return seen
+</code></pre></div>
+<p><code>reachable</code> here is deliberately not <code>prune</code>'s reachability. It follows every
+<code>Ref</code>-typed field regardless of cardinality or satisfiability — a record
+reached only through an optional field, or only through a field whose target
+turns out unsatisfiable, still counts as referenced for <code>lint</code>'s purposes. This
+is why <code>unsatisfiable-record</code> and <code>unreachable-record</code> can each fire on records
+<code>prune</code> would have handled differently: <code>lint</code> reports the schema exactly as
+authored, <code>prune</code> transforms it.</p>
+<hr />
+<h2 id="612-termination">6.12 Termination<a class="headerlink" href="#612-termination" title="Permanent link">&para;</a></h2>
+<p>Every operation above terminates on every well-formed schema, including
+recursive ones.</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Why it terminates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>satisfiable_set</code>, <code>is_empty</code></td>
+<td>Monotone least fixpoint over a finite <code>env</code>.</td>
+</tr>
+<tr>
+<td><code>prune</code></td>
+<td>One fixpoint plus one bounded walk.</td>
+</tr>
+<tr>
+<td><code>compatible_with</code>, <code>equivalent</code></td>
+<td>Memoized over pairs of resolved definitions; finitely many pairs. Coinductive assumption breaks cycles.</td>
+</tr>
+<tr>
+<td><code>normalize</code></td>
+<td>Partition refinement strictly increases block count, bounded by the number of records.</td>
+</tr>
+<tr>
+<td><code>extract</code></td>
+<td>Least fixpoint, then <code>prune</code> and <code>normalize</code>.</td>
+</tr>
+<tr>
+<td><code>lint</code></td>
+<td>Reachability walk plus <code>satisfiable_set</code> plus <code>equivalence_classes</code>.</td>
+</tr>
+<tr>
+<td><code>infer</code></td>
+<td>Bounded by the size of the samples, themselves bounded by §2.4.</td>
+</tr>
+</tbody>
+</table>
+<p>This table is the payoff for every refusal in
+<a href="../03-schema-model/#32-what-this-model-refuses-and-why">§3.2</a>. Adding unions,
+enums, or open key sets removes rows from it.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

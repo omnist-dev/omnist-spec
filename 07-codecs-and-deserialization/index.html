@@ -1,0 +1,1534 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/07-codecs-and-deserialization/">
+      
+      
+        <link rel="prev" href="../06-schema-algebra/">
+      
+      
+        <link rel="next" href="../formats/overview/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>7. Codecs & Deserialization - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#7-codecs-and-deserialization" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              7. Codecs & Deserialization
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-document-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-oml-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-schema-algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#71-two-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Two stages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#72-materialization-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Materialization rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7.2 Materialization rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#721-materializenode-schema-pseudocode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2.1 materialize(node, schema) — pseudocode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#73-writing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Writing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7.3 Writing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#731-writenode-format-pseudocode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3.1 write(node, format) — pseudocode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#74-format-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Format reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#75-per-format-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 Per-format pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-conformance-and-errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-divergence-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#71-two-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Two stages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#72-materialization-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Materialization rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7.2 Materialization rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#721-materializenode-schema-pseudocode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2.1 materialize(node, schema) — pseudocode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#73-writing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Writing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7.3 Writing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#731-writenode-format-pseudocode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3.1 write(node, format) — pseudocode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#74-format-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Format reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#75-per-format-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.5 Per-format pages
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="7-codecs-and-deserialization">7. Codecs and deserialization<a class="headerlink" href="#7-codecs-and-deserialization" title="Permanent link">&para;</a></h1>
+<h2 id="71-two-stages">7.1 Two stages<a class="headerlink" href="#71-two-stages" title="Permanent link">&para;</a></h2>
+<p>Reading a document is two separate operations, and keeping them separate is
+normative.</p>
+<pre class="mermaid"><code>graph LR
+    text["format text"] --&gt; parse["stage 1: parse"]
+    parse --&gt; untyped["untyped Document"]
+    schema["schema (optional)"] --&gt; mat["stage 2: materialize"]
+    untyped --&gt; mat
+    mat --&gt; typed["typed Document"]</code></pre>
+<p><strong>Stage 1: parse.</strong> Turn format text into a Document. No schema is involved. The
+result carries whatever types the format itself distinguishes — JSON has no date
+type, so an ISO-8601 date arrives as a string. Stage 1 MUST be total with
+respect to the schema: it never consults one and never fails because of one.</p>
+<p><strong>Stage 2: materialize.</strong> Walk the untyped Document together with a schema,
+upgrading leaves to the declared types, and check record shape in the same pass.</p>
+<p>Stage 2 is optional. With no schema, the Document is returned exactly as read,
+untouched. There is no third mode. Implementations MUST NOT offer a <code>strict</code>
+switch: either a schema is supplied and the result is guaranteed to conform, or
+one is not and nothing is checked.</p>
+<p><strong>XML is the one documented exception to "stage 1 never consults a schema."</strong>
+Every other format Omnist reads has <em>some</em> native way to write a typed
+literal — JSON/YAML/TOML numbers and booleans, OML/OSD's own grammar — so a
+leaf arriving as a string in those formats reflects the author's actual
+choice: they wrote a string, not a number, and materialization respects
+that (§7.2). XML has no typed-literal syntax at all; <code>&lt;qty&gt;3&lt;/qty&gt;</code> and
+<code>&lt;sku&gt;3&lt;/sku&gt;</code> are lexically identical, and a reader cannot tell "the
+author meant an integer" from "the author meant the string <code>3</code>" without
+outside information. The schema is the only source of that information XML
+has. So: an XML reader given a schema MAY consult it to pre-type a leaf's
+text into the scalar kind stage 1 would otherwise have been unable to
+produce — using exactly the same value-exact rules §7.2 defines for
+materialization (a text leaf becomes <code>integer</code>/<code>number</code>/<code>boolean</code> only when
+its text is an exact, unambiguous literal of that kind; anything else stays
+a string and is left for the standard stage 2 shape/cardinality check to
+accept or reject). This pretyping step is not stage 1 in the sense every
+other format's stage 1 is — it exists only because XML's stage 1 has
+strictly less information than every sibling format's stage 1 does, and it
+never substitutes for stage 2's record-shape and cardinality checking, which
+still runs afterward exactly as it does for every other format. No other
+format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
+after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
+rule.</p>
+<h2 id="72-materialization-rules">7.2 Materialization rules<a class="headerlink" href="#72-materialization-rules" title="Permanent link">&para;</a></h2>
+<p>Materialization upgrades a leaf <strong>only when the conversion is value-exact.</strong></p>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Upgraded?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"2024-01-01"</code></td>
+<td><code>date</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>"12:30:00"</code></td>
+<td><code>time</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>"2024-01-01T12:30:00"</code></td>
+<td><code>datetime</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>1.0</code></td>
+<td><code>integer</code></td>
+<td>Yes — value-exact</td>
+</tr>
+<tr>
+<td><code>1.5</code></td>
+<td><code>integer</code></td>
+<td>No. Error.</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td><code>number</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>"1"</code></td>
+<td><code>integer</code></td>
+<td>No. Error. A string is not a number.</td>
+</tr>
+<tr>
+<td><code>"maybe"</code></td>
+<td><code>boolean</code></td>
+<td>No. Error.</td>
+</tr>
+</tbody>
+</table>
+<p>The rule is one sentence: a conversion is permitted when it loses nothing and
+invents nothing. String-to-number coercion invents; float-to-int truncation
+loses. Neither happens.</p>
+<p><strong>A <code>number</code>-typed field always materializes to a host float, never a
+host integer</strong> — regardless of whether the source value looked whole. <code>1 -&gt;
+number</code> yields a float-typed <code>1.0</code>, not an integer-typed <code>1</code>, even though
+both represent the same value exactly. This is the reverse direction of the
+<code>1.0 -&gt; integer</code> row above, and it's easy to miss since the table shows the
+result as <code>Yes</code> without stating the target representation explicitly.</p>
+<p>At an <code>any</code>-typed field, materialization stops. The subtree passes through
+untouched and no leaf beneath it is upgraded.</p>
+<p>Materialization MUST collect <strong>every</strong> problem it finds, not stop at the first,
+and report them together. Each entry carries a path, a code, and a message. See
+<a href="../08-conformance-and-errors/">chapter 8</a>.</p>
+<blockquote>
+<p>Materialization cannot be implemented as "validate, then convert."
+<code>validate</code> checks a value already in its final form and has no notion of
+upgrading. Since materialization already knows, at every node, which field and
+type the schema expects there, upgrading and shape-checking happen in one pass.</p>
+</blockquote>
+<h3 id="721-materializenode-schema-pseudocode">7.2.1 <code>materialize(node, schema)</code> — pseudocode<a class="headerlink" href="#721-materializenode-schema-pseudocode" title="Permanent link">&para;</a></h3>
+<p>Structurally this is <a href="../03-schema-model/#361-validatedocument-schema-pseudocode">§3.6.1</a>'s
+<code>validate</code> with every leaf replaced by its upgrade result instead of discarded.
+The two MUST stay in lockstep: whatever this function accepts at a leaf,
+<code>validate</code> must also accept there, and vice versa. They are two different
+projections of the same rule, not two independently tuned rules that happen to
+agree today.</p>
+<div class="highlight"><pre><span></span><code>function materialize(node, S):
+    result = ValidationResult()
+    out = materialize_type(node, S, S.root, "$", result)
+    if not result.ok:
+        fail with every entry in result           # collect-all, not fail-fast
+    return out
+
+function materialize_type(node, S, t, path, result):
+    d = S.resolve(t)
+    if d is Any:
+        return node                                # untouched; nothing beneath upgraded
+    if d is Scalar:
+        return materialize_scalar(node, d, path, result)
+    return materialize_record(node, S, d, path, result)
+
+function materialize_record(node, S, rec, path, result):
+    if node is a leaf:
+        result.add(path, "shape-mismatch", "expected an object, got a value")
+        return node                                 # unchanged; caller will fail on result
+    out = []
+    counts = {}
+    for (label, child) in node.edges:
+        i = counts.get(label, 0)
+        counts[label] = i + 1
+        child_path = path + "." + label + (("[" + i + "]") if i &gt; 0 else "")
+        f = rec.field(label)
+        if f is none:
+            result.add(child_path, "unexpected-field", "field not declared on this record")
+            append (label, child) to out            # kept as-is; not dropped
+        else:
+            append (label, materialize_type(child, S, f.type, child_path, result)) to out
+    for f in rec.fields:
+        c = counts.get(f.label, 0)
+        if c &lt; f.min or not le(c, f.max):
+            result.add(path, "cardinality",
+                        "field " + f.label + " occurs " + c + " time(s), "
+                        + "expected [" + f.min + "," + f.max + "]")
+    return out
+
+function materialize_scalar(value, s, path, result):
+    if value is a node:
+        result.add(path, "shape-mismatch", "expected a " + s.kind + " value, got an object")
+        return value
+    if value is null:
+        if not s.nullable:
+            result.add(path, "null-not-allowed", "null not allowed here")
+        return value                                 # null is never converted further
+    upgraded = try_upgrade(value, s.kind)             # value-exact only; see table above
+    if upgraded is defined:
+        return upgraded
+    result.add(path, "type-mismatch",
+                "cannot be read as " + s.kind + " (not a value-exact conversion)")
+    return value                                       # unchanged; caller will fail on result
+
+function try_upgrade(value, kind):
+    # boolean is never treated as an integer or a number, in either direction,
+    # even though some host languages consider bool a subtype of int.
+    if kind == "string":   return value if value is a string else undefined
+    if kind == "boolean":  return value if value is a boolean else undefined
+    if kind == "integer":
+        if value is an integer:                    return value
+        if value is a float and value is integral:  return int(value)
+        return undefined
+    if kind == "number":
+        if value is an integer or a float:          return float(value)
+        return undefined
+    if kind in {"date", "time", "datetime"}:
+        # value MUST already be in the exact spelling matches_kind() accepts
+        # for this kind (chapter 4, docs/formats/) -- not merely parseable by a
+        # looser library function. A bare date string never upgrades to
+        # datetime and vice versa; the two shapes are disjoint by construction.
+        if value is a string and value matches kind's ISO spelling exactly:
+            return parse(value, kind)
+        return undefined
+    return undefined
+</code></pre></div>
+<p><strong>Materialization never invents and never loses.</strong> <code>1.0 -&gt; integer 1</code> is
+value-exact; <code>1.5 -&gt; integer</code> is not, and is an error, not a truncation.
+<code>"1" -&gt; integer</code> is not attempted at all: a string is never upgraded to a
+numeric kind by this stage regardless of its contents, because doing so
+would make materialization behave differently depending on which format
+produced the untyped Document, and format-independence (§2.1) is not
+optional. <strong>This is the general rule for every leaf that reached stage 2
+still a string because its source format could have written something
+else and didn't.</strong> It does not apply to a leaf XML's schema-aware pretyping
+already converted before this stage ran (§7.1's documented exception) —
+that pretyping used these exact value-exact rules itself, at the one point
+where a format has no other way to signal type at all. By the time stage 2
+runs, an XML-sourced leaf that's still a string is a string for the same
+reason any other format's is: nothing pretyped it, so §7.2 treats it
+identically to a JSON/YAML/TOML/OML/OSD string. There is no second,
+looser numeric-coercion path inside stage 2 itself, for any format.</p>
+<p>Everything under an <code>any</code> field is skipped by <code>materialize_type</code>'s first
+branch, at every depth — an <code>any</code> field one level deep and one a hundred
+levels deep behave identically: nothing beneath either is inspected.</p>
+<h2 id="73-writing">7.3 Writing<a class="headerlink" href="#73-writing" title="Permanent link">&para;</a></h2>
+<p>Writing is the reverse projection, and it is <strong>schema-free by design</strong>.</p>
+<p>A writer MUST NOT accept a schema. Its job is to serialize the Document exactly
+as it is. Schema awareness is one-directional, on the read side only.</p>
+<p><strong>Grouping.</strong> Edges sharing a label are grouped into one key, regardless of
+position: <code>[(m,A),(x,X),(m,B)]</code> writes as <code>{"m":[A,B], "x":X}</code>. Within-label
+order is preserved. Cross-label interleaving is lost, because no format in the
+JSON family (JSON, YAML, TOML) can express it — only OML and XML preserve it —
+and a writer that loses it MUST report <code>format.interleaving-lost</code>
+(<a href="../08-conformance-and-errors/#838-format-codec-adjustments">§8.3.8</a>).</p>
+<p><strong>The count-1 rule.</strong> A label appearing exactly once MUST be written as a bare
+value. A label appearing more than once MUST be written as a list. This is
+forced: a one-element list and a single value are the same Document — one edge —
+so the Document alone cannot tell them apart, and the writer has no schema to
+ask.</p>
+<p>That asymmetry is real and worth stating outright. <code>{"tag": ["x"]}</code> reads to one
+edge and writes back as <code>{"tag": "x"}</code>. The Document is unchanged; the text is
+not.</p>
+<h3 id="731-writenode-format-pseudocode">7.3.1 <code>write(node, format)</code> — pseudocode<a class="headerlink" href="#731-writenode-format-pseudocode" title="Permanent link">&para;</a></h3>
+<p>Both rules above, formalized to match the pseudocode style used everywhere
+else in this spec:</p>
+<div class="highlight"><pre><span></span><code>function write(node, format):
+    if node is a leaf:
+        return format.render_scalar(node.value)
+
+    groups = ordered_map()                    # label -&gt; list of children, first-seen order
+    for (label, child) in node.edges:
+        groups[label].append(child)
+
+    out = ordered_map()
+    for (label, children) in groups:
+        if len(children) == 1:
+            out[label] = write(children[0], format)      # bare value
+        else:
+            out[label] = [write(c, format) for c in children]  # list
+
+    return format.render_node(out)
+</code></pre></div>
+<p><code>groups</code> MUST preserve first-seen label order (the order §7.3's grouping rule
+already requires) and, within a label, the children's original edge order.
+Neither rule above is new; this section only gives them a pseudocode form
+consistent with <code>validate</code> (§3.6.1), <code>materialize</code> (§7.2.1), and the schema
+algebra (chapter 6) — there is no ambiguity being resolved here, only a
+presentational gap being closed.</p>
+<h2 id="74-format-reports">7.4 Format reports<a class="headerlink" href="#74-format-reports" title="Permanent link">&para;</a></h2>
+<p>A reader or writer SHOULD be able to report the adjustments a given conversion
+would make — a temporal value stringified, a non-string scalar stringified,
+cross-label interleaving lost — without performing it. This is what makes
+lossiness auditable ahead of time rather than discovered afterward.</p>
+<p>The report's contents are format-specific. Its codes belong to the <code>format.*</code>
+family in <a href="../08-conformance-and-errors/#838-format-codec-adjustments">§8.3.8</a>,
+which is new material and which no implementation currently emits. Note that
+not every <code>format.*</code>-adjacent behavior belongs in this report: a value that
+<code>format.*</code> now rejects outright as <code>write.unsupported-value</code> (§8.3.9) —
+an illegal-character label, an unrepresentable null, a special float, an
+empty internal node — is a write <strong>failure</strong>, not a lossy-but-successful
+adjustment, so it has nothing to preview here.</p>
+<h2 id="75-per-format-pages">7.5 Per-format pages<a class="headerlink" href="#75-per-format-pages" title="Permanent link">&para;</a></h2>
+<p>The format-by-format mappings that used to sit here as §7.4-7.8 now live in
+<code>docs/formats/</code>, one page per format. Each page states that format's mapping to
+and from the Document model and its current per-implementation parity gaps.</p>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../formats/overview/">Format overview</a></td>
+<td>The index, and what each format can and cannot express</td>
+</tr>
+<tr>
+<td><a href="../formats/json/">JSON</a></td>
+<td>Objects, keyed lists, no temporal types, no <code>NaN</code></td>
+</tr>
+<tr>
+<td><a href="../formats/yaml/">YAML</a></td>
+<td>Mappings, sequences, aliases, resolver-typed scalars</td>
+</tr>
+<tr>
+<td><a href="../formats/toml/">TOML</a></td>
+<td>Tables, array-of-tables, native temporals, no <code>null</code></td>
+</tr>
+<tr>
+<td><a href="../formats/xml/">XML</a></td>
+<td>Elements, interleaving, dropped attributes and namespaces</td>
+</tr>
+<tr>
+<td><a href="../formats/oml/">OML</a></td>
+<td>The native format; the Document model as syntax</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
