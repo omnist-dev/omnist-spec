@@ -51,6 +51,30 @@ table, compare `expect` against your result per
 (message text never compared; diagnostics compare as a set of `(path,
 code)`, never severity; no partial matching).
 
+**A trap specific to temporal scalars, found the hard way (omnist-spec#51).**
+A vector's `expect.document` `value` field for a `date`/`time`/`datetime`
+scalar MUST already be written in your own format's canonical spelling — not
+just any string that happens to be semantically equivalent to the source
+text. This matters because two equally valid comparison strategies exist and
+disagree on what "equivalent" means: an implementation with a native temporal
+type (Python's reference `omnist`, comparing parsed `datetime` objects) treats
+`"2024-01-01T10:30+05:30"` and `"2024-01-01T10:30:00+05:30"` as the identical
+value, since a missing `:SS` and an explicit `:00` describe the same instant.
+An implementation whose `Scalar::Datetime` (or equivalent) holds the
+canonical *string* the reader produced, with no native temporal type behind
+it, compares those two spellings as literally different strings — and if your
+reader canonicalizes a missing `:SS` to `:00` on read (a legitimate, common
+design choice), only one of the two spellings will ever match. A vector
+authored and tested only against a native-temporal-type implementation can
+pass there while being subtly wrong for a string-backed one, with nothing
+in the vector's own JSON signaling which convention it assumed. If you hit a
+single, otherwise-inexplicable failure on an isolated happy-path temporal
+vector while everything else in the same batch passes, check the vector's
+`value` field against its own file's other temporal vectors for exactly this
+kind of un-canonicalized omission before assuming your reader is wrong — and
+file it against this repo if it's a genuine vector defect rather than
+reworking your reader to match one outlier vector.
+
 ## CLI wrapper, or direct library calls?
 
 `omnist` (Python) uses a CLI wrapper for track 1, because a real, already-existing

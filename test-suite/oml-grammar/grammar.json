@@ -679,14 +679,14 @@
               {
                 "scalar": {
                   "kind": "datetime",
-                  "value": "2024-01-01T10:30+05:30"
+                  "value": "2024-01-01T10:30:00+05:30"
                 }
               }
             ]
           ]
         }
       },
-      "comment": "A legitimate, in-range offset (e.g. India Standard Time) parses normally -- confirms the tz-offset fix in the vector above doesn't reject valid input, only out-of-range minutes."
+      "comment": "A legitimate, in-range offset (e.g. India Standard Time) parses normally -- confirms the tz-offset fix in the vector above doesn't reject valid input, only out-of-range minutes. The expected value's seconds are canonicalized to :00 even though the source text omits them, matching every sibling OML-datetime vector's own convention (see date-then-time-lookahead-yields-one-datetime-token above) -- a temporal-scalar value in a parse vector MUST already be in the format's own canonical spelling, not just any value that happens to compare semantically equal, since a string-backed implementation (rather than one with a native temporal type) compares literally. Was originally un-canonicalized here; found and reported as omnist-spec#51 by the Rust port during omnist-rs#165."
     }
   ]
 }
