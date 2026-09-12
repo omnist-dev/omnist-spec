@@ -3,6 +3,25 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.6.0-beta (2026-09-12)
+
+**Normative (minor)** — introduces an **Extensions** mechanism: optional
+capabilities built entirely on Core, versioned and reported independently
+of Core conformance ([Extensions overview](docs/extensions/overview.md)).
+No implementation is required to support any extension to remain
+Core-conformant.
+
+Ships the first extension, **OSD-OML**
+([docs/extensions/osd-oml.md](docs/extensions/osd-oml.md)): a
+Document-shaped, OML-syntax peer to OSD text for representing a Schema.
+Adds `schema_from_document`, `parse_schema_oml`, `schema_to_document`, and
+`write_schema_oml` to the API surface, and `--from`/`--to osd|osd-oml` to
+every schema-consuming and schema-producing CLI command. `osd` remains the
+unconditional default; the extension is opt-in and changes no existing
+behavior. Two new error codes (`schema.invalid-type`, `schema.unknown-key`)
+cover checks reachable only through OSD-OML's generic OML input, since
+OSD's own grammar makes them structurally impossible in OSD text.
+
 ## v0.5.0-beta (2026-08-30)
 
 **Normative (minor)** — a systematic spec-correctness audit (two
