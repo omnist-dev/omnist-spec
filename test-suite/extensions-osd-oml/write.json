@@ -1,0 +1,46 @@
+{
+  "vectors": [
+    {
+      "name": "extensions-osd-oml/write/worked-example-produces-canonical-oml",
+      "spec": "docs/extensions/osd-oml.md#e14-worked-example",
+      "operation": "write_schema_oml",
+      "purpose": "happy-path",
+      "input": {
+        "schema": "record Address {\n    \"street\": string,\n    \"city\": string,\n}\nrecord Person {\n    \"name\": string,\n    \"nickname\" [0,1]: string?,\n    \"address\": Address,\n}\nroot Person\n"
+      },
+      "expect": {
+        "ok": true,
+        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"city\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"Person\"\n  field: { label: \"name\", type: { kind: \"scalar\", name: \"string\" } }\n  field: {\n    label: \"nickname\"\n    cardinality: { min: 0 }\n    type: { kind: \"scalar\", name: \"string\", nullable: true }\n  }\n  field: { label: \"address\", type: { kind: \"ref\", name: \"Address\" } }\n}\nroot: \"Person\"\n"
+      },
+      "comment": "E.14's worked example in the write direction. Combined with extensions-osd-oml/parse/worked-example-round-trips-to-equivalent-osd, this establishes the E.14 round-trip requirement for this schema: parse_schema_oml(write_schema_oml(S)) == S, since write_schema_oml's output here is exactly parse_schema_oml's input there. The canonical writer emits records/fields in declaration order (E.7), omits `cardinality` for exactly-1 (E.5), and omits `nullable` unless true (E.6) -- this vector pins that exact formatting, not just equivalence, since it is the reference for what 'canonical' means for this extension."
+    },
+    {
+      "name": "extensions-osd-oml/write/exactly-one-cardinality-omits-the-edge",
+      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "operation": "write_schema_oml",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"a\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"string\" } }\n}\nroot: \"R\"\n"
+      },
+      "comment": "E.5: the default cardinality (exactly 1, no OSD suffix) is written with the `cardinality` edge omitted entirely, not as `cardinality: {}`. Both are legal to read (E.5's table), but the writer picks one canonical spelling -- omission -- for the common case, the same way it omits `nullable` unless true (E.6)."
+    },
+    {
+      "name": "extensions-osd-oml/write/any-type-has-no-name-edge",
+      "spec": "docs/extensions/osd-oml.md#e6-type",
+      "operation": "write_schema_oml",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"a\": any,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+      },
+      "comment": "E.6: `any` is written as `{ kind: \"any\" }` with no `name` edge -- `Type.name` is [0,1], absent for `any` (E.8's table)."
+    }
+  ]
+}
