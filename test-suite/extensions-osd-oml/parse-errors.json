@@ -66,7 +66,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/non-string-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e11-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -82,7 +82,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/empty-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e11-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -114,7 +114,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-record-name-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e11-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -130,7 +130,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e11-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -146,7 +146,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/reserved-record-name-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e11-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -162,7 +162,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/zero-root-edges-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-meta-schema-design-rule",
+      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -178,7 +178,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-root-edges-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-meta-schema-design-rule",
+      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -210,7 +210,7 @@
     },
     {
       "name": "extensions-osd-oml/parse-errors/unknown-key-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e11-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {

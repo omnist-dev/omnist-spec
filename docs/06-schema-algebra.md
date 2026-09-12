@@ -154,6 +154,12 @@ What it removes:
   never be emitted either;
 - records left unreachable after the above.
 
+Canonical output order: `prune` only removes records and fields, never merges
+or invents any, so per
+[§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
+invariant, the surviving records and fields MUST keep their original
+declaration order.
+
 **The root-unsatisfiable case is special and is normative.** If the root record
 is itself unsatisfiable, field pruning MUST NOT be applied to the root. Its
 mandatory fields are exactly what make it unsatisfiable; stripping them would
@@ -442,6 +448,12 @@ record Top { "a": A, "b": A }
 root Top
 ```
 
+Canonical output order: merging removes any single well-defined "original
+declaration" for a surviving representative, so per
+[§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
+invariant, `normalize`'s output MUST order records by name and fields by
+label, using plain ordinal string comparison.
+
 ---
 
 ## 6.9 `extract(S, keep)`
@@ -463,7 +475,10 @@ Steps:
    `extract` MUST fail with an error naming the first offending label and
    record, so the failure is actionable.
 5. Otherwise run the result through `prune` and then `normalize`, landing in the
-   same canonical form `normalize` produces everywhere else.
+   same canonical form `normalize` produces everywhere else — including its
+   canonical output order
+   ([§3.3](03-schema-model.md#33-formal-definition)): `extract`'s output
+   order is inherited from `normalize`, not computed independently.
 
 **Deleting a mandatory field is an error, not a silent relaxation.** An
 implementation MUST NOT relax the deleted field to optional instead. Doing so
@@ -692,6 +707,17 @@ location and a reason — `infer_with_report` above, not a silent side channel.
 
 Samples MUST be node-rooted. Inferring from a bare scalar, or from zero
 samples, is an error.
+
+**`samples` MUST be an ordered sequence, not a set.** The first-seen-order
+rule above (Pass 1) is only well-defined for an ordered input — passing an
+unordered collection makes the resulting field order unreproducible, which
+is a caller error, not an implementation nondeterminism. Per
+[§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
+invariant, `infer` never merges two different labels into one output
+position (it only aggregates values *within* one already-positioned label
+across samples), so its output order MUST follow this first-seen order —
+the same category as `parse_schema` preserving declaration order, just
+derived from sample documents instead of source text.
 
 ---
 

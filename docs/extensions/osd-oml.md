@@ -83,7 +83,7 @@ hand authoring.
 can never appear is indistinguishable from an undeclared one, and OSD does
 not permit two spellings of the same thing. OSD-OML inherits this
 prohibition directly: `{ min: 0, max: 0 }` MUST be rejected by the
-semantic-validation layer (§E.11) with the same code.
+semantic-validation layer ([§E.10](#e10-structural-vs-semantic-validation)) with the same code.
 
 Absent `cardinality` edge and `{}` (present-but-empty) both mean the default
 — deliberately, to avoid two similar-looking forms meaning different things.
@@ -145,14 +145,14 @@ root: "Person"
 Repeated `record` and `field` OML labels use ordinary OML array-sugar
 ([§4.3.1](../04-oml-grammar.md)) — no special syntax.
 
-**Record/field order is not semantically significant.** A schema is a set of
-records/fields, not a sequence — OSD text itself already permits
-declarations in any order. The canonical *writer* still picks a
-deterministic order (original declaration order) purely for reproducible
-output, not because order carries meaning. Consequence: raw Document
-equality is *stricter* than schema equivalence — comparing two
-Schema-Documents for real requires materializing to `Schema` first (§E.9),
-not diffing the Documents directly.
+**Record/field order is not semantically significant**, the same as OSD
+text. Canonical serialization order for every Schema-producing operation —
+including `schema_from_document`/`parse_schema_oml` — follows
+[§3.3's canonical serialization order](../03-schema-model.md#33-formal-definition)
+invariant unchanged; this extension states no order rule of its own.
+Consequence: raw Document equality is *stricter* than schema equivalence —
+comparing two Schema-Documents for real requires materializing to `Schema`
+first ([§E.9](#e9-architecture)), not diffing the Documents directly.
 
 Field labels containing `[` or `]` are illegal at the OSD level
 (`schema.bracket-in-label`, [§5.4](../05-osd-grammar.md)) because they can
@@ -161,13 +161,12 @@ the same way it inherits the `[0,0]` ban: the semantic-validation layer MUST
 reject a `field.label` string containing either character, with the same
 code, regardless of surface syntax.
 
-## E.8 Cardinality-on-fields principle (meta-schema design rule)
+## E.8 Cardinality-on-fields principle (Document-shape design rule)
 
 **A field is `[1,1]` only if it's genuinely mandatory in every valid case.
-It's `[0,1]` if it's legitimately absent in some case. The meta-schema
+It's `[0,1]` if it's legitimately absent in some case. The Document shape
 never tries to encode *which* case makes which presence/absence correct** —
-that is always the semantic layer's job (§E.11 lists exactly what it can't
-catch).
+that is always the semantic-validation layer's job ([§E.10](#e10-structural-vs-semantic-validation)).
 
 Applied throughout:
 
@@ -201,42 +200,13 @@ inherit every existing Document-level safety limit (max depth, max node
 count, integer digit caps, [§2.4](../02-document-model.md)) — implementations
 need not build anything new for this.
 
-## E.10 Self-describing meta-schema
+## E.10 Structural vs. semantic validation
 
-The following OSD meta-schema describes the `Type` node's Document shape,
-worked through concretely as the pattern every implementation's internal
-validation MUST follow:
-
-```osd
-record Type {
-    "kind": string,
-    "name" [0,1]: string?,
-    "nullable" [0,1]: boolean?,
-}
-```
-
-What the meta-schema catches: missing required keys, wrong scalar kind on a
-declared key, unknown/extra keys. What it cannot catch, concretely:
-
-- `{ kind: "bogus" }` — passes the meta-schema; OSD cannot restrict `kind`
-  to only `"scalar"`/`"ref"`/`"any"` (no enum support).
-- `{ kind: "any", name: "x" }` — passes; OSD cannot express "this key only
-  makes sense for this kind" (no union support).
-- `{ kind: "ref", name: "Address", nullable: true }` — passes; same reason,
-  `nullable` only makes sense for `scalar`.
-- `{ kind: "scalar", name: "string", nullable: false }` — passes; OSD
-  cannot constrain a boolean to one specific value.
-
-All four cases above still require the semantic-validation layer (§E.11)
-regardless of whether an implementation builds this meta-schema internally.
-"Validates against the meta-schema" MUST NOT be read or documented as "is a
-valid schema" — the meta-schema only enforces syntax-level Document shape.
-
-## E.11 Structural vs. semantic validation
-
-The Document shape (§E.10's meta-schema) only enforces syntax-level
-structure. A separate semantic-validation layer — explicitly not the
-meta-schema — MUST catch everything else:
+There is no separate meta-schema mechanism for OSD-OML's Document shape —
+per [§E.9](#e9-architecture), stage 2 is Core's own shared
+schema-construction validator, the same one OSD text uses, applied to
+generic OML input instead of an OSD parse tree. That validator MUST catch
+everything below:
 
 | Problem | Error code |
 |---|---|
@@ -262,13 +232,7 @@ because OSD's own grammar makes them structurally impossible there (e.g.
 `int` token guarantees it; OSD-OML's `min` is an arbitrary OML value, so the
 check becomes reachable for the first time).
 
-Why this cannot be the meta-schema's job: OSD has no union/enum type and no
-range or cross-field constraints. It cannot express "these values must all
-be distinct," "this number must be ≥ 0," or "this key only makes sense when
-that other key has this value." These are structural limitations of OSD
-itself, not a gap specific to this extension.
-
-## E.12 Validation contract
+## E.11 Validation contract
 
 - **Atomic.** Converting a Schema-Document MUST either succeed with a fully
   valid `Schema`, or fail and produce nothing — never a partial `Schema`.
@@ -292,7 +256,7 @@ itself, not a gap specific to this extension.
   category as method names and builder patterns already permitted to
   differ across implementations.
 
-## E.13 API / CLI surface
+## E.12 API / CLI surface
 
 Since OSD and OSD-OML are peers, not one derived from the other, there is
 no single read/write function that sensibly handles "either" without being
@@ -303,7 +267,7 @@ told which.
 - `parse_schema(text) -> Schema` — existing, OSD text specific, unchanged.
 - `schema_from_document(doc) -> Schema` — new pure conversion primitive.
   Takes an already-parsed Document and applies exactly the semantic layer
-  described in §E.11.
+  described in [§E.10](#e10-structural-vs-semantic-validation).
 - `parse_schema_oml(text) -> Schema` — new convenience wrapper, equal to
   `schema_from_document(read_oml(text))`.
 
@@ -326,7 +290,7 @@ match the format name exactly (`osd-oml`, not a shorthand like `oml`).
 `osd`, unconditionally — matching prior, only-ever-OSD behavior exactly.
 `osd-oml` is always opt-in.
 
-## E.14 Worked example
+## E.13 Worked example
 
 Both directions, for one small schema:
 
@@ -378,7 +342,7 @@ for every valid `Schema` `S`, where `==` means `equivalent(S, S')` per
 [§6.7](../06-schema-algebra.md)'s Schema-equivalence, not raw Document
 equality (§E.7's note on order not being significant).
 
-## E.15 Non-goals
+## E.14 Non-goals
 
 The following are explicitly out of scope for this extension and are not
 implicitly authorized by it:
@@ -394,12 +358,12 @@ implicitly authorized by it:
 - A binary OML encoding of Schema — depends on a binary OML format
   existing at all, which is itself unspecified.
 
-## E.16 Conformance
+## E.15 Conformance
 
 An implementation conforms to this extension when it implements
 `schema_from_document`, `parse_schema_oml`, `schema_to_document`, and
-`write_schema_oml` per §E.5–§E.13, passes the extension's conformance
+`write_schema_oml` per §E.5–§E.12, passes the extension's conformance
 vectors (tagged `osd-oml` in the test suite), and satisfies the round-trip
-requirement (§E.14) for every vector's schema. Extension conformance is
+requirement (§E.13) for every vector's schema. Extension conformance is
 reported independently of Core conformance, per
 [Extensions §Conformance and versioning](overview.md#conformance-and-versioning).

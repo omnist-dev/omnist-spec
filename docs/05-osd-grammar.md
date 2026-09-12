@@ -193,6 +193,9 @@ An OSD writer is canonical if, for every schema, it emits text that parses back
 to an equal schema, and the emitted text is byte-identical across conformant
 implementations. Canonical form:
 
+- record and field order per
+  [§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
+  invariant;
 - one record per `record` block, fields one per line, four-space indent;
 - a trailing comma after every field, including the last;
 - `root` last;

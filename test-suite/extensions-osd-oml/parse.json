@@ -2,7 +2,7 @@
   "vectors": [
     {
       "name": "extensions-osd-oml/parse/worked-example-round-trips-to-equivalent-osd",
-      "spec": "docs/extensions/osd-oml.md#e14-worked-example",
+      "spec": "docs/extensions/osd-oml.md#e13-worked-example",
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
@@ -44,7 +44,7 @@
     },
     {
       "name": "extensions-osd-oml/parse/empty-record-is-legal",
-      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-meta-schema-design-rule",
+      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
       "operation": "parse_schema_oml",
       "purpose": "edge-case",
       "input": {

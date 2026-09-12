@@ -2,7 +2,7 @@
   "vectors": [
     {
       "name": "extensions-osd-oml/write/worked-example-produces-canonical-oml",
-      "spec": "docs/extensions/osd-oml.md#e14-worked-example",
+      "spec": "docs/extensions/osd-oml.md#e13-worked-example",
       "operation": "write_schema_oml",
       "purpose": "happy-path",
       "input": {
