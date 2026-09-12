@@ -12,7 +12,7 @@
         "ok": true,
         "schema": "record Address {\n    \"street\": string,\n    \"city\": string,\n}\nrecord Person {\n    \"name\": string,\n    \"nickname\" [0,1]: string?,\n    \"address\": Address,\n}\nroot Person\n"
       },
-      "comment": "E.14's worked example, the canonical proof case for this extension. Result is expressed as the canonical OSD text write_schema would produce, since record/field declaration order in the OSD-OML source matches OSD's own order (E.7) -- an implementation MAY compare via schema equivalence instead of this exact text, per E.12."
+      "comment": "E.13's worked example, the canonical proof case for this extension. Result is expressed as the canonical OSD text write_schema would produce, since record/field declaration order in the OSD-OML source matches OSD's own order (E.7, per Sec3.3's canonical serialization order invariant) -- an implementation MAY compare via schema equivalence instead of this exact text, per E.11."
     },
     {
       "name": "extensions-osd-oml/parse/cardinality-forms",

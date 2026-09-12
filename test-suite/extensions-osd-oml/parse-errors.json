@@ -14,7 +14,7 @@
           { "path": "R.a", "code": "schema.invalid-cardinality" }
         ]
       },
-      "comment": "E.11: negative cardinality is rejected the same way as OSD text's `[-1]` (osd-grammar/cardinality/negative-minimum-is-invalid-not-a-syntax-error)."
+      "comment": "E.10: negative cardinality is rejected the same way as OSD text's `[-1]` (osd-grammar/cardinality/negative-minimum-is-invalid-not-a-syntax-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/inverted-cardinality-range-is-invalid",
@@ -30,7 +30,7 @@
           { "path": "R.a", "code": "schema.invalid-cardinality" }
         ]
       },
-      "comment": "E.11: min > max is rejected the same way as OSD text's `[1,0]` (osd-grammar/cardinality/inverted-range-is-invalid)."
+      "comment": "E.10: min > max is rejected the same way as OSD text's `[1,0]` (osd-grammar/cardinality/inverted-range-is-invalid)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/zero-zero-cardinality-is-invalid",
@@ -59,10 +59,10 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.invalid-cardinality" }
+          { "path": "R.a", "code": "schema.non-integer-cardinality" }
         ]
       },
-      "comment": "E.11: `min`/`max` not integer-kind has no OSD-text analog -- OSD's grammar's `int` token guarantees the type there, so this check is reachable for the first time through OSD-OML's arbitrary OML input."
+      "comment": "Sec8.3.3: `min`/`max` not integer-kind reuses the existing `schema.non-integer-cardinality` code (previously only reachable via OSD text's own non-integer literal forms) -- OSD's grammar's `int` token guarantees the type there for a different reason (a bound is always a whole number when written), so this is the first input shape where a non-integer *value* in this position is possible at all."
     },
     {
       "name": "extensions-osd-oml/parse-errors/non-string-field-label-is-invalid",
@@ -78,7 +78,7 @@
           { "path": "R", "code": "schema.invalid-type" }
         ]
       },
-      "comment": "E.11: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a new code introduced by this extension (E.11)."
+      "comment": "E.10: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a general Schema-construction code defined in chapter 8, not owned by this extension."
     },
     {
       "name": "extensions-osd-oml/parse-errors/empty-field-label-is-invalid",
@@ -94,7 +94,7 @@
           { "path": "R", "code": "schema.empty-label" }
         ]
       },
-      "comment": "E.11: same rejection as OSD text's empty-string label (osd-grammar/labels/empty-label-is-rejected), inherited unchanged."
+      "comment": "E.10: same rejection as OSD text's empty-string label (osd-grammar/labels/empty-label-is-rejected), inherited unchanged."
     },
     {
       "name": "extensions-osd-oml/parse-errors/bracket-in-field-label-is-invalid",
@@ -126,7 +126,7 @@
           { "path": "R", "code": "schema.duplicate-record" }
         ]
       },
-      "comment": "E.11: two `record` edges naming the same record is rejected the same way as OSD text's duplicate record definition (osd-grammar/reserved-names/duplicate-record-definition-is-an-error)."
+      "comment": "E.10: two `record` edges naming the same record is rejected the same way as OSD text's duplicate record definition (osd-grammar/reserved-names/duplicate-record-definition-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-field-label-is-invalid",
@@ -142,7 +142,7 @@
           { "path": "R", "code": "schema.duplicate-field" }
         ]
       },
-      "comment": "E.11: two `field` edges with the same label within one `record` is rejected the same way as OSD text (osd-grammar/records/duplicate-field-label-in-one-record-is-an-error)."
+      "comment": "E.10: two `field` edges with the same label within one `record` is rejected the same way as OSD text (osd-grammar/records/duplicate-field-label-in-one-record-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/reserved-record-name-is-invalid",
@@ -158,7 +158,7 @@
           { "path": "string", "code": "schema.reserved-name" }
         ]
       },
-      "comment": "E.11: a record named after a scalar keyword is rejected the same way as OSD text (osd-grammar/reserved-names/record-named-after-a-scalar-keyword-is-rejected)."
+      "comment": "E.10: a record named after a scalar keyword is rejected the same way as OSD text (osd-grammar/reserved-names/record-named-after-a-scalar-keyword-is-rejected)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/zero-root-edges-is-invalid",
@@ -222,7 +222,39 @@
           { "path": "R.a", "code": "schema.unknown-key" }
         ]
       },
-      "comment": "E.11: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. New code introduced by this extension, since OSD text has no equivalent surface for stray keys (its grammar has no way to write one)."
+      "comment": "8.3.3: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. `schema.unknown-key` is defined in chapter 8 as a general Schema-construction rule, with no OSD-text analog since its grammar has no way to write a stray key at all."
+    },
+    {
+      "name": "extensions-osd-oml/parse-errors/missing-required-key-is-invalid",
+      "spec": "docs/08-conformance-and-errors.md#833-schema-schema-well-formedness",
+      "operation": "parse_schema_oml",
+      "purpose": "error-case",
+      "input": {
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\" }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "R.a", "code": "schema.missing-key" }
+        ]
+      },
+      "comment": "8.3.3: `field.type` is [1,1] (E.8) but absent here entirely. `schema.missing-key` is a general Schema-construction rule with no OSD-text analog -- OSD's grammar has no production for a field with no type, so this case cannot be written in OSD text at all."
+    },
+    {
+      "name": "extensions-osd-oml/parse-errors/invalid-scalar-name-is-invalid",
+      "spec": "docs/08-conformance-and-errors.md#833-schema-schema-well-formedness",
+      "operation": "parse_schema_oml",
+      "purpose": "error-case",
+      "input": {
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"bogus\" } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          { "path": "R.a", "code": "schema.unknown-type" }
+        ]
+      },
+      "comment": "8.3.3: `schema.unknown-type` already covers 'resolves to neither a scalar nor a defined record' generally -- `bogus` is not one of the seven scalar keywords, so a `kind: \"scalar\"` naming it fails the same way a dangling `ref` does. Not a new code; this vector exercises the existing code's scalar-name half, which OSD text can never reach on its own (its grammar only ever produces one of the seven real keywords in this position)."
     }
   ]
 }

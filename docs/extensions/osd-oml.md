@@ -1,6 +1,9 @@
 # OSD-OML
 
-**Status: normative.** Version 1.0 of this extension.
+**Status: normative.** Version 1.0 of this extension, versioned
+independently of Core per
+[Extensions: Conformance and versioning](overview.md#conformance-and-versioning).
+Depends on Core only.
 
 ## E.1 Summary
 
@@ -212,7 +215,8 @@ everything below:
 |---|---|
 | negative / inverted cardinality | `schema.invalid-cardinality` |
 | `[0,0]` cardinality (§E.5) | `schema.invalid-cardinality` |
-| `min`/`max` not `integer`-kind | `schema.invalid-cardinality` |
+| `min`/`max` not `integer`-kind | `schema.non-integer-cardinality` |
+| a required key is absent (`field.label`, `field.type`, `record.name`, `type.kind`) | `schema.missing-key` |
 | `name`/`label` not `string`-kind | `schema.invalid-type` |
 | empty-string `field.label` | `schema.empty-label` |
 | `[`/`]` in `field.label` (§E.7) | `schema.bracket-in-label` |
@@ -221,16 +225,18 @@ everything below:
 | reserved record name (matches scalar keyword or `any`) | `schema.reserved-name` |
 | zero `root` edges | `schema.no-root` |
 | more than one `root` edge | `schema.duplicate-root` |
-| unresolved reference | `schema.unknown-type` |
+| unresolved `ref` reference, or a `scalar` naming something outside the fixed keyword set | `schema.unknown-type` |
 | unknown/extra keys anywhere | `schema.unknown-key` |
 
-All codes are reused from the existing `schema.*` family
-([§8](../08-conformance-and-errors.md)) except `schema.invalid-type` and
-`schema.unknown-key`, which are new — these checks have no OSD-text analog
+Every code above is defined in [§8.3.3](../08-conformance-and-errors.md#833-schema-schema-well-formedness)
+as a general Schema-construction rule, not something owned by this
+extension — they apply identically regardless of which surface (OSD text
+or OSD-OML) fed the shared validator. `schema.missing-key`,
+`schema.invalid-type`, and `schema.unknown-key` have no OSD-text analog
 because OSD's own grammar makes them structurally impossible there (e.g.
-`min` being non-integer-kind cannot happen in OSD text, since the grammar's
-`int` token guarantees it; OSD-OML's `min` is an arbitrary OML value, so the
-check becomes reachable for the first time).
+a field with no type, or a stray key, cannot be written in OSD text at
+all) — OSD-OML's generic OML input is what makes these checks reachable
+for the first time, not a rule specific to this extension.
 
 ## E.11 Validation contract
 

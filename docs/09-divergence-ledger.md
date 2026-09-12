@@ -168,3 +168,18 @@ Recommended build order, since the dependencies are real:
 
 Steps 1 through 6 are the useful core. An implementation that stops there is
 still worth having.
+
+## 9.6 Extension support
+
+Extension support is tracked separately from Core status (§9.3), since an
+implementation is fully conformant with zero extensions — this table
+records adoption, not conformance gaps.
+
+| | Python | TypeScript | Rust | Go | Java |
+|---|---|---|---|---|---|
+| OSD-OML | not yet implemented | not yet implemented | not yet implemented | not yet implemented | not yet implemented |
+
+A new extension gets a new row here once its spec chapter merges; a port's
+cell updates once it actually implements and passes that extension's
+conformance vectors — same "verified against real state, not carried
+forward" discipline as §9.3.
