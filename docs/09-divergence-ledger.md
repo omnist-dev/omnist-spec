@@ -95,29 +95,43 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last source-audited: 2026-08-30**, directly against each port's own code,
-merged PR history, and (Rust) a live local conformance run — not carried
-forward from a prior edit. All five ports have now closed the full 9-issue
-spec-correctness audit batch filed 2026-08-29/30 (`omnist#322-330`,
-`omnist-ts#125-133`, `omnist-rs#158-166`, `omnist-go#95-103`,
-`omnist-j#87-95`): `[0,0]`-cardinality rejection, empty/bracket-label
-rejection, OML leading-zero rejection, DATE/TIME/DATETIME/tz-offset range
-validation, write-side unconditional failures for unrepresentable values,
-and XML carriage-return escaping. Python (`omnist` PRs #331-334, now 0.9.4),
-TypeScript (`omnist-ts` PR #134, one combined PR, now 0.3.0-alpha), Rust
-(`omnist-rs` PRs #167-170, now 0.2.2-alpha), Go (`omnist-go` PRs #104-109,
-now 0.3.0-alpha), and Java (`omnist-j` PRs #96-100, now 0.2.2-alpha) all
-verified independently, each against its own conformance harness.
+**Last source-audited: 2026-09-13**, directly against each port's own
+merged PR and real CI run — not carried forward from a prior edit. All
+five ports have bumped their `omnist-spec` submodule pin to **v0.7.0-beta**
+(`c4141d0`) and confirmed the 3 new [§3.3](03-schema-model.md#33-formal-definition)
+canonical-serialization-order vectors pass green-on-arrival (no behavior
+change needed anywhere — every port's `prune`/`normalize` already complied,
+per the source-level verification done alongside this bump): Python
+(`omnist` PR #337, merge `7d26a48`), TypeScript (`omnist-ts` PR #142, merge
+`8f4bc99`), Rust (`omnist-rs` PR #174, merge `a850fb3`), Go (`omnist-go` PR
+#112, merge `1f09394`), and Java (`omnist-j` PR #104, merge `85b7be4`).
 
-While implementing this batch, the Rust port found and reported a genuine
-omnist-spec test-suite defect (`omnist-spec#51` — an un-canonicalized
-temporal-scalar value in one happy-path vector, invisible to a
-native-temporal-type harness but a real literal-string mismatch for a
-string-backed one); fixed in commit `830590b`. Verified locally that Rust's
-conformance count moves from 165/1/6 to **166/0/6** once its submodule pin
-picks up that commit — Rust's own PR to bump past `0ac1eac` is still
-pending, so the table below records both the currently-merged count and the
-verified-pending one.
+This bump also brought in the 24 `extensions-osd-oml/*` vectors from
+v0.6.0-beta for the first time. **No port implements OSD-OML yet** (see
+[§9.6](#96-extension-support)) — all 24 are correctly reported as *skips*,
+not failures, per every port's own existing unknown-operation dispatch
+(no harness code needed changing to get this right, except Go, which added
+an explicit skip path citing the tracking issue). Each port filed its own
+"implement OSD-OML" tracking issue as unscheduled future work: Go
+(`omnist-go#111`), Java (`omnist-j#105`), Rust (`omnist-rs#175`); Python
+and TypeScript MAY still file theirs. No port cut a version bump for this round — every
+change was either a pure pin/doc-metadata update (Python, TypeScript,
+Rust) or a test/tooling-only fix (Go's skip-dispatch code, Java's
+conformance-count assertion), and none altered any port's own
+library behavior, so none crossed this project's own
+minor=features/patch=fixes-tooling threshold.
+
+Two ports found and fixed a real, independent bug during this same round,
+unrelated to the pin bump itself but caught in the course of it: Java's
+`SchemaAlgebra.java` and TypeScript's `ops/minimize.ts` both relied on
+their host language's default string comparison (UTF-16 code unit) for
+`normalize`'s alphabetical fallback, disagreeing with codepoint order for
+names containing supplementary-plane characters — closing
+[omnist-spec#54](https://github.com/omnist-dev/omnist-spec/issues/54)'s
+sibling finding. Fixed in `omnist-j` PR #103 and `omnist-ts` PR #137,
+both merged, both with a live test case at the exact U+FFFF/U+10000
+boundary. Python, Rust, and Go were unaffected (codepoint-based or
+UTF-8-byte-order string comparison, both already codepoint-safe).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
@@ -129,13 +143,20 @@ verified-pending one.
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
-| Schema algebra (all 6 ops) | complete | complete | complete | complete | complete |
+| Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors, of 155; Rust/TS/Go of 172, Java of 201 — ahead on the vendored omnist-spec pin) | reference | 124 pass / 0 fail / 48 skip | 165 pass / 1 fail / 6 skip on the merged `0ac1eac` pin (the 1 fail was `omnist-spec#51`, now fixed in `830590b`; verified locally at **166 pass / 0 fail / 6 skip** once Rust's own submodule-bump PR lands) | 170 pass / 0 fail / 2 skip | 201 pass / 0 fail / 0 skip |
-| Conformance (fixtures, of 19) | reference | 19/19 | 19/19 | 19/19 | 19/19 |
+| Conformance (vectors, of 199 — all five ports now on the same v0.7.0-beta pin) | 127 pass / 0 fail / 72 skip | 127 pass / 0 fail / 72 skip | 169 pass / 0 fail / 30 skip | 174 pass / 0 fail / 25 skip | 175 pass / 0 fail / 24 skip |
+| Conformance (fixtures, of 19) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 |
 | Fuzz testing | yes | yes | yes | yes | yes |
-| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 99.6%/99.3%, gated |
+| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
+
+**Skip counts above are not directly comparable across ports** — 24 of
+each port's skips are the shared `extensions-osd-oml/*` vectors (no port
+implements OSD-OML), but the remainder differs for pre-existing,
+independently-tracked reasons: Rust's 6 extra skips and Go's 1 extra skip
+predate this round (see each port's own conformance docs for the specific
+gaps) and are unrelated to this bump.
 
 ## 9.4 Known open divergences
 
