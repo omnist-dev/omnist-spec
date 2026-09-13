@@ -378,9 +378,9 @@ Matching rules, all normative:
 | `infer_with_report` | `{samples, allow_any}` | `{ok, schema, fallbacks}` — `fallbacks` is a list of `{location, reason}`, always present on success (empty when nothing was opened) |
 | `lint` | `{schema}` | `{ok, findings}` — `findings` is a list of `{code, severity, location}`; message text is never compared (§8.5.2 rule 1) so no `message` field is required |
 | `schema_from_document` | `{document}` | `{ok, schema: <canonical OSD text>}` — compared byte for byte, same rule as `parse_schema`'s implicit round-trip (§3.3, principle 1: nothing merges, so declaration order is preserved from the input Document's own edge order) |
-| `parse_schema_oml` | `{text}` | `{ok, schema: <canonical OSD text>}` — same comparison as `schema_from_document`; this operation is `schema_from_document(read_oml(text))`, per [§E.12](extensions/osd-oml.md#e12-api-cli-surface) |
+| `parse_schema_oml` | `{text}` | `{ok, schema: <canonical OSD text>}` — same comparison as `schema_from_document`; this operation is `schema_from_document(read_oml(text))`, per [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
 | `schema_to_document` | `{schema}` | `{ok, document}` — compared as a Document (§8.5.4's canonical encoding), which is order-sensitive per D-1/D-3; this is where §3.3's order principles actually become observable for this direction |
-| `write_schema_oml` | `{schema}` | `{ok, text}` — compared byte for byte as OML text, same rule as `write`'s Document-writer vectors; this is `write_oml(schema_to_document(schema))`, per [§E.12](extensions/osd-oml.md#e12-api-cli-surface) |
+| `write_schema_oml` | `{schema}` | `{ok, text}` — compared byte for byte as OML text, same rule as `write`'s Document-writer vectors; this is `write_oml(schema_to_document(schema))`, per [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
 
 Every operation's failure `expect` is `{ok: false, diagnostics: [...]}`, per
 §8.5.2 — `write` is the only operation where `ok: true` and `diagnostics` can

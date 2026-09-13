@@ -2,7 +2,7 @@
   "vectors": [
     {
       "name": "extensions-osd-oml/parse-errors/negative-minimum-cardinality-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -11,14 +11,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.invalid-cardinality" }
+          {
+            "path": "R.a",
+            "code": "schema.invalid-cardinality"
+          }
         ]
       },
       "comment": "E.10: negative cardinality is rejected the same way as OSD text's `[-1]` (osd-grammar/cardinality/negative-minimum-is-invalid-not-a-syntax-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/inverted-cardinality-range-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -27,14 +30,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.invalid-cardinality" }
+          {
+            "path": "R.a",
+            "code": "schema.invalid-cardinality"
+          }
         ]
       },
       "comment": "E.10: min > max is rejected the same way as OSD text's `[1,0]` (osd-grammar/cardinality/inverted-range-is-invalid)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/zero-zero-cardinality-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -43,14 +49,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.invalid-cardinality" }
+          {
+            "path": "R.a",
+            "code": "schema.invalid-cardinality"
+          }
         ]
       },
       "comment": "E.5: `{ min: 0, max: 0 }` has no OSD spelling -- a field that can never appear is indistinguishable from an undeclared one. Inherited from the 2026-08-29 audit's `[0,0]` ban (osd-grammar/cardinality/zero-max-is-invalid-redundant-with-absence), not re-decided by this extension."
     },
     {
       "name": "extensions-osd-oml/parse-errors/non-integer-cardinality-min-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -59,14 +68,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.non-integer-cardinality" }
+          {
+            "path": "R.a",
+            "code": "schema.non-integer-cardinality"
+          }
         ]
       },
       "comment": "Sec8.3.3: `min`/`max` not integer-kind reuses the existing `schema.non-integer-cardinality` code (previously only reachable via OSD text's own non-integer literal forms) -- OSD's grammar's `int` token guarantees the type there for a different reason (a bound is always a whole number when written), so this is the first input shape where a non-integer *value* in this position is possible at all."
     },
     {
       "name": "extensions-osd-oml/parse-errors/non-string-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -75,14 +87,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R", "code": "schema.invalid-type" }
+          {
+            "path": "R",
+            "code": "schema.invalid-type"
+          }
         ]
       },
       "comment": "E.10: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a general Schema-construction code defined in chapter 8, not owned by this extension."
     },
     {
       "name": "extensions-osd-oml/parse-errors/empty-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -91,14 +106,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R", "code": "schema.empty-label" }
+          {
+            "path": "R",
+            "code": "schema.empty-label"
+          }
         ]
       },
       "comment": "E.10: same rejection as OSD text's empty-string label (osd-grammar/labels/empty-label-is-rejected), inherited unchanged."
     },
     {
       "name": "extensions-osd-oml/parse-errors/bracket-in-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e7-record-field-root",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -107,14 +125,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R", "code": "schema.bracket-in-label" }
+          {
+            "path": "R",
+            "code": "schema.bracket-in-label"
+          }
         ]
       },
       "comment": "E.7: `[`/`]` in a field label is rejected the same way as OSD text (osd-grammar/labels/bracket-in-label-is-rejected) -- collides with validate's diagnostic-path convention regardless of surface syntax."
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-record-name-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -123,14 +144,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R", "code": "schema.duplicate-record" }
+          {
+            "path": "R",
+            "code": "schema.duplicate-record"
+          }
         ]
       },
       "comment": "E.10: two `record` edges naming the same record is rejected the same way as OSD text's duplicate record definition (osd-grammar/reserved-names/duplicate-record-definition-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-field-label-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -139,14 +163,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R", "code": "schema.duplicate-field" }
+          {
+            "path": "R",
+            "code": "schema.duplicate-field"
+          }
         ]
       },
       "comment": "E.10: two `field` edges with the same label within one `record` is rejected the same way as OSD text (osd-grammar/records/duplicate-field-label-in-one-record-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/reserved-record-name-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -155,14 +182,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "string", "code": "schema.reserved-name" }
+          {
+            "path": "string",
+            "code": "schema.reserved-name"
+          }
         ]
       },
       "comment": "E.10: a record named after a scalar keyword is rejected the same way as OSD text (osd-grammar/reserved-names/record-named-after-a-scalar-keyword-is-rejected)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/zero-root-edges-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -171,14 +201,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "$", "code": "schema.no-root" }
+          {
+            "path": "$",
+            "code": "schema.no-root"
+          }
         ]
       },
       "comment": "E.8: top-level `root` is [1,1], required. Zero `root` edges is rejected the same way as OSD text with no `root` declaration (osd-grammar/root/missing-root-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/duplicate-root-edges-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -187,14 +220,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "$", "code": "schema.duplicate-root" }
+          {
+            "path": "$",
+            "code": "schema.duplicate-root"
+          }
         ]
       },
       "comment": "E.8: top-level `root` is [1,1], at most one. Two `root` edges is rejected the same way as OSD text with two `root` declarations (osd-grammar/root/duplicate-root-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/unresolved-reference-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e6-type",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -203,14 +239,17 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.unknown-type" }
+          {
+            "path": "R.a",
+            "code": "schema.unknown-type"
+          }
         ]
       },
       "comment": "E.6: a `ref` type's `name` must exact-match a declared `record.name`. `Ghost` is not a scalar keyword, not `any`, and not a defined record -- the same dangling-reference failure as OSD text (schema-wellformedness/refs/dangling-reference-is-an-error)."
     },
     {
       "name": "extensions-osd-oml/parse-errors/unknown-key-is-invalid",
-      "spec": "docs/extensions/osd-oml.md#e10-structural-vs-semantic-validation",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
@@ -219,7 +258,10 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.unknown-key" }
+          {
+            "path": "R.a",
+            "code": "schema.unknown-key"
+          }
         ]
       },
       "comment": "8.3.3: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. `schema.unknown-key` is defined in chapter 8 as a general Schema-construction rule, with no OSD-text analog since its grammar has no way to write a stray key at all."
@@ -235,7 +277,10 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.missing-key" }
+          {
+            "path": "R.a",
+            "code": "schema.missing-key"
+          }
         ]
       },
       "comment": "8.3.3: `field.type` is [1,1] (E.8) but absent here entirely. `schema.missing-key` is a general Schema-construction rule with no OSD-text analog -- OSD's grammar has no production for a field with no type, so this case cannot be written in OSD text at all."
@@ -251,10 +296,89 @@
       "expect": {
         "ok": false,
         "diagnostics": [
-          { "path": "R.a", "code": "schema.unknown-type" }
+          {
+            "path": "R.a",
+            "code": "schema.unknown-type"
+          }
         ]
       },
       "comment": "8.3.3: `schema.unknown-type` already covers 'resolves to neither a scalar nor a defined record' generally -- `bogus` is not one of the seven scalar keywords, so a `kind: \"scalar\"` naming it fails the same way a dangling `ref` does. Not a new code; this vector exercises the existing code's scalar-name half, which OSD text can never reach on its own (its grammar only ever produces one of the seven real keywords in this position)."
+    },
+    {
+      "name": "extensions-osd-oml/parse-errors/non-identifier-record-name-is-invalid",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
+      "operation": "parse_schema_oml",
+      "purpose": "error-case",
+      "input": {
+        "text": "record: {\n  name: \"My Record!\"\n  field: { label: \"a\", type: { kind: \"any\" } }\n}\nroot: \"My Record!\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.record[0].name",
+            "code": "schema.invalid-name"
+          }
+        ]
+      },
+      "comment": "E.6 R-3a / Sec3.3 S-8: a record.name MUST match the Name domain [A-Za-z_][A-Za-z0-9_]*, the same domain OSD text's tokenizer already enforces implicitly. \"My Record!\" is a valid OML string but has no OSD-text representation at all -- without this check, schema_from_document could construct a Schema that write_schema can never round-trip. Uses a Document path (R-21), not a Schema path, since the violation is the name itself."
+    },
+    {
+      "name": "extensions-osd-oml/parse-errors/kind-outside-the-three-value-set-is-invalid",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
+      "operation": "parse_schema_oml",
+      "purpose": "error-case",
+      "input": {
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"text\", name: \"string\" } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.record[0].field[0].type.kind",
+            "code": "schema.invalid-type"
+          }
+        ]
+      },
+      "comment": "E.6 R-11: type.kind MUST be exactly one of scalar/ref/any. \"text\" is string-kind but outside the three-value set -- reuses schema.invalid-type, the same code R-3 uses for \"right key, wrong content\" on name/label. Document path (R-21)."
+    },
+    {
+      "name": "extensions-osd-oml/parse-errors/nullable-false-explicit-is-invalid",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
+      "operation": "parse_schema_oml",
+      "purpose": "error-case",
+      "input": {
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"string\", nullable: false } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.record[0].field[0].type.nullable",
+            "code": "schema.invalid-type"
+          }
+        ]
+      },
+      "comment": "E.6 R-13: nullable, if present, MUST be the literal true. nullable: false is a real, present violation, distinct from nullable simply being absent (which is the legal non-nullable spelling) -- previously had no assigned code at all. Reuses schema.invalid-type, same pattern as R-11. Document path (R-21)."
+    },
+    {
+      "name": "extensions-osd-oml/parse-errors/nullable-on-ref-is-unknown-key",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
+      "operation": "parse_schema_oml",
+      "purpose": "error-case",
+      "input": {
+        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"ref\", name: \"Address\", nullable: true } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.record[1].field[0].type.nullable",
+            "code": "schema.unknown-key"
+          }
+        ]
+      },
+      "comment": "E.6 R-14: nullable is not in ref-node's closed key set (E.5) regardless of its value -- structural enforcement of Sec3.3 S-7 (nullable only on Scalar), not a separate semantic check. Address resolves successfully so this vector isolates the unknown-key violation from reference resolution. Document path (R-21)."
     }
   ]
 }

@@ -2,7 +2,7 @@
   "vectors": [
     {
       "name": "extensions-osd-oml/write/worked-example-produces-canonical-oml",
-      "spec": "docs/extensions/osd-oml.md#e13-worked-example",
+      "spec": "docs/extensions/osd-oml.md#e12-worked-example",
       "operation": "write_schema_oml",
       "purpose": "happy-path",
       "input": {
@@ -16,7 +16,7 @@
     },
     {
       "name": "extensions-osd-oml/write/exactly-one-cardinality-omits-the-edge",
-      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "spec": "docs/extensions/osd-oml.md#e8-canonical-schema_to_document-output",
       "operation": "write_schema_oml",
       "purpose": "edge-case",
       "input": {
@@ -30,7 +30,7 @@
     },
     {
       "name": "extensions-osd-oml/write/any-type-has-no-name-edge",
-      "spec": "docs/extensions/osd-oml.md#e6-type",
+      "spec": "docs/extensions/osd-oml.md#e8-canonical-schema_to_document-output",
       "operation": "write_schema_oml",
       "purpose": "edge-case",
       "input": {

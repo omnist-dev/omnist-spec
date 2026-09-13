@@ -2,7 +2,7 @@
   "vectors": [
     {
       "name": "extensions-osd-oml/parse/worked-example-round-trips-to-equivalent-osd",
-      "spec": "docs/extensions/osd-oml.md#e13-worked-example",
+      "spec": "docs/extensions/osd-oml.md#e12-worked-example",
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
@@ -16,7 +16,7 @@
     },
     {
       "name": "extensions-osd-oml/parse/cardinality-forms",
-      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
@@ -30,7 +30,7 @@
     },
     {
       "name": "extensions-osd-oml/parse/type-kinds",
-      "spec": "docs/extensions/osd-oml.md#e6-type",
+      "spec": "docs/extensions/osd-oml.md#e5-formal-definition",
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
@@ -44,7 +44,7 @@
     },
     {
       "name": "extensions-osd-oml/parse/empty-record-is-legal",
-      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
+      "spec": "docs/extensions/osd-oml.md#e6-rules",
       "operation": "parse_schema_oml",
       "purpose": "edge-case",
       "input": {
@@ -58,7 +58,7 @@
     },
     {
       "name": "extensions-osd-oml/parse/record-and-field-order-is-not-significant",
-      "spec": "docs/extensions/osd-oml.md#e7-record-field-root",
+      "spec": "docs/extensions/osd-oml.md#e7-architecture-and-construction",
       "operation": "parse_schema_oml",
       "purpose": "edge-case",
       "input": {
