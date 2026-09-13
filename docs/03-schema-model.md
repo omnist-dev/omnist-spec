@@ -156,6 +156,68 @@ Constraints on a well-formed schema:
 A schema MAY be recursive. `env` is finite, so every operation in
 [chapter 6](06-schema-algebra.md) terminates.
 
+**Canonical serialization order.** `env` is a set — S-4 guarantees unique
+names, and nothing above assigns meaning to the order records or fields were
+declared in; this is a distinct concern from the Document model's own edge
+order (D-1/D-3, [§2.3](02-document-model.md#23-structural-invariants)),
+which governs data, not schema declarations. An implementation's internal
+representation MAY store records and fields however it likes, but *writing*
+a Schema back to text or to another syntax requires picking some order, and
+this was never actually specified — an omission, not a decision, discovered
+when a byte-exact round-trip vector first exposed it. The following five
+principles govern every current and future Schema-producing operation,
+Core or extension:
+
+1. **Preserve real order where one exists.** If every output record and
+   field traces back to exactly one original (nothing merged), the writer
+   MUST preserve that original's declaration or construction order.
+2. **Fall back to content-derived order where none exists.** If an
+   operation can merge multiple original records into one output record,
+   "original order" is undefined for the merge — the writer MUST instead
+   order records by name and fields by label.
+3. **The fallback compares by Unicode codepoint (scalar value), never by
+   locale, and never by UTF-16 code unit.** These are two different traps,
+   not one: locale-aware collation (e.g. Swedish sorting `å` after `z`)
+   depends on OS/host-language settings and MUST NOT be used; comparing by
+   UTF-16 code unit instead of codepoint — the default in some languages —
+   silently disagrees with codepoint order for characters outside the
+   Basic Multilingual Plane (surrogate pairs sort differently under the
+   two schemes). An implementation whose default string comparison is
+   UTF-16-code-unit-based MUST compare by codepoint explicitly for this
+   fallback, not rely on that default.
+4. **A caller-supplied collection that affects output order MUST be
+   documented as an ordered sequence, not a set** — otherwise principle 1
+   has nothing well-defined to preserve.
+5. **Classifying any operation — present or future, Core or extension —
+   reduces to one question: can it merge N>1 original records into 1?**
+   Yes → principle 2. No → principle 1. No operation needs its own
+   bespoke rule.
+
+**Determinism.** Independent of which principle applies, an
+implementation's output for a given operation and input MUST be identical
+across repeated invocations. This is a baseline correctness property, not
+a new ordering choice — an implementation whose output for the same input
+varies from run to run (for example, by iterating a hash map with no
+defined order) violates this regardless of which order it happens to
+produce on any given run.
+
+Applying these principles to the operations in
+[chapter 6](06-schema-algebra.md): [§6.5](06-schema-algebra.md#65-prunes)
+`prune` only removes records and fields, never merging anything, so
+principle 1 applies — the surviving records and fields MUST keep their
+original declaration order. [§6.8](06-schema-algebra.md#68-normalizes)
+`normalize` merges structurally-identical records into one representative,
+so principle 2 applies — its output MUST be alphabetical.
+[§6.9](06-schema-algebra.md#69-extracts-keep) `extract` is itself defined
+as `prune` followed by `normalize`, so it inherits `normalize`'s
+alphabetical order by delegation, not by having its own merging step.
+[§6.10](06-schema-algebra.md#610-infersamples) `infer` never merges two
+different labels into one output position — it only aggregates values
+*within* one already-positioned label across samples — so principle 1
+applies: output order follows the labels' first-seen order across
+`samples`, and principle 4 requires `samples` itself to be an ordered
+sequence for that to be well-defined.
+
 ---
 
 ## 3.4 Cardinality

@@ -190,9 +190,20 @@ override the first.
 ## 5.9 Canonical output
 
 An OSD writer is canonical if, for every schema, it emits text that parses back
-to an equal schema, and the emitted text is byte-identical across conformant
-implementations. Canonical form:
+to an equal schema, following the canonical form below. Two conformant
+implementations parsing the *same* source and immediately writing it back
+MUST produce byte-identical text — that guarantee comes from
+[§3.3](03-schema-model.md#33-formal-definition)'s order principles plus
+the formatting rules below, together. It does **not** extend to two
+*different* texts that happen to describe the same schema (for example,
+the same schema written in OSD versus [OSD-OML](extensions/osd-oml.md)) —
+each preserves its own input's declaration order, so equivalent-but-different
+source can legitimately produce different, still-canonical output. Canonical
+form:
 
+- record and field order per
+  [§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
+  invariant;
 - one record per `record` block, fields one per line, four-space indent;
 - a trailing comma after every field, including the last;
 - `root` last;

@@ -96,7 +96,7 @@ silently.
 |---|---|
 | `schema.no-root` | No `root` declaration |
 | `schema.duplicate-root` | More than one `root` declaration |
-| `schema.unknown-type` | A type name resolves to neither a scalar nor a defined record |
+| `schema.unknown-type` | A type name resolves to neither a scalar nor a defined record — covers a dangling `ref`, and equally a `scalar` naming something outside the fixed keyword set |
 | `schema.duplicate-record` | A record name is defined twice |
 | `schema.duplicate-field` | A label is used by two fields in one record |
 | `schema.reserved-name` | A record is named after a scalar kind or `any` |
@@ -109,11 +109,27 @@ silently.
 | `schema.quoted-type` | A quoted string in type position |
 | `schema.nullable-ref` | `?` applied to a reference |
 | `schema.nullable-any` | `any?` |
+| `schema.missing-key` | A required key of the schema-construction input (a field's label or type, a record's name, a type's kind) is absent entirely |
+| `schema.invalid-type` | A value that must be a specific kind (a label, a name) is present but of the wrong kind |
+| `schema.unknown-key` | An unrecognized key appears anywhere in the schema-construction input |
 
 `schema.unquoted-label` and `schema.quoted-type` are the two directions of
 [§5.2](05-osd-grammar.md#52-the-quoting-rule)'s quoting rule — a bare name
 belongs only in type position, a quoted string only in label position, and
 each direction gets its own code.
+
+`schema.missing-key`, `schema.invalid-type`, and `schema.unknown-key` are
+general Schema-construction rules with no OSD-text analog — OSD's own
+grammar makes them structurally impossible to trigger from OSD text (a
+field with no type, a non-string label, or a stray key cannot be written
+in OSD's syntax at all). They become reachable only through an input whose
+structure isn't grammatically constrained the way OSD text is — for
+example, [Extensions: OSD-OML](extensions/osd-oml.md), which builds a
+Schema from a generic OML Document instead of an OSD parse tree. They are
+defined here, not in that extension's own chapter, because the
+schema-construction validator that raises them is shared, unchanged, Core
+machinery — the extension supplies a second input shape, not a second set
+of rules.
 
 ### 8.3.4 `validate.*` — document against schema
 

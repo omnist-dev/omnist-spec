@@ -1,0 +1,73 @@
+{
+  "vectors": [
+    {
+      "name": "extensions-osd-oml/parse/worked-example-round-trips-to-equivalent-osd",
+      "spec": "docs/extensions/osd-oml.md#e13-worked-example",
+      "operation": "parse_schema_oml",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"city\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"Person\"\n  field: { label: \"name\", type: { kind: \"scalar\", name: \"string\" } }\n  field: {\n    label: \"nickname\"\n    cardinality: { min: 0 }\n    type: { kind: \"scalar\", name: \"string\", nullable: true }\n  }\n  field: { label: \"address\", type: { kind: \"ref\", name: \"Address\" } }\n}\nroot: \"Person\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Address {\n    \"street\": string,\n    \"city\": string,\n}\nrecord Person {\n    \"name\": string,\n    \"nickname\" [0,1]: string?,\n    \"address\": Address,\n}\nroot Person\n"
+      },
+      "comment": "E.13's worked example, the canonical proof case for this extension. Result is expressed as the canonical OSD text write_schema would produce, since record/field declaration order in the OSD-OML source matches OSD's own order (E.7, per Sec3.3's canonical serialization order invariant) -- an implementation MAY compare via schema equivalence instead of this exact text, per E.11."
+    },
+    {
+      "name": "extensions-osd-oml/parse/cardinality-forms",
+      "spec": "docs/extensions/osd-oml.md#e5-cardinality",
+      "operation": "parse_schema_oml",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"any\" } }\n  field: { label: \"b\", cardinality: {}, type: { kind: \"any\" } }\n  field: { label: \"c\", cardinality: { min: 3, max: 3 }, type: { kind: \"any\" } }\n  field: { label: \"d\", cardinality: { min: 1, max: 5 }, type: { kind: \"any\" } }\n  field: { label: \"e\", cardinality: { min: 5 }, type: { kind: \"any\" } }\n  field: { label: \"f\", cardinality: { max: 5 }, type: { kind: \"any\" } }\n  field: { label: \"g\", cardinality: { min: 0 }, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"a\": any,\n    \"b\": any,\n    \"c\" [3]: any,\n    \"d\" [1,5]: any,\n    \"e\" [5,]: any,\n    \"f\" [,5]: any,\n    \"g\" [,]: any,\n}\nroot R\n"
+      },
+      "comment": "E.5's full table in one schema: an absent cardinality edge and an empty {} both mean exactly-1 (no cardinality suffix in OSD); every other row maps to its OSD bracket form. Every field also carries an explicit `type: { kind: \"any\" }` since Field.type is [1,1] (E.8) -- OSD-OML has no field-type-omitted form, unlike cardinality."
+    },
+    {
+      "name": "extensions-osd-oml/parse/type-kinds",
+      "spec": "docs/extensions/osd-oml.md#e6-type",
+      "operation": "parse_schema_oml",
+      "purpose": "happy-path",
+      "input": {
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"b\", type: { kind: \"scalar\", name: \"string\", nullable: true } }\n  field: { label: \"c\", type: { kind: \"ref\", name: \"R\" } }\n  field: { label: \"d\", type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"a\": string,\n    \"b\": string?,\n    \"c\": R,\n    \"d\": any,\n}\nroot R\n"
+      },
+      "comment": "E.6: all four Type shapes in one schema -- plain scalar, nullable scalar, a self-ref (mutual recursion is legal per Sec3.3 of the Schema model, inherited unchanged), and any. `nullable` is present as `true` only on field b; its absence elsewhere is what E.6 requires (never present as `false`)."
+    },
+    {
+      "name": "extensions-osd-oml/parse/empty-record-is-legal",
+      "spec": "docs/extensions/osd-oml.md#e8-cardinality-on-fields-principle-document-shape-design-rule",
+      "operation": "parse_schema_oml",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record: { name: \"Empty\" }\nrecord: {\n  name: \"R\"\n  field: { label: \"e\", type: { kind: \"ref\", name: \"Empty\" } }\n}\nroot: \"R\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Empty {\n}\nrecord R {\n    \"e\": Empty,\n}\nroot R\n"
+      },
+      "comment": "E.8: Record.field is [0,], so a record with zero field edges (Record.field entirely absent, not an empty array -- OML has no empty-array sugar per Sec4.3.1) is legal, matching OSD's own `record R { }`."
+    },
+    {
+      "name": "extensions-osd-oml/parse/record-and-field-order-is-not-significant",
+      "spec": "docs/extensions/osd-oml.md#e7-record-field-root",
+      "operation": "parse_schema_oml",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record: {\n  name: \"B\"\n  field: { label: \"y\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"x\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"A\"\n  field: { label: \"b\", type: { kind: \"ref\", name: \"B\" } }\n}\nroot: \"A\"\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "E.7: record/field order carries no meaning -- B is declared before A even though A references B, and B's fields are declared y-then-x. This is a forward-reference case (already legal per the Schema model's Sec3.3) restated in OSD-OML's own record ordering, plus field order within B. Only ok:true is asserted here since the canonical writer's own deterministic-order choice (declaration order) is a writer detail, not part of what this vector is proving; extensions-osd-oml/parse/worked-example-round-trips-to-equivalent-osd already exercises exact-text comparison for order-matching input."
+    }
+  ]
+}
