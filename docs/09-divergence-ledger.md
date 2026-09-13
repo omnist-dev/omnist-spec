@@ -96,46 +96,55 @@ way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
 **Last source-audited: 2026-09-13**, directly against each port's own
-merged PR and real CI run — not carried forward from a prior edit. All
-five ports have bumped their `omnist-spec` submodule pin to **v0.7.0-beta**
-(`c4141d0`) and confirmed the 3 new [§3.3](03-schema-model.md#33-formal-definition)
-canonical-serialization-order vectors pass green-on-arrival (no behavior
-change needed anywhere — every port's `prune`/`normalize` already complied,
-per the source-level verification done alongside this bump): Python
-(`omnist` PR #337, merge `7d26a48`), TypeScript (`omnist-ts` PR #142, merge
-`8f4bc99`), Rust (`omnist-rs` PR #174, merge `a850fb3`), Go (`omnist-go` PR
-#112, merge `1f09394`), and Java (`omnist-j` PR #104, merge `85b7be4`).
+merged PR, real CI run, and (for this round) each port's actual recorded
+submodule gitlink and committed test assertions — not carried forward
+from a prior edit, and not taken from self-reported summary numbers alone
+(see the Java note below for why that distinction mattered this round).
+All five ports have bumped their `omnist-spec` submodule pin to
+**v0.9.1-beta** (`47a84d6`) and confirmed the new
+[§3.3](03-schema-model.md#33-formal-definition) S-8 (`Name` domain) and
+S-3 (case-sensitive reserved-name matching) rules were already
+pre-existing behavior everywhere (no code change needed anywhere, per
+source-level verification done alongside this bump — every port's
+reserved-name check was already a plain, case-sensitive equality, and
+every port's `name` tokenizer already matched the S-8 domain): Python
+(`omnist` PR #342, merge `18e5cbd`), TypeScript (`omnist-ts` PR #146,
+merge `5249267`), Rust (`omnist-rs` PR #178, merge `2ef92b2`), Go
+(`omnist-go` PR #115, merge `04df6f8`), and Java (`omnist-j` PR #109,
+merge `62ccbb3`).
 
-This bump also brought in the 24 `extensions-osd-oml/*` vectors from
-v0.6.0-beta for the first time. **No port implements OSD-OML yet** (see
-[§9.6](#96-extension-support)) — all 24 are correctly reported as *skips*,
-not failures, per every port's own existing unknown-operation dispatch
-(no harness code needed changing to get this right, except Go, which added
-an explicit skip path citing the tracking issue). Each port filed its own
-"implement OSD-OML" tracking issue as unscheduled future work: Go
-(`omnist-go#111`), Java (`omnist-j#105`), Rust (`omnist-rs#175`); Python
-and TypeScript MAY still file theirs. Python, TypeScript, and Rust treated
-this as a pure pin/doc-metadata update with no version bump — none altered
-any port's own library behavior, so none crossed this project's own
-minor=features/patch=fixes-tooling threshold. Go cut **v0.3.1-alpha**
-(patch): its skip-dispatch code and an unrelated XML-whitespace-comparison
-fix landing in the same window (PR #110) are both squarely tooling/fixes,
-not features. Java cut **v0.2.3-alpha** (patch, PR #106) for a different,
-better reason: its earlier #102 Unicode-comparison fix was a genuine
-behavior change that had landed *without* a version bump at the time —
-this caught and corrected that gap, not something new from this round.
+This bump also brought in 5 new vectors from v0.8.0-beta/v0.9.0-beta/v0.9.1-beta:
+1 new Core-level `osd-grammar` vector (the S-3 characterization case) and
+4 new `extensions-osd-oml/*` vectors (exercising the new
+`schema.invalid-name` code and related rules from OSD-OML's v1.1 rewrite,
+[extensions/osd-oml.md](extensions/osd-oml.md)). **No port implements
+OSD-OML yet** — the 4 extension vectors correctly report as *skips*
+everywhere, same as the existing 24; the 1 new Core vector passes
+everywhere. Each port with an "implement OSD-OML" tracking issue added a
+note about the new S-8/`schema.invalid-name` requirement: Go
+(`omnist-go#111`), Java (`omnist-j#105`), Rust (`omnist-rs#175`), and
+Python and TypeScript filed theirs for the first time this round
+(`omnist#341`, `omnist-ts#145`). No port cut a version bump — pure
+pin/doc-metadata updates, none altered any port's own library behavior.
 
-Two ports found and fixed a real, independent bug during this same round,
-unrelated to the pin bump itself but caught in the course of it: Java's
-`SchemaAlgebra.java` and TypeScript's `ops/minimize.ts` both relied on
-their host language's default string comparison (UTF-16 code unit) for
-`normalize`'s alphabetical fallback, disagreeing with codepoint order for
-names containing supplementary-plane characters — closing
-[omnist-spec#54](https://github.com/omnist-dev/omnist-spec/issues/54)'s
-sibling finding. Fixed in `omnist-j` PR #103 and `omnist-ts` PR #137,
-both merged, both with a live test case at the exact U+FFFF/U+10000
-boundary. Python, Rust, and Go were unaffected (codepoint-based or
-UTF-8-byte-order string comparison, both already codepoint-safe).
+**A same-day spec-side bug surfaced and was fixed mid-round**: the new
+S-3 vector's own JSON content had an unquoted field label (a shell-quoting
+artifact from vector generation, not a spec-content error), which made it
+fail to parse before ever exercising the check it existed to test. Caught
+by Python's port session during its pin-bump verification — exactly the
+kind of thing this cross-port verification step exists to catch. Fixed in
+[omnist-spec#60](https://github.com/omnist-dev/omnist-spec/pull/60)
+(v0.9.1-beta); every port from Python onward verified against the
+corrected vector, not the original v0.9.0-beta one.
+
+**A self-reported number needed correcting**: Java's PR #109 description
+stated "205 pass / 0 fail / 28 skip," which doesn't sum to the expected
+204 total. The actual committed `ConformanceTest.java` assertions are
+correct (`176`/`0`/`28`, matching every other port's math) — the PR body's
+figure had accidentally summed in Track 1's 29 fixture-passes without
+also adding Track 1's skip count. Not a real defect, just confirms why
+this table cites committed test assertions over summary prose when they
+diverge.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
@@ -150,8 +159,8 @@ UTF-8-byte-order string comparison, both already codepoint-safe).
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors, of 199 — all five ports now on the same v0.7.0-beta pin) | 127 pass / 0 fail / 72 skip | 127 pass / 0 fail / 72 skip | 169 pass / 0 fail / 30 skip | 174 pass / 0 fail / 25 skip | 175 pass / 0 fail / 24 skip |
-| Conformance (fixtures, of 19) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 |
+| Conformance (vectors, of 204 — all five ports now on the same v0.9.1-beta pin) | 128 pass / 0 fail / 76 skip | 128 pass / 0 fail / 76 skip | 170 pass / 0 fail / 34 skip | 175 pass / 0 fail / 29 skip | 176 pass / 0 fail / 28 skip |
+| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 29/29 (Java's own fixture set has grown independently of this round; not yet reconciled with the other four's count of 19 — worth a follow-up, not part of this bump) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
 
