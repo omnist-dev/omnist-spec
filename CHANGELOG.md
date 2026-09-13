@@ -3,6 +3,31 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.7.0-beta (2026-09-13)
+
+**Normative (minor)** — closes [omnist-spec#54](https://github.com/omnist-dev/omnist-spec/issues/54):
+the four OSD-OML operations added in v0.6.0-beta (`schema_from_document`,
+`parse_schema_oml`, `schema_to_document`, `write_schema_oml`) had no
+registered comparison semantics in [§8.5.3](docs/08-conformance-and-errors.md#853-operation-drivers) —
+nothing guaranteed a harness would actually verify the declaration-order
+behavior their own vectors encoded. Registered all four: the two
+Schema-producing operations compare byte-for-byte as canonical OSD text,
+matching `normalize`/`prune`'s existing rule; the two Document-producing
+operations compare as a Document, order-sensitive per D-1/D-3. Also
+extends `parse_schema`'s vector shape with an optional `schema` field
+(byte-for-byte) for vectors specifically pinning round-trip fidelity
+rather than mere acceptance.
+
+Adds the Core-level conformance vectors this enables and that were
+missing since v0.6.0-beta's canonical-serialization-order principles
+landed: a `parse_schema` declaration-order round-trip
+(`osd-grammar/canonical-output/declaration-order-round-trips-exactly`), a
+`prune` survivor-order vector, and a `normalize` alphabetical-order vector
+using a genuine forced-merge case where declaration order and alphabetical
+order disagree. All three are characterization vectors (§10.2) — verified
+green against the Python reference before being written, not new
+behavior.
+
 ## v0.6.0-beta (2026-09-12)
 
 **Normative (minor)** — introduces an **Extensions** mechanism: optional

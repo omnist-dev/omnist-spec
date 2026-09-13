@@ -38,6 +38,19 @@
         "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
       },
       "comment": "The root-unsatisfiable special case (Sec6.5, normative): field pruning MUST NOT apply to an unsatisfiable root, since its mandatory fields are exactly what make it unsatisfiable -- stripping them would produce a different, satisfiable schema, breaking prune's language-preservation guarantee."
+    },
+    {
+      "name": "prune/basic/survivors-keep-declaration-order-not-alphabetical",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "prune",
+      "purpose": "determinism-regression",
+      "input": {
+        "schema": "record Z {\n    \"x\": string,\n}\nrecord A {\n    \"x\": string,\n}\nrecord R {\n    \"z\": Z,\n    \"a\": A,\n}\nroot R\n"
+      },
+      "expect": {
+        "schema": "record Z {\n    \"x\": string,\n}\nrecord A {\n    \"x\": string,\n}\nrecord R {\n    \"z\": Z,\n    \"a\": A,\n}\nroot R\n"
+      },
+      "comment": "Sec3.3's canonical serialization order, principle 1: prune only removes records/fields, never merges, so a survivor's original declaration position is always well-defined and MUST be preserved -- unlike normalize (principle 2), which alphabetizes because merging destroys that position. Nothing is actually pruned here (all three records are reachable and satisfiable); the vector's only purpose is order, declared Z, A, R (reverse-of-alphabetical) so an implementation that wrongly alphabetizes prune's output fails this vector. Confirmed live against Python and matches Go's own deliberate `EnvOrder`-iteration fix in algebra/algebra.go (a real prior bug there, not a new requirement invented by this vector)."
     }
   ]
 }

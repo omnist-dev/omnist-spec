@@ -25,6 +25,19 @@
         "schema": "record Node {\n    \"child\": Node,\n}\nroot Node\n"
       },
       "comment": "prune leaves an unsatisfiable root's fields alone (see prune/basic/unsatisfiable-root-keeps-its-own-fields), so there is no 'fewest records' question to answer for a schema that accepts nothing -- normalize returns it unchanged after the is_empty check short-circuits."
+    },
+    {
+      "name": "normalize/basic/output-order-is-alphabetical-not-declaration-order",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "normalize",
+      "purpose": "determinism-regression",
+      "input": {
+        "schema": "record M {\n    \"item1\": Y,\n    \"item2\": B,\n}\nrecord Y {\n    \"x\": string,\n}\nrecord B {\n    \"x\": string,\n}\nroot M\n"
+      },
+      "expect": {
+        "schema": "record B {\n    \"x\": string,\n}\nrecord M {\n    \"item1\": B,\n    \"item2\": B,\n}\nroot M\n"
+      },
+      "comment": "Sec3.3's canonical serialization order, principle 2: normalize merges structurally-identical records into one representative, which destroys any single well-defined 'original position' for the survivor -- output MUST instead be alphabetical (records by name, ordinal comparison). M is declared first, before the merge; B survives the Y/B merge as the lexicographically smaller name. Output order is B, M -- alphabetical -- not M, B, which is what declaration-order-of-survivors would give (M was declared before either Y or B). This is the exact disambiguating case that settled the principle-2 design question live against the Python reference: a case where the two candidate rules (declaration order vs. alphabetical) actually disagree, unlike a schema that happens to already be alphabetical, which would pass under either rule and prove nothing."
     }
   ]
 }
