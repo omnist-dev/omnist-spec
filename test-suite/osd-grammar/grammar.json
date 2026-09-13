@@ -470,6 +470,20 @@
         "schema": "record Z {\n    \"x\": string,\n}\nrecord A {\n    \"x\": string,\n}\nrecord R {\n    \"z\": Z,\n    \"a\": A,\n}\nroot R\n"
       },
       "comment": "Sec3.3's canonical serialization order, principle 1: a read-side operation with nothing merged MUST preserve declaration order on write-back. Records are declared Z, A, R -- deliberately reverse-of-alphabetical -- specifically so this vector fails under an implementation that (wrongly) alphabetizes on write instead of preserving input order; a schema declared already-alphabetically would pass under either rule and prove nothing. Confirmed live against the Python reference before this vector was written: parse then immediate write reproduces Z, A, R exactly, not A, R, Z. This is a genuine new gap closed by this session's spec-correctness review, not carried-forward stale content -- Sec5.9's canonical-output claim existed long before any vector tested record order specifically."
+    },
+    {
+      "name": "osd-grammar/reserved-names/case-mismatched-name-is-not-reserved",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "parse_schema",
+      "purpose": "characterization",
+      "input": {
+        "text": "record String {\n    x: string,\n}\nroot String\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record String {\n    x: string,\n}\nroot String\n"
+      },
+      "comment": "Sec3.3 S-3: the reserved-name check is exact and case-sensitive -- record String (capital S) does not collide with the string keyword. Characterization vector: all five ports already agreed on this behavior independently (verified 2026-09-13 by reading Python/TypeScript/Rust/Go/Java source, all plain case-sensitive equality, no case-folding anywhere) before S-3 stated it explicitly. Green-on-arrival everywhere, not a behavior change."
     }
   ]
 }

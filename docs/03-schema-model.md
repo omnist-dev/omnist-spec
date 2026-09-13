@@ -144,7 +144,12 @@ Constraints on a well-formed schema:
   is an error.
 - **S-3.** A record name MUST NOT be one of the seven scalar kind keywords, and
   MUST NOT be `any`. Type position resolves a bare name to a builtin first, so
-  such a record could never be referenced.
+  such a record could never be referenced. This comparison is **exact and
+  case-sensitive** — `String` does not collide with the `string` keyword.
+  This was previously unstated (every implementation already agreed on
+  case-sensitive matching independently, verified 2026-09-13 by reading all
+  five ports' source; this codifies existing, already-uniform behavior
+  rather than changing anything).
 - **S-4.** A record name MUST be unique within `env`.
 - **S-5.** A field's label MUST be unique within its record. Two fields naming
   the same label is an error, not an implicit merge.
@@ -152,6 +157,20 @@ Constraints on a well-formed schema:
   and mutual recursion are legal; a dangling reference is an error.
 - **S-7.** `nullable` MAY be set only on a `Scalar`. A nullable `Ref` and a
   nullable `any` are both errors.
+- **S-8.** A `Name` (a record name, or a `Ref`'s target name) MUST match
+  `[A-Za-z_][A-Za-z0-9_]*`. This was previously enforced only implicitly, by
+  OSD text's own tokenizer ([§5.3](05-osd-grammar.md#53-tokens)) — the only
+  surface that could ever construct a `Name` before
+  [OSD-OML](extensions/osd-oml.md) existed. OSD-OML's Document-shaped input
+  is not grammar-constrained the same way, so it is the first surface that
+  can actually construct a `Schema` violating this without a stated rule to
+  catch it. This is a **field label is a value, a record/ref name is an
+  identifier** distinction — the same one [§5.2](05-osd-grammar.md#52-the-quoting-rule)
+  already draws for OSD text; S-8 applies it to the abstract model directly
+  so every syntax surface inherits it uniformly. Field labels are
+  unaffected — they were never identifiers in this sense and remain
+  arbitrary non-empty strings (S-5, and the bracket/empty-string rules in
+  [§5.4](05-osd-grammar.md#54-records-and-fields)).
 
 A schema MAY be recursive. `env` is finite, so every operation in
 [chapter 6](06-schema-algebra.md) terminates.

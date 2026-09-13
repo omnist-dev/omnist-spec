@@ -48,8 +48,13 @@ whitespace may — between declarations, inside a record body, after a field.
 
 `#` starts a comment that runs to end of line.
 
-An OSD `name` is `[A-Za-z_][A-Za-z0-9_]*`. Note the difference from OML's
-`IDENT`: **OSD names do not permit a hyphen.**
+An OSD `name` is `[A-Za-z_][A-Za-z0-9_]*` — this is
+[§3.3](03-schema-model.md#33-formal-definition)'s S-8 `Name` domain,
+enforced here by the tokenizer itself; OSD text cannot tokenize a name
+outside this set in the first place, so no separate check is needed at
+the schema-construction stage the way [OSD-OML](extensions/osd-oml.md)
+needs one. Note the difference from OML's `IDENT`: **OSD names do not
+permit a hyphen.**
 
 ### 5.3.1 String unescaping
 
@@ -176,7 +181,9 @@ point the author at cardinality `[0,1]` instead.
 A record MUST NOT be defined with a name that is one of the seven scalar
 keywords, and MUST NOT be named `any`. In both cases the reason is the same: a
 bare name in type position resolves to the builtin first, so such a record could
-never be referenced.
+never be referenced. Per [§3.3](03-schema-model.md#33-formal-definition) S-3,
+this check is exact and case-sensitive — `record String { ... }` does not
+collide with the `string` keyword.
 
 Defining the same record name twice is an error.
 
