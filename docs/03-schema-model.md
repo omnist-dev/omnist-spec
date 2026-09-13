@@ -175,9 +175,16 @@ Core or extension:
    operation can merge multiple original records into one output record,
    "original order" is undefined for the merge — the writer MUST instead
    order records by name and fields by label.
-3. **The fallback is always ordinal, never locale-aware.** Plain codepoint
-   string comparison, so two implementations agree regardless of host
-   language or OS locale settings.
+3. **The fallback compares by Unicode codepoint (scalar value), never by
+   locale, and never by UTF-16 code unit.** These are two different traps,
+   not one: locale-aware collation (e.g. Swedish sorting `å` after `z`)
+   depends on OS/host-language settings and MUST NOT be used; comparing by
+   UTF-16 code unit instead of codepoint — the default in some languages —
+   silently disagrees with codepoint order for characters outside the
+   Basic Multilingual Plane (surrogate pairs sort differently under the
+   two schemes). An implementation whose default string comparison is
+   UTF-16-code-unit-based MUST compare by codepoint explicitly for this
+   fallback, not rely on that default.
 4. **A caller-supplied collection that affects output order MUST be
    documented as an ordered sequence, not a set** — otherwise principle 1
    has nothing well-defined to preserve.
