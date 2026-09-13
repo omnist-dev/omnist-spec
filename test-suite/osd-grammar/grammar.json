@@ -456,6 +456,20 @@
         ]
       },
       "comment": "Either bracket character alone is enough to reject -- the rule is not specifically about a matched [i] pair, it's about the character vocabulary the diagnostic-path convention relies on being unambiguous."
+    },
+    {
+      "name": "osd-grammar/canonical-output/declaration-order-round-trips-exactly",
+      "spec": "docs/03-schema-model.md#33-formal-definition",
+      "operation": "parse_schema",
+      "purpose": "determinism-regression",
+      "input": {
+        "text": "record Z {\n    \"x\": string,\n}\nrecord A {\n    \"x\": string,\n}\nrecord R {\n    \"z\": Z,\n    \"a\": A,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Z {\n    \"x\": string,\n}\nrecord A {\n    \"x\": string,\n}\nrecord R {\n    \"z\": Z,\n    \"a\": A,\n}\nroot R\n"
+      },
+      "comment": "Sec3.3's canonical serialization order, principle 1: a read-side operation with nothing merged MUST preserve declaration order on write-back. Records are declared Z, A, R -- deliberately reverse-of-alphabetical -- specifically so this vector fails under an implementation that (wrongly) alphabetizes on write instead of preserving input order; a schema declared already-alphabetically would pass under either rule and prove nothing. Confirmed live against the Python reference before this vector was written: parse then immediate write reproduces Z, A, R exactly, not A, R, Z. This is a genuine new gap closed by this session's spec-correctness review, not carried-forward stale content -- Sec5.9's canonical-output claim existed long before any vector tested record order specifically."
     }
   ]
 }

@@ -364,7 +364,7 @@ Matching rules, all normative:
 | `operation` | `input` | success `expect` |
 |---|---|---|
 | `parse` | `{format, text}` | `{ok, document}` |
-| `parse_schema` | `{text}` | `{ok}` |
+| `parse_schema` | `{text}` | `{ok}` — `schema: <canonical OSD text>` MAY additionally be present, compared byte for byte per §3.3/§5.9, for a vector specifically pinning declaration-order or formatting round-trip fidelity rather than mere acceptance |
 | `validate` | `{schema, document}` | `{ok}` |
 | `materialize` | `{schema, document}` | `{ok, document}` |
 | `write` | `{document, format}` | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
@@ -377,10 +377,28 @@ Matching rules, all normative:
 | `infer` | `{samples, allow_any}` | `{ok, schema}` — `allow_any` defaults to `false` when absent |
 | `infer_with_report` | `{samples, allow_any}` | `{ok, schema, fallbacks}` — `fallbacks` is a list of `{location, reason}`, always present on success (empty when nothing was opened) |
 | `lint` | `{schema}` | `{ok, findings}` — `findings` is a list of `{code, severity, location}`; message text is never compared (§8.5.2 rule 1) so no `message` field is required |
+| `schema_from_document` | `{document}` | `{ok, schema: <canonical OSD text>}` — compared byte for byte, same rule as `parse_schema`'s implicit round-trip (§3.3, principle 1: nothing merges, so declaration order is preserved from the input Document's own edge order) |
+| `parse_schema_oml` | `{text}` | `{ok, schema: <canonical OSD text>}` — same comparison as `schema_from_document`; this operation is `schema_from_document(read_oml(text))`, per [§E.12](extensions/osd-oml.md#e12-api-cli-surface) |
+| `schema_to_document` | `{schema}` | `{ok, document}` — compared as a Document (§8.5.4's canonical encoding), which is order-sensitive per D-1/D-3; this is where §3.3's order principles actually become observable for this direction |
+| `write_schema_oml` | `{schema}` | `{ok, text}` — compared byte for byte as OML text, same rule as `write`'s Document-writer vectors; this is `write_oml(schema_to_document(schema))`, per [§E.12](extensions/osd-oml.md#e12-api-cli-surface) |
 
 Every operation's failure `expect` is `{ok: false, diagnostics: [...]}`, per
 §8.5.2 — `write` is the only operation where `ok: true` and `diagnostics` can
 coexist, noted above.
+
+**The 4 OSD-OML operations split across the same two comparison shapes
+every other operation already uses, not a third one.** `schema_from_document`/
+`parse_schema_oml` return a `Schema`, compared as canonical OSD text —
+identical in kind to `normalize`/`prune`'s existing byte-for-byte rule, not
+a new mechanism. `schema_to_document`/`write_schema_oml` return
+Document-shaped output, compared the same way `write`'s vectors already
+are. This is what makes [§3.3](03-schema-model.md#33-formal-definition)'s
+order principles actually conformance-checkable for OSD-OML specifically:
+before this table entry existed, a vector like
+`extensions-osd-oml/parse/worked-example-round-trips-to-equivalent-osd`
+had no documented comparison rule at all, so nothing guaranteed a harness
+would catch a declaration-order regression even though the vector's own
+`expect.schema` field encoded one.
 
 **`materialize`'s `input` is a canonical-JSON Document, not raw format text
 plus a `format` field.** This is deliberate: per
