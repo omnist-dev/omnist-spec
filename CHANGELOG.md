@@ -18,9 +18,42 @@ Adds `schema_from_document`, `parse_schema_oml`, `schema_to_document`, and
 `write_schema_oml` to the API surface, and `--from`/`--to osd|osd-oml` to
 every schema-consuming and schema-producing CLI command. `osd` remains the
 unconditional default; the extension is opt-in and changes no existing
-behavior. Two new error codes (`schema.invalid-type`, `schema.unknown-key`)
+behavior. Three new error codes (`schema.missing-key`, `schema.invalid-type`,
+`schema.unknown-key`), defined in [§8.3.3](docs/08-conformance-and-errors.md#833-schema-schema-well-formedness)
+as general Schema-construction rules rather than owned by the extension,
 cover checks reachable only through OSD-OML's generic OML input, since
 OSD's own grammar makes them structurally impossible in OSD text.
+`schema.unknown-type`'s definition is widened to explicitly cover an
+invalid scalar name, not only a dangling reference — the same failure,
+now stated once for both cases instead of two.
+
+Also formalizes **canonical serialization order**
+([§3.3](docs/03-schema-model.md#33-formal-definition)), closing a gap that
+predates this release: `env` was always a set (order semantically
+irrelevant), but no chapter ever specified what order a *writer* emits —
+an omission first exposed by OSD-OML's own round-trip vectors. Five
+principles, plus a determinism requirement, now govern every
+Schema-producing operation, Core or extension: read-side operations and
+`prune` preserve real order (declaration order, or a filtered subset of
+it); `normalize` (and `extract`, which is defined in terms of it) fall
+back to alphabetical order where merging has destroyed any single
+"original" position; `infer` preserves sample-encounter order, per its
+own existing pseudocode. Verified against all 5 ports' source before
+writing this down: every rule was already true, deliberately, wherever
+checked — this costs no implementation changes. [§5.9](docs/05-osd-grammar.md#59-canonical-output)'s
+existing byte-identical-output claim is narrowed to what is actually true
+and guaranteed: two implementations parsing the *same* source and writing
+it back agree byte-for-byte; this does not extend to two different texts
+(OSD vs. OSD-OML) describing the same schema, which MAY legitimately
+differ.
+
+Extensions also gain a **versioning policy**
+([Extensions overview](docs/extensions/overview.md)) — a reusable,
+Core-§10.3-shaped bump table, and a rule that an extension MAY declare a
+dependency on another extension's minimum version — and a
+[§9.6](docs/09-divergence-ledger.md#96-extension-support) divergence-ledger
+table tracking per-implementation extension adoption, separate from Core
+conformance.
 
 ## v0.5.0-beta (2026-08-30)
 
