@@ -477,11 +477,11 @@
       "operation": "parse_schema",
       "purpose": "characterization",
       "input": {
-        "text": "record String {\n    x: string,\n}\nroot String\n"
+        "text": "record String {\n    \"x\": string,\n}\nroot String\n"
       },
       "expect": {
         "ok": true,
-        "schema": "record String {\n    x: string,\n}\nroot String\n"
+        "schema": "record String {\n    \"x\": string,\n}\nroot String\n"
       },
       "comment": "Sec3.3 S-3: the reserved-name check is exact and case-sensitive -- record String (capital S) does not collide with the string keyword. Characterization vector: all five ports already agreed on this behavior independently (verified 2026-09-13 by reading Python/TypeScript/Rust/Go/Java source, all plain case-sensitive equality, no case-folding anywhere) before S-3 stated it explicitly. Green-on-arrival everywhere, not a behavior change."
     }
