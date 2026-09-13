@@ -114,16 +114,16 @@ not failures, per every port's own existing unknown-operation dispatch
 an explicit skip path citing the tracking issue). Each port filed its own
 "implement OSD-OML" tracking issue as unscheduled future work: Go
 (`omnist-go#111`), Java (`omnist-j#105`), Rust (`omnist-rs#175`); Python
-and TypeScript MAY still file theirs. Four of five ports treated this as a
-pure pin/doc-metadata update or a test/tooling-only fix with no version
-bump (Python, TypeScript, Rust, Java) — none altered any port's own
-library behavior, so none crossed this project's own
+and TypeScript MAY still file theirs. Python, TypeScript, and Rust treated
+this as a pure pin/doc-metadata update with no version bump — none altered
+any port's own library behavior, so none crossed this project's own
 minor=features/patch=fixes-tooling threshold. Go cut **v0.3.1-alpha**
-(patch), on the reasoning that its skip-dispatch code and an unrelated
-XML-whitespace-comparison fix landing in the same window (PR #110) are
-both squarely tooling/fixes, not features — a defensible, self-consistent
-call, not a divergence from the other four's reasoning so much as Go
-having slightly more in the batch to account for.
+(patch): its skip-dispatch code and an unrelated XML-whitespace-comparison
+fix landing in the same window (PR #110) are both squarely tooling/fixes,
+not features. Java cut **v0.2.3-alpha** (patch, PR #106) for a different,
+better reason: its earlier #102 Unicode-comparison fix was a genuine
+behavior change that had landed *without* a version bump at the time —
+this caught and corrected that gap, not something new from this round.
 
 Two ports found and fixed a real, independent bug during this same round,
 unrelated to the pin bump itself but caught in the course of it: Java's
@@ -139,7 +139,7 @@ UTF-8-byte-order string comparison, both already codepoint-safe).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.9.4 | 0.3.0-alpha | 0.2.2-alpha | 0.3.1-alpha | 0.2.2-alpha |
+| Version | 0.9.4 | 0.3.0-alpha | 0.2.2-alpha | 0.3.1-alpha | 0.2.3-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps | all three | all three | all three | all three | all three |
