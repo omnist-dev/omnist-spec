@@ -3,6 +3,29 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.8.0-beta (2026-09-13)
+
+**Normative (minor)** — two Core gaps surfaced while reviewing OSD-OML's
+formal rigor (extension chapters had been drifting toward
+documentation-style prose instead of the closed-grammar/numbered-rule
+style [§3.3](docs/03-schema-model.md#33-formal-definition)/[§5](docs/05-osd-grammar.md)
+already use; auditing against that standard found these):
+
+- **New [§3.3](docs/03-schema-model.md#33-formal-definition) S-8**: a
+  `Name` (record name, or a `Ref`'s target) MUST match
+  `[A-Za-z_][A-Za-z0-9_]*`. Previously enforced only implicitly by OSD
+  text's own tokenizer — never stated as a model-level rule, so never
+  available for a new syntax surface (OSD-OML) to inherit. No behavior
+  change for OSD text (its grammar already enforced this structurally);
+  closes a real gap for OSD-OML, addressed separately.
+- **[§3.3](docs/03-schema-model.md#33-formal-definition) S-3 clarified**:
+  the reserved-name check is exact and case-sensitive. Previously
+  unstated. Characterization only — verified against all five ports'
+  source before landing; all five already agree independently. New
+  vector: `osd-grammar/reserved-names/case-mismatched-name-is-not-reserved`.
+
+No implementation behavior change required by either item.
+
 ## v0.7.0-beta (2026-09-13)
 
 **Normative (minor)** — closes [omnist-spec#54](https://github.com/omnist-dev/omnist-spec/issues/54):
