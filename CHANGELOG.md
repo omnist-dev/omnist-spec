@@ -3,6 +3,20 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.9.1-beta (2026-09-13)
+
+**Tooling (patch)** — fixes a typo in v0.9.0-beta's own new
+`osd-grammar/reserved-names/case-mismatched-name-is-not-reserved` vector:
+its field label `x` was unquoted, which OSD text's grammar rejects
+outright (labels are always quoted, [§5.4](docs/05-osd-grammar.md#54-records-and-fields)) —
+the vector failed to parse at all, before ever reaching the case-sensitivity
+check it existed to exercise. Found by the Python port (`omnist`) during
+its v0.9.0-beta pin-bump verification. Fixed to `"x"`; spot-checked
+against the Python reference parser, confirmed to now exercise the
+intended check. No other vector in the file has this typo (checked via a
+pattern scan of every vector's input text). Not a spec-content change —
+the S-3/S-8 rules from v0.8.0-beta/v0.9.0-beta are unaffected.
+
 ## v0.9.0-beta (2026-09-13)
 
 **Normative (minor)** — [OSD-OML](docs/extensions/osd-oml.md) bumped to
