@@ -3,6 +3,47 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.9.0-beta (2026-09-13)
+
+**Normative (minor)** — [OSD-OML](docs/extensions/osd-oml.md) bumped to
+**v1.1**: E.5 through E.9 rewritten from documentation-style prose (closed
+grammar + numbered, exhaustive rules replacing tables-plus-examples that
+were never structurally guaranteed to be exhaustive — found to have real
+gaps by simulating an implementor against them). Builds on v0.8.0-beta's
+new Sec3.3 S-8.
+
+- **New code `schema.invalid-name`** (R-3a): a `record.name` or ref-branch
+  `type.name` MUST satisfy S-8's `Name` domain. Closes a real hole: OSD-OML
+  could construct a `Schema` (e.g. a record named `"My Record!"`) with no
+  possible OSD-text representation at all, since OSD's `name` token cannot
+  tokenize outside that domain and nothing previously stopped OSD-OML from
+  producing one.
+- **New rule, no prior code assigned**: `nullable: false` explicitly
+  present (R-13) now reuses `schema.invalid-type` — previously this input
+  had no stated outcome at all, not even an unstated one.
+- **New rule**: `type.kind` outside `scalar`/`ref`/`any` (R-11) now reuses
+  `schema.invalid-type` — same gap as `nullable: false`, no code existed
+  for this input before.
+- **`nullable` on a `ref-node`/`any-node`** (R-14/R-15) is now explicit
+  `schema.unknown-key`, enforcing Sec3.3 S-7 structurally via the grammar's
+  own closed key sets rather than a separate semantic check that E.10
+  never actually listed.
+- **New path-kind assignment** (R-21/R-22): `schema.missing-key`,
+  `schema.invalid-type`, `schema.unknown-key`, and `schema.invalid-name`
+  now explicitly use a Document path; every other reachable `schema.*`
+  code keeps Schema path, unchanged. [§8.4](docs/08-conformance-and-errors.md#84-paths)
+  previously allowed either without saying which applied where.
+- **Canonical `schema_to_document` output** (E.8) now states one general
+  "omit at default" rule instead of per-field special cases — codifies
+  behavior two existing vectors already tested individually without
+  either stating the general rule they were both instances of.
+
+5 new conformance vectors added to `test-suite/extensions-osd-oml/`
+covering the above. No port implements OSD-OML yet (per
+[§9.6](docs/09-divergence-ledger.md#96-extension-support)), so every new
+vector reports as a skip everywhere, same as the existing 24 — no port
+behavior change, no port version bump required by this release.
+
 ## v0.8.0-beta (2026-09-13)
 
 **Normative (minor)** — two Core gaps surfaced while reviewing OSD-OML's
