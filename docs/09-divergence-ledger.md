@@ -160,7 +160,7 @@ diverge.
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | Conformance (vectors, of 204 — all five ports now on the same v0.9.1-beta pin) | 128 pass / 0 fail / 76 skip | 128 pass / 0 fail / 76 skip | 170 pass / 0 fail / 34 skip | 175 pass / 0 fail / 29 skip | 176 pass / 0 fail / 28 skip |
-| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 29/29 (Java's own fixture set has grown independently of this round; not yet reconciled with the other four's count of 19 — worth a follow-up, not part of this bump) |
+| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (Java's own harness headline count is 29, but 10 of those are `_referee-self-test/*` fixtures — tests of the harness's own equality logic, not this port's behavior — that Java's `Track1Runner` already special-cases but still folds into the same headline number; the other four ports exclude these from their public count. Root cause confirmed, tracked in `omnist-j#110`, not urgent) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
 
