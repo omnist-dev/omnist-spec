@@ -175,6 +175,23 @@ Constraints on a well-formed schema:
 A schema MAY be recursive. `env` is finite, so every operation in
 [chapter 6](06-schema-algebra.md) terminates.
 
+**These constraints govern a Schema however it was built.** A Schema may be
+produced by parsing OSD text ([chapter 5](05-osd-grammar.md)), by parsing
+OSD-OML ([extensions](extensions/osd-oml.md)), by an algebra operation
+([chapter 6](06-schema-algebra.md)), or **by direct programmatic
+construction** through an implementation's own API — the same way
+[§2.4](02-document-model.md#24-safety-limits) treats a Document builder as
+a peer of the OML parser rather than an afterthought. S-1 through S-8 are
+properties of the model, not of any one route into it.
+
+This matters because the routes are not equally constrained. A text grammar
+can make a violation unwritable, and where it does, the corresponding check
+has historically gone unstated — S-8 existed only inside OSD's tokenizer
+until OSD-OML needed it, and `max = 0` ([§3.4](#34-cardinality)) is
+representable programmatically while both text surfaces reject it. An
+implementation MUST enforce S-1 through S-8 at construction, not rely on its
+parsers to have made violations unreachable.
+
 **Canonical serialization order.** `env` is a set — S-4 guarantees unique
 names, and nothing above assigns meaning to the order records or fields were
 declared in; this is a distinct concern from the Document model's own edge
@@ -270,12 +287,32 @@ A field with `max = 0` means the label may never appear. `min <= max` forces
 written directly in OSD source ([§5.5](05-osd-grammar.md#55-cardinality),
 `schema.invalid-cardinality`): a field that can never appear is
 indistinguishable from one that was never declared, so allowing both would be
-a second spelling for one thing. `max = 0` can still arise as a *derived*
-value — an intermediate result of algebra operations that narrow a
-cardinality range, before that result is itself normalized — which is exactly
-the state `prune` (§6.5) is defined to clean up: it is a step other
-operations MAY need to run over their own output, not a shape an author
-writes by hand.
+a second spelling for one thing. [OSD-OML](extensions/osd-oml.md) forbids it
+identically.
+
+**`max = 0` is nevertheless representable in the model**, since S-2 requires
+only `max >= min` and `0 >= 0` holds. The single route to it is **direct
+programmatic construction** — building a `Field` through an implementation's
+own API rather than parsing either text surface. `prune` ([§6.5](06-schema-algebra.md#65-prunes))
+is what cleans it up.
+
+Two consequences worth stating plainly, because both are easy to get wrong:
+
+- **No operation in [chapter 6](06-schema-algebra.md) produces `max = 0`.**
+  There is no intersection, meet, or range-narrowing operation in this spec;
+  `max = 0` is consumed in several places and produced in none. An earlier
+  version of this section justified the value as "an intermediate result of
+  algebra operations that narrow a cardinality range" — no such operation
+  exists, and that justification was wrong.
+- **No conformance vector can reach it.** Every vector supplies schemas as
+  OSD text, and OSD text cannot express `[0,0]`, so `prune`'s `max = 0` rule
+  is normative but unverifiable through the suite as currently designed. An
+  implementation could omit that rule entirely and still pass.
+
+Whether the model should permit `max = 0` at all — rather than tightening
+S-2 to forbid it and deleting the handling from §6.5 and §6.3 alike — is
+[omnist-spec#83](https://github.com/omnist-dev/omnist-spec/issues/83), and is
+deliberately left open here rather than settled in passing.
 
 ---
 

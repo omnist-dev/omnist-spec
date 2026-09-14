@@ -7,6 +7,19 @@ edit_uri: edit/master/docs/
 
 docs_dir: docs
 
+# Anchor validation is deliberately an error, not a warning. Stale
+# cross-references were the most common defect found in this spec's 2026-09
+# quality audit: a citation that resolves to a section which no longer says
+# what the citing text claims is invisible to both readers and reviewers.
+# mkdocs does not check anchors by default, so every `#anchor` in the docs
+# went unverified by CI until this was added -- `--strict` reported broken
+# ones as INFO and passed. `warn` is the strongest level this option accepts;
+# combined with the `--strict` that CI already runs, a warning aborts the
+# build, so this is a hard gate despite the name.
+validation:
+  links:
+    anchors: warn
+
 theme:
   name: material
   logo: assets/logo.svg
