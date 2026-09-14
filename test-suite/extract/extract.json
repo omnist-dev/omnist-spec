@@ -78,6 +78,26 @@
         ]
       },
       "comment": "The companion case to first-bad/within-record-declaration-order-wins: with nothing but 'order' kept, every record loses every field, so step 1's single global pass over env reaches Address (declared first, Sec3.1's schema) before it ever reaches Order -- first_bad is Address's own first field (street), regardless of what Order's internal field order looks like. This is the exact case omnist-spec#36 found the spec's own worked example getting wrong: first_bad is a whole-environment pass, never scoped to the record that 'looks like' the obvious offender. Confirmed live against the reference implementation."
+    },
+
+    {
+      "name": "extract/step5/kept-optional-field-is-dropped-when-its-target-dies",
+      "spec": "docs/06-schema-algebra.md#69-extracts-keep",
+      "operation": "extract",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record Address {\n    \"city\": string,\n    \"zip\": string,\n}\nrecord R {\n    \"name\": string,\n    \"addr\" [0,1]: Address,\n}\nroot R\n",
+        "keep": [
+          "name",
+          "addr",
+          "city"
+        ]
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"name\": string,\n}\nroot R\n"
+      },
+      "comment": "Sec6.9 step 5 drops any field still pointing at an invalidated record, 'mandatory or not' -- and this vector is the only one exercising the 'or not' half. zip is mandatory and not kept, so Address is invalidated. addr is optional, so step 3's propagation never invalidates R and step 4 never fires. Step 5 must still strip addr, even though \"addr\" is literally in keep, because its target is gone. An implementation that reuses step 3's mandatory-only logic for step 5 -- a plausible reading, the two steps being adjacent and similar -- leaves addr pointing at a record absent from new_env. What happens next depends on the port: one that validates references at Schema construction raises an unknown-type error instead (this is what the Python reference does when mutated that way), while one that does not emits the dangling Ref directly, a schema S-6 says cannot exist. Either way the vector catches it, since both outcomes differ from the expected success. That implementation passes every other vector in this file. Verified against the Python reference."
     }
   ]
 }
