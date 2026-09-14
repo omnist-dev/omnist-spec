@@ -3,6 +3,40 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.12.0-beta (2026-09-14)
+
+**Normative (minor)** — eight conformance vectors closing coverage gaps found
+by the audit, where a wrong implementation passed the whole suite. No spec
+prose changed; no implementation behavior changes. Closes
+[#72](https://github.com/omnist-dev/omnist-spec/issues/72),
+[#73](https://github.com/omnist-dev/omnist-spec/issues/73),
+[#74](https://github.com/omnist-dev/omnist-spec/issues/74),
+[#80](https://github.com/omnist-dev/omnist-spec/issues/80).
+
+- **`normalize`'s refinement fixpoint had no test at all** (#72). All three
+  existing vectors merge on the first pass, so an implementation that groups
+  by local signature once and skips refinement entirely passed. The new
+  `ref-targets-in-different-blocks-block-the-merge` requires a second round.
+  Two more pin the discrimination §6.8's own prose warns about — records
+  differing only by scalar kind, and only by nullability, must not merge.
+- **`extract` step 5's "mandatory or not" ref-drop** (#73) had no vector; all
+  four existing ones exercise step 3's mandatory-only propagation. A
+  plausible misreading emits a schema with a dangling `Ref` that S-6 says
+  cannot exist, and passed conformance.
+- **`equivalent` coverage** (#80): same-language schemas differing in record
+  *count*, and differing in *declared field set* (an optional field whose
+  target is unsatisfiable, so it can never be emitted). The second is the one
+  most likely to be got wrong — comparing declared field sets is
+  reasonable-looking and returns the wrong answer. A negative-boundary vector
+  makes the same target satisfiable so the answer flips.
+- **§8.3.8 MUST-fail conditions** (#74): one genuine gap, not the three
+  originally reported. The `key-sanitized` and `shape-empty-ambiguous`
+  conditions were already covered — the original grep searched for the
+  `format.*` code names, which correctly appear nowhere, since §8.3.8 says
+  all five emit `write.unsupported-value`. Added the one real gap, a C0
+  control character in a string written to XML. See the issue for the
+  correction.
+
 ## v0.11.0-beta (2026-09-14)
 
 **Normative (minor)** — three rules the spec relied on but never stated,

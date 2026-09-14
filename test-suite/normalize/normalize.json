@@ -38,6 +38,48 @@
         "schema": "record B {\n    \"x\": string,\n}\nrecord M {\n    \"item1\": B,\n    \"item2\": B,\n}\nroot M\n"
       },
       "comment": "Sec3.3's canonical serialization order, principle 2: normalize merges structurally-identical records into one representative, which destroys any single well-defined 'original position' for the survivor -- output MUST instead be alphabetical (records by name, ordinal comparison). M is declared first, before the merge; B survives the Y/B merge as the lexicographically smaller name. Output order is B, M -- alphabetical -- not M, B, which is what declaration-order-of-survivors would give (M was declared before either Y or B). This is the exact disambiguating case that settled the principle-2 design question live against the Python reference: a case where the two candidate rules (declaration order vs. alphabetical) actually disagree, unlike a schema that happens to already be alphabetical, which would pass under either rule and prove nothing."
+    },
+
+    {
+      "name": "normalize/refinement/ref-targets-in-different-blocks-block-the-merge",
+      "spec": "docs/06-schema-algebra.md#68-normalizes",
+      "operation": "normalize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": integer,\n}\nrecord M1 {\n    \"f\": A,\n}\nrecord M2 {\n    \"f\": B,\n}\nrecord Top {\n    \"m1\": M1,\n    \"m2\": M2,\n}\nroot Top\n"
+      },
+      "expect": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": integer,\n}\nrecord M1 {\n    \"f\": A,\n}\nrecord M2 {\n    \"f\": B,\n}\nrecord Top {\n    \"m1\": M1,\n    \"m2\": M2,\n}\nroot Top\n"
+      },
+      "comment": "Sec6.8's partition refinement MUST iterate to a fixpoint, and this is the only vector that requires it to. M1 and M2 are identical under the target-blind local signature -- one Ref field each, same label, same cardinality -- so a first-pass-only implementation merges them and rewrites Top.m2, silently collapsing two schemas that are not equivalent. Only a second refinement round separates them, once A and B are known to be in different blocks (they differ by scalar kind and never merge). Nothing merges here: all five records survive unchanged. Verified against the Python reference."
+    },
+
+    {
+      "name": "normalize/refinement/records-differing-only-by-scalar-kind-do-not-merge",
+      "spec": "docs/06-schema-algebra.md#68-normalizes",
+      "operation": "normalize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": integer,\n}\nrecord Top {\n    \"a\": A,\n    \"b\": B,\n}\nroot Top\n"
+      },
+      "expect": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": integer,\n}\nrecord Top {\n    \"a\": A,\n    \"b\": B,\n}\nroot Top\n"
+      },
+      "comment": "Sec6.8's prose flags this exact bug -- 'an implementation that reads is-scalar-or-not as a bare boolean will silently merge a string field with an integer field' -- and until now no vector tested it. The local signature MUST discriminate scalar kind, not merely value-versus-node. Direct case with no Ref indirection, so it isolates the signature bug from the refinement bug its sibling vector covers."
+    },
+
+    {
+      "name": "normalize/refinement/records-differing-only-by-nullable-do-not-merge",
+      "spec": "docs/06-schema-algebra.md#68-normalizes",
+      "operation": "normalize",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": string?,\n}\nrecord Top {\n    \"a\": A,\n    \"b\": B,\n}\nroot Top\n"
+      },
+      "expect": {
+        "schema": "record A {\n    \"x\": string,\n}\nrecord B {\n    \"x\": string?,\n}\nrecord Top {\n    \"a\": A,\n    \"b\": B,\n}\nroot Top\n"
+      },
+      "comment": "The nullable half of the same discrimination requirement. Same scalar kind, differing only in nullability, which Sec3.3 S-7 makes part of the Scalar's identity -- so A and B accept different documents and MUST NOT merge. An implementation whose local signature records kind but drops the nullable flag passes the sibling vector above and fails here."
     }
   ]
 }

@@ -249,6 +249,37 @@
       "comment": "An empty internal node (zero edges) and an empty-string leaf have no distinct XML spelling -- both would be written as the self-closing <x />, and confirmed live that reading it back always produces the empty-string leaf, never the empty internal node, with no diagnostic distinguishing the two cases that collided. The write fails, unconditionally, not just under strict -- same principle as the label and NaN cases above, not a format.* adjustment that still succeeds."
     },
     {
+      "name": "formats-xml/basic/string-with-a-c0-control-character-cannot-be-written",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "root",
+              {
+                "edges": [
+                  ["s", {"scalar": {"kind": "string", "value": "a\u0001b"}}]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.root.s",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "The format.string-illegal-char condition from Sec8.3.8: XML 1.0 cannot represent a raw C0 control character other than tab, LF and CR, and there is no substitute spelling, so the write MUST fail unconditionally rather than drop or replace the character. U+0001 is a legal Document string value -- Sec2.2 places no such restriction on the model -- so this is a target-format limitation, reachable from a perfectly valid Document. Completes the Sec8.3.8 five: the null-unrepresentable, float-special, key-sanitized and shape-empty-ambiguous conditions were already covered by vectors elsewhere in this suite; this was the only one of the five with no test. Verified against the Python reference, which raises write.unsupported-value at exactly this path."
+    },
+    {
       "name": "formats-xml/basic/carriage-return-written-as-numeric-character-reference",
       "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
       "operation": "write",

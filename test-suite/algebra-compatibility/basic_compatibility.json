@@ -211,6 +211,45 @@
       },
       "expect": { "result": true },
       "comment": "Both schemas are unsatisfiable: every reference is mandatory, so each demands an infinitely deep document and neither accepts a finite one. Sec6.7 defines equivalence as accepting the same set of documents, and both accept the empty set, so they are equivalent vacuously -- despite differing in record names, record count, and field labels, none of which any document could expose. An implementation that errors or returns false on unsatisfiable input fails here while passing every other equivalent vector, since the existing two both use satisfiable schemas. Sec6.8's scope limitation and its Theorem 4 precondition both rest on this behavior."
+    },
+
+    {
+      "name": "equivalent/duplicated-records-equal-one-shared-record",
+      "spec": "docs/06-schema-algebra.md#67-equivalenta-b",
+      "operation": "equivalent",
+      "purpose": "edge-case",
+      "input": {
+        "a": "record P {\n    \"x\": string,\n}\nrecord Q {\n    \"x\": string,\n}\nrecord Top {\n    \"a\": P,\n    \"b\": Q,\n}\nroot Top\n",
+        "b": "record S {\n    \"x\": string,\n}\nrecord Top {\n    \"a\": S,\n    \"b\": S,\n}\nroot Top\n"
+      },
+      "expect": { "result": true },
+      "comment": "Three records versus two, and a different reference graph, but the same accepted documents. Sec6.7 forbids substituting structural equality for equivalence, and the two existing vectors only cover naming and reachability differences -- neither covers a differing record count. An implementation requiring a bijection between record sets, which is a natural reading of 'same structure', returns false here and passes every other vector."
+    },
+
+    {
+      "name": "equivalent/unemittable-optional-field-does-not-change-the-language",
+      "spec": "docs/06-schema-algebra.md#67-equivalenta-b",
+      "operation": "equivalent",
+      "purpose": "edge-case",
+      "input": {
+        "a": "record Top {\n    \"x\": string,\n}\nroot Top\n",
+        "b": "record U {\n    \"u\": U,\n}\nrecord Top {\n    \"x\": string,\n    \"opt\" [0,1]: U,\n}\nroot Top\n"
+      },
+      "expect": { "result": true },
+      "comment": "The two schemas declare different field sets, and are still equivalent. U is unsatisfiable, so the optional field opt can never be emitted by any document, and B's language is exactly A's. This is the equivalence case most likely to be implemented wrongly: comparing declared field sets -- 'every field of A must appear in B and vice versa' -- is reasonable-looking and returns false here. Paired with the sibling vector below, which keeps the shape and makes U satisfiable, so the field becomes emittable and the answer flips."
+    },
+
+    {
+      "name": "equivalent/emittable-optional-field-does-change-the-language",
+      "spec": "docs/06-schema-algebra.md#67-equivalenta-b",
+      "operation": "equivalent",
+      "purpose": "edge-case",
+      "input": {
+        "a": "record Top {\n    \"x\": string,\n}\nroot Top\n",
+        "b": "record U {\n    \"u\" [0,1]: U,\n}\nrecord Top {\n    \"x\": string,\n    \"opt\" [0,1]: U,\n}\nroot Top\n"
+      },
+      "expect": { "result": false },
+      "comment": "The negative boundary for the vector above: identical shape, except U's self-reference is now optional, so U is satisfiable and opt can actually be emitted. B therefore accepts documents A rejects, and the two are not equivalent. Pinning both sides matters because an implementation that simply ignores optional fields would pass the positive case for the wrong reason and fail here."
     }
   ]
 }
