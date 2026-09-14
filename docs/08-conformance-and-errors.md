@@ -483,12 +483,26 @@ map-and-array shape smuggling assumptions back in. The encoding is explicit:
 - A node is `{"edges": [[label, target], ...]}`. The outer array preserves
   order; repeated labels appear as repeated entries.
 - A scalar is `{"scalar": {"kind": K, "value": V}}` where `K` is one of the
-  seven kinds. Temporal values are ISO-8601 strings. `integer` values are JSON
-  numbers when they fit exactly and decimal strings otherwise.
+  seven kinds. Temporal values are ISO-8601 strings. For `integer` values see
+  the threshold rule below.
 - `null` is `{"scalar": {"kind": null, "value": null}}`.
 
-This is verbose on purpose. A vector file must not depend on the reader's JSON
-library to decide whether `1` is an integer or a number.
+**The integer threshold is exactly ±(2^53 − 1).** An `integer` whose absolute
+value is at most 9007199254740991 MUST be encoded as a JSON number; any
+integer outside that range MUST be encoded as a decimal string. Both a vector
+author and a vector reader apply the same fixed bound, in both directions.
+
+The bound is stated as a literal rather than by reference to any language's
+behavior, deliberately. It is the largest integer every IEEE-754 double can
+represent exactly, which makes it the one threshold that is a property of the
+interchange format rather than of whichever JSON library a given
+implementation happens to use — and §2.4's integer-digit cap allows integers
+far larger than this, so the case is reachable, not theoretical.
+
+This is verbose on purpose, and the threshold is part of that purpose. A
+vector file must not depend on the reader's JSON library to decide whether
+`1` is an integer or a number, and it must not depend on that library to
+decide where "fits exactly" stops either.
 
 ### 8.5.5 Reporting
 
