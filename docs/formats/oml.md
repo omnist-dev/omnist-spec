@@ -81,10 +81,10 @@ five formats rather than two ([XML](xml.md) is the constraint).
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. "OML read/write" is complete in every current implementation
-(Core and Extended alike on the read side). Only the *writer* restriction is
-one-sided by design — a canonical writer MUST NOT emit Extended spellings even
-though a reader MUST accept them.
+is the authority on per-implementation "OML read/write" status; this page
+states none of its own. What is *not* a status question but a design one: the
+reader and writer are deliberately asymmetric — a canonical writer MUST NOT
+emit Extended spellings even though a reader MUST accept them.
 
 Canonical output is not permitted to vary at all. Chapter 9's
 [§9.2](../09-divergence-ledger.md#92-forbidden-variation) puts the exact bytes

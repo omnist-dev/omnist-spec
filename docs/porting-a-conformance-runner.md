@@ -117,15 +117,15 @@ every skip cites a real reason. Two categories:
   removed from the ledger; it doesn't stay listed as historical record.
 
 If you find a genuinely new divergence category building your own runner,
-follow the same pattern: file it as a new `D-`-numbered entry in this repo
+follow the same pattern: file it as a new `DIV-`-numbered entry in this repo
 first (with real, source-verified evidence — every existing entry cites a
 specific file, function, or confirmed behavior, never "presumably"), then
 cite it. `§9.2`'s forbidden-variation rules have a narrow, explicit carve-out
 for exactly this case (a missing distinction being skipped) — it does **not**
 cover producing incorrect output, which stays a plain conformance bug
-regardless of the reason behind it. D-7's two halves are the worked example
-of that distinction: one accepted accommodation, one real bug that needed
-fixing, in the same underlying architecture decision.
+regardless of the reason behind it. That distinction is the whole point: one
+accepted accommodation and one real bug can come out of the same underlying
+architecture decision, and only the first belongs in the ledger.
 
 ## When you find a real failure
 

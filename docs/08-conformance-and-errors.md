@@ -184,9 +184,9 @@ there is no separate set of names for them.
 
 **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
-they describe occurs, with a conformance vector for each — see
-[§9.4](09-divergence-ledger.md#94-known-open-divergences) D-3 for
-per-port rollout status.
+they describe occurs, with a conformance vector for each. Per-implementation
+status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
+nowhere else.
 
 Every code above describes a write that still succeeds, and — this is the
 test that matters, not merely "is there only one available fallback" —

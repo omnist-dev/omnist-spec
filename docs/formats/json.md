@@ -18,10 +18,13 @@ is not a value in the model, it is the same label occurring more than once.
 schema upgrades it in stage 2. A writer MUST stringify a temporal leaf to
 ISO-8601.
 
-**No `NaN` or `Infinity`.** Those tokens are not valid JSON. A writer MUST NOT
-emit them. The default behavior is to substitute `null` at the leaf so the
-output is always valid JSON, and to report the substitution as an
-error-severity adjustment in the format report. A strict mode MAY instead fail.
+**No `NaN` or `Infinity`.** Those tokens are not valid JSON. Writing one MUST
+fail with `write.unsupported-value`
+([§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments)),
+unconditionally — not gated behind a strict mode, and never by substituting
+`null`. A substituted `NaN` and a genuine `null` produce the identical JSON
+token and read back as the identical Document value, so the substitution could
+never be detected or undone afterwards.
 
 **Bare nested arrays are rejected.** `[[1,2],[3,4]]` has inner elements with no
 label and therefore no edge to occupy. A reader MUST reject it rather than
@@ -121,8 +124,9 @@ its two fixtures in [`../examples/`](../examples/index.md#packagejson).
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. Its "Codecs (JSON/YAML/TOML/XML)" row reads "all four" for
-every current implementation.
+is the authority on which implementations ship a JSON codec. This page states
+no per-port status of its own: a copy here can only go stale relative to the
+ledger.
 
 There is no JSON-specific entry in
 [§9.4](../09-divergence-ledger.md#94-known-open-divergences) — see that

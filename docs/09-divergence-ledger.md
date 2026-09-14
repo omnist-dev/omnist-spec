@@ -177,6 +177,18 @@ Only genuinely unresolved items belong here. A closed item is removed
 entirely once fixed — its resolution lives in the fixing repo's own issue,
 not as a growing paragraph in this file.
 
+**Entries are numbered `DIV-1`, `DIV-2`, …** — deliberately *not* `D-N`,
+which is chapter 2's Document-model rule namespace
+([§2.3](02-document-model.md#23-structural-invariants)'s `D-1`..`D-5`). The
+two were previously indistinguishable, so a bare `D-3` could mean either an
+edge-ordering invariant or a retired XML divergence, and both readings
+appeared in the same chapter.
+
+Because a closed entry is deleted rather than archived, a citation to one
+can outlive it. **Before removing an entry, search the docs for inbound
+citations** — that is how the previous `D-3` and `D-7` references ended up
+pointing at nothing.
+
 None currently open.
 
 ## 9.5 Adding a sixth implementation

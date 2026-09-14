@@ -121,12 +121,11 @@ demonstration of exactly one limitation (see also
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-"all four" for Python, TypeScript, and Rust alike — every implementation has
-an XML codec.
+is the authority on which implementations ship an XML codec and on what each
+one currently reports. This page deliberately states no per-port status of its
+own: a copy here can only go stale relative to the ledger, and did.
 
-XML also has its own tracked divergence, [D-3](../09-divergence-ledger.md#94-known-open-divergences):
-attribute and namespace-prefix drops MUST now be reported via
+Attribute and namespace-prefix drops MUST be reported via
 `format.attribute-dropped`/`format.namespace-dropped`
 ([§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments)),
-not silently — per-port rollout is still in progress.
+never silently.
