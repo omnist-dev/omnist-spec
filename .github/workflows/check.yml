@@ -32,6 +32,20 @@ jobs:
       - run: pip install mkdocs-material
       - run: mkdocs build --strict
 
+  # Every normative paragraph must carry a citable rule number. A requirement
+  # nobody can cite is one nobody can point at in review, and one nothing
+  # structurally guarantees is complete -- the single largest finding of the
+  # 2026-09 quality audit, where five chapters carried ~98 MUST-level
+  # requirements between them with no anchors at all.
+  rule-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: "3.12"
+      - run: python3 tools/check_rule_coverage.py
+
   # Every vector file must be strictly valid JSON. RFC 8259 forbids raw
   # control characters inside string literals, and a literal one very nearly
   # shipped during the 2026-09 audit -- it would have broken every port's

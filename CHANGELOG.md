@@ -3,6 +3,32 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.16.0-beta (2026-09-14)
+
+**Editorial (minor)** — closes
+[#63](https://github.com/omnist-dev/omnist-spec/issues/63), the largest
+finding of the quality audit. No requirement changed meaning; every one
+became citable, and CI now keeps it that way.
+
+- **The remaining four chapters have rule spines**: `OML-1`..`OML-24`
+  (chapter 4), `OSD-1`..`OSD-13` (chapter 5), `C-1`..`C-8` (chapter 7),
+  `E-1`..`E-22` (chapter 8). With chapter 6's `A-1`..`A-23` from
+  v0.15.2-beta, all ~98 previously-unanchored MUST-level requirements now
+  have numbers, matching §2.3's `D-` and §3.3's `S-` conventions.
+- **Numbered in place**, as in chapter 6, rather than gathered into per-chapter
+  tables — a consolidated list would be a second copy free to drift from the
+  prose it summarises.
+- **New `tools/check_rule_coverage.py`, wired into CI.** It fails the build if
+  any normative paragraph in chapters 4–8 lacks a rule number, so the spine
+  cannot silently rot the way the citations did. Verified in both directions:
+  removing one rule number fails with the file and line, restoring it passes.
+- **It immediately found more.** Chapters 2 and 3 already had `D-` and `S-`
+  spines, but the checker shows **12 and 10 normative paragraphs respectively
+  sitting outside them** — §2.4's limit prose and §3.3's canonical-order
+  principles among them. Those two chapters are reported but not enforced for
+  now; extending the spine to cover them is follow-up work, and #63 is
+  reopened for it rather than the gap going unrecorded.
+
 ## v0.15.2-beta (2026-09-14)
 
 **Editorial (patch)** — first instalment of

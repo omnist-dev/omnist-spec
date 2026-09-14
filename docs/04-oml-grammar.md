@@ -6,9 +6,9 @@ onto it, so every Document shape round-trips through OML exactly.
 
 Two levels are defined:
 
-- **OML-Core** — what the canonical writer emits. Every conformant reader MUST
+- **OML-1. OML-Core.** — what the canonical writer emits. Every conformant reader MUST
   accept all of it.
-- **OML-Extended** — additional read-only spellings. Every conformant reader
+- **OML-2. OML-Extended.** — additional read-only spellings. Every conformant reader
   MUST accept them; a canonical writer MUST NOT emit them.
 
 The machine-readable grammar is [`grammars/oml.abnf`](https://github.com/omnist-dev/omnist-spec/blob/master/grammars/oml.abnf),
@@ -49,7 +49,7 @@ name: "Ann"; address: { city: "Zurich"; postcode: "8001" }; tag: "x"; tag: "y"
 
 ## 4.2 Tokenization
 
-A conformant tokenizer MUST scan with **maximal munch under a fixed priority
+**OML-3.** A conformant tokenizer MUST scan with **maximal munch under a fixed priority
 order**. At each position it tries rules in this order and the first that
 matches wins, consuming the longest match for that rule. There is no backtracking
 between rules.
@@ -66,13 +66,13 @@ between rules.
 
 Anything matching none of these is an error.
 
-Two consequences of the order are normative and MUST be reproduced.
+**OML-4.** Two consequences of the order are normative and MUST be reproduced.
 
 **`nan` and `inf` can never be bare labels.** They are claimed by rule 7 before
 `IDENT` is reached, so `nan: 1` is an error. `"nan": 1` is fine, since quoting
 routes it to rule 1.
 
-**DATE versus DATETIME needs one lookahead.** At a position where `DATE`
+**OML-5. DATE versus DATETIME needs one lookahead.** At a position where `DATE`
 matches, the tokenizer MUST check whether the next character is `T` and the text
 after it matches `TIME`. If so, it emits `DATETIME`. If not, it emits `DATE`,
 and whatever follows is tokenized independently. So `2024-01-01T10:30` is one
@@ -103,7 +103,7 @@ NUMBER   = ["-"] int-part "." 1*DIGIT [exponent]
 exponent = ("e" / "E") ["+" / "-"] 1*DIGIT
 ```
 
-**A numeric literal's integer part MUST NOT have a leading zero.** `int-part`
+**OML-6. A numeric literal's integer part MUST NOT have a leading zero.** `int-part`
 only permits a single `0`, or a nonzero digit followed by any digits — never a
 `0` followed by more digits. `01` and `00` are errors
 (`parse.leading-zero`); `0`, `0.5`, and `-0` are fine. This matches every
@@ -120,19 +120,19 @@ all, so a bare `int-part` only ever falls through to `INTEGER`.
 
 ### 4.2.4 DATE, TIME, and DATETIME value ranges
 
-ABNF constrains `DATE`/`TIME`/`DATETIME` (§4's grammar) to digit *counts*
+**OML-7.** ABNF constrains `DATE`/`TIME`/`DATETIME` (§4's grammar) to digit *counts*
 only — it cannot express that a month digit pair must be `01`–`12`, for
 instance. That range checking is still normative and MUST be enforced, at
 parse time, as part of tokenizing these three rules, not deferred to some
 later validation pass:
 
-- **`DATE`** MUST be a valid proleptic Gregorian calendar date: month `01`–`12`;
+- **OML-8. `DATE`.** MUST be a valid proleptic Gregorian calendar date: month `01`–`12`;
   day valid for that month and year, including leap years (`2000-02-29` is
   valid, `1900-02-29` is not — 1900 is not a leap year).
-- **`TIME`** and the time portion of `DATETIME` MUST have hour `00`–`23`,
+- **OML-9. `TIME`.** and the time portion of `DATETIME` MUST have hour `00`–`23`,
   minute `00`–`59`, and second `00`–`59`. OML has no leap-second spelling:
   `23:59:60` is an error, not a valid 61st second.
-- **`tz-offset`** MUST have the same hour and minute ranges as `TIME` —
+- **OML-10. `tz-offset`.** MUST have the same hour and minute ranges as `TIME` —
   `00`–`23` and `00`–`59` respectively. This is the same rule as `TIME`'s,
   applied to the same two digit pairs; an implementation MUST NOT accept a
   wider range for the offset than it accepts for `TIME` itself. (This is
@@ -170,7 +170,7 @@ that exact position:
 b: [1, 2, 3]
 ```
 
-produces `[(b,1), (b,2), (b,3)]` — indistinguishable from three separate `b:`
+**OML-11.** produces `[(b,1), (b,2), (b,3)]` — indistinguishable from three separate `b:`
 edges. An array is not a value in the Document model, which is why array
 elements MUST NOT themselves be arrays: there is nothing to nest into.
 
@@ -186,12 +186,12 @@ Rules:
 
 ## 4.4 Labels
 
-A label is written either as a `STRING` or as a bare `IDENT`. A bare label MUST
+**OML-12.** A label is written either as a `STRING` or as a bare `IDENT`. A bare label MUST
 NOT be `null`, `true`, or `false`; those three, and only those three, are
 rejected in bare-label position. That is the complete reserved set at the parser
 level.
 
-The canonical writer MUST emit a bare label only when the label text matches
+**OML-13.** The canonical writer MUST emit a bare label only when the label text matches
 `IDENT` **and** is not one of `null`, `true`, `false`, `nan`, `inf`. It MUST
 quote otherwise. `nan` and `inf` are in the writer's quote list even though they
 are not parser-level reserved words, because emitting them bare would produce
@@ -201,7 +201,7 @@ text the tokenizer reads back as a number.
 
 Three spellings.
 
-**Double-quoted (Core).** Recognized escapes are exactly `\"`, `\\`, `\/`, `\b`,
+**OML-14. Double-quoted (Core).** Recognized escapes are exactly `\"`, `\\`, `\/`, `\b`,
 `\f`, `\n`, `\r`, `\t`, and `\uXXXX` with four hex digits. A `\uXXXX` in the
 high-surrogate range `D800`–`DBFF` MUST be immediately followed by a second
 `\uXXXX` in the low-surrogate range `DC00`–`DFFF`; the pair combines into one
@@ -219,7 +219,7 @@ only the first three are consumed as the terminator, and any further quotes in
 that run are returned to the scanner. A run of one or two quotes is literal
 content. Tab and newline are legal inside; other control characters are not.
 
-The canonical writer MUST emit only `\"`, `\\`, `\n`, `\r`, `\t`, and `\u00XX`
+**OML-15.** The canonical writer MUST emit only `\"`, `\\`, `\n`, `\r`, `\t`, and `\u00XX`
 for other control characters. It MUST NOT emit `\/`, `\b`, `\f`, surrogate
 pairs, raw strings, or multiline strings. Non-ASCII characters are emitted
 literally.
@@ -238,7 +238,7 @@ Anything else — two bare scalars in a row, for instance — is an error.
 
 ### 4.6.1 Top-level disambiguation
 
-The grammar is ambiguous on paper: a leading `IDENT` or `STRING` could begin
+**OML-16.** The grammar is ambiguous on paper: a leading `IDENT` or `STRING` could begin
 either a scalar or an edge. A conformant parser MUST resolve it with **one token
 of lookahead** before committing. If the current token is a `STRING`, or an
 `IDENT` that is not `null`/`true`/`false`, and the next token is `:`, parse as
@@ -261,7 +261,7 @@ vectors distinguish them by code.
 | Integer literal digits, sign excluded | 4300 | tokenize time |
 | Nesting depth, `{` levels | 200 | parse time |
 
-Both match the Document model's caps (§2.4), deliberately: a document that
+**OML-17.** Both match the Document model's caps (§2.4), deliberately: a document that
 parses MUST NOT then fail to build. Both MUST raise a parse error rather than
 letting a pathological input exhaust stack or memory.
 
@@ -270,7 +270,7 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 
 ## 4.8 Worked examples
 
-Every row below MUST hold for a conformant implementation, and the ABNF in
+**OML-18.** Every row below MUST hold for a conformant implementation, and the ABNF in
 `grammars/oml.abnf` accepts every accepted input shown.
 
 | Input | Result |
@@ -296,7 +296,7 @@ Every row below MUST hold for a conformant implementation, and the ABNF in
 An OML writer is canonical if, for every Document, it emits text that parses
 back to an equal Document, following the canonical form below.
 
-**Two conformant implementations writing the *same* Document MUST produce
+**OML-19.** **Two conformant implementations writing the *same* Document MUST produce
 byte-identical text.** This guarantee is stronger than
 [OSD's](05-osd-grammar.md#59-canonical-output), for a structural reason: OML's
 syntax *is* the Document model, and edge order is data
@@ -308,11 +308,11 @@ corresponding OSD case legitimately does not.
 
 Canonical form:
 
-- **OML-Core only.** A canonical writer MUST NOT emit OML-Extended spellings,
+- **OML-20. OML-Core only.** A canonical writer MUST NOT emit OML-Extended spellings,
   though every reader MUST accept them — restating the Core/Extended split
   defined in this chapter's opening.
 - **Edges in Document order**, always. Order is data and is never rearranged.
-- **Repeated labels, never array sugar.** `[(b,1), (b,2), (b,3)]` MUST be
+- **OML-21. Repeated labels, never array sugar.** `[(b,1), (b,2), (b,3)]` MUST be
   written as three `b:` edges, not as `b: [1, 2, 3]`. Both parse to the same
   Document (§4.3.1), so a canonical form has to pick one, and this is it.
   Emitting array sugar is a permitted non-canonical writer option, not
@@ -333,7 +333,7 @@ tag: "x"
 tag: "y"
 ```
 
-A **compact mode** is permitted: the whole Document on one line, edges
+**OML-22.** A **compact mode** is permitted: the whole Document on one line, edges
 separated by `;` rather than newlines. "Compact" means single-line, not
 merely unindented — a writer that keeps newlines but drops indentation is
 producing a third layout, which this section does not define and which a
@@ -343,12 +343,12 @@ canonical writer MUST NOT emit.
 name: "Ann"; adr: { city: "Z"; pc: "8001" }; tag: "x"; tag: "y"
 ```
 
-Compact output MUST round-trip in both of the senses that matter, and they
+**OML-23.** Compact output MUST round-trip in both of the senses that matter, and they
 are different claims:
 
 - **Parsing it yields an equal Document** — the same Document the expanded
   form above denotes. Compact mode changes layout, never content.
-- **Re-writing that Document in compact mode reproduces the same bytes.**
+- **OML-24. Re-writing that Document in compact mode reproduces the same bytes.**
   Compact mode is itself canonical within its own layout, so two conformant
   implementations emitting compact output for one Document MUST agree byte
   for byte, exactly as they must for the expanded form.
