@@ -185,7 +185,7 @@
           ]
         }
       },
-      "comment": "D-15, the TOML half. A BOM carries no data -- it is meaningless for UTF-8, which has no byte-order ambiguity to mark -- so treating it as content on some surfaces and not others is how two implementations build different Documents from one file. Paired with the JSON vector because those were the two readers that rejected a BOM before D-15."
+      "comment": "D-15, the TOML half. A BOM carries no data -- it is meaningless for UTF-8, which has no byte-order ambiguity to mark -- so treating it as content on some surfaces and not others is how two implementations build different Documents from one file. Paired with the JSON and OSD vectors because those were the three readers that rejected a BOM before D-15."
     }
   ]
 }

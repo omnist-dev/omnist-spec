@@ -32,20 +32,30 @@ change, and every writer does.**
   byte-level divergence between ports. Three new vectors (JSON, TOML, OSD),
   currently red against the reference by design.
 - **Chapters 2 and 3 have complete rule spines.** They already had `D-1..D-5`
-  and `S-1..S-8`, but 22 normative paragraphs sat outside them — invisible
-  until `check_rule_coverage.py` existed. Now `D-6..D-16` and `S-9..S-20`.
+  and `S-1..S-8`, but normative paragraphs sat outside them — invisible until
+  `check_rule_coverage.py` existed. Now `D-6..D-17` and `S-9..S-21`.
   Existing numbers were left untouched, since `D-1..D-5` are cited from four
-  other files; new rules were appended rather than renumbering.
+  other files; new rules were appended rather than renumbering. `D-17` is the
+  §2.3 wrapper sentence itself ("a conformant implementation MUST maintain
+  all of the following"), restored with its MUST rather than left as
+  non-normative framing — `D-5` carried no MUST of its own and depended on
+  it. `S-21` is `infer`'s `any`-emission requirement, previously a table row
+  the checker's original table-skipping heuristic couldn't see; the checker
+  was fixed to scan table cells generally, not just to carve out this one
+  row.
 - **§3.3's five canonical-order principles are individually citable as
   `S-9..S-13`.** They were numbered `1.`–`5.` locally while chapter 6's `A-3`,
   `A-9` and `A-18` explicitly inherit from them — load-bearing for another
   chapter's rules while unreachable by number.
 - **Three paragraphs were *not* numbered, deliberately.** Mechanical numbering
-  would have manufactured rules out of framing text. The sentence introducing
-  `D-1..D-5` had its redundant MUST removed instead; the depth-limit
+  would have manufactured rules out of framing text. The depth-limit
   elaboration now reads "On depth (D-12, elaborated)"; the `any`-name
   restriction now cites `S-3` rather than restating it; and §3.3's
-  principle-application paragraph cites the `A-` rules it explains.
+  principle-application paragraph cites the `A-` rules it explains. (The
+  sentence introducing `D-1..D-5` was initially left unnumbered with its
+  MUST removed, on the theory that it was a redundant wrapper — that turned
+  out to be wrong, since `D-5` has no MUST of its own; it is `D-17` above,
+  not on this list.)
 - **All seven normative chapters are now enforced** by
   `tools/check_rule_coverage.py` in CI, with no reported-but-unenforced set
   remaining.
