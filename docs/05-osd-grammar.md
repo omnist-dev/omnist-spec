@@ -147,6 +147,16 @@ Three further checks sit above the grammar, and MUST be applied:
   rejected at the token boundary or accepted into the token and rejected one
   step later at field construction, the observable result is the same
   invalid-cardinality error, not a parse failure.
+- **A leading `+` is a syntax error**, unlike `-`. `[+1]` MUST be rejected as
+  `parse.unexpected-token`, never accepted and silently normalized to
+  `[1,1]`. The latitude granted to `-` above exists only because a
+  tokenizer's number token legitimately reads negative values elsewhere in
+  the grammar; `+` has no such role, so there is nothing for a conformant
+  tokenizer to accept it into. The same goes for a repeated sign such as
+  `[--1]`. Stated because `-` was addressed carefully and `+` was not,
+  leaving three defensible readings — reject at the token boundary, accept
+  then reject at construction, or accept and normalize — of which the third
+  differs *observably* from the other two.
 - An inverted range, `max < min`, is rejected. `[1,0]` tokenizes fine and is
   rejected on field construction.
 - **A cardinality of exactly `[0,0]` is rejected.** A field that must occur

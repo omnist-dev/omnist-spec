@@ -163,6 +163,26 @@ of rules.
 | `validate.unexpected-field` | A label no field of the closed record names |
 | `validate.cardinality` | An edge count outside `[min, max]` |
 
+*Non-normative.* These five are the codes a **user** meets most often, since
+they fire on ordinary data rather than on a malformed schema or a broken
+implementation. Each diagnostic pairs one with a path
+([§8.4](#84-paths)) locating the offending edge — `$.order.items[2].sku`
+names the `sku` inside the third `items` edge — so the useful reading order
+is path first, then code. What each typically means in practice:
+
+| Code | Usually means |
+|---|---|
+| `validate.shape-mismatch` | A scalar where the schema expects a record or the reverse — often a value that should have been wrapped in an object, or a single-field object flattened by an upstream tool |
+| `validate.type-mismatch` | Right shape, wrong scalar kind — most often a number that arrived as a string, common when data came from CSV, form input, or any format without typed literals |
+| `validate.null-not-allowed` | An explicit `null` where the field is not nullable. If *absence* is what you meant, the fix is usually cardinality `[0,1]`, not a nullable type — see [§3.5](03-schema-model.md#35-nullable-versus-optional) |
+| `validate.unexpected-field` | A label the record does not declare. Records are closed, so this is a typo, version skew between producer and schema, or a field that genuinely needs adding |
+| `validate.cardinality` | Too few or too many edges carrying one label — a missing required field, or repetition where the schema allows one |
+
+The two most often confused are `null-not-allowed` and `cardinality`. "May be
+absent" and "may be null" are different questions with different mechanisms,
+and reaching for the wrong one is the most frequent modelling error in
+Omnist; §3.5 exists for exactly that.
+
 ### 8.3.5 `materialize.*` — schema-directed deserialization
 
 | Code | Raised when |

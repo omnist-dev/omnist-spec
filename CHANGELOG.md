@@ -3,6 +3,38 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.15.1-beta (2026-09-14)
+
+**Editorial (patch)** — closes
+[#70](https://github.com/omnist-dev/omnist-spec/issues/70) and
+[#79](https://github.com/omnist-dev/omnist-spec/issues/79). No normative
+rule changes except the first item, which pins behavior all implementations
+already had.
+
+- **§5.5: a leading `+` in a cardinality bound is a syntax error**, unlike
+  `-`. The `-` case was addressed with care and `+` was never mentioned,
+  leaving three defensible readings — reject at the token boundary, accept
+  then reject at construction, or accept and silently normalize — of which
+  the third differs *observably*. Verified against the reference: `[+1]` and
+  `[--1]` both raise `parse.unexpected-token` while `[-1]` correctly raises
+  `schema.invalid-cardinality`.
+- **The glossary no longer restates §6.4's satisfiability rule.** It carried
+  a near-verbatim second copy of the propagation rule and the fixpoint note;
+  it now gives the one-line intuition and cites §6.4 as normative, so the two
+  cannot drift apart.
+- **The reading order is split by audience.** All ten chapters were listed
+  uniformly, with no signal that 8 through 10 are implementor and maintainer
+  material — "Passing the test suite" reads like homework to someone who
+  just wants to model data. Now split into *using Omnist* and *implementing
+  a port*, with the two questions newcomers ask first — optional versus
+  nullable, and string-or-number — linked directly to the sections that
+  answer them.
+- **The `validate.*` codes are now actionable.** They are the codes a user
+  meets most often, and each was a one-line table entry with no guidance on
+  what to do. Added a non-normative "usually means" table and a note on the
+  two most often confused, `null-not-allowed` and `cardinality`, pointing at
+  §3.5.
+
 ## v0.15.0-beta (2026-09-14)
 
 **Normative (minor)** — closes

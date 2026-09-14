@@ -115,6 +115,13 @@ policy.
 
 ## Reading order
 
+**Most readers need only the first group.** The second exists for people
+building or maintaining an implementation; nothing in it is required to *use*
+Omnist through an existing library.
+
+**If you are using Omnist** — modelling data, writing schemas, converting
+between formats:
+
 | Chapter | Read it for |
 |---|---|
 | [01 Glossary](01-glossary.md) | Terms used everywhere else |
@@ -124,6 +131,25 @@ policy.
 | [05 OSD grammar](05-osd-grammar.md) | Writing Schemas as text |
 | [06 Schema Algebra](06-schema-algebra.md) | The operations |
 | [07 Codecs](07-codecs-and-deserialization.md) | Reading other formats |
-| [08 Conformance and errors](08-conformance-and-errors.md) | Passing the test suite |
+| [Format codecs](formats/overview.md) | JSON, YAML, TOML, XML, OML specifics |
+
+Two shortcuts worth knowing, because they are the questions newcomers
+actually ask first. **"Optional or nullable?"** —
+[§3.5](03-schema-model.md#35-nullable-versus-optional) answers it with a
+table, and conflating the two is the most common modelling error in Omnist.
+**"Can a field hold a string *or* a number?"** —
+[§3.2](03-schema-model.md#32-what-this-model-refuses-and-why) explains why not, and
+what to do instead.
+
+**If you are implementing or maintaining a port**, add:
+
+| Chapter | Read it for |
+|---|---|
+| [08 Conformance and errors](08-conformance-and-errors.md) | Error codes, and passing the test suite |
 | [09 Divergence ledger](09-divergence-ledger.md) | What implementations may differ on |
 | [10 Governance](10-governance-and-versioning.md) | How this document changes |
+| [Conformance harness](conformance-harness.md) · [Porting a runner](porting-a-conformance-runner.md) | Running the suite in a new language |
+
+One exception to that split: §8.3's error-code taxonomy is worth a look for
+*any* reader, since it is where a code like `validate.type-mismatch` resolves
+to a meaning when a document fails validation.
