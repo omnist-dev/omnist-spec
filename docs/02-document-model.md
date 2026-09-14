@@ -228,3 +228,45 @@ exactly one number, not two kept equal by discipline. The MUST here is aimed
 at an implementation whose architecture genuinely has two separate places a
 depth limit could be configured; where a single shared constant is the
 natural design, as in Python, the requirement is satisfied automatically.
+
+---
+
+## 2.5 Encoding
+
+These rules apply to every text surface — OML, OSD, and every codec's input.
+They are stated because each one is a place two implementations can build
+*different Documents from identical bytes* while both believing they are
+correct, which is the most dangerous class of divergence a data format has:
+one system validates the reading it sees, another acts on a different one.
+
+**Input MUST be valid UTF-8.** A malformed byte sequence is an error,
+reported as `parse.invalid-encoding` ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
+An implementation MUST NOT substitute `U+FFFD` or otherwise repair the input
+and continue: silent repair is exactly how two readers end up with different
+Documents, since what a replacement character stands in for is not
+recoverable.
+
+**Byte-order marks are deliberately not settled here.** Implementations
+currently disagree — measured against the reference, OML and XML accept a
+leading `U+FEFF` while JSON and TOML reject it — and each codec arguably
+inherits its own format's conventions rather than Omnist's. Picking a rule
+would also require both ABNF grammars to admit `%xFEFF`, which they do not.
+That is a real gap, tracked as
+[omnist-spec#78](https://github.com/omnist-dev/omnist-spec/issues/78), and
+left open rather than settled in passing alongside the two rules above.
+
+**Labels and names compare byte-wise, never by Unicode normalization.** Two
+labels are the same label when their UTF-8 bytes are identical. `café`
+written as `U+0063 U+0061 U+0066 U+00E9` and as `U+0063 U+0061 U+0066 U+0065
+U+0301` are **two distinct labels**, and a node carrying both has two edges.
+An implementation MUST NOT normalize to NFC, NFD, or anything else, on read
+or on comparison.
+
+That last rule is the one most likely to be violated by accident, because
+some platforms normalize filenames and text input by default. It is stated
+the way it is for consistency: [§3.3](03-schema-model.md#33-formal-definition)
+S-3 already requires exact, case-sensitive matching for reserved names, and
+[§3.3](03-schema-model.md#33-formal-definition)'s canonical ordering compares
+by Unicode codepoint rather than by locale. Byte-wise label identity is the
+same discipline applied to the Document model — no hidden text transformation
+anywhere, so what an author writes is what round-trips.

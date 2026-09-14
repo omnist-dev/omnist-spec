@@ -67,13 +67,22 @@ This is deliberately weaker than OML's string escaping and MUST NOT be
 "upgraded" by an implementation. A label like `"a\nb"` is the three-character
 string `anb`. Conformance vectors cover this.
 
-**A literal control character below `U+0020` inside an OSD string is an
-error** (`parse.control-character`, [§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
+**A raw control character below `U+0020` inside an OSD string is an error**
+(`parse.control-character`, [§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
 the same restriction OML's double-quoted strings have
 ([§4.5](04-oml-grammar.md#45-strings)). Weak unescaping only changes
 how backslash sequences are interpreted — it says nothing about which raw
 bytes are legal in the string body to begin with, and there is no reason
 for OSD to be laxer than OML on that separate question.
+
+**The ban applies to every raw byte in the string body, escape context
+included.** A control character immediately after a backslash is still a
+control character in the body, so `"a\<U+0001>b"` is an error exactly as
+`"a<U+0001>b"` is. This was previously written as "a *literal* control
+character", which invited the reading that only an unescaped one was
+forbidden — and `grammars/osd.abnf`'s escape alternative was written as
+`"\" %x00-10FFFF`, which admitted the escaped form. The grammar now excludes
+`%x00-1F` there, so the two artifacts agree.
 
 ## 5.4 Records and fields
 

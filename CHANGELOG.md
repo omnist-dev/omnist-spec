@@ -3,6 +3,58 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.15.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#77](https://github.com/omnist-dev/omnist-spec/issues/77) and
+[#87](https://github.com/omnist-dev/omnist-spec/issues/87); partially
+addresses [#78](https://github.com/omnist-dev/omnist-spec/issues/78).
+
+- **`grammars/osd.abnf` and §5.3.1 no longer disagree** (#77). The escape
+  alternative admitted an escaped control character the prose forbids, so a
+  parser generated from the grammar and one written from the prose disagreed
+  on the same bytes. The grammar now excludes `%x00-1F` there, and the prose
+  says "raw" rather than "literal" and states that the ban covers escape
+  context.
+- **`parse.codec-syntax` registered** (#87). Malformed JSON, YAML, TOML or
+  XML had no code at all, so the reference invented an unregistered
+  `parse.syntax` used at nine sites. One code covers all four formats
+  deliberately — splitting it per format adds three codes conveying nothing
+  the message does not, and nothing branches on which codec failed. §8.3.1
+  now also states the distinction from §8.3.8's refusal codes: malformed
+  input versus well-formed input outside the supported profile.
+- **New §2.5, Encoding** (#78, partial). Input MUST be valid UTF-8, with
+  silent `U+FFFD` repair forbidden — new code `parse.invalid-encoding`, where
+  the reference previously raised a bare `UnicodeDecodeError` outside the
+  taxonomy entirely. And **labels compare byte-wise, never by Unicode
+  normalization**: `café` written as `U+00E9` and as `e` plus `U+0301` are
+  two distinct labels.
+
+**Two things were pulled from this release after review.** Both are recorded
+here rather than quietly dropped, because the reasoning matters more than the
+outcome.
+
+**The expansion-ratio limit (#75) was withdrawn.** It would have added a
+fourth §2.4 limit, capping nodes materialized per input byte at 10. Review
+found the rule undefined in its central term: §2.2 and the reference count
+**containers only** — a scalar leaf is a *value*, not a *node*, pinned by the
+existing `node-count-at-declared-limit-succeeds` vector — while the threshold
+had been calibrated by counting every edge target. On identical bytes the two
+readings differ by roughly 1000×. Under the spec's own definition the alias
+bomb measures 0.048 nodes per byte, so the proposed limit **would never have
+fired on the attack it was designed to stop**, while realistic anchored
+configs — the docker-compose and GitLab-CI merge-key idiom — exceed 10 under
+the other reading and would have been wrongly rejected. #75 stays open: the
+defect is real, but this was not the fix.
+
+**BOM handling (#78) is explicitly left unsettled.** A first draft required a
+leading `U+FEFF` to be stripped on every text surface. Measured against the
+reference, OML and XML accept one while JSON and TOML reject it, so the rule
+would have made the reference non-conformant in two places — and neither ABNF
+grammar admits `%xFEFF`, which would have recreated the exact
+grammar-versus-prose split #77 exists to close. §2.5 now says so openly
+instead of guessing.
+
 ## v0.14.0-beta (2026-09-14)
 
 **Normative (minor)** — closes

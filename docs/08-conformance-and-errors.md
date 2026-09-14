@@ -56,6 +56,8 @@ Every diagnostic carries at least:
 | `parse.leading-zero` | A `NUMBER`/`INTEGER` literal's integer part has a leading zero |
 | `parse.invalid-date` | A `DATE` or the date portion of a `DATETIME` is not a valid calendar date |
 | `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
+| `parse.codec-syntax` | Input is not well-formed in its own source format (JSON, YAML, TOML, XML) — see the note below |
+| `parse.invalid-encoding` | Input is not valid UTF-8 ([§2.5](02-document-model.md#25-encoding)) |
 
 **Six of these codes also cover OSD's own lexical stage**:
 `parse.unexpected-token`, `parse.trailing-content`,
@@ -72,6 +74,26 @@ and never an implementation-invented code outside this taxonomy. The
 remaining five codes (`reserved-word-label`, `bare-word`, `empty-array`,
 `nested-array`, `separator-in-array`) describe OML's value grammar
 specifically and have no OSD equivalent.
+
+**Codec read failures** — input that is not well-formed in its own source
+format — use `parse.codec-syntax`. Every other code in this family describes
+OML or OSD specifically, so before this existed there was nothing to report
+for malformed JSON, YAML, TOML or XML, and an implementation had to invent a
+name for the most common failure a codec has. The message SHOULD name the
+format and carry through whatever the underlying parser said, since that
+detail is what makes the failure actionable; §8.5.2 never compares message
+text, so this costs nothing in conformance.
+
+One code covers all four formats deliberately. Splitting it per format would
+add three codes that convey nothing the message does not already say, and
+nothing in the algebra or the harness branches on which codec failed.
+
+Distinguish this from the refusal codes in
+[§8.3.8](#838-format-codec-adjustments): those are for input that is
+well-formed in its source format and outside the profile Omnist supports.
+`parse.codec-syntax` means the input is genuinely malformed. Reporting a
+refusal as a syntax error, or the reverse, sends a user looking in the wrong
+place.
 
 ### 8.3.2 `document.*` — building and limits
 

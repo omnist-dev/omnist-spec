@@ -484,6 +484,26 @@
         "schema": "record String {\n    \"x\": string,\n}\nroot String\n"
       },
       "comment": "Sec3.3 S-3: the reserved-name check is exact and case-sensitive -- record String (capital S) does not collide with the string keyword. Characterization vector: all five ports already agreed on this behavior independently (verified 2026-09-13 by reading Python/TypeScript/Rust/Go/Java source, all plain case-sensitive equality, no case-folding anywhere) before S-3 stated it explicitly. Green-on-arrival everywhere, not a behavior change."
+},
+
+    {
+      "name": "osd-grammar/strings/escaped-control-character-is-still-an-error",
+      "spec": "docs/05-osd-grammar.md#531-string-unescaping",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "record R {\n    \"a\\\u0001b\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.control-character"
+          }
+        ]
+      },
+      "comment": "Sec5.3.1's control-character ban applies to every raw byte in the string body, escape context included -- a control character immediately after a backslash is still a control character in the body. This was ambiguous until v0.15.0-beta: the prose said 'a literal control character', which invited the reading that only an unescaped one was forbidden, and grammars/osd.abnf's escape alternative was written as \"\\\" %x00-10FFFF, which admitted the escaped form outright. So a parser generated from the grammar and one written from the prose disagreed on these exact bytes. Grammar and prose now agree and this vector pins it."
     }
   ]
 }
