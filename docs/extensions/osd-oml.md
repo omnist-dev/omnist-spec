@@ -542,7 +542,7 @@ root Person
 
 **OSD-OML** (canonical form, one record/field per line for readability —
 compact form is also legal and MUST round-trip identically per OML's own
-compact-mode guarantee, [§4.9](../04-oml-grammar.md)):
+compact-mode guarantee, [§4.9](../04-oml-grammar.md#49-canonical-output)):
 
 ```oml
 record: {
