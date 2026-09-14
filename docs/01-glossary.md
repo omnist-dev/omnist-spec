@@ -85,9 +85,9 @@ per schema. A schema is single-rooted, which is what makes a lossless XML round
 trip possible.
 
 **satisfiable** — A record is satisfiable if at least one finite Document can
-match it. A record with a mandatory field whose type is an unsatisfiable record
-is itself unsatisfiable. Computed as a least fixpoint. See
-[chapter 6](06-schema-algebra.md).
+match it. [§6.4](06-schema-algebra.md#64-is_emptys-and-satisfiability) is normative and
+carries the propagation rule and the fixpoint algorithm; this entry is the
+one-line intuition, deliberately not a second copy of the definition.
 
 **scalar** — A leaf value. Exactly seven kinds exist: `string`, `integer`,
 `number`, `boolean`, `date`, `time`, `datetime`. There is no `float` kind and no
