@@ -3,6 +3,46 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.17.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#78](https://github.com/omnist-dev/omnist-spec/issues/78) and
+[#93](https://github.com/omnist-dev/omnist-spec/issues/93). This is the
+intended freeze point for the quality audit: every normative chapter now has
+full rule coverage, enforced in CI. **JSON and TOML readers need a change.**
+
+- **New D-15: a leading byte-order mark MUST be stripped, on every surface.**
+  Previously left unsettled because a first draft would have made the
+  reference non-conformant. Settling it uniformly rather than per-surface,
+  for two reasons. A BOM carries no data — it is meaningless for UTF-8, which
+  has no byte-order ambiguity to mark — so treating it as content anywhere is
+  wrong, and treating it as content on *some* surfaces is how two
+  implementations build different Documents from one file. And it overrides
+  nothing: RFC 8259 §8.1 explicitly permits a JSON parser to "ignore the
+  presence of a byte order mark rather than treating it as an error".
+  Measured before this rule, the reference stripped a BOM for OML and XML and
+  rejected it for JSON and TOML. Both ABNF grammars now admit `%xFEFF` at
+  offset zero and nowhere else. Two new vectors, currently red against the
+  reference by design.
+- **Chapters 2 and 3 have complete rule spines.** They already had `D-1..D-5`
+  and `S-1..S-8`, but 22 normative paragraphs sat outside them — invisible
+  until `check_rule_coverage.py` existed. Now `D-6..D-16` and `S-9..S-20`.
+  Existing numbers were left untouched, since `D-1..D-5` are cited from four
+  other files; new rules were appended rather than renumbering.
+- **§3.3's five canonical-order principles are individually citable as
+  `S-9..S-13`.** They were numbered `1.`–`5.` locally while chapter 6's `A-3`,
+  `A-9` and `A-18` explicitly inherit from them — load-bearing for another
+  chapter's rules while unreachable by number.
+- **Three paragraphs were *not* numbered, deliberately.** Mechanical numbering
+  would have manufactured rules out of framing text. The sentence introducing
+  `D-1..D-5` had its redundant MUST removed instead; the depth-limit
+  elaboration now reads "On depth (D-12, elaborated)"; the `any`-name
+  restriction now cites `S-3` rather than restating it; and §3.3's
+  principle-application paragraph cites the `A-` rules it explains.
+- **All seven normative chapters are now enforced** by
+  `tools/check_rule_coverage.py` in CI, with no reported-but-unenforced set
+  remaining.
+
 ## v0.16.0-beta (2026-09-14)
 
 **Editorial (minor)** — closes

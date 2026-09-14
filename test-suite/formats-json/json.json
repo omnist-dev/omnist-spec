@@ -278,6 +278,33 @@
         ]
       },
       "comment": "D-3 (closed 2026-08-23): Sec7.3's grouping rule already MUST group same-label edges regardless of position ([(m,A),(x,X),(m,B)] -> {\"m\":[A,B],\"x\":X}) -- no format in the JSON family (JSON/YAML/TOML) can express cross-label interleaving. What was missing was reporting the loss; format.interleaving-lost (Sec8.3.8) now MUST be emitted whenever a written Document actually had more than one distinct label AND at least one label's edges were not all contiguous, i.e. grouping changed relative order. Path is $, the whole document, since the loss isn't localized to one label's edges -- it's the interleaving between labels. This vector uses JSON as the representative case; the same MUST applies to YAML and TOML writers for the identical reason."
+    }    ,
+    {
+      "name": "formats-json/encoding/leading-bom-is-stripped",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "﻿{\"a\":1}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-15: a leading U+FEFF is consumed and contributes nothing to the Document, on every surface including the codecs. The result is identical to the same input without it. This does not override JSON: RFC 8259 Sec8.1 explicitly permits an implementation parsing JSON to ignore a byte order mark rather than treating it as an error. Before D-15 the reference rejected this input while accepting the OML equivalent, which is the divergence the uniform rule closes."
     }
   ]
 }

@@ -28,13 +28,14 @@ ENFORCED = {
     "docs/06-schema-algebra.md": "A",
     "docs/07-codecs-and-deserialization.md": "C",
     "docs/08-conformance-and-errors.md": "E",
-}
-
-# Chapters reported but not enforced, pending #63's remaining work.
-REPORTED = {
     "docs/02-document-model.md": "D",
     "docs/03-schema-model.md": "S",
 }
+
+# Every normative chapter is enforced. Chapters 2 and 3 joined the set once
+# omnist-spec#93 closed the 22 paragraphs that sat outside their existing
+# D- and S- spines -- a gap invisible until this script existed.
+REPORTED: dict[str, str] = {}
 
 NORMATIVE = re.compile(r"\bMUST\b|\bSHALL\b")
 

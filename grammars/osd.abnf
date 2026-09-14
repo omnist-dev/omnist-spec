@@ -15,7 +15,12 @@
 ; Whitespace and comments are discarded by the tokenizer and may appear
 ; between any two tokens. They are omitted from the syntactic rules below.
 
-schema        = *( record-def / root-def )
+schema        = [BOM] *( record-def / root-def )
+                ; BOM: a leading U+FEFF is consumed and contributes
+                ; nothing to the Schema (spec 2.5). Permitted only at
+                ; offset zero.
+
+BOM           = %xFEFF
                 ; declarations may interleave in any order; `root` need not
                 ; come last, though canonical output places it last.
 

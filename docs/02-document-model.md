@@ -81,8 +81,8 @@ Exactly seven scalar kinds exist:
 | `time` | A time of day, with optional sub-second precision and optional UTC offset |
 | `datetime` | A date and a time of day, joined |
 
-There is no `float` kind and no `decimal` kind. `number` covers non-integral
-values. Implementations MUST NOT add scalar kinds; adding one changes the
+**D-6.** There is no `float` kind and no `decimal` kind. `number` covers
+non-integral values. Implementations MUST NOT add scalar kinds; adding one changes the
 Schema Algebra's subtyping lattice and therefore changes conformance results.
 
 `null` is a value but not a kind. It has no scalar kind of its own and is
@@ -96,7 +96,7 @@ uniqueness, ordering, or the relationship between repeated labels.
 
 ### 2.2.3 Nesting
 
-A target is either a value or a node. Nothing else. In particular there is no
+**D-7.** A target is either a value or a node. Nothing else. In particular there is no
 bare nested list: a target cannot be a list of unlabeled items, because an
 unlabeled item has no edge to occupy. An input containing one (JSON
 `[[1,2],[3,4]]`, for instance) MUST be rejected at read time, not silently
@@ -106,8 +106,9 @@ flattened. See [chapter 7](07-codecs-and-deserialization.md).
 
 ## 2.3 Structural invariants
 
-A conformant implementation MUST maintain all of the following for every
-Document it constructs, reads, or hands back.
+A conformant implementation maintains all of the following for every Document
+it constructs, reads, or hands back. Each is a requirement in its own right;
+this sentence introduces them rather than adding a further one.
 
 **D-1. Edge order is preserved.** The order of edges within a node MUST be the
 order they appeared in the source, for every reader. Implementations MUST NOT
@@ -134,7 +135,7 @@ kinds and values are equal. An `integer` and a `number` of the same magnitude
 are distinct scalars in the Document model, even though `integer` is a subtype
 of `number` in the Schema model (§6).
 
-This invariant is unconditional for the model itself — it is not weakened by
+**D-8.** This invariant is unconditional for the model itself — it is not weakened by
 what any particular host language can represent. An implementation targeting
 a language with no native `integer`/`number` distinction (e.g. JavaScript's
 single `number` type) MAY be structurally unable to preserve this distinction
@@ -154,7 +155,7 @@ implementation that cannot construct its input.
 
 ## 2.4 Safety limits
 
-A Document is built from untrusted input. Three quantities bound the work an
+**D-9.** A Document is built from untrusted input. Three quantities bound the work an
 implementation will do before refusing to continue: nesting depth, total node
 count, and the digit length of an `integer` literal. Every conformant
 implementation MUST enforce a finite limit on all three. **No implementation
@@ -186,10 +187,10 @@ for example a lower depth limit on a mobile or embedded runtime with a small
 call stack, or a higher node count on a system built to ingest large batch
 documents. Whatever values an implementation chooses:
 
-- They MUST be finite. "No limit" is not a legal choice for any of the three.
-- They MUST be documented, in the same place a user would look for the rest of
+- **D-10.** They MUST be finite. "No limit" is not a legal choice for any of the three.
+- **D-11.** They MUST be documented, in the same place a user would look for the rest of
   the implementation's conformance profile.
-- The depth limit MUST match between the Document builder and the OML parser
+- **D-12.** The depth limit MUST match between the Document builder and the OML parser
   within one implementation (§2.4 note below) — a document that parses MUST
   NOT then fail to build.
 
@@ -205,7 +206,7 @@ one — an embedded or big-data target with an actual reason to deviate — not 
 capability any implementation ships today. A future implementation is free to
 be the first.
 
-**What is fixed regardless of the chosen value: how exceeding it is reported.**
+**D-13. What is fixed regardless of the chosen value: how exceeding it is reported.**
 Exceeding a declared limit — whatever number the implementation chose — MUST
 produce the corresponding standardized error from the `document.limit.*`
 family defined in [chapter 8](08-conformance-and-errors.md), MUST NOT be
@@ -219,7 +220,7 @@ each of them draws its own line.
 It exists because a shallow document can still be enormous — a million sibling
 edges is depth 1.
 
-**On depth.** Within one implementation, the Document builder's depth limit and
+**On depth (D-12, elaborated).** Within one implementation, the Document builder's depth limit and
 the OML parser's nesting limit MUST be the same number. A document that the
 parser accepts MUST NOT then fail while the builder walks it. In Python this
 isn't an active synchronization an implementer has to maintain — the builder
@@ -239,23 +240,35 @@ They are stated because each one is a place two implementations can build
 correct, which is the most dangerous class of divergence a data format has:
 one system validates the reading it sees, another acts on a different one.
 
-**Input MUST be valid UTF-8.** A malformed byte sequence is an error,
+**D-14. Input MUST be valid UTF-8.** A malformed byte sequence is an error,
 reported as `parse.invalid-encoding` ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
 An implementation MUST NOT substitute `U+FFFD` or otherwise repair the input
 and continue: silent repair is exactly how two readers end up with different
 Documents, since what a replacement character stands in for is not
 recoverable.
 
-**Byte-order marks are deliberately not settled here.** Implementations
-currently disagree — measured against the reference, OML and XML accept a
-leading `U+FEFF` while JSON and TOML reject it — and each codec arguably
-inherits its own format's conventions rather than Omnist's. Picking a rule
-would also require both ABNF grammars to admit `%xFEFF`, which they do not.
-That is a real gap, tracked as
-[omnist-spec#78](https://github.com/omnist-dev/omnist-spec/issues/78), and
-left open rather than settled in passing alongside the two rules above.
+**D-15. A leading byte-order mark MUST be stripped, on every surface.**
+`U+FEFF` at offset zero is consumed and contributes nothing to the Document.
+Anywhere else it is ordinary content with no special meaning. Both ABNF
+grammars admit it at that position and nowhere else.
 
-**Labels and names compare byte-wise, never by Unicode normalization.** Two
+The rule is uniform across OML, OSD and every codec deliberately. A BOM
+carries no data — it is meaningless for UTF-8, which has no byte-order
+ambiguity to mark — so treating it as content on any surface would be wrong,
+and treating it as content on *some* surfaces is how two implementations
+build different Documents from the same file.
+
+This does not override the formats Omnist reads. RFC 8259 §8.1 explicitly
+permits it: implementations parsing JSON "MAY ignore the presence of a byte
+order mark rather than treating it as an error". Stripping rather than
+rejecting is also the pragmatic choice — BOM-prefixed files are routine from
+Windows tooling, and refusing them would reject well-formed data over a byte
+the author never sees and usually cannot see.
+
+Measured before this rule existed, the reference stripped a BOM for OML and
+XML and rejected it for JSON and TOML — the divergence this closes.
+
+**D-16. Labels and names compare byte-wise, never by Unicode normalization.** Two
 labels are the same label when their UTF-8 bytes are identical. `café`
 written as `U+0063 U+0061 U+0066 U+00E9` and as `U+0063 U+0061 U+0066 U+0065
 U+0301` are **two distinct labels**, and a node carrying both has two edges.
