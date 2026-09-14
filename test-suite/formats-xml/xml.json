@@ -280,6 +280,66 @@
       "comment": "The format.string-illegal-char condition from Sec8.3.8: XML 1.0 cannot represent a raw C0 control character other than tab, LF and CR, and there is no substitute spelling, so the write MUST fail unconditionally rather than drop or replace the character. U+0001 is a legal Document string value -- Sec2.2 places no such restriction on the model -- so this is a target-format limitation, reachable from a perfectly valid Document. Completes the Sec8.3.8 five: the null-unrepresentable, float-special, key-sanitized and shape-empty-ambiguous conditions were already covered by vectors elsewhere in this suite; this was the only one of the five with no test. Verified against the Python reference, which raises write.unsupported-value at exactly this path."
     },
     {
+      "name": "formats-xml/profile/doctype-declaration-is-refused",
+      "spec": "docs/formats/xml.md#the-data-xml-profile",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<?xml version=\"1.0\"?><!DOCTYPE d [<!ELEMENT d ANY>]><d><f>hi</f></d>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "format.dtd-forbidden"
+          }
+        ]
+      },
+      "comment": "The data-XML profile refuses any DOCTYPE declaration, on sight rather than on use -- this one declares a harmless element type and references nothing, and is still refused. Rejecting at the declaration is what makes the rule testable and the failure early; rejecting only when a DTD-defined entity is referenced would make it conditional on content. The path is $ because the refusal happens before any element is read, so there is no edge to name. Note this document is well-formed XML: the code is a format refusal, deliberately NOT a parse.* syntax error, so a user is not sent looking for a defect in a valid file. Before the profile was specified, ports disagreed: Python and Java refused DOCTYPE-bearing documents, Rust and Go silently skipped the declaration, TypeScript accepted it -- a Sec9.2 grammar-acceptance divergence this vector exists to close."
+    },
+    {
+      "name": "formats-xml/profile/non-predefined-entity-reference-is-refused",
+      "spec": "docs/formats/xml.md#the-data-xml-profile",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<d><f>&nbsp;</f></d>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "format.entity-forbidden"
+          }
+        ]
+      },
+      "comment": "Only XML's five predefined entities are in profile. &nbsp; could only have been defined by a DTD, which the profile already refuses, so accepting the reference while refusing the declaration would be incoherent. Included as its own vector because a reader that rejects DOCTYPE by pattern-matching the prolog would still accept this."
+    },
+    {
+      "name": "formats-xml/profile/mixed-content-is-refused",
+      "spec": "docs/formats/xml.md#the-data-xml-profile",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<d>text<f>hi</f></d>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "format.mixed-content"
+          }
+        ]
+      },
+      "comment": "Text alongside child elements has no Document shape: an edge's target is a value or a node, never both (Sec2.3 D-4). The Python reference already enforced this and its error message already named 'the data-XML profile' -- a concept that existed in one implementation and nowhere in the spec until now, with no vector and an unregistered code. That is exactly the gap this vector and the profile section close together."
+    },
+    {
       "name": "formats-xml/basic/carriage-return-written-as-numeric-character-reference",
       "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
       "operation": "write",

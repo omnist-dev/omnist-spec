@@ -175,6 +175,9 @@ there is no separate set of names for them.
 | Code | Severity | Meaning |
 |---|---|---|
 | `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
+| `format.dtd-forbidden` | error | A `DOCTYPE` declaration, outside the data-XML profile ([XML](formats/xml.md#the-data-xml-profile)) |
+| `format.entity-forbidden` | error | An entity reference other than XML's five predefined ones |
+| `format.mixed-content` | error | Text alongside child elements in one element, which has no Document shape |
 | `format.attribute-dropped` | warning | An XML attribute was discarded on read |
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
@@ -234,6 +237,17 @@ simply failing on that case, rather than disabling the format broadly:
 A previous version of this spec had all five succeed anyway. The correct
 behavior for all five is `write.unsupported-value` (below): the write
 fails, unconditionally, not only under `strict`.
+
+**`format.dtd-forbidden`, `format.entity-forbidden` and
+`format.mixed-content` are a different shape from the rest of this table.**
+They are read-side *refusals*, not adjustments: the input is well-formed XML
+that Omnist declines to support, per the
+[data-XML profile](formats/xml.md#the-data-xml-profile). They sit here
+because they are codec-specific conditions, which is what this family is
+for — but note two consequences. They are `error` severity and the read
+fails, so there is no adjusted result to report alongside them. And they
+MUST NOT be reported as syntax errors: the document is valid XML, and
+telling a user otherwise sends them hunting for a defect that is not there.
 
 A sixth code, `format.string-cr-normalized`, used to exist in this table
 for a related reason — XML mandates line-ending normalization on parse, so

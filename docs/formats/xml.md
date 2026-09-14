@@ -1,5 +1,42 @@
 # XML
 
+## The data-XML profile
+
+Omnist does not read arbitrary XML. It reads a deliberately narrow subset —
+**data-XML** — and a conformant reader MUST reject anything outside it rather
+than ignore the unsupported construct.
+
+**Supported.** Elements, text content, CDATA sections, comments, processing
+instructions, the XML declaration, attributes (dropped on read, reported via
+`format.attribute-dropped`), and namespace prefixes (dropped, reported via
+`format.namespace-dropped`).
+
+**Not supported.** Each of these MUST fail the read:
+
+| Construct | Why it is out of profile |
+|---|---|
+| A `DOCTYPE` declaration, of any kind | Nothing in a DTD contributes to the resulting Document, so honouring one is attack surface for no benefit — external entities reach the filesystem and the network, and nested internal entities expand exponentially |
+| An entity reference other than XML's five predefined (`&lt;` `&gt;` `&amp;` `&quot;` `&apos;`) | Its definition could only have come from a DTD, which is already refused |
+| Mixed content — text alongside child elements in one element | There is no Document shape for it: an edge's target is a value **or** a node, never both ([§2.3](../02-document-model.md#23-structural-invariants) D-4) |
+
+**Reject on sight, not on use.** A reader MUST fail when it encounters the
+`DOCTYPE` declaration itself, not later when an entity defined by it is
+referenced. A document that declares entities and never uses them is still
+refused. This is what makes the rule testable and keeps the failure early and
+predictable rather than conditional on content.
+
+**These are refusals, not malformed input.** Every document above is
+well-formed XML; Omnist is declining a feature. A reader MUST NOT report them
+with a code or message implying the input is invalid XML, because that sends
+the user looking for a defect in a file that has none.
+
+> **Why this is stated at all.** Before it was, the five implementations had
+> each drawn their own line and disagreed: two rejected `DOCTYPE`-bearing
+> documents, two silently skipped the declaration, one accepted it outright.
+> That is precisely the "grammar acceptance" variation
+> [§9.2](../09-divergence-ledger.md#92-forbidden-variation) forbids —
+> "accepting a superset is as much a failure as accepting a subset."
+
 ## Model mapping
 
 XML is the format the Document model was shaped around.

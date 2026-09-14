@@ -3,6 +3,46 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.14.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#76](https://github.com/omnist-dev/omnist-spec/issues/76), partially
+addresses [#87](https://github.com/omnist-dev/omnist-spec/issues/87).
+**All five ports need changes.**
+
+- **New: the data-XML profile** ([XML](docs/formats/xml.md#the-data-xml-profile)).
+  The spec described how XML maps to Documents but never said *what XML it
+  accepts*, so each port drew its own line and they disagreed — two refused
+  `DOCTYPE`-bearing documents, two silently skipped the declaration, one
+  accepted it. That is the "grammar acceptance" variation §9.2 forbids,
+  live across five implementations. The profile now states what is supported
+  positively, and requires everything outside it to be **refused, not
+  ignored**: any `DOCTYPE` declaration, entity references beyond XML's five
+  predefined, and mixed content.
+- **Refuse on sight, not on use.** A `DOCTYPE` must fail when encountered,
+  not later if an entity it defines is referenced — so a document that
+  declares entities and never uses them is still refused. This keeps the
+  failure early and testable rather than conditional on content.
+- **Three new `format.*` codes**: `format.dtd-forbidden`,
+  `format.entity-forbidden`, `format.mixed-content`. All `error` severity.
+  §8.3.8 now notes these are read-side *refusals*, unlike the rest of that
+  table, and that they MUST NOT be reported as syntax errors — the documents
+  are well-formed XML, and saying otherwise sends users hunting for a defect
+  in a valid file.
+- **The concept already existed, unnamed.** The Python reference has been
+  rejecting mixed content with the message "outside the data-XML profile"
+  while the spec defined no such profile, no vector tested it, and the code
+  it reported was unregistered.
+- **Three new vectors**, currently reported as skips by ports that raise
+  unstructured syntax errors for these cases — red-before-green per §10.2.
+
+Security note, recorded accurately: the original issue claimed a faithful
+implementor "ships XXE". That is **not true of any current port** — the two
+libraries capable of external entity resolution (Python's stdlib, Java's
+`javax`) are both already hardened, and the other three never perform I/O
+while parsing. The real defect was the conformance divergence, not a live
+vulnerability.
+
 ## v0.13.0-beta (2026-09-14)
 
 **Normative (minor)** — closes
