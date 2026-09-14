@@ -337,6 +337,53 @@ unreachable records while accepting exactly the same documents.
 `normalize` returns the canonical minimal schema equivalent to `S`: the fewest
 records, unique up to record naming. This is the paper's `MinimizeSA`.
 
+**This guarantee is scoped to satisfiable schemas.** If `is_empty(S)`,
+`normalize` returns `S` unchanged (step 1), so two equivalent unsatisfiable
+schemas need not — and generally will not — normalize to the same text:
+
+```osd
+record A {
+    "b": B,
+}
+record B {
+    "a": A,
+}
+root A
+```
+
+```osd
+record X {
+    "y": Y,
+    "z": Z,
+}
+record Y {
+    "x": X,
+}
+record Z {
+    "x": X,
+}
+root X
+```
+
+Both accept zero documents, so both accept the *same* set of documents, and
+`equivalent` reports them equal ([§6.7](#67-equivalenta-b)). `normalize`
+leaves each exactly as written.
+
+**This is a limitation of the model, not an oversight in the algorithm.**
+Omnist has no direct spelling for the empty language. The paper's automaton
+has one — a state from which no accepting path exists — but an Omnist schema
+can express unsatisfiability only *indirectly*, through a mandatory reference
+cycle. There are unboundedly many such spellings (`record R { "r": R }`,
+`record Q { "z": Q }`, and so on), all equivalent to each other, and none
+distinguished by the model. A canonical form needs a canonical representative
+to map onto; here every candidate is an arbitrary pick rather than something
+the model singles out.
+
+**Consequence for callers.** Do not use equality of `normalize` output as an
+equivalence test unless both inputs are known to be satisfiable.
+[`equivalent`](#67-equivalenta-b) is the sanctioned check and is correct in
+every case, including this one.
+
 Three steps.
 
 ```mermaid
@@ -453,6 +500,22 @@ declaration" for a surviving representative, so per
 [§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
 invariant, `normalize`'s output MUST order records by name and fields by
 label, using plain ordinal string comparison.
+
+**Minimality theorem.** The paper's Theorem 4: for satisfiable `A` and `B`,
+`equivalent(A, B)` holds exactly when `normalize(A)` and `normalize(B)` are
+isomorphic — identical up to a bijection of record names. This is what makes
+"minimize, then compare structurally" a sound decision procedure for
+equivalence, and it is why `normalize`'s output is described as unique *up to
+record naming* rather than unique outright.
+
+The satisfiability precondition is not decoration: it is exactly the scope
+limitation stated at the top of this section. Two unsatisfiable schemas are
+always `equivalent`, yet their `normalize` outputs are whatever the author
+wrote, so the "only when" direction fails without it. An implementation
+offering a structural-comparison shortcut as an optional extra (§9.1) must
+therefore special-case the unsatisfiable pair, or restrict the shortcut to
+satisfiable inputs. It MUST NOT substitute such a shortcut for `equivalent`
+itself ([§6.7](#67-equivalenta-b)).
 
 ---
 

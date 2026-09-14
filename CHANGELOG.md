@@ -3,6 +3,42 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.10.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#71](https://github.com/omnist-dev/omnist-spec/issues/71). No behavior
+change in any implementation; `normalize` already does what §6.8 now says.
+
+§6.8 claimed unconditionally that `normalize` "returns the canonical minimal
+schema equivalent to `S`", while its own step 1 returns unsatisfiable schemas
+unchanged. Those contradict: two equivalent unsatisfiable schemas normalize
+to different text, so the canonical-form guarantee did not hold over the
+domain the sentence claimed.
+
+- **The guarantee is now scoped to satisfiable schemas**, with the worked
+  counterexample stated inline, and callers are told not to use `normalize`
+  output equality as an equivalence test unless both inputs are known
+  satisfiable — `equivalent` is correct in every case and remains the
+  sanctioned check.
+- **The reason is now recorded**, because it is a property of the model
+  rather than a fixable defect in the algorithm: Omnist has no direct
+  spelling for the empty language. The paper's automaton has one; an Omnist
+  schema expresses unsatisfiability only indirectly through a mandatory
+  reference cycle, and there are unboundedly many such spellings, all
+  equivalent and none distinguished by the model. A canonical form needs a
+  canonical representative, and every candidate here is an arbitrary pick.
+- **The paper's Theorem 4 is now stated in the spec** — equivalence holds
+  exactly when normalized forms are isomorphic, for satisfiable inputs. The
+  spec previously cited the paper's *Algorithms* but none of its *Theorems*,
+  which is the deeper reason this gap went unnoticed: the theorem that makes
+  "minimize then compare" sound was never written down, so neither was its
+  precondition.
+- **New vector** `equivalent/unsatisfiable-schemas-are-equivalent-vacuously`.
+  Both existing `equivalent` vectors use satisfiable schemas, so an
+  implementation that errored or returned false on unsatisfiable input passed
+  the whole suite. That behavior is load-bearing for the scope limitation
+  above, so it is now pinned.
+
 ## v0.9.2-beta (2026-09-14)
 
 **Editorial (patch)** — first batch of fixes from the whole-spec quality
