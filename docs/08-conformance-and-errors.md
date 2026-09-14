@@ -298,6 +298,36 @@ A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
 `path` MUST be a Document or Schema path — never a text-position path, since a
 Document or Schema already exists by the time any of those families can fire.
 
+### 8.4.1 Which kind each `schema.*` code uses
+
+Saying "a Document or Schema path" leaves the choice open, and paths are
+compared byte-for-byte, so the choice has to be pinned per code rather than
+left to the implementation.
+
+For most `schema.*` codes the answer was only ever implicit: OSD text's
+grammar establishes a record or field's identity before those checks can run,
+so a Schema path is the only thing that could be built. That stops being true
+for the four codes reachable only from a Document-shaped surface such as
+[OSD-OML](extensions/osd-oml.md), which is not grammar-constrained the same
+way. A `record` node whose `name` key is missing has no `RecordName` from
+which to build a Schema path at all.
+
+- **`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key`, and
+  `schema.invalid-name` MUST use a Document path**, rooted at the node the
+  violation occurs on — `$.record[0]` for a record node missing its `name`,
+  `$.record[1].field[2].type.kind` for an invalid `kind` value.
+- **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
+  text: these checks never run until the enclosing record or field has a valid
+  name or label to build one from.
+- **The whole-schema cases above keep `$`** and take precedence over both
+  rules. Three of §8.4's five fall under this section: `schema.no-root`,
+  `schema.duplicate-root`, and a dangling root reference. The other two are
+  `algebra.*` codes, outside this section's scope and unaffected by it.
+
+This applies to any surface, present or future, that can construct a Schema
+without a grammar fixing identity first — it is a property of the codes, not
+of the extension that first made them reachable.
+
 ## 8.5 Conformance harness protocol
 
 A conformant implementation passes the vectors in `test-suite/`. Vectors are
@@ -455,12 +485,26 @@ map-and-array shape smuggling assumptions back in. The encoding is explicit:
 - A node is `{"edges": [[label, target], ...]}`. The outer array preserves
   order; repeated labels appear as repeated entries.
 - A scalar is `{"scalar": {"kind": K, "value": V}}` where `K` is one of the
-  seven kinds. Temporal values are ISO-8601 strings. `integer` values are JSON
-  numbers when they fit exactly and decimal strings otherwise.
+  seven kinds. Temporal values are ISO-8601 strings. For `integer` values see
+  the threshold rule below.
 - `null` is `{"scalar": {"kind": null, "value": null}}`.
 
-This is verbose on purpose. A vector file must not depend on the reader's JSON
-library to decide whether `1` is an integer or a number.
+**The integer threshold is exactly ±(2^53 − 1).** An `integer` whose absolute
+value is at most 9007199254740991 MUST be encoded as a JSON number; any
+integer outside that range MUST be encoded as a decimal string. Both a vector
+author and a vector reader apply the same fixed bound, in both directions.
+
+The bound is stated as a literal rather than by reference to any language's
+behavior, deliberately. It is the largest integer every IEEE-754 double can
+represent exactly, which makes it the one threshold that is a property of the
+interchange format rather than of whichever JSON library a given
+implementation happens to use — and §2.4's integer-digit cap allows integers
+far larger than this, so the case is reachable, not theoretical.
+
+This is verbose on purpose, and the threshold is part of that purpose. A
+vector file must not depend on the reader's JSON library to decide whether
+`1` is an integer or a number, and it must not depend on that library to
+decide where "fits exactly" stops either.
 
 ### 8.5.5 Reporting
 

@@ -109,6 +109,27 @@
         "ok": true,
         "text": "dt: 2024-01-01T12:30:00\n"
       }
+    },
+    {
+      "name": "formats-oml/canonical-output/repeated-labels-never-array-sugar",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            ["b", {"scalar": {"kind": "integer", "value": 1}}],
+            ["b", {"scalar": {"kind": "integer", "value": 2}}],
+            ["b", {"scalar": {"kind": "integer", "value": 3}}]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "b: 1\nb: 2\nb: 3\n"
+      },
+      "comment": "Sec4.9: array sugar and repeated labels denote the same Document (Sec4.3.1 expands [...] at parse time), so a canonical form has to choose one, and it chooses repeated labels. A writer emitting `b: [1, 2, 3]` here produces an equal Document on re-read but different bytes, which Sec9.2 forbids for canonical output. Emitting sugar remains a legal non-canonical writer option; this vector pins what canonical means, not what is parseable."
     }
   ]
 }

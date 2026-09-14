@@ -124,7 +124,7 @@ its violation code. **This list is authoritative and closed: a conforming
 implementation's validator has exactly these checks, for input that
 already matches E.5's grammar shape — no more, no fewer**, except where a
 rule explicitly notes it is inherited from a Core rule not restated here
-in full (see the note before R-21).
+in full (see "Error path assignment" below).
 
 ### Top level
 
@@ -134,10 +134,10 @@ in full (see the note before R-21).
   declared `record.name` (R-16). Unresolved (a dangling root reference) →
   `schema.unknown-type`, **path `$`** — this is
   [§8.4](../08-conformance-and-errors.md#84-paths)'s existing whole-schema
-  fallback for exactly this case, unchanged from OSD text, and takes
-  precedence over R-21's general rule below. Not `string`-kind →
-  `schema.invalid-type` (this half is new to OSD-OML — R-21 applies:
-  Document path).
+  fallback for exactly this case, unchanged from OSD text; §8.4.1 preserves
+  it as an explicit exception to its own two rules. Not `string`-kind →
+  `schema.invalid-type`, which is new to OSD-OML and takes the Document path
+  §8.4.1 assigns it.
 
 ### `record-node`
 
@@ -229,30 +229,28 @@ in full (see the note before R-21).
 
 ### Error path assignment
 
-[§8.4](../08-conformance-and-errors.md#84-paths) permits a `schema.*`
-diagnostic's `path` to be either a Document path or a Schema path, but
-never states which applies to which code — unambiguous for every
-pre-existing `schema.*` code, because OSD text's grammar always
-establishes a record or field's identity before any of those checks can
-run. OSD-OML breaks that assumption: `schema.missing-key`,
-`schema.invalid-type`, `schema.unknown-key`, and `schema.invalid-name`
-(the four codes with no OSD-text analog, per the note at the end of this
-section) can fire on a node that has no valid name yet.
+Path-kind assignment is **not** an OSD-OML rule and is not restated here.
+It is Core's, in
+[§8.4.1](../08-conformance-and-errors.md#841-which-kind-each-schema-code-uses):
+`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key` and
+`schema.invalid-name` use a Document path; every other `schema.*` code uses a
+Schema path; the whole-schema cases, including R-2's dangling root, keep `$`.
 
-- **R-21.** `schema.missing-key`, `schema.invalid-type`,
-  `schema.unknown-key`, and `schema.invalid-name` MUST use a **Document
-  path** ([§8.4](../08-conformance-and-errors.md#84-paths)), rooted at the
-  node the violation occurs on — e.g. `$.record[0]` for a `record-node`
-  missing `name`, `$.record[1].field[2].type.kind` for an invalid `kind`
-  value. (R-2's dangling-root case is the one exception, per its own
-  entry above — it predates this rule and keeps the pre-existing `$`
-  fallback.)
-- **R-22.** Every other `schema.*` code reachable via OSD-OML (e.g.
-  `schema.duplicate-record`, `schema.bracket-in-label`,
-  `schema.invalid-cardinality`) continues to use **Schema path**,
-  unchanged from OSD text — these checks never run until R-3/R-7 have
-  already confirmed the enclosing record/field has a valid name/label to
-  build one from.
+- **R-21.** A diagnostic raised by any rule in this section MUST carry the
+  path kind §8.4.1 assigns to its code.
+- **R-22.** *Retired.* This number previously carried the Schema-path half of
+  the assignment, now stated in §8.4.1. The number is kept rather than reused
+  so that existing citations to R-22 resolve to an explanation instead of to
+  whatever rule would otherwise have inherited the slot — this list is
+  numbered for citation, so a vacated number is a hazard, not a tidy-up.
+
+The reason those four codes needed an explicit assignment at all is a
+property of this extension's input shape: OSD text's grammar establishes a
+record or field's identity before any check can run, so a Schema path was
+always the only buildable option there. OSD-OML's Document-shaped input has
+no such guarantee — a `record-node` missing its `name` has no `RecordName` to
+build a Schema path from. The rule is Core's because any future surface with
+the same property inherits the same problem.
 
 Every code cited above is defined in
 [§8.3.3](../08-conformance-and-errors.md#833-schema-schema-well-formedness)
@@ -446,22 +444,22 @@ A per-code index into E.6's rules, for "what can go wrong" lookup. **This
 table is derived from E.6, not an independent source** — if it and a rule
 ever disagree, the rule wins and the table has a bug.
 
-| Code | Fired by | Path kind (R-21/R-22) |
+| Code | Fired by | Path kind (Sec8.4.1) |
 |---|---|---|
 | `schema.no-root` | R-1 | Schema (`$` fallback) |
 | `schema.duplicate-root` | R-1 | Schema (`$` fallback) |
-| `schema.missing-key` | R-3, R-7, R-9, R-12, R-14 | Document (R-21) |
-| `schema.invalid-type` | R-2, R-3, R-7, R-11, R-12, R-13, R-14 | Document (R-21) |
-| `schema.invalid-name` | R-3a | Document (R-21) |
-| `schema.unknown-type` | R-2 (dangling root, path `$`), R-12, R-14 | R-2: `$` / R-12, R-14: Schema (R-22) |
-| `schema.reserved-name` | R-4 | Schema (R-22) |
-| `schema.duplicate-record` | R-5 | Schema (R-22) |
-| `schema.empty-label` | R-7 | Schema (R-22) |
-| `schema.bracket-in-label` | R-7 | Schema (R-22) |
-| `schema.duplicate-field` | R-8 | Schema (R-22) |
-| `schema.unknown-key` | R-14, R-15, R-20 | Document (R-21) |
-| `schema.non-integer-cardinality` | R-17, R-18 | Schema (R-22) |
-| `schema.invalid-cardinality` | R-17, R-18, R-19 | Schema (R-22) |
+| `schema.missing-key` | R-3, R-7, R-9, R-12, R-14 | Document (Sec8.4.1) |
+| `schema.invalid-type` | R-2, R-3, R-7, R-11, R-12, R-13, R-14 | Document (Sec8.4.1) |
+| `schema.invalid-name` | R-3a | Document (Sec8.4.1) |
+| `schema.unknown-type` | R-2 (dangling root, path `$`), R-12, R-14 | R-2: `$` / R-12, R-14: Schema |
+| `schema.reserved-name` | R-4 | Schema |
+| `schema.duplicate-record` | R-5 | Schema |
+| `schema.empty-label` | R-7 | Schema |
+| `schema.bracket-in-label` | R-7 | Schema |
+| `schema.duplicate-field` | R-8 | Schema |
+| `schema.unknown-key` | R-14, R-15, R-20 | Document (Sec8.4.1) |
+| `schema.non-integer-cardinality` | R-17, R-18 | Schema |
+| `schema.invalid-cardinality` | R-17, R-18, R-19 | Schema |
 
 ## E.10 Validation contract
 
@@ -541,8 +539,8 @@ root Person
 ```
 
 **OSD-OML** (canonical form, one record/field per line for readability —
-compact form is also legal and MUST round-trip identically per OML's own
-compact-mode guarantee, [§4.9](../04-oml-grammar.md)):
+compact form is also legal and parses to the same Document, per OML's own
+compact-mode guarantee, [§4.9](../04-oml-grammar.md#49-canonical-output)):
 
 ```oml
 record: {

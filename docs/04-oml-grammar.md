@@ -290,3 +290,69 @@ Every row below MUST hold for a conformant implementation, and the ABNF in
 | `[]` in value position | error, empty array |
 | `a: {}` | `[(a, [])]` |
 | `"hello"` alone | the document is the single scalar `hello` |
+
+## 4.9 Canonical output
+
+An OML writer is canonical if, for every Document, it emits text that parses
+back to an equal Document, following the canonical form below.
+
+**Two conformant implementations writing the *same* Document MUST produce
+byte-identical text.** This guarantee is stronger than
+[OSD's](05-osd-grammar.md#59-canonical-output), for a structural reason: OML's
+syntax *is* the Document model, and edge order is data
+([§2.3](02-document-model.md#23-structural-invariants) D-1), so there is no
+separate source-declaration order to preserve. Two different OML texts
+denoting the same Document — array sugar versus repeated labels, compact
+versus expanded — therefore canonicalise to the same bytes, where the
+corresponding OSD case legitimately does not.
+
+Canonical form:
+
+- **OML-Core only.** A canonical writer MUST NOT emit OML-Extended spellings,
+  though every reader MUST accept them — restating the Core/Extended split
+  defined in this chapter's opening.
+- **Edges in Document order**, always. Order is data and is never rearranged.
+- **Repeated labels, never array sugar.** `[(b,1), (b,2), (b,3)]` MUST be
+  written as three `b:` edges, not as `b: [1, 2, 3]`. Both parse to the same
+  Document (§4.3.1), so a canonical form has to pick one, and this is it.
+  Emitting array sugar is a permitted non-canonical writer option, not
+  canonical output.
+- **One edge per line.** A node value opens with `{` on the edge's own line,
+  its edges indented by two spaces, and a closing `}` at the parent's
+  indentation.
+- **Labels** bare only where §4.4 permits, quoted otherwise.
+- **String escapes** restricted to the set §4.5 allows.
+
+```oml
+name: "Ann"
+adr: {
+  city: "Z"
+  pc: "8001"
+}
+tag: "x"
+tag: "y"
+```
+
+A **compact mode** is permitted: the whole Document on one line, edges
+separated by `;` rather than newlines. "Compact" means single-line, not
+merely unindented — a writer that keeps newlines but drops indentation is
+producing a third layout, which this section does not define and which a
+canonical writer MUST NOT emit.
+
+```oml
+name: "Ann"; adr: { city: "Z"; pc: "8001" }; tag: "x"; tag: "y"
+```
+
+Compact output MUST round-trip in both of the senses that matter, and they
+are different claims:
+
+- **Parsing it yields an equal Document** — the same Document the expanded
+  form above denotes. Compact mode changes layout, never content.
+- **Re-writing that Document in compact mode reproduces the same bytes.**
+  Compact mode is itself canonical within its own layout, so two conformant
+  implementations emitting compact output for one Document MUST agree byte
+  for byte, exactly as they must for the expanded form.
+
+What it does *not* claim is that compact and expanded output are
+interchangeable byte sequences: they are two canonical layouts of one
+Document, each stable under its own round-trip.

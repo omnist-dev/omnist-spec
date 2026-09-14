@@ -3,6 +3,55 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.11.0-beta (2026-09-14)
+
+**Normative (minor)** — three rules the spec relied on but never stated,
+from the quality audit. Closes
+[#66](https://github.com/omnist-dev/omnist-spec/issues/66),
+[#68](https://github.com/omnist-dev/omnist-spec/issues/68),
+[#69](https://github.com/omnist-dev/omnist-spec/issues/69).
+
+**⚠️ One existing vector's encoding changes — ports must re-verify.** See
+§8.5.4 below. Every other change here is prose or additive.
+
+- **New [§4.9](docs/04-oml-grammar.md#49-canonical-output), OML canonical
+  output.** `osd-oml.md` cited "§4.9" for OML's compact-mode round-trip
+  guarantee; chapter 4 ended at §4.8 and made no such guarantee anywhere, so
+  the citation pointed at a rule that was never written. Chapter 4 had no
+  canonical-output section at all, while OSD has §5.9 — its writer rules were
+  scattered across §4.4 and §4.5 with no round-trip guarantee. §4.9
+  consolidates them and pins two previously unstated things: **canonical
+  output uses repeated labels, never array sugar** (§4.3.1 makes both parse
+  to the same Document, so a canonical form must choose, and two conformant
+  writers could otherwise disagree on bytes — which §9.2 forbids); and the
+  byte-identical guarantee is **stronger for OML than for OSD**, because
+  OML's syntax is the Document model and edge order is data, so there is no
+  separate declaration order to preserve. Compact mode is now defined as
+  *single-line* rather than merely unindented — a writer keeping newlines but
+  dropping indentation produces a third layout, which is not canonical — and
+  its round-trip guarantee is split into the two distinct claims it was
+  conflating: parsing compact output yields an equal Document, and re-writing
+  that Document compactly reproduces the same bytes. New vector
+  `formats-oml/canonical-output/repeated-labels-never-array-sugar` pins the
+  array-sugar rule, which #66 asked be tested rather than left honor-system.
+- **New [§8.4.1](docs/08-conformance-and-errors.md#841-which-kind-each-schema-code-uses),
+  path-kind per `schema.*` code.** §8.4 allowed "a Document or Schema path"
+  without saying which applied where, leaving a byte-compared value
+  unspecified. The rule existed but lived in the OSD-OML extension as
+  R-21/R-22, flagged provisional when written. It is a property of the codes,
+  not of the extension that first reached them, so it now lives in Core and
+  the extension cites it.
+- **[§8.5.4](docs/08-conformance-and-errors.md#854-canonical-document-encoding)
+  integer threshold pinned at ±(2^53 − 1).** "Fit exactly" was never defined,
+  in the encoding whose stated purpose is not depending on the reader's JSON
+  library. **This corrected an existing vector**:
+  `document-model/limits/integer-beyond-fixed-width-still-parses-under-default-limit`
+  encoded a 25-digit integer as a bare JSON number, which requires every
+  reader's JSON library to parse it losslessly — JavaScript's `JSON.parse`,
+  Go's `encoding/json` into `interface{}`, and `serde_json`'s default all
+  fail to. Its expected value is now the decimal-string form. Two new vectors
+  pin both sides of the boundary.
+
 ## v0.10.0-beta (2026-09-14)
 
 **Normative (minor)** — closes
