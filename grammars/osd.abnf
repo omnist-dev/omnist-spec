@@ -16,13 +16,25 @@
 ; between any two tokens. They are omitted from the syntactic rules below.
 
 schema        = [BOM] *( record-def / root-def )
-                ; BOM: a leading U+FEFF is consumed and contributes
-                ; nothing to the Schema (spec 2.5). Permitted only at
-                ; offset zero.
-
-BOM           = %xFEFF
                 ; declarations may interleave in any order; `root` need not
                 ; come last, though canonical output places it last.
+                ; BOM: a leading U+FEFF is consumed and contributes
+                ; nothing to the Schema (spec 2.5). Permitted only at
+                ; offset zero -- see the note on BOM below.
+
+BOM           = %xFEFF
+                ; The offset-zero constraint is NOT expressible in this
+                ; grammar. These rules are token-level: per the preamble
+                ; above, whitespace and comments are discarded by the
+                ; tokenizer and may appear between any two tokens, so
+                ; `[BOM]` alone would also admit a U+FEFF preceded by
+                ; blank lines or a comment. It is the tokenizer that
+                ; enforces the constraint: U+FEFF is recognized as a BOM
+                ; only as the very first character of the input, and is
+                ; ordinary content everywhere else. OML's grammar has no
+                ; such gap -- its `document` rule spells the leading
+                ; separator out as `[BOM] [SEP] ...`, so BOM is
+                ; positionally first in the grammar itself.
 
 record-def    = %s"record" name "{" [ field *( "," field ) [ "," ] ] "}"
                 ; a trailing comma after the last field is legal and is what

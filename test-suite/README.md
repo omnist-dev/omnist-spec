@@ -70,12 +70,14 @@ a number.
   `number`'s `V` is always a JSON number, never a JSON string.
 
 **Some vectors cannot be honestly run by every implementation, and that's
-expected — see [§9.4 D-6](../docs/09-divergence-ledger.md#94-known-open-divergences)**
-for a concrete example: a `document` whose `kind` is `"integer"` or
+expected.** A `document` whose `kind` is `"integer"` or
 `"number"` can't be faithfully constructed by an implementation with no
 native distinction between the two (e.g. TypeScript). Such an
 implementation's runner MUST report `skip` for the affected vectors, not
-`fail` and not a forced `pass` — the same discipline already applies to
+`fail` and not a forced `pass`, and MUST record the gap as a numbered
+`DIV-N` entry in
+[§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences) — the same
+discipline already applies to
 `document-model/limits.json`'s vectors for implementations with no
 runtime-configurable safety limit (§2.4).
 

@@ -22,14 +22,14 @@
 ; ---------------------------------------------------------------- document
 
 document      = [BOM] [SEP] ( node-edges / scalar ) [SEP]
+                ; see (T3) for the disambiguation; node-edges may be empty,
+                ; so the empty document is legal.
                 ; BOM: a leading U+FEFF is consumed and contributes
                 ; nothing to the Document (spec 2.5). It is permitted
                 ; only here, at offset zero; anywhere else U+FEFF is
                 ; ordinary content.
 
 BOM           = %xFEFF
-                ; see (T3) for the disambiguation; node-edges may be empty,
-                ; so the empty document is legal.
 
 node-edges    = [ edge *( SEP edge ) ]
 

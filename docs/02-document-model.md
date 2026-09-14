@@ -106,9 +106,14 @@ flattened. See [chapter 7](07-codecs-and-deserialization.md).
 
 ## 2.3 Structural invariants
 
-A conformant implementation maintains all of the following for every Document
-it constructs, reads, or hands back. Each is a requirement in its own right;
-this sentence introduces them rather than adding a further one.
+**D-17. A conformant implementation MUST maintain all of the following for
+every Document it constructs, reads, or hands back.** Each of `D-1`..`D-5` is
+also a requirement in its own right, and where one states a narrower scope of
+its own — `D-1` binds every reader, `D-3` binds the operations of chapters 3
+and 6 — that narrower scope governs, and this rule does not widen it. Where a
+rule states no scope of its own, notably `D-5`, this rule supplies it: scalar
+identity holds for every Document an implementation constructs, reads, or
+hands back.
 
 **D-1. Edge order is preserved.** The order of edges within a node MUST be the
 order they appeared in the source, for every reader. Implementations MUST NOT
@@ -258,15 +263,34 @@ ambiguity to mark — so treating it as content on any surface would be wrong,
 and treating it as content on *some* surfaces is how two implementations
 build different Documents from the same file.
 
-This does not override the formats Omnist reads. RFC 8259 §8.1 explicitly
-permits it: implementations parsing JSON "MAY ignore the presence of a byte
-order mark rather than treating it as an error". Stripping rather than
-rejecting is also the pragmatic choice — BOM-prefixed files are routine from
-Windows tooling, and refusing them would reject well-formed data over a byte
-the author never sees and usually cannot see.
+**Where this sits relative to each format's own specification.** For JSON it
+overrides nothing: RFC 8259 §8.1 explicitly permits it — implementations
+parsing JSON "MAY ignore the presence of a byte order mark rather than
+treating it as an error". XML 1.0 and YAML 1.2 both permit a leading BOM
+outright, so stripping it is the ordinary reading there too. **TOML is the
+one case where this rule goes beyond what the format requires.** TOML v1.0.0
+has no BOM provision at all: it says only that a TOML file must be a valid
+UTF-8 encoded document, and its ABNF gives `U+FEFF` no position anywhere,
+leading or otherwise — which is why the reference's `tomllib` rejects a
+BOM-prefixed document. Stripping it for TOML is therefore a deliberate
+Omnist choice, made for uniformity across surfaces, not an application of
+TOML's own rules; a TOML parser that rejects the byte is not violating TOML,
+it is failing this spec. The pragmatic case is the same either way:
+BOM-prefixed files are routine from Windows tooling, and refusing them would
+reject well-formed data over a byte the author never sees and usually cannot
+see.
+
+**On writers (D-15).** A conformant Omnist writer MUST NOT emit a leading
+byte-order mark on any surface — OML, OSD, or any codec's output. This
+mirrors RFC 8259 §8.1's own writer guidance and is what keeps the rule from
+producing byte-level divergence: if stripping on read were paired with a
+free choice on write, two conformant implementations could emit different
+bytes for the same Document while both read either back correctly.
 
 Measured before this rule existed, the reference stripped a BOM for OML and
-XML and rejected it for JSON and TOML — the divergence this closes.
+XML and rejected it for JSON, TOML and OSD — the divergence this closes.
+OSD was the third rejecting surface, not a second stripping one:
+`parse_schema` on BOM-prefixed OSD text raised `parse.unexpected-token`.
 
 **D-16. Labels and names compare byte-wise, never by Unicode normalization.** Two
 labels are the same label when their UTF-8 bytes are identical. `café`

@@ -9,7 +9,8 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
 [#78](https://github.com/omnist-dev/omnist-spec/issues/78) and
 [#93](https://github.com/omnist-dev/omnist-spec/issues/93). This is the
 intended freeze point for the quality audit: every normative chapter now has
-full rule coverage, enforced in CI. **JSON and TOML readers need a change.**
+full rule coverage, enforced in CI. **JSON, TOML and OSD readers need a
+change, and every writer does.**
 
 - **New D-15: a leading byte-order mark MUST be stripped, on every surface.**
   Previously left unsettled because a first draft would have made the
@@ -19,11 +20,17 @@ full rule coverage, enforced in CI. **JSON and TOML readers need a change.**
   wrong, and treating it as content on *some* surfaces is how two
   implementations build different Documents from one file. And it overrides
   nothing: RFC 8259 §8.1 explicitly permits a JSON parser to "ignore the
-  presence of a byte order mark rather than treating it as an error".
+  presence of a byte order mark rather than treating it as an error". TOML is
+  the one surface where the rule goes past the format's own specification:
+  TOML v1.0.0 has no BOM provision at all, and its ABNF gives `U+FEFF` no
+  position, so stripping there is a deliberate Omnist choice for uniformity.
   Measured before this rule, the reference stripped a BOM for OML and XML and
-  rejected it for JSON and TOML. Both ABNF grammars now admit `%xFEFF` at
-  offset zero and nowhere else. Two new vectors, currently red against the
-  reference by design.
+  rejected it for JSON, TOML **and OSD** (`parse_schema` raised
+  `parse.unexpected-token`). Both ABNF grammars now admit `%xFEFF` at offset
+  zero and nowhere else. D-15 also binds writers: a conformant writer MUST
+  NOT emit a leading BOM on any surface, so the rule cannot produce
+  byte-level divergence between ports. Three new vectors (JSON, TOML, OSD),
+  currently red against the reference by design.
 - **Chapters 2 and 3 have complete rule spines.** They already had `D-1..D-5`
   and `S-1..S-8`, but 22 normative paragraphs sat outside them — invisible
   until `check_rule_coverage.py` existed. Now `D-6..D-16` and `S-9..S-20`.

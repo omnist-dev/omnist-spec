@@ -90,7 +90,7 @@
           }
         ]
       },
-      "comment": "D-3 (closed 2026-08-23): the attribute x=\"1\" is gone -- there is no path from a Document edge back to an attribute, so writing never produces one either -- and that drop MUST now be reported via format.attribute-dropped (Sec8.3.8), not silent. Path is $.a: the element the attribute was lost from."
+      "comment": "Ledger entry DIV-3 (closed 2026-08-23; divergence-ledger numbering, not chapter 2's D-N rules): the attribute x=\"1\" is gone -- there is no path from a Document edge back to an attribute, so writing never produces one either -- and that drop MUST now be reported via format.attribute-dropped (Sec8.3.8), not silent. Path is $.a: the element the attribute was lost from."
     },
     {
       "name": "formats-xml/basic/namespace-prefix-is-dropped-on-read",
@@ -130,7 +130,7 @@
           }
         ]
       },
-      "comment": "D-3 (closed 2026-08-23): a prefixed tag <ns:b> reads as the local name b, with the prefix and any namespace binding discarded -- reported via format.namespace-dropped (Sec8.3.8), not silent. Path is $.a.b: the element the prefix was lost from, using the same RecordName.label-style dotted path convention Sec8.4 defines for Schema/Document paths generally."
+      "comment": "Ledger entry DIV-3 (closed 2026-08-23; divergence-ledger numbering, not chapter 2's D-N rules): a prefixed tag <ns:b> reads as the local name b, with the prefix and any namespace binding discarded -- reported via format.namespace-dropped (Sec8.3.8), not silent. Path is $.a.b: the element the prefix was lost from, using the same RecordName.label-style dotted path convention Sec8.4 defines for Schema/Document paths generally."
     },
     {
       "name": "formats-xml/basic/multi-rooted-document-cannot-be-written",

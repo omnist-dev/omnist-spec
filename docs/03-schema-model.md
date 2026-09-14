@@ -521,7 +521,7 @@ Semantics of `any` in each operation:
 | validate | Descent stops. The subtree is accepted unchecked. |
 | `compatible_with` | If the right-hand type is `any`, the answer is true — `any` absorbs everything. If the left-hand type is `any` and the right-hand type is not, the answer is false. |
 | materialize | The subtree passes through untouched. No leaf upgrades happen inside it. |
-| `infer` | `infer` MUST NOT emit `any` unless explicitly requested. When requested, every opening it introduces MUST be reported. |
+| `infer` | **S-21.** `infer` MUST NOT emit `any` unless explicitly requested. When requested, every opening it introduces MUST be reported. |
 | `lint` | Every `any` field is reported as an informational finding, so a human can audit the schema's openings. |
 
 Restrictions:

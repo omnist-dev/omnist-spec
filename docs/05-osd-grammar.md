@@ -268,9 +268,9 @@ root R
 | `record any { "a": string }` | error: reserved type name |
 | `record R{"a":string}` twice | error: duplicate definition |
 | `record R{"a":string}` with no `root` | error: a schema must declare a root |
-| `record R{"a":string} record S{"b":string}` with two `root` declarations | error: a schema MUST NOT declare more than one root |
+| `record R{"a":string} record S{"b":string}` with two `root` declarations | error: a schema MUST NOT declare more than one root (OSD-10) |
 | `record R{a:string}` | error: expected a quoted field name |
-| `record R{"": string}` | error: a field label MUST NOT be empty |
+| `record R{"": string}` | error: a field label MUST NOT be empty (OSD-2) |
 | `record R{"a": "string"}` | error: a quoted string cannot appear in type position |
 | `record R { "a": string, }` | valid; trailing comma accepted |
 | `record R { "data": any }` | field type is `any` |

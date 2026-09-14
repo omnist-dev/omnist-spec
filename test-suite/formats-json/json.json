@@ -277,7 +277,7 @@
           }
         ]
       },
-      "comment": "D-3 (closed 2026-08-23): Sec7.3's grouping rule already MUST group same-label edges regardless of position ([(m,A),(x,X),(m,B)] -> {\"m\":[A,B],\"x\":X}) -- no format in the JSON family (JSON/YAML/TOML) can express cross-label interleaving. What was missing was reporting the loss; format.interleaving-lost (Sec8.3.8) now MUST be emitted whenever a written Document actually had more than one distinct label AND at least one label's edges were not all contiguous, i.e. grouping changed relative order. Path is $, the whole document, since the loss isn't localized to one label's edges -- it's the interleaving between labels. This vector uses JSON as the representative case; the same MUST applies to YAML and TOML writers for the identical reason."
+      "comment": "Ledger entry DIV-3 (closed 2026-08-23; divergence-ledger numbering, not chapter 2's D-N rules): Sec7.3's grouping rule already MUST group same-label edges regardless of position ([(m,A),(x,X),(m,B)] -> {\"m\":[A,B],\"x\":X}) -- no format in the JSON family (JSON/YAML/TOML) can express cross-label interleaving. What was missing was reporting the loss; format.interleaving-lost (Sec8.3.8) now MUST be emitted whenever a written Document actually had more than one distinct label AND at least one label's edges were not all contiguous, i.e. grouping changed relative order. Path is $, the whole document, since the loss isn't localized to one label's edges -- it's the interleaving between labels. This vector uses JSON as the representative case; the same MUST applies to YAML and TOML writers for the identical reason."
     }    ,
     {
       "name": "formats-json/encoding/leading-bom-is-stripped",
