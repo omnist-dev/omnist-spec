@@ -3,6 +3,59 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.13.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#83](https://github.com/omnist-dev/omnist-spec/issues/83). Corrects a false
+justification, states a requirement that was only ever implied, and closes
+the CI hole that let citation rot accumulate in the first place.
+
+- **§3.4's justification for `max = 0` was wrong.** It claimed the value
+  "can arise as a derived value — an intermediate result of algebra
+  operations that narrow a cardinality range". No such operation exists:
+  chapter 6 has no intersection, meet, or range-narrowing operation, and
+  `max = 0` is consumed in three places and produced in none. The real and
+  only route is direct programmatic construction, which is now stated. Also
+  recorded: no conformance vector can reach `prune`'s `max = 0` rule, since
+  every vector supplies schemas as OSD text and OSD text cannot express
+  `[0,0]` — the rule is normative but unverifiable through the suite.
+- **New in §3.3: the `S-*` constraints govern a Schema however it was
+  built** — parsed from OSD, parsed from OSD-OML, produced by an algebra
+  operation, or constructed programmatically. This mirrors how
+  [§2.4](docs/02-document-model.md#24-safety-limits) already treats a
+  Document builder as a peer of the OML parser. Implementations MUST enforce
+  S-1 through S-8 at construction rather than relying on their parsers to
+  have made violations unreachable.
+- **⚠️ That requirement has already found a real bug.** The Python
+  reference enforces S-1, S-3, S-5 and S-6 at construction but **not S-8**,
+  so a Schema can be built whose canonical OSD output cannot be parsed back
+  — violating §5.9's definition of a canonical writer. Filed as
+  [omnist#344](https://github.com/omnist-dev/omnist/issues/344). The other
+  four ports are unverified and should be checked during the next pin sweep.
+- **CI now builds the docs at all, and validates anchors.** Two separate
+  holes, both found by review after a first draft of this entry wrongly
+  claimed the gate was already active:
+    - **Nothing in CI built the documentation.** `check.yml` ran only the
+      version check; `docs.yml` runs `mkdocs gh-deploy` — no `--strict` —
+      and only on push to `master`, i.e. after merge. A broken build reached
+      the published site before anything complained. A `docs-build` job now
+      runs `mkdocs build --strict` on every pull request.
+    - **`mkdocs` does not validate anchors by default**, so every `#anchor`
+      went unchecked; a broken one was reported as INFO and passed. This is
+      the root cause of the citation rot fixed in v0.9.2-beta.
+      `validation.links.anchors` is now on, verified to abort the build on a
+      deliberately broken anchor. Its limit is worth knowing: it catches
+      markdown links carrying an anchor, not bare prose citations like
+      "see §6.3" — which is exactly how a wrong-section reference in this
+      change's own first draft slipped past.
+- **New `tools/check_vectors.py`, wired into CI.** Nothing parsed
+  `test-suite/` before this. A vector was nearly committed during the audit
+  with a literal `U+0001` byte inside a JSON string, which RFC 8259 forbids
+  and which would have broken every port's vector reader while this repo's
+  CI stayed green. The script checks strict-JSON validity, raw control
+  characters (reporting the line), duplicate vector names, and required
+  fields — and is verified to fail on that exact byte.
+
 ## v0.12.0-beta (2026-09-14)
 
 **Normative (minor)** — eight conformance vectors closing coverage gaps found
