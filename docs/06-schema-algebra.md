@@ -337,6 +337,53 @@ unreachable records while accepting exactly the same documents.
 `normalize` returns the canonical minimal schema equivalent to `S`: the fewest
 records, unique up to record naming. This is the paper's `MinimizeSA`.
 
+**This guarantee is scoped to satisfiable schemas.** If `is_empty(S)`,
+`normalize` returns `S` unchanged (step 1), so two equivalent unsatisfiable
+schemas need not — and generally will not — normalize to the same text:
+
+```osd
+record A {
+    "b": B,
+}
+record B {
+    "a": A,
+}
+root A
+```
+
+```osd
+record X {
+    "y": Y,
+    "z": Z,
+}
+record Y {
+    "x": X,
+}
+record Z {
+    "x": X,
+}
+root X
+```
+
+Both accept zero documents, so both accept the *same* set of documents, and
+`equivalent` reports them equal ([§6.7](#67-equivalenta-b)). `normalize`
+leaves each exactly as written.
+
+**This is a limitation of the model, not an oversight in the algorithm.**
+Omnist has no direct spelling for the empty language. The paper's automaton
+has one — a state from which no accepting path exists — but an Omnist schema
+can express unsatisfiability only *indirectly*, through a mandatory reference
+cycle. There are unboundedly many such spellings (`record R { "r": R }`,
+`record Q { "z": Q }`, and so on), all equivalent to each other, and none
+distinguished by the model. A canonical form needs a canonical representative
+to map onto; here every candidate is an arbitrary pick rather than something
+the model singles out.
+
+**Consequence for callers.** Do not use equality of `normalize` output as an
+equivalence test unless both inputs are known to be satisfiable.
+[`equivalent`](#67-equivalenta-b) is the sanctioned check and is correct in
+every case, including this one.
+
 Three steps.
 
 ```mermaid
@@ -454,6 +501,22 @@ declaration" for a surviving representative, so per
 invariant, `normalize`'s output MUST order records by name and fields by
 label, using plain ordinal string comparison.
 
+**Minimality theorem.** The paper's Theorem 4: for satisfiable `A` and `B`,
+`equivalent(A, B)` holds exactly when `normalize(A)` and `normalize(B)` are
+isomorphic — identical up to a bijection of record names. This is what makes
+"minimize, then compare structurally" a sound decision procedure for
+equivalence, and it is why `normalize`'s output is described as unique *up to
+record naming* rather than unique outright.
+
+The satisfiability precondition is not decoration: it is exactly the scope
+limitation stated at the top of this section. Two unsatisfiable schemas are
+always `equivalent`, yet their `normalize` outputs are whatever the author
+wrote, so the "only when" direction fails without it. An implementation
+offering a structural-comparison shortcut as an optional extra (§9.1) MUST
+therefore either special-case the unsatisfiable pair or restrict the shortcut
+to satisfiable inputs, and MUST NOT substitute such a shortcut for
+`equivalent` itself ([§6.7](#67-equivalenta-b)).
+
 ---
 
 ## 6.9 `extract(S, keep)`
@@ -479,6 +542,15 @@ Steps:
    canonical output order
    ([§3.3](03-schema-model.md#33-formal-definition)): `extract`'s output
    order is inherited from `normalize`, not computed independently.
+
+`extract` inherits [§6.8](#68-normalizes)'s scope limitation along with its
+canonical form: step 5 delegates to `normalize`, so when the extracted result
+is unsatisfiable it is returned as written rather than canonicalised. Step 4
+does not prevent this — it fires only when the root is *invalidated* by the
+`keep` set, which is a different condition from the result being
+unsatisfiable. An input that is already unsatisfiable, and all of whose labels
+are kept, passes step 4 untouched and emerges unchanged. So the canonical-form
+guarantee above holds for satisfiable results only, exactly as in §6.8.
 
 **Deleting a mandatory field is an error, not a silent relaxation.** An
 implementation MUST NOT relax the deleted field to optional instead. Doing so

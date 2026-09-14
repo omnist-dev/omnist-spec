@@ -198,6 +198,19 @@
         "b": "record Unused {\n    \"y\": integer,\n}\nrecord Top {\n    \"x\": string,\n}\nroot Top\n"
       },
       "expect": { "result": true }
+    },
+
+    {
+      "name": "equivalent/unsatisfiable-schemas-are-equivalent-vacuously",
+      "spec": "docs/06-schema-algebra.md#67-equivalenta-b",
+      "operation": "equivalent",
+      "purpose": "edge-case",
+      "input": {
+        "a": "record A {\n    \"b\": B,\n}\nrecord B {\n    \"a\": A,\n}\nroot A\n",
+        "b": "record X {\n    \"y\": Y,\n    \"z\": Z,\n}\nrecord Y {\n    \"x\": X,\n}\nrecord Z {\n    \"x\": X,\n}\nroot X\n"
+      },
+      "expect": { "result": true },
+      "comment": "Both schemas are unsatisfiable: every reference is mandatory, so each demands an infinitely deep document and neither accepts a finite one. Sec6.7 defines equivalence as accepting the same set of documents, and both accept the empty set, so they are equivalent vacuously -- despite differing in record names, record count, and field labels, none of which any document could expose. An implementation that errors or returns false on unsatisfiable input fails here while passing every other equivalent vector, since the existing two both use satisfiable schemas. Sec6.8's scope limitation and its Theorem 4 precondition both rest on this behavior."
     }
   ]
 }
