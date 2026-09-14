@@ -3,6 +3,36 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.9.2-beta (2026-09-14)
+
+**Editorial (patch)** — first batch of fixes from the whole-spec quality
+audit ([#63](https://github.com/omnist-dev/omnist-spec/issues/63)-[#80](https://github.com/omnist-dev/omnist-spec/issues/80)).
+Citation rot only; no normative rule changed, no implementation affected.
+
+- **[#64](https://github.com/omnist-dev/omnist-spec/issues/64)**:
+  `formats/json.md` documented `NaN`/`Infinity` as substitute-`null`-and-report,
+  which [§8.3.8](docs/08-conformance-and-errors.md#838-format-codec-adjustments)
+  had already superseded with unconditional `write.unsupported-value`. The
+  conformance vector was updated when that rule changed; this prose was not,
+  and the vector cited this page as its authority. Rewritten to match, and to
+  cite §8.3.8 rather than restate its rationale.
+- **[#67](https://github.com/omnist-dev/omnist-spec/issues/67)**:
+  `formats/xml.md`'s "Parity gaps" section carried three stale claims — a
+  retired `D-3` ledger citation, "per-port rollout is still in progress"
+  (it completed), and "As of spec v0.1 ... Python, TypeScript, and Rust"
+  (five ports, and the spec is at v0.9). It now states no per-port status at
+  all and defers wholly to §9.3, which is the only place that information
+  should live.
+- **[#65](https://github.com/omnist-dev/omnist-spec/issues/65)**: the
+  divergence ledger's entry IDs collided with chapter 2's Document-model
+  rules — both were `D-N`, and `08-conformance-and-errors.md` used both
+  meanings in one file. Ledger entries are now `DIV-N`; the convention and
+  the reason are stated in [§9.4](docs/09-divergence-ledger.md#94-known-open-divergences),
+  and `porting-a-conformance-runner.md`'s filing instruction updated. The two
+  citations left dangling by deleted entries (`D-3` in §8.3.8, `D-7` in the
+  porting guide) are resolved. §9.4 now also warns to check for inbound
+  citations before deleting an entry, which is how both arose.
+
 ## v0.9.1-beta (2026-09-13)
 
 **Tooling (patch)** — fixes a typo in v0.9.0-beta's own new
