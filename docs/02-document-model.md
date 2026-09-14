@@ -154,13 +154,14 @@ implementation that cannot construct its input.
 
 ## 2.4 Safety limits
 
-A Document is built from untrusted input. Three quantities bound the work an
+A Document is built from untrusted input. Four quantities bound the work an
 implementation will do before refusing to continue: nesting depth, total node
-count, and the digit length of an `integer` literal. Every conformant
-implementation MUST enforce a finite limit on all three. **No implementation
-MAY be unbounded on any of them.**
+count, the digit length of an `integer` literal, and the ratio of nodes
+materialized to input size. Every conformant implementation MUST enforce a
+finite limit on all four. **No implementation MAY be unbounded on any of
+them.**
 
-**What is fixed, and what is not.** The *existence* and *meaning* of the three
+**What is fixed, and what is not.** The *existence* and *meaning* of the four
 limits is normative. The specific *numbers* are not: this is a deliberate
 change from an earlier draft of this spec, which wrongly treated one platform's
 numbers as universal constants. A limit exists to bound work against untrusted
@@ -173,6 +174,7 @@ big-data ingestion engine.
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
+| Maximum expansion ratio | 10 | Nodes materialized per byte of input, for any format with a reference or alias mechanism |
 
 The reference defaults are what the Python implementation uses today, and what
 a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
@@ -180,13 +182,36 @@ matches CPython's own default for `sys.set_int_max_str_digits` — conversion
 between an arbitrarily long digit string and a big integer is superlinear, so
 an unbounded literal is a denial-of-service vector regardless of language.
 
-**Choosing different values.** An implementation MAY set any of the three
+**On the expansion ratio.** A format with an alias or reference mechanism —
+YAML anchors today, anything similar later — can describe a document
+exponentially larger than its own source text. The node-count limit bounds
+the *result* but not the *ratio*, and that gap is exploitable in a way the
+other three limits are not: an attacker sizes the input to land just under
+the node cap, and every request is then **accepted**, with no diagnostic,
+while costing the reader orders of magnitude more than it cost to send. No
+limit is exceeded, so nothing anywhere reports a problem.
+
+The default of 10 comes from measurement rather than intuition. Legitimate
+documents sit near 0.1–0.2 nodes per input byte — a dense flat document of a
+thousand short edges measures 0.10, a fifty-level nested document 0.20, an
+ordinary small YAML config 0.14 — because every node needs a label and a
+separator to exist in the source at all. A ten-level YAML anchor chain
+measures **362**. A cap of 10 leaves roughly fifty times headroom above the
+densest legitimate input while sitting far below any amplification worth
+mounting.
+
+A reader MUST reject input exceeding its configured ratio with the matching
+`document.limit.*` code (§8.3.2), and the check MUST fire during
+materialization rather than after, since firing afterwards would mean doing
+the work the limit exists to prevent.
+
+**Choosing different values.** An implementation MAY set any of the four
 lower or higher than the reference default, to fit its deployment target —
 for example a lower depth limit on a mobile or embedded runtime with a small
 call stack, or a higher node count on a system built to ingest large batch
 documents. Whatever values an implementation chooses:
 
-- They MUST be finite. "No limit" is not a legal choice for any of the three.
+- They MUST be finite. "No limit" is not a legal choice for any of the four.
 - They MUST be documented, in the same place a user would look for the rest of
   the implementation's conformance profile.
 - The depth limit MUST match between the Document builder and the OML parser
@@ -194,13 +219,13 @@ documents. Whatever values an implementation chooses:
   NOT then fail to build.
 
 **Where this stands today.** No implementation currently exposes a public
-configuration surface for any of the three limits. Python's `_MAX_DEPTH`,
+configuration surface for any of the four limits. Python's `_MAX_DEPTH`,
 `_MAX_NODES`, and `_MAX_INT_DIGITS` are hardcoded module constants with no
 constructor argument, function parameter, or environment variable that lets a
 caller change them — the only place they vary at all is inside Python's own
 test suite, via direct monkeypatching of the private module attribute, which
 is a test technique, not a configuration surface a real caller can use. "MAY
-set any of the three" is written for an implementation that chooses to expose
+set any of the four" is written for an implementation that chooses to expose
 one — an embedded or big-data target with an actual reason to deviate — not a
 capability any implementation ships today. A future implementation is free to
 be the first.
@@ -228,3 +253,43 @@ exactly one number, not two kept equal by discipline. The MUST here is aimed
 at an implementation whose architecture genuinely has two separate places a
 depth limit could be configured; where a single shared constant is the
 natural design, as in Python, the requirement is satisfied automatically.
+
+---
+
+## 2.5 Encoding
+
+These rules apply to every text surface — OML, OSD, and every codec's input.
+They are stated because each one is a place two implementations can build
+*different Documents from identical bytes* while both believing they are
+correct, which is the most dangerous class of divergence a data format has:
+one system validates the reading it sees, another acts on a different one.
+
+**Input MUST be valid UTF-8.** A malformed byte sequence is an error,
+reported as `parse.invalid-encoding` ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
+An implementation MUST NOT substitute `U+FFFD` or otherwise repair the input
+and continue: silent repair is exactly how two readers end up with different
+Documents, since what a replacement character stands in for is not
+recoverable.
+
+**A leading byte-order mark MUST be stripped.** `U+FEFF` at the very start of
+input is consumed and contributes nothing to the Document. A BOM anywhere
+else is ordinary content, with no special meaning. Stripping rather than
+rejecting is the pragmatic choice — BOM-prefixed files are entirely routine
+from Windows tooling, and refusing them would reject well-formed data for a
+byte the author never sees.
+
+**Labels and names compare byte-wise, never by Unicode normalization.** Two
+labels are the same label when their UTF-8 bytes are identical. `café`
+written as `U+0063 U+0061 U+0066 U+00E9` and as `U+0063 U+0061 U+0066 U+0065
+U+0301` are **two distinct labels**, and a node carrying both has two edges.
+An implementation MUST NOT normalize to NFC, NFD, or anything else, on read
+or on comparison.
+
+That last rule is the one most likely to be violated by accident, because
+some platforms normalize filenames and text input by default. It is stated
+the way it is for consistency: [§3.3](03-schema-model.md#33-formal-definition)
+S-3 already requires exact, case-sensitive matching for reserved names, and
+[§3.3](03-schema-model.md#33-formal-definition)'s canonical ordering compares
+by Unicode codepoint rather than by locale. Byte-wise label identity is the
+same discipline applied to the Document model — no hidden text transformation
+anywhere, so what an author writes is what round-trips.

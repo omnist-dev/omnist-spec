@@ -687,6 +687,47 @@
         }
       },
       "comment": "A legitimate, in-range offset (e.g. India Standard Time) parses normally -- confirms the tz-offset fix in the vector above doesn't reject valid input, only out-of-range minutes. The expected value's seconds are canonicalized to :00 even though the source text omits them, matching every sibling OML-datetime vector's own convention (see date-then-time-lookahead-yields-one-datetime-token above) -- a temporal-scalar value in a parse vector MUST already be in the format's own canonical spelling, not just any value that happens to compare semantically equal, since a string-backed implementation (rather than one with a native temporal type) compares literally. Was originally un-canonicalized here; found and reported as omnist-spec#51 by the Rust port during omnist-rs#165."
+},
+
+    {
+      "name": "oml-grammar/encoding/leading-bom-is-stripped",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "\ufeffa: 1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            ["a", {"scalar": {"kind": "integer", "value": 1}}]
+          ]
+        }
+      },
+      "comment": "Sec2.5: a byte-order mark at the very start of input is consumed and contributes nothing to the Document -- the result is identical to the same input without it. Stripping rather than rejecting is deliberate: BOM-prefixed files are routine from Windows tooling, and refusing them would reject well-formed data over a byte the author never sees. A BOM anywhere other than position zero is ordinary content with no special meaning."
+    },
+
+    {
+      "name": "oml-grammar/encoding/nfc-and-nfd-labels-are-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "\"caf\u00e9\": 1\n\"cafe\u0301\": 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            ["caf\u00e9", {"scalar": {"kind": "integer", "value": 1}}],
+            ["cafe\u0301", {"scalar": {"kind": "integer", "value": 2}}]
+          ]
+        }
+      },
+      "comment": "Sec2.5: labels compare byte-wise, never by Unicode normalization. Both labels render as 'cafe-acute' but differ in bytes -- one is U+00E9, the other 'e' followed by combining U+0301 -- so they are two distinct labels and the node has two edges. An implementation that normalizes to NFC or NFD on read collapses them into one edge and fails here. This is the rule most likely to be broken by accident, since some platforms normalize text input by default."
     }
   ]
 }

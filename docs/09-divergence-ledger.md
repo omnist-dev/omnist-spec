@@ -58,10 +58,10 @@ is what this exception permits, not a blanket exemption for the surrounding
 area. **This exception covers a missing distinction being skipped, never an
 incorrect output being produced.**
 
-**Whether a safety limit exists, and what it is called.** All three limits in
-§2.4 (depth, node count, integer digits) MUST be enforced by every
-implementation, at some finite value it documents. An implementation MUST NOT
-be unbounded on any of the three, and exceeding whichever value it configures
+**Whether a safety limit exists, and what it is called.** All four limits in
+§2.4 (depth, node count, integer digits, expansion ratio) MUST be enforced by
+every implementation, at some finite value it documents. An implementation
+MUST NOT be unbounded on any of the four, and exceeding whichever value it configures
 MUST raise the matching `document.limit.*` code (§8.3.2) — never a different
 code, and never silently. The threshold number is permitted variation (§9.1);
 having no threshold at all, or reporting the wrong code when one is crossed, is

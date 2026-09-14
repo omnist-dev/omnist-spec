@@ -3,6 +3,55 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.15.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#75](https://github.com/omnist-dev/omnist-spec/issues/75),
+[#77](https://github.com/omnist-dev/omnist-spec/issues/77),
+[#78](https://github.com/omnist-dev/omnist-spec/issues/78), and the rest of
+[#87](https://github.com/omnist-dev/omnist-spec/issues/87). **All five ports
+need changes.**
+
+- **§2.4 gains a fourth limit: maximum expansion ratio**, default 10 nodes
+  per input byte (#75). The existing node-count limit bounds the *result* but
+  not the *ratio*, and that gap is exploitable in a way the other three are
+  not: size the input to land just under the node cap and every request is
+  **accepted**, with no diagnostic, while costing the reader orders of
+  magnitude more than it cost to send. The default comes from measurement —
+  legitimate documents sit at 0.10–0.20 nodes/byte (dense flat, deeply
+  nested, and ordinary config all measured), a ten-level YAML anchor chain at
+  **362**. New code `document.limit.expansion`.
+  - **Correction on the record**: this issue originally claimed a second
+    attack, where rejecting a large bomb costs ~9s CPU because the limit
+    fires "after the work is done". That premise was false. Timing across
+    inputs whose theoretical expansion differs by a factor of a million is
+    **flat at ~9s**, which proves the limit is already enforced
+    incrementally — the cost is materializing the 1,000,000 nodes §2.4
+    permits, behaving exactly as specified, and tunable via §2.4 already. The
+    recommended fix shrank from two parts to one.
+- **New §2.5, Encoding** (#78). Input MUST be valid UTF-8, with silent
+  `U+FFFD` repair forbidden; a leading BOM MUST be stripped; and **labels
+  compare byte-wise, never by Unicode normalization** — `café` as `U+00E9`
+  and as `e`+`U+0301` are two distinct labels. Each was a place two
+  implementations could build different Documents from identical bytes. New
+  code `parse.invalid-encoding`; the reference previously raised a bare
+  `UnicodeDecodeError` outside the taxonomy entirely.
+- **`grammars/osd.abnf` and §5.3.1 no longer disagree** (#77). The escape
+  alternative read `"\" %x00-10FFFF`, admitting an escaped control character
+  the prose forbids, so a parser generated from the grammar and one written
+  from the prose disagreed on the same bytes. The grammar now excludes
+  `%x00-1F` there, and the prose says "raw" rather than "literal" and states
+  that the ban covers escape context.
+- **`parse.codec-syntax` registered** (#87). Malformed JSON/YAML/TOML/XML had
+  no code at all, so the reference invented an unregistered `parse.syntax`
+  used at nine sites. One code covers all four formats deliberately —
+  splitting it per format adds three codes conveying nothing the message does
+  not, and nothing branches on which codec failed. §8.3.1 now also states the
+  distinction from §8.3.8's refusal codes: malformed input versus well-formed
+  input outside the supported profile.
+- Three new vectors. Two pass against the reference; the third reports as a
+  skip pending structured diagnostics, red-before-green per §10.2.
+
 ## v0.14.0-beta (2026-09-14)
 
 **Normative (minor)** — closes

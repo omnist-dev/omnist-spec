@@ -76,10 +76,17 @@ ref-type      = name
 name          = ( ALPHA / "_" ) *( ALPHA / DIGIT / "_" )
                 ; NOTE: no hyphen, unlike OML's IDENT.
 
-string        = DQUOTE *( "\" %x00-10FFFF / %x20-21 / %x23-5B / %x5D-10FFFF )
+string        = DQUOTE *( "\" %x20-10FFFF / %x20-21 / %x23-5B / %x5D-10FFFF )
                 DQUOTE
                 ; a backslash consumes the NEXT character verbatim; see
                 ; chapter 5 for unescaping, which has no named-escape table.
+                ; The escape alternative excludes %x00-1F deliberately:
+                ; 5.3.1's control-character ban applies to every raw byte in
+                ; the string body, escape context included. This rule
+                ; previously read "\" %x00-10FFFF, which admitted an escaped
+                ; control character the prose forbids -- so a parser generated
+                ; from this grammar and one written from the prose disagreed
+                ; on the same bytes.
 
 DQUOTE        = %x22
 ALPHA         = %x41-5A / %x61-7A
