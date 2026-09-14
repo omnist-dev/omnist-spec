@@ -32,11 +32,29 @@ the CI hole that let citation rot accumulate in the first place.
   — violating §5.9's definition of a canonical writer. Filed as
   [omnist#344](https://github.com/omnist-dev/omnist/issues/344). The other
   four ports are unverified and should be checked during the next pin sweep.
-- **CI now validates documentation anchors.** `mkdocs` does not check them by
-  default, so every `#anchor` in the spec went unverified — `--strict`
-  reported a broken one as INFO and passed. This is the root cause of the
-  citation rot fixed in v0.9.2-beta. `validation.links.anchors` is now on,
-  and verified to abort the build on a deliberately broken anchor.
+- **CI now builds the docs at all, and validates anchors.** Two separate
+  holes, both found by review after a first draft of this entry wrongly
+  claimed the gate was already active:
+    - **Nothing in CI built the documentation.** `check.yml` ran only the
+      version check; `docs.yml` runs `mkdocs gh-deploy` — no `--strict` —
+      and only on push to `master`, i.e. after merge. A broken build reached
+      the published site before anything complained. A `docs-build` job now
+      runs `mkdocs build --strict` on every pull request.
+    - **`mkdocs` does not validate anchors by default**, so every `#anchor`
+      went unchecked; a broken one was reported as INFO and passed. This is
+      the root cause of the citation rot fixed in v0.9.2-beta.
+      `validation.links.anchors` is now on, verified to abort the build on a
+      deliberately broken anchor. Its limit is worth knowing: it catches
+      markdown links carrying an anchor, not bare prose citations like
+      "see §6.3" — which is exactly how a wrong-section reference in this
+      change's own first draft slipped past.
+- **New `tools/check_vectors.py`, wired into CI.** Nothing parsed
+  `test-suite/` before this. A vector was nearly committed during the audit
+  with a literal `U+0001` byte inside a JSON string, which RFC 8259 forbids
+  and which would have broken every port's vector reader while this repo's
+  CI stayed green. The script checks strict-JSON validity, raw control
+  characters (reporting the line), duplicate vector names, and required
+  fields — and is verified to fail on that exact byte.
 
 ## v0.12.0-beta (2026-09-14)
 

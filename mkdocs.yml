@@ -12,10 +12,17 @@ docs_dir: docs
 # quality audit: a citation that resolves to a section which no longer says
 # what the citing text claims is invisible to both readers and reviewers.
 # mkdocs does not check anchors by default, so every `#anchor` in the docs
-# went unverified by CI until this was added -- `--strict` reported broken
-# ones as INFO and passed. `warn` is the strongest level this option accepts;
-# combined with the `--strict` that CI already runs, a warning aborts the
-# build, so this is a hard gate despite the name.
+# went unverified -- a broken one was reported as INFO and the build passed.
+# `warn` is the strongest level this option accepts; under `--strict` a
+# warning aborts the build, which is why check.yml's docs-build job runs
+# `mkdocs build --strict` on every pull request. Before that job existed,
+# nothing in CI built the docs at all: docs.yml deploys with `gh-deploy`,
+# without `--strict`, and only after merge.
+#
+# Note the limit of this gate: it validates markdown links that carry an
+# anchor. A bare prose citation like "see 6.3" is invisible to it, and that
+# is exactly how the wrong-section reference in this PR's own first draft
+# got through.
 validation:
   links:
     anchors: warn

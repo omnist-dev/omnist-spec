@@ -15,3 +15,33 @@ jobs:
         with:
           python-version: "3.12"
       - run: python3 tools/check_version_sync.py
+
+  # The docs build was previously verified only on a contributor's machine:
+  # docs.yml runs `mkdocs gh-deploy` with no --strict, and only after merge,
+  # so a broken build or a dangling cross-reference reached the published
+  # site before anything complained. This job runs the same strict build on
+  # every pull request, which is what makes mkdocs.yml's `validation` block
+  # an actual gate rather than a local convenience.
+  docs-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: "3.12"
+      - run: pip install mkdocs-material
+      - run: mkdocs build --strict
+
+  # Every vector file must be strictly valid JSON. RFC 8259 forbids raw
+  # control characters inside string literals, and a literal one very nearly
+  # shipped during the 2026-09 audit -- it would have broken every port's
+  # vector reader while the spec's own tooling stayed green, since nothing
+  # here parsed the suite at all.
+  vectors-valid:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: "3.12"
+      - run: python3 tools/check_vectors.py

@@ -310,7 +310,9 @@ Two consequences worth stating plainly, because both are easy to get wrong:
   implementation could omit that rule entirely and still pass.
 
 Whether the model should permit `max = 0` at all — rather than tightening
-S-2 to forbid it and deleting the handling from §6.5 and §6.3 alike — is
+S-2 to forbid it and deleting the handling from
+[§6.5](06-schema-algebra.md#65-prunes) and
+[§6.6](06-schema-algebra.md#66-compatible_witha-b) alike — is
 [omnist-spec#83](https://github.com/omnist-dev/omnist-spec/issues/83), and is
 deliberately left open here rather than settled in passing.
 
