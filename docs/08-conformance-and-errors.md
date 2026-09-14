@@ -102,13 +102,12 @@ place.
 | `document.limit.depth` | Nesting exceeds the implementation's configured depth limit |
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
-| `document.limit.expansion` | Nodes materialized exceed the implementation's configured multiple of input size |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-These four `document.limit.*` codes correspond exactly to the four
-quantities in [§2.4](02-document-model.md#24-safety-limits) — one each, no
+These three `document.limit.*` codes correspond exactly to the three
+quantities in [§2.4](02-document-model.md#24-safety-limits) — no fourth, no
 tiers. **The codes are fixed; the threshold that triggers each one is not**
-— an implementation MAY configure any of the four limits to a value other
+— an implementation MAY configure any of the three limits to a value other
 than the reference default, per §2.4, but whatever value it configures,
 crossing it MUST raise exactly this code, never a different one and never
 silently.
