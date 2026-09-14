@@ -75,6 +75,25 @@ function le(x, y):
 
 ---
 
+## Normative rules in this chapter
+
+Requirements here are numbered **A-1** through **A-23**, in document order, so
+they can be cited directly rather than paraphrased. The convention matches
+[§2.3](02-document-model.md#23-structural-invariants)'s `D-` rules and
+[§3.3](03-schema-model.md#33-formal-definition)'s `S-` rules.
+
+They are numbered **in place** rather than gathered into a separate list. A
+consolidated table would be easier to skim, but it would be a second copy of
+every requirement, free to drift from the prose it summarises — the failure
+mode that produced several findings in this spec's 2026-09 audit. The rule
+and its rationale stay in one place.
+
+This numbering covers the operations' own requirements. Ordering obligations
+these rules depend on are Core's and live in
+[§3.3](03-schema-model.md#33-formal-definition)'s canonical serialization
+order principles; where a rule below cites that invariant, the invariant is
+normative and the rule states how this chapter's operation inherits it.
+
 ## 6.3 Scalar subtyping
 
 There is exactly **one** subtyping relation between scalar kinds:
@@ -91,7 +110,7 @@ function scalar_sub(a, b):
 ```
 
 `date` is not a subtype of `datetime`. `string` is not a supertype of anything.
-Implementations MUST NOT add relations; each one added changes every
+**A-1.** Implementations MUST NOT add relations; each one added changes every
 compatibility answer in the system.
 
 ---
@@ -134,7 +153,7 @@ function is_empty(S):
 
 Note that `any` is treated as satisfiable, since it admits every value.
 
-Iteration over `env` MUST be deterministic. `env` is ordered by declaration;
+**A-2.** Iteration over `env` MUST be deterministic. `env` is ordered by declaration;
 implementations MUST NOT iterate an unordered set where the result's ordering is
 observable.
 
@@ -157,11 +176,11 @@ What it removes:
 Canonical output order: `prune` only removes records and fields, never merges
 or invents any, so per
 [§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
-invariant, the surviving records and fields MUST keep their original
+invariant, **A-3:** the surviving records and fields MUST keep their original
 declaration order.
 
 **The root-unsatisfiable case is special and is normative.** If the root record
-is itself unsatisfiable, field pruning MUST NOT be applied to the root. Its
+is itself unsatisfiable, **A-4:** field pruning MUST NOT be applied to the root. Its
 mandatory fields are exactly what make it unsatisfiable; stripping them would
 produce a different, satisfiable schema, breaking the guarantee that `prune`
 preserves the language. Instead the root is kept as written, and only the rest
@@ -195,7 +214,7 @@ function prune_record(rec, sat):
 survive `prune_record` — except at an unsatisfiable root, where every field is
 followed.
 
-**Determinism requirement.** The output environment's key order MUST be derived
+**Determinism requirement (A-5).** The output environment's key order MUST be derived
 by iterating `S.env` in declaration order and filtering by the reachable set,
 never by iterating the reachable set. Iterating an unordered set makes the
 output order depend on hash seeding, which makes canonical output
@@ -295,7 +314,7 @@ function record_sub(SA, a, SB, b, sat_a, memo):
     return true
 ```
 
-The memo key MUST be the identity of the *resolved definitions*, not the
+**A-6.** The memo key MUST be the identity of the *resolved definitions*, not the
 reference names. Two names bound to the same record definition are the same
 node in the graph, and keying on names would defeat cycle detection where
 aliasing is present.
@@ -325,7 +344,7 @@ function equivalent(A, B):
     return compatible_with(A, B) and compatible_with(B, A)
 ```
 
-There is no cheaper structural shortcut, and implementations MUST NOT
+**A-7.** There is no cheaper structural shortcut, and implementations MUST NOT
 substitute one. Structural equality is strictly stronger than equivalence: two
 schemas can differ in record names, declaration order, and the presence of
 unreachable records while accepting exactly the same documents.
@@ -469,7 +488,7 @@ function normalize(S):
     return Schema(Ref(rep[S.root.name]), new_env)
 ```
 
-Names MUST be sorted before grouping, and the representative MUST be the
+**A-8.** Names MUST be sorted before grouping, and the representative MUST be the
 minimum of its block. Both requirements exist so that two implementations
 produce the same canonical output, not merely equivalent output.
 
@@ -498,7 +517,7 @@ root Top
 Canonical output order: merging removes any single well-defined "original
 declaration" for a surviving representative, so per
 [§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
-invariant, `normalize`'s output MUST order records by name and fields by
+invariant, **A-9:** `normalize`'s output MUST order records by name and fields by
 label, using plain ordinal string comparison.
 
 **Minimality theorem.** The paper's Theorem 4: for satisfiable `A` and `B`,
@@ -512,7 +531,7 @@ The satisfiability precondition is not decoration: it is exactly the scope
 limitation stated at the top of this section. Two unsatisfiable schemas are
 always `equivalent`, yet their `normalize` outputs are whatever the author
 wrote, so the "only when" direction fails without it. An implementation
-offering a structural-comparison shortcut as an optional extra (§9.1) MUST
+offering a structural-comparison shortcut as an optional extra (§9.1) **(A-10)** MUST
 therefore either special-case the unsatisfiable pair or restrict the shortcut
 to satisfiable inputs, and MUST NOT substitute such a shortcut for
 `equivalent` itself ([§6.7](#67-equivalenta-b)).
@@ -535,7 +554,7 @@ Steps:
 3. Propagate. A record with a mandatory field typed to an invalidated record is
    itself invalidated. Least fixpoint, same shape as §6.4.
 4. If the root is invalidated, there is no valid subschema for this `keep` set.
-   `extract` MUST fail with an error naming the first offending label and
+   **A-11:** `extract` MUST fail with an error naming the first offending label and
    record, so the failure is actionable.
 5. Otherwise run the result through `prune` and then `normalize`, landing in the
    same canonical form `normalize` produces everywhere else — including its
@@ -553,7 +572,7 @@ are kept, passes step 4 untouched and emerges unchanged. So the canonical-form
 guarantee above holds for satisfiable results only, exactly as in §6.8.
 
 **Deleting a mandatory field is an error, not a silent relaxation.** An
-implementation MUST NOT relax the deleted field to optional instead. Doing so
+**A-12:** an implementation MUST NOT relax the deleted field to optional instead. Doing so
 would make `extract` return a schema weaker than the input rather than a
 subschema of it, and it would hide what is far more often a mistake in the
 caller's `keep` set than an intended change. A caller who wants the relaxed
@@ -599,7 +618,7 @@ function extract(S, keep):
 
 `first_bad` records the *first* offender encountered during step 1's single
 pass over `S.env` in declaration order — not the first one propagation later
-discovers. Implementations MUST report this one specifically, so that two
+discovers. **A-13:** implementations MUST report this one specifically, so that two
 implementations facing the same input produce the same error message.
 
 **Worked example.** With the `Root`/`Order`/`Address`/`LineItem` schema from
@@ -660,9 +679,9 @@ Rules:
 - Samples disagreeing on scalar kind are an error, with one exception:
   `integer` mixed with `number` collapses to `number`. That exception exists
   because it is the one subtyping relation the model has (§6.3).
-- Node children become nested named records, recursively. Since the model has
-  no inline records, generated names are derived from the label and MUST be
-  made unique.
+- **A-22.** Node children become nested named records, recursively. Since the
+  model has no inline records, generated names are derived from the label and
+  MUST be made unique.
 
 **`allow_any` — the two cases, both specified.** By default (`allow_any =
 false`), a field `infer` cannot reduce to one precise type is a hard failure
@@ -762,32 +781,32 @@ vs. string, not the one sanctioned integer/number subtype relation):
   one `AnyFallback("Root.id", "values of more than one scalar kind (integer, string)")`.
   `infer(samples, allow_any = true)` (the plain wrapper) returns the same
   schema but discards the fallback list — a caller who wants to know what was
-  opened MUST call `infer_with_report` directly.
+  opened **(A-23)** MUST call `infer_with_report` directly.
 
 Two requirements:
 
-**`infer` MUST NOT normalize its output.** The raw result keeps a one-to-one
+**A-14. `infer` MUST NOT normalize its output.** The raw result keeps a one-to-one
 correspondence between sample labels and generated record names, which is what
 makes it readable and hand-editable. It may therefore contain structurally
 identical duplicate records. A caller who wants the canonical form calls
 `normalize` explicitly.
 
-**`infer` MUST NOT emit `any` by default.** Opening a field is a decision the
+**A-15. `infer` MUST NOT emit `any` by default.** Opening a field is a decision the
 author makes, never one the tool makes for them. An implementation MAY offer an
 opt-in mode; when it does, it MUST report every opening it introduced, with a
 location and a reason — `infer_with_report` above, not a silent side channel.
 
-Samples MUST be node-rooted. Inferring from a bare scalar, or from zero
+**A-16.** Samples MUST be node-rooted. Inferring from a bare scalar, or from zero
 samples, is an error.
 
-**`samples` MUST be an ordered sequence, not a set.** The first-seen-order
+**A-17. `samples` MUST be an ordered sequence, not a set.** The first-seen-order
 rule above (Pass 1) is only well-defined for an ordered input — passing an
 unordered collection makes the resulting field order unreproducible, which
 is a caller error, not an implementation nondeterminism. Per
 [§3.3's canonical serialization order](03-schema-model.md#33-formal-definition)
 invariant, `infer` never merges two different labels into one output
 position (it only aggregates values *within* one already-positioned label
-across samples), so its output order MUST follow this first-seen order —
+across samples), so **A-18:** its output order MUST follow this first-seen order —
 the same category as `parse_schema` preserving declaration order, just
 derived from sample documents instead of source text.
 
@@ -799,7 +818,7 @@ derived from sample documents instead of source text.
 schema; `lint` checks a schema for structures that parse fine but can never do
 anything.
 
-**`lint` reports and MUST NOT mutate.** That line is the whole design. `prune`
+**A-19. `lint` reports and MUST NOT mutate.** That line is the whole design. `prune`
 and `normalize` are the transforms that fix these problems; `lint` only names
 them.
 
@@ -822,10 +841,10 @@ Computation:
   per block, not one per name.** The block's names, sorted, are joined into a
   single `location` string (`"Addr, Location"`); the message names every
   member relative to the sorted-minimum representative.
-- `any-field` is advisory. It MUST NOT on its own cause a non-zero exit status
+- **A-20.** `any-field` is advisory. It MUST NOT on its own cause a non-zero exit status
   in a command-line tool.
 
-Findings MUST be sorted deterministically by `(code, location)`.
+**A-21.** Findings MUST be sorted deterministically by `(code, location)`.
 
 ```
 function lint(S):

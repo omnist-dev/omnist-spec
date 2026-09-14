@@ -3,6 +3,32 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.15.2-beta (2026-09-14)
+
+**Editorial (patch)** — first instalment of
+[#63](https://github.com/omnist-dev/omnist-spec/issues/63). No requirement
+changed meaning; every one of them became citable.
+
+- **Chapter 6's normative requirements are now numbered `A-1` through
+  `A-23`**, in document order, matching §2.3's `D-` rules and §3.3's `S-`
+  rules. Chapter 6 was the worst case the audit found: the largest chapter,
+  the most MUSTs, the operations where silent cross-implementation
+  divergence is most likely, and not one anchor anyone could cite. Rules an
+  implementor can now point at in review include `A-2` (deterministic `env`
+  iteration), `A-7` (no structural shortcut for `equivalent`), `A-8`
+  (sort-then-minimum representative choice), `A-12` (never relax a deleted
+  field to optional), `A-19` (`lint` must not mutate) and `A-20`
+  (`any-field` must not by itself cause a non-zero exit).
+- **Numbered in place, not gathered into a table.** A consolidated list would
+  skim better but would be a second copy of every requirement, free to drift
+  from the prose it summarises — the exact failure mode behind several
+  findings in this audit, including the glossary duplication fixed in
+  v0.15.1-beta. Rule and rationale stay together.
+- Verified by construction: after numbering, every `MUST`/`SHALL` line in the
+  chapter either carries a rule number or is a continuation line of one.
+
+Chapters 4, 5, 7 and 8 still have no rule spine; #63 stays open for them.
+
 ## v0.15.1-beta (2026-09-14)
 
 **Editorial (patch)** — closes
