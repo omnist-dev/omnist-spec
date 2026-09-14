@@ -124,8 +124,9 @@ its two fixtures in [`../examples/`](../examples/index.md#packagejson).
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. Its "Codecs (JSON/YAML/TOML/XML)" row reads "all four" for
-every current implementation.
+is the authority on which implementations ship a JSON codec. This page states
+no per-port status of its own: a copy here can only go stale relative to the
+ledger.
 
 There is no JSON-specific entry in
 [§9.4](../09-divergence-ledger.md#94-known-open-divergences) — see that

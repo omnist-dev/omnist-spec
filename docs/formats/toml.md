@@ -104,9 +104,9 @@ format's own spec.
 ## Parity gaps
 
 Chapter 9's status table ([§9.3](../09-divergence-ledger.md#93-current-status))
-is the authority. As of spec v0.1, its "Codecs JSON/YAML/TOML/XML" row reads
-"all four" for Python, TypeScript, and Rust alike — every implementation has
-a TOML codec.
+is the authority on which implementations ship a TOML codec. This page states
+no per-port status of its own: a copy here can only go stale relative to the
+ledger.
 
 There is no TOML-specific entry in
 [§9.4](../09-divergence-ledger.md#94-known-open-divergences). The `null` gap

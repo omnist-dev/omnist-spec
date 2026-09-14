@@ -20,9 +20,12 @@ Citation rot only; no normative rule changed, no implementation affected.
   `formats/xml.md`'s "Parity gaps" section carried three stale claims — a
   retired `D-3` ledger citation, "per-port rollout is still in progress"
   (it completed), and "As of spec v0.1 ... Python, TypeScript, and Rust"
-  (five ports, and the spec is at v0.9). It now states no per-port status at
-  all and defers wholly to §9.3, which is the only place that information
-  should live.
+  (five ports, and the spec is at v0.9). **All five `formats/*.md` pages**
+  were then swept for the same pattern, per the issue's own fix note:
+  `toml.md` and `yaml.md` carried that identical stale sentence verbatim,
+  and `json.md`/`oml.md` carried less brittle but still duplicated status
+  claims. Every one now defers wholly to §9.3 and states no per-port status
+  of its own, which is the only arrangement that cannot drift.
 - **[#65](https://github.com/omnist-dev/omnist-spec/issues/65)**: the
   divergence ledger's entry IDs collided with chapter 2's Document-model
   rules — both were `D-N`, and `08-conformance-and-errors.md` used both
