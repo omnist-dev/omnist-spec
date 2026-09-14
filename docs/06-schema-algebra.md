@@ -512,10 +512,10 @@ The satisfiability precondition is not decoration: it is exactly the scope
 limitation stated at the top of this section. Two unsatisfiable schemas are
 always `equivalent`, yet their `normalize` outputs are whatever the author
 wrote, so the "only when" direction fails without it. An implementation
-offering a structural-comparison shortcut as an optional extra (§9.1) must
-therefore special-case the unsatisfiable pair, or restrict the shortcut to
-satisfiable inputs. It MUST NOT substitute such a shortcut for `equivalent`
-itself ([§6.7](#67-equivalenta-b)).
+offering a structural-comparison shortcut as an optional extra (§9.1) MUST
+therefore either special-case the unsatisfiable pair or restrict the shortcut
+to satisfiable inputs, and MUST NOT substitute such a shortcut for
+`equivalent` itself ([§6.7](#67-equivalenta-b)).
 
 ---
 
@@ -542,6 +542,15 @@ Steps:
    canonical output order
    ([§3.3](03-schema-model.md#33-formal-definition)): `extract`'s output
    order is inherited from `normalize`, not computed independently.
+
+`extract` inherits [§6.8](#68-normalizes)'s scope limitation along with its
+canonical form: step 5 delegates to `normalize`, so when the extracted result
+is unsatisfiable it is returned as written rather than canonicalised. Step 4
+does not prevent this — it fires only when the root is *invalidated* by the
+`keep` set, which is a different condition from the result being
+unsatisfiable. An input that is already unsatisfiable, and all of whose labels
+are kept, passes step 4 untouched and emerges unchanged. So the canonical-form
+guarantee above holds for satisfiable results only, exactly as in §6.8.
 
 **Deleting a mandatory field is an error, not a silent relaxation.** An
 implementation MUST NOT relax the deleted field to optional instead. Doing so

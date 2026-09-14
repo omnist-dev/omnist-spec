@@ -7,7 +7,10 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
 **Normative (minor)** — closes
 [#71](https://github.com/omnist-dev/omnist-spec/issues/71). No behavior
-change in any implementation; `normalize` already does what §6.8 now says.
+change is expected in any implementation: `normalize` already does what §6.8
+now says, verified against the Python reference. The other four ports have
+not yet run the new vector, so that expectation is unconfirmed for them until
+the next submodule-pin round.
 
 §6.8 claimed unconditionally that `normalize` "returns the canonical minimal
 schema equivalent to `S`", while its own step 1 returns unsatisfiable schemas
@@ -33,6 +36,13 @@ domain the sentence claimed.
   which is the deeper reason this gap went unnoticed: the theorem that makes
   "minimize then compare" sound was never written down, so neither was its
   precondition.
+- **§6.9's `extract` carried the identical overclaim** and is corrected too:
+  its step 5 delegates to `normalize`, so it inherits the scope limitation
+  along with the canonical form. Step 4 does not prevent this, despite
+  appearances — it fires when the root is *invalidated by the keep set*,
+  which is a different condition from the result being unsatisfiable. An
+  already-unsatisfiable input whose labels are all kept passes step 4 and
+  emerges unchanged, confirmed against the reference.
 - **New vector** `equivalent/unsatisfiable-schemas-are-equivalent-vacuously`.
   Both existing `equivalent` vectors use satisfiable schemas, so an
   implementation that errored or returned false on unsatisfiable input passed
