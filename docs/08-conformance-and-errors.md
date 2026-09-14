@@ -298,6 +298,34 @@ A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
 `path` MUST be a Document or Schema path — never a text-position path, since a
 Document or Schema already exists by the time any of those families can fire.
 
+### 8.4.1 Which kind each `schema.*` code uses
+
+Saying "a Document or Schema path" leaves the choice open, and paths are
+compared byte-for-byte, so the choice has to be pinned per code rather than
+left to the implementation.
+
+For most `schema.*` codes the answer was only ever implicit: OSD text's
+grammar establishes a record or field's identity before those checks can run,
+so a Schema path is the only thing that could be built. That stops being true
+for the four codes reachable only from a Document-shaped surface such as
+[OSD-OML](extensions/osd-oml.md), which is not grammar-constrained the same
+way. A `record` node whose `name` key is missing has no `RecordName` from
+which to build a Schema path at all.
+
+- **`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key`, and
+  `schema.invalid-name` MUST use a Document path**, rooted at the node the
+  violation occurs on — `$.record[0]` for a record node missing its `name`,
+  `$.record[1].field[2].type.kind` for an invalid `kind` value.
+- **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
+  text: these checks never run until the enclosing record or field has a valid
+  name or label to build one from.
+- **The five whole-schema cases above keep `$`**, including a dangling root
+  reference, and take precedence over both rules.
+
+This applies to any surface, present or future, that can construct a Schema
+without a grammar fixing identity first — it is a property of the codes, not
+of the extension that first made them reachable.
+
 ## 8.5 Conformance harness protocol
 
 A conformant implementation passes the vectors in `test-suite/`. Vectors are
