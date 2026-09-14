@@ -176,7 +176,7 @@
           ]
         }
       },
-      "comment": "2^53, one past the threshold, so Sec8.5.4 requires the decimal-string form. Together with the sibling vector this pins both sides of the boundary rather than one. A reader that accepts only the JSON-number form for integer scalars fails here, which is the point: the string form is not optional above the threshold."
+      "comment": "2^53, one past the threshold, so Sec8.5.4 requires the decimal-string form here. What this vector actually verifies is that a reader accepts the string form and recovers the exact value -- it does NOT verify that a writer chooses the string form, because the harness decodes either encoding to the same integer (a reader is deliberately lenient). Sec8.5.4's choice-of-encoding requirement binds vector authors and is enforced by review, not by this vector. The sibling at 2^53-1 is the one that catches a reader rounding near the boundary."
     }
   ]
 }

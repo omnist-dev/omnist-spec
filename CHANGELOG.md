@@ -26,7 +26,14 @@ from the quality audit. Closes
   writers could otherwise disagree on bytes — which §9.2 forbids); and the
   byte-identical guarantee is **stronger for OML than for OSD**, because
   OML's syntax is the Document model and edge order is data, so there is no
-  separate declaration order to preserve.
+  separate declaration order to preserve. Compact mode is now defined as
+  *single-line* rather than merely unindented — a writer keeping newlines but
+  dropping indentation produces a third layout, which is not canonical — and
+  its round-trip guarantee is split into the two distinct claims it was
+  conflating: parsing compact output yields an equal Document, and re-writing
+  that Document compactly reproduces the same bytes. New vector
+  `formats-oml/canonical-output/repeated-labels-never-array-sugar` pins the
+  array-sugar rule, which #66 asked be tested rather than left honor-system.
 - **New [§8.4.1](docs/08-conformance-and-errors.md#841-which-kind-each-schema-code-uses),
   path-kind per `schema.*` code.** §8.4 allowed "a Document or Schema path"
   without saying which applied where, leaving a byte-compared value

@@ -308,8 +308,9 @@ corresponding OSD case legitimately does not.
 
 Canonical form:
 
-- **OML-Core only.** A canonical writer MUST NOT emit OML-Extended spellings
-  (§4.1), though every reader MUST accept them.
+- **OML-Core only.** A canonical writer MUST NOT emit OML-Extended spellings,
+  though every reader MUST accept them — restating the Core/Extended split
+  defined in this chapter's opening.
 - **Edges in Document order**, always. Order is data and is never rearranged.
 - **Repeated labels, never array sugar.** `[(b,1), (b,2), (b,3)]` MUST be
   written as three `b:` edges, not as `b: [1, 2, 3]`. Both parse to the same
@@ -332,5 +333,26 @@ tag: "x"
 tag: "y"
 ```
 
-A compact mode with no indentation is permitted and MUST round-trip:
-`name: "Ann"; adr: { city: "Z"; pc: "8001" }; tag: "x"; tag: "y"`.
+A **compact mode** is permitted: the whole Document on one line, edges
+separated by `;` rather than newlines. "Compact" means single-line, not
+merely unindented — a writer that keeps newlines but drops indentation is
+producing a third layout, which this section does not define and which a
+canonical writer MUST NOT emit.
+
+```oml
+name: "Ann"; adr: { city: "Z"; pc: "8001" }; tag: "x"; tag: "y"
+```
+
+Compact output MUST round-trip in both of the senses that matter, and they
+are different claims:
+
+- **Parsing it yields an equal Document** — the same Document the expanded
+  form above denotes. Compact mode changes layout, never content.
+- **Re-writing that Document in compact mode reproduces the same bytes.**
+  Compact mode is itself canonical within its own layout, so two conformant
+  implementations emitting compact output for one Document MUST agree byte
+  for byte, exactly as they must for the expanded form.
+
+What it does *not* claim is that compact and expanded output are
+interchangeable byte sequences: they are two canonical layouts of one
+Document, each stable under its own round-trip.

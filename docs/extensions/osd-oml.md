@@ -124,7 +124,7 @@ its violation code. **This list is authoritative and closed: a conforming
 implementation's validator has exactly these checks, for input that
 already matches E.5's grammar shape — no more, no fewer**, except where a
 rule explicitly notes it is inherited from a Core rule not restated here
-in full (see the note before R-21).
+in full (see "Error path assignment" below).
 
 ### Top level
 
@@ -134,10 +134,10 @@ in full (see the note before R-21).
   declared `record.name` (R-16). Unresolved (a dangling root reference) →
   `schema.unknown-type`, **path `$`** — this is
   [§8.4](../08-conformance-and-errors.md#84-paths)'s existing whole-schema
-  fallback for exactly this case, unchanged from OSD text, and takes
-  precedence over R-21's general rule below. Not `string`-kind →
-  `schema.invalid-type` (this half is new to OSD-OML — R-21 applies:
-  Document path).
+  fallback for exactly this case, unchanged from OSD text; §8.4.1 preserves
+  it as an explicit exception to its own two rules. Not `string`-kind →
+  `schema.invalid-type`, which is new to OSD-OML and takes the Document path
+  §8.4.1 assigns it.
 
 ### `record-node`
 
@@ -238,6 +238,11 @@ Schema path; the whole-schema cases, including R-2's dangling root, keep `$`.
 
 - **R-21.** A diagnostic raised by any rule in this section MUST carry the
   path kind §8.4.1 assigns to its code.
+- **R-22.** *Retired.* This number previously carried the Schema-path half of
+  the assignment, now stated in §8.4.1. The number is kept rather than reused
+  so that existing citations to R-22 resolve to an explanation instead of to
+  whatever rule would otherwise have inherited the slot — this list is
+  numbered for citation, so a vacated number is a hazard, not a tidy-up.
 
 The reason those four codes needed an explicit assignment at all is a
 property of this extension's input shape: OSD text's grammar establishes a
@@ -534,7 +539,7 @@ root Person
 ```
 
 **OSD-OML** (canonical form, one record/field per line for readability —
-compact form is also legal and MUST round-trip identically per OML's own
+compact form is also legal and parses to the same Document, per OML's own
 compact-mode guarantee, [§4.9](../04-oml-grammar.md#49-canonical-output)):
 
 ```oml

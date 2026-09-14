@@ -319,8 +319,10 @@ which to build a Schema path at all.
 - **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
   text: these checks never run until the enclosing record or field has a valid
   name or label to build one from.
-- **The five whole-schema cases above keep `$`**, including a dangling root
-  reference, and take precedence over both rules.
+- **The whole-schema cases above keep `$`** and take precedence over both
+  rules. Three of §8.4's five fall under this section: `schema.no-root`,
+  `schema.duplicate-root`, and a dangling root reference. The other two are
+  `algebra.*` codes, outside this section's scope and unaffected by it.
 
 This applies to any surface, present or future, that can construct a Schema
 without a grammar fixing identity first — it is a property of the codes, not
