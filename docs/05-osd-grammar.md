@@ -63,7 +63,7 @@ backslash pair `\X` with the single character `X`. There is **no named-escape
 table**. `\n` becomes the letter `n`, not a newline. `\\` becomes `\` and `\"`
 becomes `"`, which are the only two cases where the rule matches intuition.
 
-This is deliberately weaker than OML's string escaping and MUST NOT be
+**OSD-1.** This is deliberately weaker than OML's string escaping and MUST NOT be
 "upgraded" by an implementation. A label like `"a\nb"` is the three-character
 string `anb`. Conformance vectors cover this.
 
@@ -97,13 +97,13 @@ emits. Fields are otherwise comma-separated, with no leading comma.
 An empty record body — `record R { }` — is legal. It describes a node with no
 edges.
 
-**A field label MUST NOT be the empty string.** `""` is a legal *value* for an
+**OSD-2. A field label MUST NOT be the empty string.** `""` is a legal *value* for an
 OML/OSD string generally, but a label is an identifier, not a value — an
 empty label names nothing a caller could ever reference, and any real input
 that produced one represents a data-quality problem, not an intentional
 schema. `"": string` is rejected with `schema.empty-label`.
 
-**A field label MUST NOT contain `[` or `]`.** [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
+**OSD-3. A field label MUST NOT contain `[` or `]`.** [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
 diagnostic-path convention appends `[i]` to a repeated label's second and
 later occurrences (the first occurrence of `"a"` paths as `$.a`, the second
 as `$.a[1]`). A label that itself contains a literal bracket — `"a[1]": string`
@@ -136,10 +136,10 @@ Every accepted form, and what each means:
 The grammar above accepts all five bracketed rows, including the comma-first
 forms. It rejects `[]`, which is the "empty cardinality" error.
 
-Three further checks sit above the grammar, and MUST be applied:
+**OSD-4.** Three further checks sit above the grammar, and MUST be applied:
 
 - A bound containing `.` is rejected: cardinality must be a whole number.
-- A negative minimum is rejected. This spec's `int` production above accepts
+- **OSD-5.** A negative minimum is rejected. This spec's `int` production above accepts
   only unsigned digits, but a conformant tokenizer's number token MAY include
   an optional leading `-` (the reference implementation's does, since the same
   token also reads negative field values elsewhere in the grammar). Either
@@ -147,7 +147,7 @@ Three further checks sit above the grammar, and MUST be applied:
   rejected at the token boundary or accepted into the token and rejected one
   step later at field construction, the observable result is the same
   invalid-cardinality error, not a parse failure.
-- **A leading `+` is a syntax error**, unlike `-`. `[+1]` MUST be rejected as
+- **OSD-6.** **A leading `+` is a syntax error**, unlike `-`. `[+1]` MUST be rejected as
   `parse.unexpected-token`, never accepted and silently normalized to
   `[1,1]`. The latitude granted to `-` above exists only because a
   tokenizer's number token legitimately reads negative values elsewhere in
@@ -184,20 +184,20 @@ ref-type    = name
 **Scalars.** Exactly seven keywords. A trailing `?` makes the scalar nullable;
 omitting it means non-nullable.
 
-**`any`.** Reserved in its exact lowercase spelling only. `any?` MUST be
+**OSD-7. `any`.** Reserved in its exact lowercase spelling only. `any?` MUST be
 rejected: `any` already includes `null`, so the suffix is redundant rather than
 meaningful. Capitalized `Any` is *not* this production — it is an ordinary
 `name` and therefore a reference, which produces an unknown-type error if no
 record by that name exists.
 
-**References.** Any `name` that is not a scalar keyword and not `any`.
+**OSD-8. References.** Any `name` that is not a scalar keyword and not `any`.
 Resolution is by lookup in the schema's environment, so forward references and
 mutual recursion both work. `?` MUST NOT follow a reference; the error MUST
 point the author at cardinality `[0,1]` instead.
 
 ## 5.7 Reserved names
 
-A record MUST NOT be defined with a name that is one of the seven scalar
+**OSD-9.** A record MUST NOT be defined with a name that is one of the seven scalar
 keywords, and MUST NOT be named `any`. In both cases the reason is the same: a
 bare name in type position resolves to the builtin first, so such a record could
 never be referenced. Per [§3.3](03-schema-model.md#33-formal-definition) S-3,
@@ -208,14 +208,14 @@ Defining the same record name twice is an error.
 
 ## 5.8 Root
 
-Exactly one `root` declaration MUST be present. A schema with no root is an
+**OSD-10.** Exactly one `root` declaration MUST be present. A schema with no root is an
 error (`schema.no-root`). A schema with more than one `root` declaration is
 also an error (`schema.duplicate-root`): a second `root` MUST NOT silently
 override the first.
 
 ## 5.9 Canonical output
 
-An OSD writer is canonical if, for every schema, it emits text that parses back
+**OSD-11.** An OSD writer is canonical if, for every schema, it emits text that parses back
 to an equal schema, following the canonical form below. Two conformant
 implementations parsing the *same* source and immediately writing it back
 MUST produce byte-identical text — that guarantee comes from
@@ -243,12 +243,12 @@ record R {
 root R
 ```
 
-A compact mode with no indentation is permitted and MUST round-trip:
+**OSD-12.** A compact mode with no indentation is permitted and MUST round-trip:
 `record R { "a": string } root R`.
 
 ## 5.10 Worked examples
 
-Every row MUST hold for a conformant implementation.
+**OSD-13.** Every row MUST hold for a conformant implementation.
 
 | Input | Result |
 |---|---|

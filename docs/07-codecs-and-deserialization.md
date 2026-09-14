@@ -14,7 +14,7 @@ graph LR
     mat --> typed["typed Document"]
 ```
 
-**Stage 1: parse.** Turn format text into a Document. No schema is involved. The
+**C-1. Stage 1: parse.** Turn format text into a Document. No schema is involved. The
 result carries whatever types the format itself distinguishes — JSON has no date
 type, so an ISO-8601 date arrives as a string. Stage 1 MUST be total with
 respect to the schema: it never consults one and never fails because of one.
@@ -22,7 +22,7 @@ respect to the schema: it never consults one and never fails because of one.
 **Stage 2: materialize.** Walk the untyped Document together with a schema,
 upgrading leaves to the declared types, and check record shape in the same pass.
 
-Stage 2 is optional. With no schema, the Document is returned exactly as read,
+**C-2.** Stage 2 is optional. With no schema, the Document is returned exactly as read,
 untouched. There is no third mode. Implementations MUST NOT offer a `strict`
 switch: either a schema is supplied and the result is guaranteed to conform, or
 one is not and nothing is checked.
@@ -80,7 +80,7 @@ result as `Yes` without stating the target representation explicitly.
 At an `any`-typed field, materialization stops. The subtree passes through
 untouched and no leaf beneath it is upgraded.
 
-Materialization MUST collect **every** problem it finds, not stop at the first,
+**C-3.** Materialization MUST collect **every** problem it finds, not stop at the first,
 and report them together. Each entry carries a path, a code, and a message. See
 [chapter 8](08-conformance-and-errors.md).
 
@@ -91,7 +91,7 @@ and report them together. Each entry carries a path, a code, and a message. See
 
 ### 7.2.1 `materialize(node, schema)` — pseudocode
 
-Structurally this is [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
+**C-4.** Structurally this is [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
 `validate` with every leaf replaced by its upgrade result instead of discarded.
 The two MUST stay in lockstep: whatever this function accepts at a leaf,
 `validate` must also accept there, and vice versa. They are two different
@@ -201,17 +201,17 @@ levels deep behave identically: nothing beneath either is inspected.
 
 Writing is the reverse projection, and it is **schema-free by design**.
 
-A writer MUST NOT accept a schema. Its job is to serialize the Document exactly
+**C-5.** A writer MUST NOT accept a schema. Its job is to serialize the Document exactly
 as it is. Schema awareness is one-directional, on the read side only.
 
-**Grouping.** Edges sharing a label are grouped into one key, regardless of
+**C-6. Grouping.** Edges sharing a label are grouped into one key, regardless of
 position: `[(m,A),(x,X),(m,B)]` writes as `{"m":[A,B], "x":X}`. Within-label
 order is preserved. Cross-label interleaving is lost, because no format in the
 JSON family (JSON, YAML, TOML) can express it — only OML and XML preserve it —
 and a writer that loses it MUST report `format.interleaving-lost`
 ([§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)).
 
-**The count-1 rule.** A label appearing exactly once MUST be written as a bare
+**C-7. The count-1 rule.** A label appearing exactly once MUST be written as a bare
 value. A label appearing more than once MUST be written as a list. This is
 forced: a one-element list and a single value are the same Document — one edge —
 so the Document alone cannot tell them apart, and the writer has no schema to
@@ -245,7 +245,7 @@ function write(node, format):
     return format.render_node(out)
 ```
 
-`groups` MUST preserve first-seen label order (the order §7.3's grouping rule
+**C-8.** `groups` MUST preserve first-seen label order (the order §7.3's grouping rule
 already requires) and, within a label, the children's original edge order.
 Neither rule above is new; this section only gives them a pseudocode form
 consistent with `validate` (§3.6.1), `materialize` (§7.2.1), and the schema

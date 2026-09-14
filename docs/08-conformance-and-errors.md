@@ -18,12 +18,12 @@ code-agnostic mode for exactly this reason.
 
 ## 8.2 Code format
 
-A code is a lowercase, dot-separated path. Each segment is
+**E-1.** A code is a lowercase, dot-separated path. Each segment is
 `[a-z][a-z0-9-]*`. The first segment is the family. Codes are stable
 identifiers: once published, a code's meaning MUST NOT change. Retiring a code
 means adding a new one and leaving the old one documented as retired.
 
-Codes are not messages. An implementation MUST emit a human-readable message
+**E-2.** Codes are not messages. An implementation MUST emit a human-readable message
 alongside the code, and the message MAY be localized, reworded, or improved at
 any time. Conformance tests match on codes and paths, never on message text.
 
@@ -59,7 +59,7 @@ Every diagnostic carries at least:
 | `parse.codec-syntax` | Input is not well-formed in its own source format (JSON, YAML, TOML, XML) — see the note below |
 | `parse.invalid-encoding` | Input is not valid UTF-8 ([§2.5](02-document-model.md#25-encoding)) |
 
-**Six of these codes also cover OSD's own lexical stage**:
+**E-3.** **Six of these codes also cover OSD's own lexical stage**:
 `parse.unexpected-token`, `parse.trailing-content`,
 `parse.unterminated-string`, `parse.invalid-escape`,
 `parse.unpaired-surrogate`, `parse.control-character`. OSD produces a
@@ -104,7 +104,7 @@ place.
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-These three `document.limit.*` codes correspond exactly to the three
+**E-4.** These three `document.limit.*` codes correspond exactly to the three
 quantities in [§2.4](02-document-model.md#24-safety-limits) — no fourth, no
 tiers. **The codes are fixed; the threshold that triggers each one is not**
 — an implementation MAY configure any of the three limits to a value other
@@ -227,7 +227,7 @@ there is no separate set of names for them.
 | `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
 | `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
 
-**`format.attribute-dropped`, `format.namespace-dropped`, and
+**E-5.** **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
 they describe occurs, with a conformance vector for each. Per-implementation
 status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
@@ -246,7 +246,7 @@ making; failing here would mean XML could never write a single typed value,
 not that it handles a rare edge case more strictly. That's the same
 category `format.interleaving-lost` is already in.
 
-Five adjustments that used to be in this table are not like that, and MUST
+**E-6.** Five adjustments that used to be in this table are not like that, and MUST
 NOT be treated as ones a writer can choose an arbitrary fallback for and
 still succeed — each one collides with a genuinely different,
 independently-valid input, in a way that is narrow (it doesn't affect
@@ -280,7 +280,7 @@ A previous version of this spec had all five succeed anyway. The correct
 behavior for all five is `write.unsupported-value` (below): the write
 fails, unconditionally, not only under `strict`.
 
-**`format.dtd-forbidden`, `format.entity-forbidden` and
+**E-7.** **`format.dtd-forbidden`, `format.entity-forbidden` and
 `format.mixed-content` are a different shape from the rest of this table.**
 They are read-side *refusals*, not adjustments: the input is well-formed XML
 that Omnist declines to support, per the
@@ -291,7 +291,7 @@ fails, so there is no adjusted result to report alongside them. And they
 MUST NOT be reported as syntax errors: the document is valid XML, and
 telling a user otherwise sends them hunting for a defect that is not there.
 
-A sixth code, `format.string-cr-normalized`, used to exist in this table
+**E-8.** A sixth code, `format.string-cr-normalized`, used to exist in this table
 for a related reason — XML mandates line-ending normalization on parse, so
 a literal `\r` byte and a literal `\n` byte, written as-is, are
 indistinguishable on read-back, the same collision shape as the five
@@ -313,7 +313,7 @@ diagnostic code is needed for this case at all.
 
 ## 8.4 Paths
 
-A path locates a diagnostic. Paths are normative and MUST be byte-identical
+**E-9.** A path locates a diagnostic. Paths are normative and MUST be byte-identical
 across implementations, because conformance vectors match on them.
 
 **Document paths** start at `$` and descend by label. A repeated label is
@@ -326,7 +326,7 @@ $.item[0]                the first edge labeled `item`
 $.item[2].sku            `sku` inside the third `item`
 ```
 
-The index MUST be present when the label occurs more than once in that node, and
+**E-10.** The index MUST be present when the label occurs more than once in that node, and
 MUST be absent when it occurs exactly once.
 
 **Schema paths** are `RecordName` for a record-level diagnostic and
@@ -349,7 +349,7 @@ from the byte offset of the failure:
 14:8                     line 14, column 8
 ```
 
-A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
+**E-11.** A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
 `schema.*`, `validate.*`, `materialize.*`, `algebra.*`, or `lint.*` diagnostic's
 `path` MUST be a Document or Schema path — never a text-position path, since a
 Document or Schema already exists by the time any of those families can fire.
@@ -368,11 +368,11 @@ for the four codes reachable only from a Document-shaped surface such as
 way. A `record` node whose `name` key is missing has no `RecordName` from
 which to build a Schema path at all.
 
-- **`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key`, and
+- **E-12.** **`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key`, and
   `schema.invalid-name` MUST use a Document path**, rooted at the node the
   violation occurs on — `$.record[0]` for a record node missing its `name`,
   `$.record[1].field[2].type.kind` for an invalid `kind` value.
-- **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
+- **E-13.** **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
   text: these checks never run until the enclosing record or field has a valid
   name or label to build one from.
 - **The whole-schema cases above keep `$`** and take precedence over both
@@ -402,15 +402,15 @@ JSON, one case per object, grouped into files by operation.
 }
 ```
 
-- `name` MUST be unique across the whole suite. A harness reports results keyed
+- **E-14.** `name` MUST be unique across the whole suite. A harness reports results keyed
   on it.
 - `spec` points at the section the vector pins. A vector with no section to
   point at is a vector testing something unspecified, which is a spec defect.
-- `operation` selects the driver. It MUST be one of the operation names listed
+- **E-15.** `operation` selects the driver. It MUST be one of the operation names listed
   on the [Operations & Models Reference](operations-and-models-reference.md)
   page — that page is the vocabulary's single source, not a free-text field
   vectors can spell differently across files.
-- `purpose` MUST be one of `happy-path`, `edge-case`, `error-case`, or
+- **E-16.** `purpose` MUST be one of `happy-path`, `edge-case`, `error-case`, or
   `determinism-regression` — what a vector is actually pinning, so a reader
   doesn't have to reverse-engineer it from the input/expect pair.
   `happy-path` is an ordinary conforming case with nothing specific being
@@ -434,7 +434,7 @@ JSON, one case per object, grouped into files by operation.
 
 Matching rules, all normative:
 
-1. Message text MUST NOT be compared.
+**E-17.** 1. Message text MUST NOT be compared.
 2. The diagnostic list MUST be compared as a **set**, not a sequence. Ordering
    of diagnostics is not specified and implementations may find problems in any
    order.
@@ -499,7 +499,7 @@ Schemas in `input` are OSD text. Documents are given in the canonical JSON
 encoding of §8.5.4, not in a format-specific text, except where the vector is
 specifically testing a parser.
 
-**`write` vector `text` comparison for XML MUST ignore insignificant
+**E-18.** **`write` vector `text` comparison for XML MUST ignore insignificant
 inter-tag whitespace.** Unlike JSON/YAML/TOML/OML, this spec places no
 normative requirement anywhere on XML writer output formatting (no
 indentation, no line-break convention) — codecs and deserialization (§7.3)
@@ -545,7 +545,7 @@ map-and-array shape smuggling assumptions back in. The encoding is explicit:
   the threshold rule below.
 - `null` is `{"scalar": {"kind": null, "value": null}}`.
 
-**The integer threshold is exactly ±(2^53 − 1).** An `integer` whose absolute
+**E-19. The integer threshold is exactly ±(2^53 − 1).** An `integer` whose absolute
 value is at most 9007199254740991 MUST be encoded as a JSON number; any
 integer outside that range MUST be encoded as a decimal string. Both a vector
 author and a vector reader apply the same fixed bound, in both directions.
@@ -574,14 +574,14 @@ vectors and reports the count. A run that hides skips as passes is worthless for
 tracking convergence, which is the whole point of
 [chapter 9](09-divergence-ledger.md).
 
-**A skip MUST cite a reason, and the reason determines what else is
+**E-20.** **A skip MUST cite a reason, and the reason determines what else is
 required:**
 
 - **Not yet implemented.** The operation or feature doesn't exist yet in
   this implementation. Temporary by nature — expected to become a `pass`
   once the work lands. No ledger entry is required for this category on its
   own, though the usual issue tracker SHOULD have something open for it.
-- **Documented divergence.** The vector's outcome depends on a capability
+- **E-21. Documented divergence.** The vector's outcome depends on a capability
   this implementation's target language or design genuinely cannot provide
   — not a missing feature, a structural limit. This category MUST have a
   corresponding entry in [chapter 9](09-divergence-ledger.md)'s divergence
@@ -594,7 +594,7 @@ required:**
   the ledger, once the implementation adds real support — it doesn't stay
   listed once resolved.
 
-**CI gating.** A conformant CI run MUST fail the build when the fail count
+**E-22. CI gating.** A conformant CI run MUST fail the build when the fail count
 is nonzero. A conformant CI run MUST NOT fail the build merely because the
 skip count is nonzero — an implementation with real, cited reasons for
 every skip has *passed* conformance in the sense this section defines.
