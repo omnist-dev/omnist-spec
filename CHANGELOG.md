@@ -3,6 +3,63 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.17.0-beta (2026-09-14)
+
+**Normative (minor)** — closes
+[#78](https://github.com/omnist-dev/omnist-spec/issues/78) and
+[#93](https://github.com/omnist-dev/omnist-spec/issues/93). This is the
+intended freeze point for the quality audit: every normative chapter now has
+full rule coverage, enforced in CI. **JSON, TOML and OSD readers need a
+change, and every writer does.**
+
+- **New D-15: a leading byte-order mark MUST be stripped, on every surface.**
+  Previously left unsettled because a first draft would have made the
+  reference non-conformant. Settling it uniformly rather than per-surface,
+  for two reasons. A BOM carries no data — it is meaningless for UTF-8, which
+  has no byte-order ambiguity to mark — so treating it as content anywhere is
+  wrong, and treating it as content on *some* surfaces is how two
+  implementations build different Documents from one file. And it overrides
+  nothing: RFC 8259 §8.1 explicitly permits a JSON parser to "ignore the
+  presence of a byte order mark rather than treating it as an error". TOML is
+  the one surface where the rule goes past the format's own specification:
+  TOML v1.0.0 has no BOM provision at all, and its ABNF gives `U+FEFF` no
+  position, so stripping there is a deliberate Omnist choice for uniformity.
+  Measured before this rule, the reference stripped a BOM for OML and XML and
+  rejected it for JSON, TOML **and OSD** (`parse_schema` raised
+  `parse.unexpected-token`). Both ABNF grammars now admit `%xFEFF` at offset
+  zero and nowhere else. D-15 also binds writers: a conformant writer MUST
+  NOT emit a leading BOM on any surface, so the rule cannot produce
+  byte-level divergence between ports. Three new vectors (JSON, TOML, OSD),
+  currently red against the reference by design.
+- **Chapters 2 and 3 have complete rule spines.** They already had `D-1..D-5`
+  and `S-1..S-8`, but normative paragraphs sat outside them — invisible until
+  `check_rule_coverage.py` existed. Now `D-6..D-17` and `S-9..S-21`.
+  Existing numbers were left untouched, since `D-1..D-5` are cited from four
+  other files; new rules were appended rather than renumbering. `D-17` is the
+  §2.3 wrapper sentence itself ("a conformant implementation MUST maintain
+  all of the following"), restored with its MUST rather than left as
+  non-normative framing — `D-5` carried no MUST of its own and depended on
+  it. `S-21` is `infer`'s `any`-emission requirement, previously a table row
+  the checker's original table-skipping heuristic couldn't see; the checker
+  was fixed to scan table cells generally, not just to carve out this one
+  row.
+- **§3.3's five canonical-order principles are individually citable as
+  `S-9..S-13`.** They were numbered `1.`–`5.` locally while chapter 6's `A-3`,
+  `A-9` and `A-18` explicitly inherit from them — load-bearing for another
+  chapter's rules while unreachable by number.
+- **Three paragraphs were *not* numbered, deliberately.** Mechanical numbering
+  would have manufactured rules out of framing text. The depth-limit
+  elaboration now reads "On depth (D-12, elaborated)"; the `any`-name
+  restriction now cites `S-3` rather than restating it; and §3.3's
+  principle-application paragraph cites the `A-` rules it explains. (The
+  sentence introducing `D-1..D-5` was initially left unnumbered with its
+  MUST removed, on the theory that it was a redundant wrapper — that turned
+  out to be wrong, since `D-5` has no MUST of its own; it is `D-17` above,
+  not on this list.)
+- **All seven normative chapters are now enforced** by
+  `tools/check_rule_coverage.py` in CI, with no reported-but-unenforced set
+  remaining.
+
 ## v0.16.0-beta (2026-09-14)
 
 **Editorial (minor)** — closes

@@ -204,14 +204,14 @@ when a byte-exact round-trip vector first exposed it. The following five
 principles govern every current and future Schema-producing operation,
 Core or extension:
 
-1. **Preserve real order where one exists.** If every output record and
+1. **S-9. Preserve real order where one exists.** If every output record and
    field traces back to exactly one original (nothing merged), the writer
    MUST preserve that original's declaration or construction order.
-2. **Fall back to content-derived order where none exists.** If an
+2. **S-10. Fall back to content-derived order where none exists.** If an
    operation can merge multiple original records into one output record,
    "original order" is undefined for the merge — the writer MUST instead
    order records by name and fields by label.
-3. **The fallback compares by Unicode codepoint (scalar value), never by
+3. **S-11. The fallback compares by Unicode codepoint (scalar value), never by
    locale, and never by UTF-16 code unit.** These are two different traps,
    not one: locale-aware collation (e.g. Swedish sorting `å` after `z`)
    depends on OS/host-language settings and MUST NOT be used; comparing by
@@ -221,15 +221,15 @@ Core or extension:
    two schemes). An implementation whose default string comparison is
    UTF-16-code-unit-based MUST compare by codepoint explicitly for this
    fallback, not rely on that default.
-4. **A caller-supplied collection that affects output order MUST be
+4. **S-12. A caller-supplied collection that affects output order MUST be
    documented as an ordered sequence, not a set** — otherwise principle 1
    has nothing well-defined to preserve.
-5. **Classifying any operation — present or future, Core or extension —
+5. **S-13. Classifying any operation — present or future, Core or extension —
    reduces to one question: can it merge N>1 original records into 1?**
    Yes → principle 2. No → principle 1. No operation needs its own
    bespoke rule.
 
-**Determinism.** Independent of which principle applies, an
+**S-14. Determinism.** Independent of which principle applies, an
 implementation's output for a given operation and input MUST be identical
 across repeated invocations. This is a baseline correctness property, not
 a new ordering choice — an implementation whose output for the same input
@@ -237,22 +237,26 @@ varies from run to run (for example, by iterating a hash map with no
 defined order) violates this regardless of which order it happens to
 produce on any given run.
 
-Applying these principles to the operations in
-[chapter 6](06-schema-algebra.md): [§6.5](06-schema-algebra.md#65-prunes)
-`prune` only removes records and fields, never merging anything, so
-principle 1 applies — the surviving records and fields MUST keep their
-original declaration order. [§6.8](06-schema-algebra.md#68-normalizes)
-`normalize` merges structurally-identical records into one representative,
-so principle 2 applies — its output MUST be alphabetical.
-[§6.9](06-schema-algebra.md#69-extracts-keep) `extract` is itself defined
-as `prune` followed by `normalize`, so it inherits `normalize`'s
-alphabetical order by delegation, not by having its own merging step.
-[§6.10](06-schema-algebra.md#610-infersamples) `infer` never merges two
-different labels into one output position — it only aggregates values
-*within* one already-positioned label across samples — so principle 1
-applies: output order follows the labels' first-seen order across
-`samples`, and principle 4 requires `samples` itself to be an ordered
-sequence for that to be well-defined.
+How these principles land on the operations in
+[chapter 6](06-schema-algebra.md). Each operation's own rule states the
+obligation; this paragraph explains which principle produced it, and adds no
+requirement of its own.
+
+- [§6.5](06-schema-algebra.md#65-prunes) `prune` only removes records and
+  fields, never merging anything, so **S-9** applies — hence `A-3`, that the
+  surviving records and fields keep their original declaration order.
+- [§6.8](06-schema-algebra.md#68-normalizes) `normalize` merges
+  structurally-identical records into one representative, so **S-10**
+  applies — hence `A-9`, that its output is alphabetical.
+- [§6.9](06-schema-algebra.md#69-extracts-keep) `extract` is defined as
+  `prune` followed by `normalize`, so it inherits `normalize`'s order by
+  delegation rather than having a merging step of its own.
+- [§6.10](06-schema-algebra.md#610-infersamples) `infer` never merges two
+  different labels into one output position — it only aggregates values
+  *within* one already-positioned label across samples — so **S-9** applies
+  again, giving `A-18`: output order follows the labels' first-seen order
+  across `samples`. **S-12** is what requires `samples` to be an ordered
+  sequence for that to be well-defined at all, which is `A-17`.
 
 ---
 
@@ -282,7 +286,7 @@ except the last, which it rejects with a specific error. In particular the
 comma-first forms `[,n]` and `[,]` are legal: a minimum bound before the comma
 is not required.
 
-A field with `max = 0` means the label may never appear. `min <= max` forces
+**S-15.** A field with `max = 0` means the label may never appear. `min <= max` forces
 `min = 0` too, so `max = 0` only ever means `[0,0]` — and `[0,0]` MUST NOT be
 written directly in OSD source ([§5.5](05-osd-grammar.md#55-cardinality),
 `schema.invalid-cardinality`): a field that can never appear is
@@ -329,7 +333,7 @@ them is the most common modeling error in Omnist.
 | May the value present be `null`? | nullable scalar | `"coupon": string?` |
 | Both? | both | `"coupon" [0,1]: string?` |
 
-`?` applies to scalars only. A reference MUST NOT take `?`; "this subtree may be
+**S-16.** `?` applies to scalars only. A reference MUST NOT take `?`; "this subtree may be
 absent" is cardinality `[0,1]`. `any` MUST NOT take `?` either, since `any`
 already admits `null`.
 
@@ -360,7 +364,7 @@ A target conforms to a type as follows:
 
 A Document conforms to a schema `S` if its root node conforms to `env[S.root]`.
 
-**Order MUST be ignored** at every step (invariant D-3). Validation counts
+**S-17. Order MUST be ignored** at every step (invariant D-3). Validation counts
 edges; it never sequences them.
 
 **Validation checks, it never converts.** A value either has the declared kind
@@ -375,7 +379,7 @@ satisfies a `number`-typed field, with nothing upgraded or changed. Verified
 against the reference implementation: `validate` on an integer value against
 a `number`-typed field returns `ok: true` with no diagnostics.
 
-**Validation MUST report every failure**, not just the first. A validation
+**S-18. Validation MUST report every failure**, not just the first. A validation
 result is a list of `(path, code, message)` entries; an empty list means valid.
 Codes are defined in [chapter 8](08-conformance-and-errors.md).
 
@@ -454,7 +458,7 @@ Two details that are easy to miss and change the result if skipped:
   the count is zero, so the path is always the record's own path, even when the
   count is nonzero-but-wrong.
 
-`validate` MUST run within the depth limit of [§2.4](02-document-model.md#24-safety-limits).
+**S-19.** `validate` MUST run within the depth limit of [§2.4](02-document-model.md#24-safety-limits).
 Exceeding it is a resource-cap error, not a validation finding, and is defined
 there, not in this section.
 
@@ -517,13 +521,14 @@ Semantics of `any` in each operation:
 | validate | Descent stops. The subtree is accepted unchecked. |
 | `compatible_with` | If the right-hand type is `any`, the answer is true — `any` absorbs everything. If the left-hand type is `any` and the right-hand type is not, the answer is false. |
 | materialize | The subtree passes through untouched. No leaf upgrades happen inside it. |
-| `infer` | `infer` MUST NOT emit `any` unless explicitly requested. When requested, every opening it introduces MUST be reported. |
+| `infer` | **S-21.** `infer` MUST NOT emit `any` unless explicitly requested. When requested, every opening it introduces MUST be reported. |
 | `lint` | Every `any` field is reported as an informational finding, so a human can audit the schema's openings. |
 
 Restrictions:
 
-- `any?` MUST be rejected. `any` already includes `null`.
-- A record MUST NOT be named `any`.
+- **S-20.** `any?` MUST be rejected. `any` already includes `null`.
+- A record MUST NOT be named `any` — this is S-3, restated here for the
+  reader who arrives at `any` directly rather than through §3.3.
 - Only the exact lowercase spelling is reserved. `Any` is an ordinary name and
   therefore a reference.
 - Cardinality is orthogonal to `any`: `"data" [0,]: any` is legal.

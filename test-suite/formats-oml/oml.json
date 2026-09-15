@@ -17,7 +17,7 @@
         "ok": true,
         "text": "d: \"2024-01-01\"\n"
       },
-      "comment": "A string-kinded value that happens to be date-shaped MUST stay quoted -- writing it bare would produce a different Document on re-read (a genuine temporal literal, ch.4's grammar), silently changing its kind. Confirmed live against the reference implementation. Filed as omnist-spec#33 after this exact case was found unquoted (a real bug, not a permitted divergence) in omnist-rs -- see docs/09-divergence-ledger.md D-7(2)."
+      "comment": "A string-kinded value that happens to be date-shaped MUST stay quoted -- writing it bare would produce a different Document on re-read (a genuine temporal literal, ch.4's grammar), silently changing its kind. Confirmed live against the reference implementation. Filed as omnist-spec#33 after this exact case was found unquoted (a real bug, not a permitted divergence) in omnist-rs, where it was fixed."
     },
     {
       "name": "formats-oml/basic/time-shaped-string-stays-quoted-on-write",

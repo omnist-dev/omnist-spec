@@ -336,7 +336,7 @@
           }
         ]
       },
-      "comment": "D-2 (closed): a second root declaration used to be permitted to silently win over the first in at least one implementation. Sec5.8 now MUSTs a schema have exactly one root declaration; a second is an error, not an override. Path is $ for the same reason as osd-grammar/root/missing-root-is-an-error -- there is no specific record to blame, the schema itself is malformed."
+      "comment": "Ledger entry DIV-2 (closed; divergence-ledger numbering, not chapter 2's D-N rules): a second root declaration used to be permitted to silently win over the first in at least one implementation. Sec5.8 now MUSTs a schema have exactly one root declaration; a second is an error, not an override. Path is $ for the same reason as osd-grammar/root/missing-root-is-an-error -- there is no specific record to blame, the schema itself is malformed."
     },
     {
       "name": "osd-grammar/labels/unquoted-field-name-is-rejected",
@@ -504,6 +504,19 @@
         ]
       },
       "comment": "Sec5.3.1's control-character ban applies to every raw byte in the string body, escape context included -- a control character immediately after a backslash is still a control character in the body. This was ambiguous until v0.15.0-beta: the prose said 'a literal control character', which invited the reading that only an unescaped one was forbidden, and grammars/osd.abnf's escape alternative was written as \"\\\" %x00-10FFFF, which admitted the escaped form outright. So a parser generated from the grammar and one written from the prose disagreed on these exact bytes. Grammar and prose now agree and this vector pins it."
+    },
+    {
+      "name": "osd-grammar/encoding/leading-bom-is-stripped",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "﻿record R {\n    \"a\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "D-15, the OSD half. A leading U+FEFF is consumed and contributes nothing to the Schema, exactly as on OML and the codecs; the result is identical to the same input without it, and grammars/osd.abnf admits BOM at offset zero and nowhere else. OSD was the third surface that rejected a BOM before D-15 -- measured against the reference, parse_schema raised SchemaError parse.unexpected-token -- alongside the JSON and TOML readers. Red against the reference by design, like its JSON and TOML counterparts."
     }
   ]
 }

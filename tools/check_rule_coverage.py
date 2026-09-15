@@ -7,10 +7,14 @@ structurally guarantees is complete. That was the single largest finding of
 this spec's 2026-09 quality audit: five chapters carried roughly 98
 MUST-level requirements between them with no anchors at all.
 
-This script enforces the rule for chapters that have been brought up to
-standard, and reports -- without failing -- the two that predate it. Chapters
-2 and 3 have D- and S- spines already, but a handful of their normative
-paragraphs sit outside those lists; see omnist-spec#63.
+Every normative chapter is enforced here; omnist-spec#63 closed the last
+gap, chapters 2 and 3, whose D- and S- spines existed but left 22 normative
+paragraphs outside them.
+
+Table rows count. A row is a paragraph in disguise: `docs/03-schema-model.md`
+carried a MUST-level requirement on `infer` and `any` inside a table cell,
+unrestated anywhere in prose and uncitable, which an earlier version of this
+script skipped wholesale.
 """
 
 from __future__ import annotations
@@ -28,13 +32,14 @@ ENFORCED = {
     "docs/06-schema-algebra.md": "A",
     "docs/07-codecs-and-deserialization.md": "C",
     "docs/08-conformance-and-errors.md": "E",
-}
-
-# Chapters reported but not enforced, pending #63's remaining work.
-REPORTED = {
     "docs/02-document-model.md": "D",
     "docs/03-schema-model.md": "S",
 }
+
+# Every normative chapter is enforced. Chapters 2 and 3 joined the set once
+# omnist-spec#93 closed the 22 paragraphs that sat outside their existing
+# D- and S- spines -- a gap invisible until this script existed.
+REPORTED: dict[str, str] = {}
 
 NORMATIVE = re.compile(r"\bMUST\b|\bSHALL\b")
 
@@ -61,19 +66,31 @@ def _paragraphs(lines: list[str]):
         yield block
 
 
+TABLE_SEP = re.compile(r"^\s*\|[\s:|-]+\|\s*$")
+
+
 def _rules(lines: list[str]):
-    """Split paragraphs further, so each bullet in a list is its own rule."""
+    """Split paragraphs further, so each bullet or table row is its own rule.
+
+    A table row states a requirement as much as a paragraph does, and it can
+    only be cited if it carries a rule number of its own. The alignment row
+    (`|---|---|`) is layout, never a requirement.
+    """
     for block in _paragraphs(lines):
         items, cur = [], []
         for i in block:
-            if re.match(r"\s*[-*] ", lines[i]) and cur:
+            row = lines[i].lstrip().startswith("|")
+            if (row or re.match(r"\s*[-*] ", lines[i])) and cur:
                 items.append(cur)
                 cur = [i]
             else:
                 cur.append(i)
         if cur:
             items.append(cur)
-        yield from items
+        for item in items:
+            if TABLE_SEP.match(lines[item[0]]):
+                continue
+            yield item
 
 
 def gaps_in(path: str, prefix: str) -> list[tuple[int, str]]:
@@ -83,9 +100,6 @@ def gaps_in(path: str, prefix: str) -> list[tuple[int, str]]:
     for item in _rules(lines):
         text = " ".join(lines[i] for i in item)
         if not NORMATIVE.search(text):
-            continue
-        # A table row states its requirement in the table's own terms.
-        if lines[item[0]].lstrip().startswith("|"):
             continue
         if not tag.search(text):
             out.append((item[0] + 1, lines[item[0]].strip()[:88]))
@@ -109,7 +123,7 @@ def main() -> int:
     for path, prefix in REPORTED.items():
         gaps = gaps_in(path, prefix)
         note = "covered" if not gaps else f"{len(gaps)} outside the {prefix}- spine"
-        print(f"{path}: {note} (not enforced, see omnist-spec#63)")
+        print(f"{path}: {note} (reported, not enforced)")
 
     if failed:
         print("\nEvery normative paragraph needs a citable rule number.",
