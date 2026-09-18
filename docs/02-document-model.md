@@ -164,10 +164,15 @@ implementation that cannot construct its input.
 implementation will do before refusing to continue: nesting depth, total node
 count, and the digit length of an `integer` literal. Every conformant
 implementation MUST enforce a finite limit on all three. **No implementation
-MAY be unbounded on any of them.**
+MAY be unbounded on any of them.** A fourth quantity, the alias expansion
+factor (D-18, §2.4.1), bounds a format mechanism rather than the Document
+itself, so it binds only the codecs that have such a mechanism; where it
+applies, it is a safety limit in this section's sense like the other three,
+and D-10 and D-11 below govern it identically.
 
-**What is fixed, and what is not.** The *existence* and *meaning* of the three
-limits is normative. The specific *numbers* are not: this is a deliberate
+**What is fixed, and what is not.** The *existence* and *meaning* of the
+limits is normative — the three universal ones, and the expansion factor
+wherever D-18 applies. The specific *numbers* are not: this is a deliberate
 change from an earlier draft of this spec, which wrongly treated one platform's
 numbers as universal constants. A limit exists to bound work against untrusted
 input on the hardware actually running the implementation, and that varies
@@ -179,6 +184,16 @@ big-data ingestion engine.
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
+| Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, in a format that has an anchor/reference mechanism (D-18) |
+
+**The fourth row is conditional; the first three are not.** Depth, node count
+and integer digits bound every Document on every route into the model, so
+every implementation enforces all three. The expansion factor bounds one
+specific mechanism — a format construct that is written once and materializes
+many times — and is therefore a requirement on the codecs that have such a
+mechanism, not on implementations generally (D-18 below, and
+[§9.2](09-divergence-ledger.md#92-forbidden-variation)). A Document built
+programmatically from native objects has no anchors and is unaffected.
 
 The reference defaults are what the Python implementation uses today, and what
 a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
@@ -186,27 +201,31 @@ matches CPython's own default for `sys.set_int_max_str_digits` — conversion
 between an arbitrarily long digit string and a big integer is superlinear, so
 an unbounded literal is a denial-of-service vector regardless of language.
 
-**Choosing different values.** An implementation MAY set any of the three
+**Choosing different values.** An implementation MAY set any of these limits
 lower or higher than the reference default, to fit its deployment target —
 for example a lower depth limit on a mobile or embedded runtime with a small
 call stack, or a higher node count on a system built to ingest large batch
 documents. Whatever values an implementation chooses:
 
-- **D-10.** They MUST be finite. "No limit" is not a legal choice for any of the three.
+- **D-10.** They MUST be finite. "No limit" is not a legal choice for any
+  limit in this section — the three universal ones above, or the alias
+  expansion factor of D-18 wherever that rule applies.
 - **D-11.** They MUST be documented, in the same place a user would look for the rest of
-  the implementation's conformance profile.
+  the implementation's conformance profile. This too covers every limit in
+  this section, the alias expansion factor included: an implementation that
+  ships a YAML codec MUST state the maximum expansion factor it enforces.
 - **D-12.** The depth limit MUST match between the Document builder and the OML parser
   within one implementation (§2.4 note below) — a document that parses MUST
   NOT then fail to build.
 
 **Where this stands today.** No implementation currently exposes a public
-configuration surface for any of the three limits. Python's `_MAX_DEPTH`,
+configuration surface for any of these limits. Python's `_MAX_DEPTH`,
 `_MAX_NODES`, and `_MAX_INT_DIGITS` are hardcoded module constants with no
 constructor argument, function parameter, or environment variable that lets a
 caller change them — the only place they vary at all is inside Python's own
 test suite, via direct monkeypatching of the private module attribute, which
 is a test technique, not a configuration surface a real caller can use. "MAY
-set any of the three" is written for an implementation that chooses to expose
+set any of these limits" is written for an implementation that chooses to expose
 one — an embedded or big-data target with an actual reason to deviate — not a
 capability any implementation ships today. A future implementation is free to
 be the first.
@@ -234,6 +253,178 @@ exactly one number, not two kept equal by discipline. The MUST here is aimed
 at an implementation whose architecture genuinely has two separate places a
 depth limit could be configured; where a single shared constant is the
 natural design, as in Python, the requirement is satisfied automatically.
+
+### 2.4.1 Bounding alias expansion
+
+The three limits above bound the *result*. None of them bounds the *ratio*
+between what an input writes and what reading it materializes. Some formats
+let one written construct be referred to elsewhere and materialize again at
+every reference — YAML's anchors and aliases are the case Omnist meets today
+— and nesting those references multiplies. An input well under the node cap
+can still expand by several hundred times, be accepted with no diagnostic,
+and be replayed indefinitely at the reader's expense.
+
+**D-18.** A codec for a format with an anchor/reference mechanism — one in
+which a construct may be defined once and referred to from elsewhere, so that
+a single definition materializes more than once — MUST enforce a finite
+maximum **expansion factor** on every anchored definition in its input, and
+MUST reject input that exceeds it with `document.limit.alias-expansion`
+([§8.3.2](08-conformance-and-errors.md#832-document-building-and-limits)).
+For an anchored definition `a`:
+
+- `W(a)` is the number of **value slots materialized** when `a` is expanded. A
+  container counts as one slot, a scalar leaf counts as one slot, and a
+  reference to an anchored definition `b` appearing inside `a` contributes
+  whatever that reference itself materializes, recursively.
+- `S(a)` is the number of **value slots written in `a`'s own definition**,
+  where a reference appearing inside it counts as exactly **one** slot,
+  regardless of the size of what it points at.
+- **The anchored node `a` itself counts as one slot, in both `W(a)` and
+  `S(a)`.** `W` and `S` are counts over the same tree, one expanded and one
+  as written, and both are rooted at `a` inclusively. An anchor on a mapping
+  of three scalars has `S = 4`, not 3; an anchor on a bare scalar has
+  `S = W = 1`, so `E = 1.00`. Counting `a` in one and not the other would
+  make `E` depend on which side the reader chose, and a solitary scalar
+  anchor would have a zero denominator.
+- `E(a) = W(a) / S(a)`.
+
+**What a reference contributes to `W`.** A reference contributes exactly what
+it materializes — no more, and no less:
+
+- A **plain alias** in value position (YAML `*b`) materializes a copy of `b`
+  as a nested value. It contributes `W(b)` in full, including `b`'s own
+  container slot, because that container is reproduced at the point of use.
+- A **merge-key reference** (YAML `<<: *b`, [§ YAML](formats/yaml.md)) does
+  not materialize `b`'s container at all: it flattens `b`'s own edges into
+  the referring mapping, one level up. It therefore contributes `W(b) - 1` —
+  everything `b` materializes except the container slot that is not
+  reproduced. The `<<` entry still counts as exactly one written slot in `S`,
+  like any other reference.
+- **A merge key whose value is a *sequence* of aliases** — YAML 1.1's
+  `<<: [*p, *q, ...]` form, which the reference accepts — is the single-alias
+  case repeated, and nothing more. **Each** alias in the sequence contributes
+  its target's edges flattened in, `W(target) - 1` apiece, exactly as the
+  single-alias form does; **none** of them contributes its target's full `W`.
+  The sequence holding the aliases is a syntactic carrier for the merge, not a
+  materialized container, so it contributes **no slot of its own** to `W`. And
+  the `<<` entry counts as exactly **one** written slot in `S`, whether its
+  value is a single alias or a sequence of any length. Worked, given
+  `p: &p {k: 1}`, `q: &q {j: 2}` and `z: &z {<<: [*p, *q], m: 3}`:
+
+  ```
+  W(z) = 1 + (W(p) - 1) + (W(q) - 1) + 1 = 4     S(z) = 3     E(z) = 1.33
+  ```
+
+  `S(z)` is 3 — `z`'s own container, the single `<<` entry, and `m` — not 5.
+  Reading the plain-alias rule onto each element instead, and counting the
+  sequence as a slot, would give `W = 7` over `S = 5`; that reading is wrong.
+  Confirmed against the reference: `z` materializes `{j: 2, k: 1, m: 3}`, four
+  slots.
+
+The general rule is the first sentence; the three cases are what it comes to
+for the one format that has the mechanism today. A worked nested case, since
+no vector exercises one yet — given `p: &p {k: 1}`, `q: &q {<<: *p, m: 2}`,
+and `r: &r {n: *q}`:
+
+```
+W(p) = 2  (p's container + the scalar 1)          S(p) = 2   E(p) = 1.00
+W(q) = 1 + (W(p) - 1) + 1 = 3                     S(q) = 3   E(q) = 1.00
+W(r) = 1 + W(q) = 4                               S(r) = 2   E(r) = 2.00
+```
+
+`q`'s merge of `p` contributes 1, not 2, because `p`'s container is flattened
+away; `r`'s plain alias of `q` contributes all 3 of `q`'s slots, because
+`q`'s container *is* reproduced under `n`.
+
+D-18 is violated, and the codec MUST reject the input, when `E(a)` exceeds
+the configured maximum for any anchored definition `a` in it. The reference
+default is **50**.
+
+- **D-19.** The check MUST be performed **before** the expansion is
+  materialized. `W` and `S` are computable in time linear in the size of the
+  input from the raw anchor/reference graph alone, without walking the
+  expanded tree, so a conformant implementation refuses an over-limit input
+  without ever paying for the expansion it describes. An implementation that
+  discovers the violation only after expanding does not satisfy this rule
+  even if it reports the right code.
+
+  **`W` is a conservative upper bound, not the exact materialized count.**
+  Computing `W` from the reference graph — each reference contributing its
+  target's full structural contribution, per the rules above — is what makes
+  the check linear and pre-materialization, and it is deliberately blind to
+  key-collision resolution. Where a merged key is overridden by a local key of
+  the same name, the bound exceeds what is actually materialized. Given
+  `p: &p {k: 1}` and `q: &q {<<: *p, k: 9}`, the rule computes
+  `W(q) = 1 + (W(p) - 1) + 1 = 3`, while the reference in fact materializes
+  `{k: 9}` — two slots — because `q`'s own `k` displaces the merged one. This
+  overestimate is intentional and conformant: resolving which keys survive a
+  collision requires walking the expanded tree, which is precisely the work
+  D-19 exists to avoid paying before the input has been accepted. An
+  implementation MUST NOT refine `W` downward by performing collision
+  resolution during the check. The bound errs toward rejection, never toward
+  acceptance, so no input that the exact count would refuse is admitted by the
+  bound. Where §2.4.1 says `W(a)` is the number of value slots *materialized*,
+  read it as the structural count defined by these rules; the two coincide
+  except under key override.
+
+  **D-19's bound holds only if the check is made as it goes.** An
+  implementation SHOULD evaluate `E(a)` per anchored definition as it computes
+  it and reject on the first `E(a)` over the maximum, rather than computing
+  every `W` in the input and checking afterwards. Checking as it goes keeps
+  every `W` it ever holds bounded by `max × S(a)` for the anchor in hand.
+  Deferring the check lets the very input D-18 exists to refuse drive a `W` to
+  arbitrary magnitude first — on a fixed-width integer that is an overflow,
+  and a wrapped `W` can compare *under* the maximum, turning the attack input
+  into an accept. An implementation that does defer the check MUST otherwise
+  guard against that overflow, with a checked or saturating accumulation or an
+  arbitrary-precision `W`.
+- **D-20.** An anchored definition that refers to itself, directly or through
+  a cycle of other definitions, has unbounded `W` and MUST be rejected under
+  this limit, with `document.limit.alias-expansion` — the same code as any
+  other D-18 rejection. A codec MUST NOT attempt to compute a finite `E` for
+  it, and MUST NOT materialize a cyclic or infinite structure instead.
+
+  The reference does not satisfy this yet, and the gap is a real one rather
+  than a wording artifact. It rejects a directly self-referential mapping
+  anchor today, but with an uncoded `DocumentError` reading `cycle detected` —
+  which is how it reports every §2.4 limit, its Python API surfacing no code
+  on any of them — and it silently *accepts* the self-merging form
+  `a: &a {<<: *a, k: 1}`, materializing `{k: 1}` rather than refusing it.
+  Closing both is part of the D-18 rollout tracked by
+  [`DIV-3`](09-divergence-ledger.md#94-known-open-divergences), not a separate
+  allowance.
+
+**Scope, stated explicitly.** D-18 binds a codec *that has such a mechanism*.
+It is not a fourth universal limit: §2.4's first three rows apply to every
+Document however it was built, and D-18 applies to a parse of a format with
+anchors. Of the five formats this spec covers, **only YAML has one today**
+([§ YAML](formats/yaml.md)); JSON, TOML, XML and OML have no construct that
+materializes more than once from a single written definition, so the rule is
+vacuous for them and they need not compute anything. It binds any future
+format or extension that adds one. Nothing in D-18 refers to input byte
+length, so there is no ratio-to-bytes to be undefined on a programmatic
+construction route, and no denominator to disagree about.
+
+**XML's entity expansion is the same class of problem and is already
+handled.** A DTD's internal entities have exactly this shape — the "billion
+laughs" attack is an XML attack first — but the data-XML profile in
+[§ XML](formats/xml.md) rejects a DTD outright, so the mechanism never
+reaches the Document builder. That is a stronger rule than this one, not a
+gap in it, and it is deliberately not restated here: one refusal per hazard.
+
+**On the reference default of 50.** It is calibrated against `E` as defined
+above, measured on real documents. Legitimate anchored YAML clusters far
+below it: a merge-key configuration of the `<<: *defaults` kind that
+docker-compose and GitLab CI use reads `E = 1.00` at every size tested, up to
+36 KB, because a merge key flattens into the referring mapping rather than
+nesting under it; anchor-to-anchor chains and scalar-constant reuse read at
+most 5.75. The amplifying shape — nested anchors, each level referring to the
+previous one several times — crosses into dangerous territory around
+`E = 170` and climbs steeply from there. 50 sits roughly 9× above the worst
+legitimate document measured and roughly 3.4× below the weakest dangerous
+one, and it fires well before the input grows large enough to reach the node
+cap. An implementation MAY configure a different value, subject to D-10 and
+D-11 like any other limit in §2.4: finite, and documented.
 
 ---
 

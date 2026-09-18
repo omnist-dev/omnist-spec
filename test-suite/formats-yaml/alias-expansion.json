@@ -1,0 +1,606 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/alias-expansion/nested-anchor-fan-out-exceeds-expansion-limit",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 50,
+        "text": "a: &a leaf\nb: &b {p: *a, q: *a, r: *a, s: *a}\nc: &c {p: *b, q: *b, r: *b, s: *b}\nd: &d {p: *c, q: *c, r: *c, s: *c}\ne: &e {p: *d, q: *d, r: *d, s: *d}\ntop: *e\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Five anchored definitions, each referring to the previous one four times -- the amplifying shape D-18 exists to stop, kept deliberately small. Expansion factors under \u00a72.4.1's definition, working outward: E(a)=1/1=1.00, E(b)=5/5=1.00, E(c)=21/5=4.20, E(d)=85/5=17.00, E(e)=341/5=68.20. E(e) exceeds the declared maximum of 50 (which is also the reference default), so the input MUST be rejected with document.limit.alias-expansion. Note what is NOT the reason for rejection: 341 materialized value slots is nowhere near any node cap, and the reference accepts this input today -- that acceptance, at a ~68x amplification an attacker can replay indefinitely, is exactly the defect omnist-spec#75 reports. Per D-19 the check is computed from the anchor/alias graph before expanding, so a conformant reader refuses this without materializing the 341 slots."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-key-config-expands-one-to-one-and-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 50,
+        "text": "defaults: &defaults\n  adapter: postgres\n  host: localhost\n  port: 5432\ndevelopment:\n  <<: *defaults\n  database: dev\nproduction:\n  <<: *defaults\n  database: prod\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "defaults",
+              {
+                "edges": [
+                  [
+                    "adapter",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "postgres"
+                      }
+                    }
+                  ],
+                  [
+                    "host",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "localhost"
+                      }
+                    }
+                  ],
+                  [
+                    "port",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5432
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "development",
+              {
+                "edges": [
+                  [
+                    "adapter",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "postgres"
+                      }
+                    }
+                  ],
+                  [
+                    "host",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "localhost"
+                      }
+                    }
+                  ],
+                  [
+                    "port",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5432
+                      }
+                    }
+                  ],
+                  [
+                    "database",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "dev"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "production",
+              {
+                "edges": [
+                  [
+                    "adapter",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "postgres"
+                      }
+                    }
+                  ],
+                  [
+                    "host",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "localhost"
+                      }
+                    }
+                  ],
+                  [
+                    "port",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5432
+                      }
+                    }
+                  ],
+                  [
+                    "database",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "prod"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The `<<: *defaults` merge-key idiom docker-compose and GitLab CI use. E(defaults) = 4/4 = 1.00: the anchor's definition is one container plus three scalars, and a merge key flattens those keys into the referring mapping rather than nesting a copy under it, so the ratio stays exactly 1.00 no matter how many places merge it or how large the config grows. This is the legitimate document any expansion bound has to keep accepting, and the case an earlier bytes-based proposal would have wrongly rejected (see omnist-spec#75). Document confirmed live against the reference: the merged keys appear before the referring mapping's own keys, and `defaults` itself remains an edge."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-key-sequence-flattens-each-alias-and-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 50,
+        "text": "base: &base\n  region: eu-west-1\nlimits: &limits\n  retries: 3\nsvc:\n  <<: [*base, *limits]\n  name: api\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "limits",
+              {
+                "edges": [
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "svc",
+              {
+                "edges": [
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ],
+                  [
+                    "name",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "api"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "YAML 1.1's sequence form of the merge key, `<<: [*base, *limits]`, which \u00a72.4.1 covers explicitly because the general \"a reference contributes its target's W\" rule reads two ways on it. Each alias in the sequence contributes its target's edges flattened in -- W(target) - 1 apiece, exactly as the single-alias `<<: *x` form does -- and the sequence holding them is a syntactic carrier for the merge, not a materialized container, so it contributes no slot of its own. The `<<` entry counts as exactly one written slot in S no matter how many aliases its sequence holds. So for `svc`: W = 1 + (W(base) - 1) + (W(limits) - 1) + 1 = 4 over S = 3 (svc's container, the one `<<` entry, and `name`), E = 1.33. The reading this vector exists to rule out -- plain-alias contribution per element, plus a slot for the sequence -- would give W = 7 over S = 5, E = 1.40. Document captured live from the reference: the merged keys appear in sequence order before the referring mapping's own keys, and no `<<` label survives. Like every vector in this file the reference accepts it today, but here acceptance is the correct outcome; see DIV-3 for what a runner reports on the rest."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/anchor-to-anchor-chain-under-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 50,
+        "text": "base: &base\n  region: eu-west-1\n  retries: 3\nsvc: &svc\n  conf: *base\n  name: api\ntop:\n  primary: *svc\n  secondary: *svc\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ],
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "svc",
+              {
+                "edges": [
+                  [
+                    "conf",
+                    {
+                      "edges": [
+                        [
+                          "region",
+                          {
+                            "scalar": {
+                              "kind": "string",
+                              "value": "eu-west-1"
+                            }
+                          }
+                        ],
+                        [
+                          "retries",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "name",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "api"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "top",
+              {
+                "edges": [
+                  [
+                    "primary",
+                    {
+                      "edges": [
+                        [
+                          "conf",
+                          {
+                            "edges": [
+                              [
+                                "region",
+                                {
+                                  "scalar": {
+                                    "kind": "string",
+                                    "value": "eu-west-1"
+                                  }
+                                }
+                              ],
+                              [
+                                "retries",
+                                {
+                                  "scalar": {
+                                    "kind": "integer",
+                                    "value": 3
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "name",
+                          {
+                            "scalar": {
+                              "kind": "string",
+                              "value": "api"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "secondary",
+                    {
+                      "edges": [
+                        [
+                          "conf",
+                          {
+                            "edges": [
+                              [
+                                "region",
+                                {
+                                  "scalar": {
+                                    "kind": "string",
+                                    "value": "eu-west-1"
+                                  }
+                                }
+                              ],
+                              [
+                                "retries",
+                                {
+                                  "scalar": {
+                                    "kind": "integer",
+                                    "value": 3
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "name",
+                          {
+                            "scalar": {
+                              "kind": "string",
+                              "value": "api"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "An anchor whose definition itself refers to another anchor, then used twice -- the ordinary shared-configuration shape. E(base) = 3/3 = 1.00; E(svc) = 5/3 = 1.67, since *base inside svc's definition counts as one written slot but contributes W(base)=3 materialized ones. Well under 50, so this MUST be accepted: chaining anchors is not by itself amplification. Reusing *svc twice at the bottom does not enter any E at all -- E is a per-definition ratio, not a count of how often a definition is referenced."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expansion-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "text": "x: &x\n  a: 1\n  b: 2\n  c: 3\n  d: 4\ny: &y\n  inner: *x\ntop: *y\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "y",
+              {
+                "edges": [
+                  [
+                    "inner",
+                    {
+                      "edges": [
+                        [
+                          "a",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "b",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ],
+                        [
+                          "d",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 4
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "top",
+              {
+                "edges": [
+                  [
+                    "inner",
+                    {
+                      "edges": [
+                        [
+                          "a",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "b",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ],
+                        [
+                          "d",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 4
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E(x) = 5/5 = 1.00; E(y) = 6/2 = 3.00 -- y's definition writes two slots (its own container, plus *x counting as exactly one regardless of target size) and materializes six (its container plus W(x)=5). Exactly at the declared maximum of 3, which MUST succeed: D-18 rejects when E exceeds the maximum, not when it reaches it. declared_max_alias_expansion is a vector-local parameter, not the reference default of 50 -- \u00a72.4 makes the number non-normative, so a harness configures the implementation under test to this value for the vector's duration, and an implementation exposing no such configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expansion-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "x: &x\n  a: 1\n  b: 2\n  c: 3\n  d: 4\ny: &y\n  inner: *x\ntop: *y\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Byte-identical input to the vector above, one past the declared maximum: E(y) = 3.00 against a declared limit of 2. Same skip-not-fail caveat for an implementation with no configuration surface. The pair pins the boundary the way the depth and node-count pairs in document-model/limits.json do -- exceeding your own declared limit produces document.limit.alias-expansion, never a different code (not document.limit.nodes, per E-4a), never truncation, never silent acceptance."
+    }
+  ]
+}

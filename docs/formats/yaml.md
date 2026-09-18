@@ -17,6 +17,35 @@ Document model has no notion of it. This is lossless in value and lossy in
 structure sharing, which is the correct trade for a model whose whole point is
 the fully expanded edge list.
 
+**The merge key, `<<`, is the one alias form that does not nest.** An entry
+`<<: *x` in a mapping flattens the referenced mapping's *own* entries into the
+referring mapping — one level up — rather than nesting a copy of it under the
+key `<<`. YAML 1.1 also permits a sequence of aliases, `<<: [*x, *y]`, merging
+each in turn. `<<` itself never survives as a label; it is a merge
+instruction, not an edge. So `d: &d {a: 1}` / `e: {<<: *d, b: 2}` reads as
+`e` carrying the two edges `a` and `b`, not an edge named `<<`. This is the
+mechanism [D-18](../02-document-model.md#241-bounding-alias-expansion) means by
+"flattened", and the reason a merge-key config expands one-to-one where a
+plain alias multiplies; §2.4.1 states what each form contributes to the
+expansion factor.
+
+**Which is exactly why the YAML reader MUST bound alias expansion.** Fully
+expanding every alias is what makes an anchor an amplifier: one written
+definition materializes again at each reference, and an anchor whose
+definition itself contains references multiplies. YAML's anchor/alias
+mechanism is the only such construct among the five formats this spec covers,
+so YAML is the only format on which
+[D-18](../02-document-model.md#241-bounding-alias-expansion) currently has
+anything to do — and a conformant YAML reader MUST enforce it. Compute each
+anchored definition's expansion factor `E` from the anchor/alias graph
+*before* expanding, reject the input with `document.limit.alias-expansion`
+when any `E` exceeds the configured maximum (reference default 50), and
+reject a self-referential anchor outright. §2.4.1 defines `E`, gives the
+reasoning behind the default, and explains why ordinary anchored YAML — merge
+keys, shared constants, anchor chains — sits far below it. Nothing here
+changes the value-fidelity rule above: an alias that is expanded still reads
+as an independent edge carrying the value.
+
 **YAML resolves some scalars on its own.** A bare ISO-8601-looking scalar
 resolves to a `date` or `datetime` with no schema involved. YAML is one of two
 formats whose native parser can do this without a schema — TOML is the

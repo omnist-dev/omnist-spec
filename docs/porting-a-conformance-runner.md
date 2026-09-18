@@ -127,6 +127,44 @@ regardless of the reason behind it. That distinction is the whole point: one
 accepted accommodation and one real bug can come out of the same underlying
 architecture decision, and only the first belongs in the ledger.
 
+## Declared-limit keys: keep your allowlist current
+
+A vector that pins a safety-limit boundary carries a `declared_max_*` key in
+its `input`, naming the limit value it was written against. Your runner needs
+an allowlist of those keys, checked before the vector runs: if the key is
+present and your implementation exposes no way to configure that limit to the
+stated value, the vector is a `skip`. Python's runner spells this as a
+`_LIMIT_KEYS` set in `tools/conformance/vector_runner.py`; every port's
+runner has an equivalent.
+
+**A key your allowlist doesn't know about is not skipped — it is run against
+your own default**, which is the one outcome the mechanism exists to prevent.
+`test-suite/README.md` lists the current keys. Check that list against your
+allowlist on every submodule bump, and treat a new key as part of adopting
+the rule that introduced it, not as separate work.
+
+As of **v0.18.0-beta** the newest key is `declared_max_alias_expansion`
+(§2.4.1's D-18). No port recognizes it yet, and no port enforces D-18 yet
+either, so adopting the rule is two steps: **(a)** implement D-18, and
+**(b)** add `declared_max_alias_expansion` to your allowlist.
+
+**Doing (a) without (b) buys you a false pass, which is worse than a
+failure.** Of the five vectors in `formats-yaml/alias-expansion`, two
+(`nested-anchor-fan-out-exceeds-expansion-limit`,
+`expansion-one-past-declared-limit-fails`) fail outright until you implement
+the rule — loud, triaged, fixed. The third,
+`expansion-at-declared-limit-succeeds`, reports **green either way**. It is
+green today because nothing enforces the limit at all, and it stays green
+after step (a) because it is run against your implementation's own default
+maximum instead of the **3** the vector declares — an `E` at your default's
+boundary is not the boundary the vector was written to pin, so the vector
+exercises nothing and a real off-by-one in your threshold sails through it. A
+failure gets looked at. A pass does not. Treat step (b) as part of step (a),
+never as follow-up work.
+
+See [§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3` for
+the per-vector breakdown of what a runner reports today.
+
 ## When you find a real failure
 
 Triage before touching anything:
