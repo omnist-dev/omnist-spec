@@ -17,6 +17,18 @@ Document model has no notion of it. This is lossless in value and lossy in
 structure sharing, which is the correct trade for a model whose whole point is
 the fully expanded edge list.
 
+**The merge key, `<<`, is the one alias form that does not nest.** An entry
+`<<: *x` in a mapping flattens the referenced mapping's *own* entries into the
+referring mapping — one level up — rather than nesting a copy of it under the
+key `<<`. YAML 1.1 also permits a sequence of aliases, `<<: [*x, *y]`, merging
+each in turn. `<<` itself never survives as a label; it is a merge
+instruction, not an edge. So `d: &d {a: 1}` / `e: {<<: *d, b: 2}` reads as
+`e` carrying the two edges `a` and `b`, not an edge named `<<`. This is the
+mechanism [D-18](../02-document-model.md#241-bounding-alias-expansion) means by
+"flattened", and the reason a merge-key config expands one-to-one where a
+plain alias multiplies; §2.4.1 states what each form contributes to the
+expansion factor.
+
 **Which is exactly why the YAML reader MUST bound alias expansion.** Fully
 expanding every alias is what makes an anchor an amplifier: one written
 definition materializes again at each reference, and an anchor whose

@@ -159,7 +159,7 @@ diverge.
 | Version | 0.9.5 | 0.3.0-alpha | 0.2.2-alpha | 0.3.1-alpha | 0.2.3-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
-| Resource caps | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) |
+| Resource caps (§2.4's three universal limits; D-18 is enforced by no port yet — DIV-3) | all three | all three | all three | all three | all three |
 | OML read/write | complete | complete | complete | complete | complete |
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | `any` type | yes | yes | yes | yes | yes |
@@ -192,6 +192,13 @@ two were previously indistinguishable, so a bare `D-3` could mean either an
 edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
+**`DIV-1` and `DIV-2` are retired numbers and MUST NOT be reused.** Both
+entries closed and were deleted; the numbers stay spent so a citation to
+either in an older document, issue, or port changelog cannot silently come to
+mean something else. This note lives here, in the preamble, rather than inside
+any single entry — an entry is deleted when it closes, and a retirement note
+that rides along inside one disappears with it.
+
 Because a closed entry is deleted rather than archived, a citation to one
 can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
@@ -200,16 +207,45 @@ pointing at nothing.
 **DIV-3. No implementation enforces the alias expansion limit (D-18) yet.**
 D-18, D-19 and D-20 ([§2.4.1](02-document-model.md#241-bounding-alias-expansion))
 are new normative content as of **v0.18.0-beta**. As of that release no port
-enforces them, the Python reference included: all five vectors in
+enforces them, the Python reference included: all six vectors in
 `test-suite/formats-yaml/alias-expansion.json` — both rejection cases among
 them — are currently *accepted* by the reference, verified by running them,
 not assumed. This is a rollout gap, not a design defect and not a
 divergence any implementation intends to keep: it is the expected interval
-between a spec rule landing and the ports adopting it. Until a port adopts
-it, its runner reports those vectors as `fail` or `skip` citing this entry,
-never as `pass`. Tracked by omnist-spec#75 and the PR that introduced the
-rule. Remove this entry when every port enforces D-18; `DIV-1` and `DIV-2`
-are retired numbers and MUST NOT be reused.
+between a spec rule landing and the ports adopting it. Tracked by
+omnist-spec#75 and the PR that introduced the rule. Remove this entry when
+every port enforces D-18.
+
+**What a runner actually reports today, vector by vector — and the one that
+lies.** An earlier draft of this entry claimed the two declared-limit boundary
+vectors "report as failures rather than skips" until a port allowlists
+`declared_max_alias_expansion`. That is wrong, and wrong in the dangerous
+direction. Run against the reference as it behaves today, all six vectors are
+*accepted*, which means:
+
+| vector | `expect.ok` | reported today |
+|---|---|---|
+| `nested-anchor-fan-out-exceeds-expansion-limit` | false | **fail** — real, and nothing to do with the allowlist; this vector carries no boundary the runner could skip on |
+| `merge-key-config-expands-one-to-one-and-succeeds` | true | pass, correctly |
+| `merge-key-sequence-flattens-each-alias-and-succeeds` | true | pass, correctly |
+| `anchor-to-anchor-chain-under-limit-succeeds` | true | pass, correctly |
+| `expansion-at-declared-limit-succeeds` | true | **a false pass** — it reports green only because nothing enforces the limit, not because the runner recognized and skipped a declared-limit vector |
+| `expansion-one-past-declared-limit-fails` | false | **fail** — real, same reason as the first |
+
+So the honest count is **two outright failures and one false pass**, not two
+failures where skips belong. The false pass is the part that matters. Adopting
+D-18 is two steps, not one: **(a)** implement the rule, and **(b)** add
+`declared_max_alias_expansion` to the runner's limit-key allowlist. A port that
+does (a) and forgets (b) does not get a loud failure to tell it so —
+`expansion-at-declared-limit-succeeds` keeps reporting green while being run
+against that port's own default maximum instead of the 3 the vector declares,
+so it exercises the wrong boundary and can mask a real threshold bug
+indefinitely. A failure gets triaged. A pass gets believed.
+
+Until a port completes both steps, its runner reports these vectors as `fail`
+or `skip` citing this entry. It MUST NOT report
+`expansion-at-declared-limit-succeeds` as a pass on the strength of step (a)
+alone.
 
 ## 9.5 Adding a sixth implementation
 

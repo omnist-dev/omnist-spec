@@ -170,8 +170,9 @@ itself, so it binds only the codecs that have such a mechanism; where it
 applies, it is a safety limit in this section's sense like the other three,
 and D-10 and D-11 below govern it identically.
 
-**What is fixed, and what is not.** The *existence* and *meaning* of the three
-limits is normative. The specific *numbers* are not: this is a deliberate
+**What is fixed, and what is not.** The *existence* and *meaning* of the
+limits is normative — the three universal ones, and the expansion factor
+wherever D-18 applies. The specific *numbers* are not: this is a deliberate
 change from an earlier draft of this spec, which wrongly treated one platform's
 numbers as universal constants. A limit exists to bound work against untrusted
 input on the hardware actually running the implementation, and that varies
@@ -299,8 +300,28 @@ it materializes — no more, and no less:
   everything `b` materializes except the container slot that is not
   reproduced. The `<<` entry still counts as exactly one written slot in `S`,
   like any other reference.
+- **A merge key whose value is a *sequence* of aliases** — YAML 1.1's
+  `<<: [*p, *q, ...]` form, which the reference accepts — is the single-alias
+  case repeated, and nothing more. **Each** alias in the sequence contributes
+  its target's edges flattened in, `W(target) - 1` apiece, exactly as the
+  single-alias form does; **none** of them contributes its target's full `W`.
+  The sequence holding the aliases is a syntactic carrier for the merge, not a
+  materialized container, so it contributes **no slot of its own** to `W`. And
+  the `<<` entry counts as exactly **one** written slot in `S`, whether its
+  value is a single alias or a sequence of any length. Worked, given
+  `p: &p {k: 1}`, `q: &q {j: 2}` and `z: &z {<<: [*p, *q], m: 3}`:
 
-The general rule is the first sentence; the two cases are what it comes to
+  ```
+  W(z) = 1 + (W(p) - 1) + (W(q) - 1) + 1 = 4     S(z) = 3     E(z) = 1.33
+  ```
+
+  `S(z)` is 3 — `z`'s own container, the single `<<` entry, and `m` — not 5.
+  Reading the plain-alias rule onto each element instead, and counting the
+  sequence as a slot, would give `W = 7` over `S = 5`; that reading is wrong.
+  Confirmed against the reference: `z` materializes `{j: 2, k: 1, m: 3}`, four
+  slots.
+
+The general rule is the first sentence; the three cases are what it comes to
 for the one format that has the mechanism today. A worked nested case, since
 no vector exercises one yet — given `p: &p {k: 1}`, `q: &q {<<: *p, m: 2}`,
 and `r: &r {n: *q}`:
@@ -326,10 +347,52 @@ default is **50**.
   without ever paying for the expansion it describes. An implementation that
   discovers the violation only after expanding does not satisfy this rule
   even if it reports the right code.
+
+  **`W` is a conservative upper bound, not the exact materialized count.**
+  Computing `W` from the reference graph — each reference contributing its
+  target's full structural contribution, per the rules above — is what makes
+  the check linear and pre-materialization, and it is deliberately blind to
+  key-collision resolution. Where a merged key is overridden by a local key of
+  the same name, the bound exceeds what is actually materialized. Given
+  `p: &p {k: 1}` and `q: &q {<<: *p, k: 9}`, the rule computes
+  `W(q) = 1 + (W(p) - 1) + 1 = 3`, while the reference in fact materializes
+  `{k: 9}` — two slots — because `q`'s own `k` displaces the merged one. This
+  overestimate is intentional and conformant: resolving which keys survive a
+  collision requires walking the expanded tree, which is precisely the work
+  D-19 exists to avoid paying before the input has been accepted. An
+  implementation MUST NOT refine `W` downward by performing collision
+  resolution during the check. The bound errs toward rejection, never toward
+  acceptance, so no input that the exact count would refuse is admitted by the
+  bound. Where §2.4.1 says `W(a)` is the number of value slots *materialized*,
+  read it as the structural count defined by these rules; the two coincide
+  except under key override.
+
+  **D-19's bound holds only if the check is made as it goes.** An
+  implementation SHOULD evaluate `E(a)` per anchored definition as it computes
+  it and reject on the first `E(a)` over the maximum, rather than computing
+  every `W` in the input and checking afterwards. Checking as it goes keeps
+  every `W` it ever holds bounded by `max × S(a)` for the anchor in hand.
+  Deferring the check lets the very input D-18 exists to refuse drive a `W` to
+  arbitrary magnitude first — on a fixed-width integer that is an overflow,
+  and a wrapped `W` can compare *under* the maximum, turning the attack input
+  into an accept. An implementation that does defer the check MUST otherwise
+  guard against that overflow, with a checked or saturating accumulation or an
+  arbitrary-precision `W`.
 - **D-20.** An anchored definition that refers to itself, directly or through
   a cycle of other definitions, has unbounded `W` and MUST be rejected under
-  this limit. A codec MUST NOT attempt to compute a finite `E` for it, and
-  MUST NOT materialize a cyclic or infinite structure instead.
+  this limit, with `document.limit.alias-expansion` — the same code as any
+  other D-18 rejection. A codec MUST NOT attempt to compute a finite `E` for
+  it, and MUST NOT materialize a cyclic or infinite structure instead.
+
+  The reference does not satisfy this yet, and the gap is a real one rather
+  than a wording artifact. It rejects a directly self-referential mapping
+  anchor today, but with an uncoded `DocumentError` reading `cycle detected` —
+  which is how it reports every §2.4 limit, its Python API surfacing no code
+  on any of them — and it silently *accepts* the self-merging form
+  `a: &a {<<: *a, k: 1}`, materializing `{k: 1}` rather than refusing it.
+  Closing both is part of the D-18 rollout tracked by
+  [`DIV-3`](09-divergence-ledger.md#94-known-open-divergences), not a separate
+  allowance.
 
 **Scope, stated explicitly.** D-18 binds a codec *that has such a mechanism*.
 It is not a fourth universal limit: §2.4's first three rows apply to every

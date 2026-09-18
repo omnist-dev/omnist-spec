@@ -144,11 +144,26 @@ allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
 As of **v0.18.0-beta** the newest key is `declared_max_alias_expansion`
-(§2.4.1's D-18). No port recognizes it yet, so every port's runner currently
-reports `formats-yaml/alias-expansion`'s two boundary vectors as failures
-rather than skips until its allowlist is updated — see
-[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3`, which
-also covers the larger gap that no port enforces D-18 itself yet.
+(§2.4.1's D-18). No port recognizes it yet, and no port enforces D-18 yet
+either, so adopting the rule is two steps: **(a)** implement D-18, and
+**(b)** add `declared_max_alias_expansion` to your allowlist.
+
+**Doing (a) without (b) buys you a false pass, which is worse than a
+failure.** Of the five vectors in `formats-yaml/alias-expansion`, two
+(`nested-anchor-fan-out-exceeds-expansion-limit`,
+`expansion-one-past-declared-limit-fails`) fail outright until you implement
+the rule — loud, triaged, fixed. The third,
+`expansion-at-declared-limit-succeeds`, reports **green either way**. It is
+green today because nothing enforces the limit at all, and it stays green
+after step (a) because it is run against your implementation's own default
+maximum instead of the **3** the vector declares — an `E` at your default's
+boundary is not the boundary the vector was written to pin, so the vector
+exercises nothing and a real off-by-one in your threshold sails through it. A
+failure gets looked at. A pass does not. Treat step (b) as part of step (a),
+never as follow-up work.
+
+See [§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3` for
+the per-vector breakdown of what a runner reports today.
 
 ## When you find a real failure
 

@@ -106,11 +106,18 @@ exercising anything.
 Runners implement this as an allowlist — Python's is a `_LIMIT_KEYS` set in
 `tools/conformance/vector_runner.py`, and the other ports' runners are
 modelled on it. **A key missing from that set is silently treated as an
-ordinary vector**, which is the failure mode above. `declared_max_alias_expansion`
-is new in v0.18.0-beta: until a port adds it to its own allowlist, that port's
-runner will report `formats-yaml/alias-expansion`'s two boundary vectors
-(`expansion-at-declared-limit-succeeds`,
-`expansion-one-past-declared-limit-fails`) as failures rather than skips. See
+ordinary vector**, which is the failure mode above.
+
+`declared_max_alias_expansion` is new in v0.18.0-beta, and no port enforces
+D-18 yet either, so adopting it takes two steps: **(a)** implement the rule,
+and **(b)** allowlist the key. Skipping (b) does not produce a failure — it
+produces a **false pass**, which is the more dangerous outcome because nobody
+investigates a green result. `expansion-one-past-declared-limit-fails` and
+`nested-anchor-fan-out-exceeds-expansion-limit` fail loudly until step (a) is
+done. But `expansion-at-declared-limit-succeeds` reports green whether or not
+step (b) is done: without the allowlist entry it runs against the port's own
+default maximum rather than the **3** it declares, so it pins no boundary at
+all and will happily mask a wrong threshold. See
 [`docs/porting-a-conformance-runner.md`](../docs/porting-a-conformance-runner.md)
 and [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
 `DIV-3`.

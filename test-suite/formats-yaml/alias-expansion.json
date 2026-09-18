@@ -161,6 +161,91 @@
       "comment": "The `<<: *defaults` merge-key idiom docker-compose and GitLab CI use. E(defaults) = 4/4 = 1.00: the anchor's definition is one container plus three scalars, and a merge key flattens those keys into the referring mapping rather than nesting a copy under it, so the ratio stays exactly 1.00 no matter how many places merge it or how large the config grows. This is the legitimate document any expansion bound has to keep accepting, and the case an earlier bytes-based proposal would have wrongly rejected (see omnist-spec#75). Document confirmed live against the reference: the merged keys appear before the referring mapping's own keys, and `defaults` itself remains an edge."
     },
     {
+      "name": "formats-yaml/alias-expansion/merge-key-sequence-flattens-each-alias-and-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 50,
+        "text": "base: &base\n  region: eu-west-1\nlimits: &limits\n  retries: 3\nsvc:\n  <<: [*base, *limits]\n  name: api\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "limits",
+              {
+                "edges": [
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "svc",
+              {
+                "edges": [
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ],
+                  [
+                    "name",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "api"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "YAML 1.1's sequence form of the merge key, `<<: [*base, *limits]`, which \u00a72.4.1 covers explicitly because the general \"a reference contributes its target's W\" rule reads two ways on it. Each alias in the sequence contributes its target's edges flattened in -- W(target) - 1 apiece, exactly as the single-alias `<<: *x` form does -- and the sequence holding them is a syntactic carrier for the merge, not a materialized container, so it contributes no slot of its own. The `<<` entry counts as exactly one written slot in S no matter how many aliases its sequence holds. So for `svc`: W = 1 + (W(base) - 1) + (W(limits) - 1) + 1 = 4 over S = 3 (svc's container, the one `<<` entry, and `name`), E = 1.33. The reading this vector exists to rule out -- plain-alias contribution per element, plus a slot for the sequence -- would give W = 7 over S = 5, E = 1.40. Document captured live from the reference: the merged keys appear in sequence order before the referring mapping's own keys, and no `<<` label survives. Like every vector in this file the reference accepts it today, but here acceptance is the correct outcome; see DIV-3 for what a runner reports on the rest."
+    },
+    {
       "name": "formats-yaml/alias-expansion/anchor-to-anchor-chain-under-limit-succeeds",
       "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
       "operation": "parse",
