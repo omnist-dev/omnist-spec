@@ -81,6 +81,40 @@ discipline already applies to
 `document-model/limits.json`'s vectors for implementations with no
 runtime-configurable safety limit (§2.4).
 
+### Declared-limit keys, and the allowlist every runner needs
+
+A vector that pins a safety-limit boundary carries the limit it was written
+against as a `declared_max_*` key inside `input`. These are the four in the
+suite today:
+
+```
+declared_max_depth              §2.4 maximum nesting depth
+declared_max_nodes              §2.4 maximum node count
+declared_max_int_digits         §2.4 maximum integer digits
+declared_max_alias_expansion    §2.4.1 maximum alias expansion factor (D-18)
+```
+
+A key is a **vector-local parameter, not the reference default**. A runner
+MUST recognize every key in this list and, when the implementation under test
+exposes no configuration surface for that limit, report `skip` for the vector
+— not `fail`, and not a `pass` obtained by running it against whatever
+default the implementation happens to ship. Running a boundary vector against
+the wrong number does not test the boundary; depending on which side of it
+the default falls, it either fails for the wrong reason or passes without
+exercising anything.
+
+Runners implement this as an allowlist — Python's is a `_LIMIT_KEYS` set in
+`tools/conformance/vector_runner.py`, and the other ports' runners are
+modelled on it. **A key missing from that set is silently treated as an
+ordinary vector**, which is the failure mode above. `declared_max_alias_expansion`
+is new in v0.18.0-beta: until a port adds it to its own allowlist, that port's
+runner will report `formats-yaml/alias-expansion`'s two boundary vectors
+(`expansion-at-declared-limit-succeeds`,
+`expansion-one-past-declared-limit-fails`) as failures rather than skips. See
+[`docs/porting-a-conformance-runner.md`](../docs/porting-a-conformance-runner.md)
+and [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
+`DIV-3`.
+
 ## Matching
 
 Four rules, all normative, all from chapter 8:

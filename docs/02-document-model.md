@@ -164,7 +164,11 @@ implementation that cannot construct its input.
 implementation will do before refusing to continue: nesting depth, total node
 count, and the digit length of an `integer` literal. Every conformant
 implementation MUST enforce a finite limit on all three. **No implementation
-MAY be unbounded on any of them.**
+MAY be unbounded on any of them.** A fourth quantity, the alias expansion
+factor (D-18, §2.4.1), bounds a format mechanism rather than the Document
+itself, so it binds only the codecs that have such a mechanism; where it
+applies, it is a safety limit in this section's sense like the other three,
+and D-10 and D-11 below govern it identically.
 
 **What is fixed, and what is not.** The *existence* and *meaning* of the three
 limits is normative. The specific *numbers* are not: this is a deliberate
@@ -196,27 +200,31 @@ matches CPython's own default for `sys.set_int_max_str_digits` — conversion
 between an arbitrarily long digit string and a big integer is superlinear, so
 an unbounded literal is a denial-of-service vector regardless of language.
 
-**Choosing different values.** An implementation MAY set any of the three
+**Choosing different values.** An implementation MAY set any of these limits
 lower or higher than the reference default, to fit its deployment target —
 for example a lower depth limit on a mobile or embedded runtime with a small
 call stack, or a higher node count on a system built to ingest large batch
 documents. Whatever values an implementation chooses:
 
-- **D-10.** They MUST be finite. "No limit" is not a legal choice for any of the three.
+- **D-10.** They MUST be finite. "No limit" is not a legal choice for any
+  limit in this section — the three universal ones above, or the alias
+  expansion factor of D-18 wherever that rule applies.
 - **D-11.** They MUST be documented, in the same place a user would look for the rest of
-  the implementation's conformance profile.
+  the implementation's conformance profile. This too covers every limit in
+  this section, the alias expansion factor included: an implementation that
+  ships a YAML codec MUST state the maximum expansion factor it enforces.
 - **D-12.** The depth limit MUST match between the Document builder and the OML parser
   within one implementation (§2.4 note below) — a document that parses MUST
   NOT then fail to build.
 
 **Where this stands today.** No implementation currently exposes a public
-configuration surface for any of the three limits. Python's `_MAX_DEPTH`,
+configuration surface for any of these limits. Python's `_MAX_DEPTH`,
 `_MAX_NODES`, and `_MAX_INT_DIGITS` are hardcoded module constants with no
 constructor argument, function parameter, or environment variable that lets a
 caller change them — the only place they vary at all is inside Python's own
 test suite, via direct monkeypatching of the private module attribute, which
 is a test technique, not a configuration surface a real caller can use. "MAY
-set any of the three" is written for an implementation that chooses to expose
+set any of these limits" is written for an implementation that chooses to expose
 one — an embedded or big-data target with an actual reason to deviate — not a
 capability any implementation ships today. A future implementation is free to
 be the first.
@@ -266,11 +274,46 @@ For an anchored definition `a`:
 - `W(a)` is the number of **value slots materialized** when `a` is expanded. A
   container counts as one slot, a scalar leaf counts as one slot, and a
   reference to an anchored definition `b` appearing inside `a` contributes
-  `W(b)` in full, recursively.
+  whatever that reference itself materializes, recursively.
 - `S(a)` is the number of **value slots written in `a`'s own definition**,
   where a reference appearing inside it counts as exactly **one** slot,
   regardless of the size of what it points at.
+- **The anchored node `a` itself counts as one slot, in both `W(a)` and
+  `S(a)`.** `W` and `S` are counts over the same tree, one expanded and one
+  as written, and both are rooted at `a` inclusively. An anchor on a mapping
+  of three scalars has `S = 4`, not 3; an anchor on a bare scalar has
+  `S = W = 1`, so `E = 1.00`. Counting `a` in one and not the other would
+  make `E` depend on which side the reader chose, and a solitary scalar
+  anchor would have a zero denominator.
 - `E(a) = W(a) / S(a)`.
+
+**What a reference contributes to `W`.** A reference contributes exactly what
+it materializes — no more, and no less:
+
+- A **plain alias** in value position (YAML `*b`) materializes a copy of `b`
+  as a nested value. It contributes `W(b)` in full, including `b`'s own
+  container slot, because that container is reproduced at the point of use.
+- A **merge-key reference** (YAML `<<: *b`, [§ YAML](formats/yaml.md)) does
+  not materialize `b`'s container at all: it flattens `b`'s own edges into
+  the referring mapping, one level up. It therefore contributes `W(b) - 1` —
+  everything `b` materializes except the container slot that is not
+  reproduced. The `<<` entry still counts as exactly one written slot in `S`,
+  like any other reference.
+
+The general rule is the first sentence; the two cases are what it comes to
+for the one format that has the mechanism today. A worked nested case, since
+no vector exercises one yet — given `p: &p {k: 1}`, `q: &q {<<: *p, m: 2}`,
+and `r: &r {n: *q}`:
+
+```
+W(p) = 2  (p's container + the scalar 1)          S(p) = 2   E(p) = 1.00
+W(q) = 1 + (W(p) - 1) + 1 = 3                     S(q) = 3   E(q) = 1.00
+W(r) = 1 + W(q) = 4                               S(r) = 2   E(r) = 2.00
+```
+
+`q`'s merge of `p` contributes 1, not 2, because `p`'s container is flattened
+away; `r`'s plain alias of `q` contributes all 3 of `q`'s slots, because
+`q`'s container *is* reproduced under `n`.
 
 D-18 is violated, and the codec MUST reject the input, when `E(a)` exceeds
 the configured maximum for any anchored definition `a` in it. The reference
@@ -318,7 +361,7 @@ previous one several times — crosses into dangerous territory around
 legitimate document measured and roughly 3.4× below the weakest dangerous
 one, and it fires well before the input grows large enough to reach the node
 cap. An implementation MAY configure a different value, subject to D-10 and
-D-11 like any other limit.
+D-11 like any other limit in §2.4: finite, and documented.
 
 ---
 

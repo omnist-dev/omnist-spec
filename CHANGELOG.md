@@ -13,9 +13,13 @@ implementation shipping a YAML codec needs a change.** Nothing else does.
   bound each anchored definition's expansion factor.** For an anchored
   definition `a`, `W(a)` is the value slots materialized when `a` is expanded
   (a container counts, a scalar leaf counts, a reference inside `a`
-  contributes its target's full `W`, recursively), `S(a)` is the slots
+  contributes whatever it materializes, recursively), `S(a)` is the slots
   written in `a`'s own definition (a reference counting as exactly one,
-  whatever it points at), and `E(a) = W(a)/S(a)`. Input where any `E(a)`
+  whatever it points at), and `E(a) = W(a)/S(a)`. **`a` itself counts as one
+  slot on both sides**, so a bare scalar anchor reads `E = 1.00` rather than
+  dividing by zero. A plain alias contributes its target's full `W`; a
+  merge-key reference, which flattens its target's edges into the referring
+  mapping instead of nesting a copy, contributes `W(target) - 1`. Input where any `E(a)`
   exceeds the configured maximum MUST be rejected with the new
   `document.limit.alias-expansion` code. Reference default **50**.
   **D-19** requires the check *before* the expansion is materialized — `W`
@@ -64,6 +68,25 @@ implementation shipping a YAML codec needs a change.** Nothing else does.
   The three accepted documents were captured live from the reference. The
   rejected one is accepted by every implementation today, by design — that
   is the defect. 230 vectors total.
+- **`DIV-3` opened in §9.4, and §9.3's resource-caps row says so.** No
+  implementation enforces D-18 yet, the Python reference included: all five
+  new vectors — both rejection cases among them — are *accepted* by the
+  reference today, confirmed by running them rather than assumed. That is
+  expected for a rule landing ahead of its rollout, and it is now recorded
+  instead of implicit.
+- **Every port's conformance runner needs one line of its own.** Boundary
+  vectors carry the limit they were written against as a `declared_max_*`
+  key, and a runner skips a vector whose key it recognizes but cannot
+  configure. `declared_max_alias_expansion` is new here, so until a port adds
+  it to its own allowlist (Python's is `_LIMIT_KEYS` in
+  `tools/conformance/vector_runner.py`) that port's runner runs the two
+  boundary vectors against its own default and reports them as failures
+  rather than skips. `test-suite/README.md` now lists all four keys and
+  `docs/porting-a-conformance-runner.md` makes checking the list part of a
+  submodule bump.
+- **Editorial: D-10 and D-11 now reach the fourth limit by their own text.**
+  They said "any of the three"; the finiteness and documentation obligations
+  §2.4.1 defers to them are stated as covering every limit in §2.4.
 - **Port impact is unverified and no port issues are filed yet.** YAML
   libraries differ substantially in native alias handling, so which ports
   need what follows from a per-port check against D-18 now that the spec

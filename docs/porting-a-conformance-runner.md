@@ -127,6 +127,29 @@ regardless of the reason behind it. That distinction is the whole point: one
 accepted accommodation and one real bug can come out of the same underlying
 architecture decision, and only the first belongs in the ledger.
 
+## Declared-limit keys: keep your allowlist current
+
+A vector that pins a safety-limit boundary carries a `declared_max_*` key in
+its `input`, naming the limit value it was written against. Your runner needs
+an allowlist of those keys, checked before the vector runs: if the key is
+present and your implementation exposes no way to configure that limit to the
+stated value, the vector is a `skip`. Python's runner spells this as a
+`_LIMIT_KEYS` set in `tools/conformance/vector_runner.py`; every port's
+runner has an equivalent.
+
+**A key your allowlist doesn't know about is not skipped — it is run against
+your own default**, which is the one outcome the mechanism exists to prevent.
+`test-suite/README.md` lists the current keys. Check that list against your
+allowlist on every submodule bump, and treat a new key as part of adopting
+the rule that introduced it, not as separate work.
+
+As of **v0.18.0-beta** the newest key is `declared_max_alias_expansion`
+(§2.4.1's D-18). No port recognizes it yet, so every port's runner currently
+reports `formats-yaml/alias-expansion`'s two boundary vectors as failures
+rather than skips until its allowlist is updated — see
+[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3`, which
+also covers the larger gap that no port enforces D-18 itself yet.
+
 ## When you find a real failure
 
 Triage before touching anything:

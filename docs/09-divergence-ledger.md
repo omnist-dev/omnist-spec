@@ -58,10 +58,10 @@ is what this exception permits, not a blanket exemption for the surrounding
 area. **This exception covers a missing distinction being skipped, never an
 incorrect output being produced.**
 
-**Whether a safety limit exists, and what it is called.** All three limits in
-§2.4 (depth, node count, integer digits) MUST be enforced by every
+**Whether a safety limit exists, and what it is called.** All three universal
+limits in §2.4 (depth, node count, integer digits) MUST be enforced by every
 implementation, at some finite value it documents. An implementation MUST NOT
-be unbounded on any of the three, and exceeding whichever value it configures
+be unbounded on any of them, and exceeding whichever value it configures
 MUST raise the matching `document.limit.*` code (§8.3.2) — never a different
 code, and never silently. The threshold number is permitted variation (§9.1);
 having no threshold at all, or reporting the wrong code when one is crossed, is
@@ -159,7 +159,7 @@ diverge.
 | Version | 0.9.5 | 0.3.0-alpha | 0.2.2-alpha | 0.3.1-alpha | 0.2.3-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
-| Resource caps | all three | all three | all three | all three | all three |
+| Resource caps | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) | all three; D-18 pending (DIV-3) |
 | OML read/write | complete | complete | complete | complete | complete |
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | `any` type | yes | yes | yes | yes | yes |
@@ -197,7 +197,19 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-None currently open.
+**DIV-3. No implementation enforces the alias expansion limit (D-18) yet.**
+D-18, D-19 and D-20 ([§2.4.1](02-document-model.md#241-bounding-alias-expansion))
+are new normative content as of **v0.18.0-beta**. As of that release no port
+enforces them, the Python reference included: all five vectors in
+`test-suite/formats-yaml/alias-expansion.json` — both rejection cases among
+them — are currently *accepted* by the reference, verified by running them,
+not assumed. This is a rollout gap, not a design defect and not a
+divergence any implementation intends to keep: it is the expected interval
+between a spec rule landing and the ports adopting it. Until a port adopts
+it, its runner reports those vectors as `fail` or `skip` citing this entry,
+never as `pass`. Tracked by omnist-spec#75 and the PR that introduced the
+rule. Remove this entry when every port enforces D-18; `DIV-1` and `DIV-2`
+are retired numbers and MUST NOT be reused.
 
 ## 9.5 Adding a sixth implementation
 
