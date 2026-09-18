@@ -17,6 +17,23 @@ Document model has no notion of it. This is lossless in value and lossy in
 structure sharing, which is the correct trade for a model whose whole point is
 the fully expanded edge list.
 
+**Which is exactly why the YAML reader MUST bound alias expansion.** Fully
+expanding every alias is what makes an anchor an amplifier: one written
+definition materializes again at each reference, and an anchor whose
+definition itself contains references multiplies. YAML's anchor/alias
+mechanism is the only such construct among the five formats this spec covers,
+so YAML is the only format on which
+[D-18](../02-document-model.md#241-bounding-alias-expansion) currently has
+anything to do — and a conformant YAML reader MUST enforce it. Compute each
+anchored definition's expansion factor `E` from the anchor/alias graph
+*before* expanding, reject the input with `document.limit.alias-expansion`
+when any `E` exceeds the configured maximum (reference default 50), and
+reject a self-referential anchor outright. §2.4.1 defines `E`, gives the
+reasoning behind the default, and explains why ordinary anchored YAML — merge
+keys, shared constants, anchor chains — sits far below it. Nothing here
+changes the value-fidelity rule above: an alias that is expanded still reads
+as an independent edge carrying the value.
+
 **YAML resolves some scalars on its own.** A bare ISO-8601-looking scalar
 resolves to a `date` or `datetime` with no schema involved. YAML is one of two
 formats whose native parser can do this without a schema — TOML is the

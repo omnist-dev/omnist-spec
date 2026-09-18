@@ -102,15 +102,30 @@ place.
 | `document.limit.depth` | Nesting exceeds the implementation's configured depth limit |
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
+| `document.limit.alias-expansion` | An anchored definition's expansion factor exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-**E-4.** These three `document.limit.*` codes correspond exactly to the three
-quantities in [§2.4](02-document-model.md#24-safety-limits) — no fourth, no
+**E-4.** These four `document.limit.*` codes correspond exactly to the four
+quantities in [§2.4](02-document-model.md#24-safety-limits) — no fifth, no
 tiers. **The codes are fixed; the threshold that triggers each one is not**
-— an implementation MAY configure any of the three limits to a value other
+— an implementation MAY configure any of the four limits to a value other
 than the reference default, per §2.4, but whatever value it configures,
 crossing it MUST raise exactly this code, never a different one and never
 silently.
+
+**E-4a.** The first three apply to every Document on every route into the
+model. `document.limit.alias-expansion` is different in reach, not in kind:
+per [D-18](02-document-model.md#241-bounding-alias-expansion) it is raised
+only by a codec for a format that has an anchor/reference mechanism — YAML
+alone among the five formats today — and cannot arise from a programmatic
+construction, which has no anchors to expand. An implementation whose codecs
+have no such mechanism will never raise it; an implementation whose codecs do
+MUST raise exactly this code when its configured maximum is crossed, and MUST
+NOT report an over-expansion as `document.limit.nodes` on the grounds that a
+large expansion would have hit the node cap eventually. Its `path` is a
+Document path, per E-11, and it is `$` — the violation is a property of the
+input's reference graph as a whole, detected before any Document structure
+exists to descend into.
 
 ### 8.3.3 `schema.*` — schema well-formedness
 

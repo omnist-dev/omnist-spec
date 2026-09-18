@@ -179,6 +179,16 @@ big-data ingestion engine.
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
+| Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, in a format that has an anchor/reference mechanism (D-18) |
+
+**The fourth row is conditional; the first three are not.** Depth, node count
+and integer digits bound every Document on every route into the model, so
+every implementation enforces all three. The expansion factor bounds one
+specific mechanism — a format construct that is written once and materializes
+many times — and is therefore a requirement on the codecs that have such a
+mechanism, not on implementations generally (D-18 below, and
+[§9.2](09-divergence-ledger.md#92-forbidden-variation)). A Document built
+programmatically from native objects has no anchors and is unaffected.
 
 The reference defaults are what the Python implementation uses today, and what
 a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
@@ -234,6 +244,81 @@ exactly one number, not two kept equal by discipline. The MUST here is aimed
 at an implementation whose architecture genuinely has two separate places a
 depth limit could be configured; where a single shared constant is the
 natural design, as in Python, the requirement is satisfied automatically.
+
+### 2.4.1 Bounding alias expansion
+
+The three limits above bound the *result*. None of them bounds the *ratio*
+between what an input writes and what reading it materializes. Some formats
+let one written construct be referred to elsewhere and materialize again at
+every reference — YAML's anchors and aliases are the case Omnist meets today
+— and nesting those references multiplies. An input well under the node cap
+can still expand by several hundred times, be accepted with no diagnostic,
+and be replayed indefinitely at the reader's expense.
+
+**D-18.** A codec for a format with an anchor/reference mechanism — one in
+which a construct may be defined once and referred to from elsewhere, so that
+a single definition materializes more than once — MUST enforce a finite
+maximum **expansion factor** on every anchored definition in its input, and
+MUST reject input that exceeds it with `document.limit.alias-expansion`
+([§8.3.2](08-conformance-and-errors.md#832-document-building-and-limits)).
+For an anchored definition `a`:
+
+- `W(a)` is the number of **value slots materialized** when `a` is expanded. A
+  container counts as one slot, a scalar leaf counts as one slot, and a
+  reference to an anchored definition `b` appearing inside `a` contributes
+  `W(b)` in full, recursively.
+- `S(a)` is the number of **value slots written in `a`'s own definition**,
+  where a reference appearing inside it counts as exactly **one** slot,
+  regardless of the size of what it points at.
+- `E(a) = W(a) / S(a)`.
+
+D-18 is violated, and the codec MUST reject the input, when `E(a)` exceeds
+the configured maximum for any anchored definition `a` in it. The reference
+default is **50**.
+
+- **D-19.** The check MUST be performed **before** the expansion is
+  materialized. `W` and `S` are computable in time linear in the size of the
+  input from the raw anchor/reference graph alone, without walking the
+  expanded tree, so a conformant implementation refuses an over-limit input
+  without ever paying for the expansion it describes. An implementation that
+  discovers the violation only after expanding does not satisfy this rule
+  even if it reports the right code.
+- **D-20.** An anchored definition that refers to itself, directly or through
+  a cycle of other definitions, has unbounded `W` and MUST be rejected under
+  this limit. A codec MUST NOT attempt to compute a finite `E` for it, and
+  MUST NOT materialize a cyclic or infinite structure instead.
+
+**Scope, stated explicitly.** D-18 binds a codec *that has such a mechanism*.
+It is not a fourth universal limit: §2.4's first three rows apply to every
+Document however it was built, and D-18 applies to a parse of a format with
+anchors. Of the five formats this spec covers, **only YAML has one today**
+([§ YAML](formats/yaml.md)); JSON, TOML, XML and OML have no construct that
+materializes more than once from a single written definition, so the rule is
+vacuous for them and they need not compute anything. It binds any future
+format or extension that adds one. Nothing in D-18 refers to input byte
+length, so there is no ratio-to-bytes to be undefined on a programmatic
+construction route, and no denominator to disagree about.
+
+**XML's entity expansion is the same class of problem and is already
+handled.** A DTD's internal entities have exactly this shape — the "billion
+laughs" attack is an XML attack first — but the data-XML profile in
+[§ XML](formats/xml.md) rejects a DTD outright, so the mechanism never
+reaches the Document builder. That is a stronger rule than this one, not a
+gap in it, and it is deliberately not restated here: one refusal per hazard.
+
+**On the reference default of 50.** It is calibrated against `E` as defined
+above, measured on real documents. Legitimate anchored YAML clusters far
+below it: a merge-key configuration of the `<<: *defaults` kind that
+docker-compose and GitLab CI use reads `E = 1.00` at every size tested, up to
+36 KB, because a merge key flattens into the referring mapping rather than
+nesting under it; anchor-to-anchor chains and scalar-constant reuse read at
+most 5.75. The amplifying shape — nested anchors, each level referring to the
+previous one several times — crosses into dangerous territory around
+`E = 170` and climbs steeply from there. 50 sits roughly 9× above the worst
+legitimate document measured and roughly 3.4× below the weakest dangerous
+one, and it fires well before the input grows large enough to reach the node
+cap. An implementation MAY configure a different value, subject to D-10 and
+D-11 like any other limit.
 
 ---
 

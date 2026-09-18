@@ -67,6 +67,14 @@ code, and never silently. The threshold number is permitted variation (§9.1);
 having no threshold at all, or reporting the wrong code when one is crossed, is
 not.
 
+§2.4's fourth limit, the alias expansion factor (D-18), is scoped rather than
+universal: it binds an implementation's codec for any format that has an
+anchor/reference mechanism, which today means YAML and nothing else. Where it
+applies it is as non-negotiable as the other three — a finite documented
+maximum, and `document.limit.alias-expansion` when it is crossed. Where no
+such mechanism exists there is nothing to enforce, and an implementation
+shipping no YAML codec is not diverging by not enforcing it.
+
 **Validation results.** Which documents a schema accepts, and where a rejection
 is located.
 

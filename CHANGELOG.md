@@ -3,6 +3,72 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.18.0-beta (2026-09-18)
+
+**Normative (minor)** — closes
+[#75](https://github.com/omnist-dev/omnist-spec/issues/75). **Every
+implementation shipping a YAML codec needs a change.** Nothing else does.
+
+- **New D-18: a codec for a format with an anchor/reference mechanism MUST
+  bound each anchored definition's expansion factor.** For an anchored
+  definition `a`, `W(a)` is the value slots materialized when `a` is expanded
+  (a container counts, a scalar leaf counts, a reference inside `a`
+  contributes its target's full `W`, recursively), `S(a)` is the slots
+  written in `a`'s own definition (a reference counting as exactly one,
+  whatever it points at), and `E(a) = W(a)/S(a)`. Input where any `E(a)`
+  exceeds the configured maximum MUST be rejected with the new
+  `document.limit.alias-expansion` code. Reference default **50**.
+  **D-19** requires the check *before* the expansion is materialized — `W`
+  and `S` come from the raw reference graph in time linear in input size, so
+  an over-limit input costs nothing to refuse. **D-20** rejects a
+  self-referential anchor, whose `W` is unbounded.
+- **Why this was needed.** §2.4 bounded the *result* — depth, node count,
+  integer digits — and nothing bounded the *ratio* between what an input
+  writes and what reading it materializes. A sub-1 KB YAML document of
+  nested anchors lands under the million-node cap, is accepted with no
+  diagnostic at roughly 600× amplification, and can be replayed
+  indefinitely. No limit is crossed, so no implementation was
+  non-conformant while it happened.
+- **The threshold is calibrated against `E` itself, measured.** This is the
+  third attempt at #75 and the first that measures the quantity it
+  specifies; both earlier drafts were withdrawn for calibrating against
+  input bytes or against edge counts rather than the thing being limited.
+  Measured against the reference: a `<<: *defaults` merge-key config of the
+  docker-compose/GitLab-CI kind reads **`E = 1.00` at every size tested, up
+  to 36 KB** (a merge key flattens into the referring mapping instead of
+  nesting a copy under it), the worst legitimate document measured — anchor
+  chains, scalar-constant reuse — reads **5.75**, and the amplifying shape
+  turns dangerous around **`E = 170`**. 50 is ~9× above the worst legitimate
+  reading and ~3.4× below the weakest dangerous one.
+- **The scope is conditional, and stated as such in three places.** D-18 is
+  **not** a fourth universal limit: §2.4's first three rows bind every
+  Document however it was built, D-18 binds a *codec that has* an
+  anchor/reference mechanism. Among the five formats this spec covers, only
+  YAML has one today; a Document built programmatically has no anchors and
+  no byte count, so neither of the failure modes that sank the previous
+  drafts (division by zero, route ambiguity) exists here. §9.2 says the same
+  in its own words, and E-4a pins the reach of the new code.
+- **XML's entity expansion is deliberately not re-handled.** It is the same
+  hazard — "billion laughs" is an XML attack first — but the data-XML
+  profile already rejects a DTD outright, which is stricter than this bound.
+  §2.4.1 cross-references it rather than adding a second mechanism.
+- **`docs/formats/yaml.md` now states the read-side obligation.** It
+  previously treated aliases purely as a value-fidelity question — two
+  independent edges both carrying the value — which is exactly the property
+  that makes an anchor an amplifier, and it never said so.
+- **Five vectors** in `test-suite/formats-yaml/alias-expansion.json`: a
+  nested fan-out rejected at `E = 68.20` against a declared 50, a merge-key
+  config accepted at `E = 1.00`, an anchor-to-anchor chain accepted at
+  `E = 1.67`, and an at-limit/one-past pair on byte-identical input pinning
+  that D-18 rejects when `E` *exceeds* the maximum, not when it reaches it.
+  The three accepted documents were captured live from the reference. The
+  rejected one is accepted by every implementation today, by design — that
+  is the defect. 230 vectors total.
+- **Port impact is unverified and no port issues are filed yet.** YAML
+  libraries differ substantially in native alias handling, so which ports
+  need what follows from a per-port check against D-18 now that the spec
+  position is settled.
+
 ## v0.17.0-beta (2026-09-14)
 
 **Normative (minor)** — closes
