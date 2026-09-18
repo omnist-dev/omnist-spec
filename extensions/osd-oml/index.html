@@ -1,0 +1,2270 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/extensions/osd-oml/">
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>OSD-OML - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#osd-oml" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              OSD-OML
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-document-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04-oml-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06-schema-algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07-codecs-and-deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08-conformance-and-errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09-divergence-ledger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Extensions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSD-OML
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSD-OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#e1-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.1 Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e2-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.2 Motivation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e3-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.3 Terminology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e4-framing-and-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.4 Framing and scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e5-formal-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.5 Formal definition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e6-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.6 Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="E.6 Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#top-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Top level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#record-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        record-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#field-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        field-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        type-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference resolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cardinality-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cardinality-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Closure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-path-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error path assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e6a-illustrative-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.6a Illustrative examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e7-architecture-and-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.7 Architecture and construction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e8-canonical-schema_to_document-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.8 Canonical schema_to_document output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e9-error-code-recap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.9 Error code recap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e10-validation-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.10 Validation contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e11-api-cli-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.11 API / CLI surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e12-worked-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.12 Worked example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e13-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.13 Non-goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e14-conformance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.14 Conformance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#e1-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.1 Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e2-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.2 Motivation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e3-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.3 Terminology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e4-framing-and-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.4 Framing and scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e5-formal-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.5 Formal definition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e6-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.6 Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="E.6 Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#top-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Top level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#record-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        record-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#field-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        field-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        type-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference resolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cardinality-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cardinality-node
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Closure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-path-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error path assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e6a-illustrative-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.6a Illustrative examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e7-architecture-and-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.7 Architecture and construction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e8-canonical-schema_to_document-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.8 Canonical schema_to_document output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e9-error-code-recap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.9 Error code recap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e10-validation-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.10 Validation contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e11-api-cli-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.11 API / CLI surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e12-worked-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.12 Worked example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e13-non-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.13 Non-goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e14-conformance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E.14 Conformance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="osd-oml">OSD-OML<a class="headerlink" href="#osd-oml" title="Permanent link">&para;</a></h1>
+<p><strong>Status: normative.</strong> Version 1.1 of this extension, versioned
+independently of Core per
+<a href="../overview/#conformance-and-versioning">Extensions: Conformance and versioning</a>.
+Depends on Core only.</p>
+<p><strong>v1.1 (2026-09-13):</strong> E.5 through E.9 rewritten from documentation-style
+prose into a closed formal grammar plus numbered, exhaustive rules —
+matching the style <a href="../../03-schema-model/#33-formal-definition">§3.3</a>/<a href="../../05-osd-grammar/">§5</a>
+already hold themselves to. No previously-legal input becomes illegal and
+no previously-illegal input becomes legal for anything already covered by
+an existing conformance vector; this closes gaps that had no vector at
+all (a missing error code for <code>nullable: false</code>, no rule for <code>type.kind</code>
+outside its three legal values, no path-kind assignment for the codes
+unique to this extension, and a new rule — R-3a, <code>schema.invalid-name</code> —
+closing a real hole where a <code>Schema</code> constructible via OSD-OML had no OSD
+text representation at all). See <code>omnist-spec</code>'s own <code>CHANGELOG.md</code> for
+the full list.</p>
+<h2 id="e1-summary">E.1 Summary<a class="headerlink" href="#e1-summary" title="Permanent link">&para;</a></h2>
+<p>Schema has one native textual surface: OSD (<a href="../../05-osd-grammar/">chapter 5</a>).
+This extension adds a second, peer surface: <strong>OSD-OML</strong>, a Document-shaped
+representation of a Schema, written using OML's existing, unmodified grammar
+and machinery (<a href="../../04-oml-grammar/">chapter 4</a>). OML serialization, storage,
+and any future binary encoding of Schema fall out of machinery that already
+exists for Documents generally — none of them need a separate schema-specific
+design.</p>
+<h2 id="e2-motivation">E.2 Motivation<a class="headerlink" href="#e2-motivation" title="Permanent link">&para;</a></h2>
+<p>Three concrete needs converge on the same underlying gap: a future "bundle"
+format embedding a schema alongside conforming documents; a future document
+store that wants to persist schemas the same way it persists document data,
+as OML, rather than inventing a separate schema-storage format; and a future
+binary OML encoding, which a Schema should be serializable into without a
+parallel, schema-specific binary design.</p>
+<p>All three need the same thing: <strong>Schema needs a Document-shaped
+representation, not just a text syntax.</strong> OML's reader/writer only ever
+operate on Documents; before this extension there is no path from a <code>Schema</code>
+object into that machinery at all.</p>
+<h2 id="e3-terminology">E.3 Terminology<a class="headerlink" href="#e3-terminology" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>OSD</strong> keeps its existing meaning everywhere in the spec — the native,
+  human-authored text grammar (chapter 5). This extension changes nothing
+  about OSD text.</li>
+<li><strong>OSD-OML</strong> is the new surface: the Document-shaped representation of a
+  Schema, written using OML's existing, unmodified grammar.</li>
+<li>OSD and OSD-OML are <strong>peers</strong>, not a base format and a derived variant — the
+  same relationship JSON and YAML have to Document. Neither is "the real one."
+  Both are legitimately "an Omnist Schema Definition," in different syntax.</li>
+<li>File extension: <strong><code>.oml</code></strong>, not a distinct extension. An OSD-OML file <em>is</em>
+  an ordinary OML file, parsed and written with the exact same generic reader
+  and writer as any other OML document (§E.7).</li>
+<li><strong>Cross-reference disambiguation.</strong> Rules genuinely about OSD <em>syntax</em>
+  (tokenization, grammar productions) remain exactly as OSD-text-specific as
+  they already are — OSD-OML has no grammar of its own; it inherits OML's
+  grammar wholesale. Rules about Schema <em>well-formedness</em> (duplicate root,
+  invalid cardinality, unresolved reference, etc.) are already scoped to
+  Schema, not to OSD text specifically — visible in the existing <code>schema.*</code>
+  error-code prefix, as opposed to <code>parse.*</code>. Those rules already apply to
+  both surfaces with no restatement needed.</li>
+</ul>
+<h2 id="e4-framing-and-scope">E.4 Framing and scope<a class="headerlink" href="#e4-framing-and-scope" title="Permanent link">&para;</a></h2>
+<p>The target is <strong>Schema ↔ Document ↔ OML text</strong>, not "OSD gets an OML format."
+The Document-shaped intermediate is unavoidable — OML's reader/writer only
+ever operate on Documents, never on <code>Schema</code> objects directly.</p>
+<p>Scope is deliberately narrow: only OML matters as a text surface for this
+extension. JSON/YAML/TOML/XML serialization of Schema is out of scope — the
+Document-shaped form would technically support it later via the existing
+codecs, but that is not specified here.</p>
+<p>Governing principle for every choice below: <strong>explicit and consistent beats
+concise.</strong> This representation is for lossless, programmatic round-tripping,
+not for humans to hand-author — OSD text remains the recommended surface for
+hand authoring.</p>
+<h2 id="e5-formal-definition">E.5 Formal definition<a class="headerlink" href="#e5-formal-definition" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>schema-doc    = { record: record-node*, root: String }   ; CLOSED: only these labels
+record-node   = { name: String, field: field-node* }      ; CLOSED
+field-node    = { label: String, type: type-node,
+                   cardinality: cardinality-node? }        ; CLOSED
+type-node     = scalar-node | ref-node | any-node
+scalar-node   = { kind: "scalar", name: scalar-name,
+                   nullable: True? }                       ; CLOSED
+ref-node      = { kind: "ref", name: String }               ; CLOSED
+any-node      = { kind: "any" }                              ; CLOSED
+scalar-name   = "string" | "integer" | "number" | "boolean"
+              | "date" | "time" | "datetime"
+cardinality-node = { min: Integer?, max: Integer? }          ; CLOSED
+</code></pre></div>
+<p>Each <code>; CLOSED</code> node has exactly the keys shown — no other key is legal on
+that node, regardless of <code>kind</code>. This is what makes <code>type-node</code>'s three
+branches mutually exclusive by construction rather than by convention: for
+example, <code>nullable</code> simply is not part of <code>ref-node</code>'s or <code>any-node</code>'s
+grammar, so it can never be a semantic afterthought on those branches (see
+R-14, R-15) — it is a structural fact about the shape, the same way <code>str</code>
+and <code>int</code> are different Python types rather than one type with a
+"which-one" flag.</p>
+<p><code>type-node</code> is always a node, never a bare literal — including
+<code>kind: "any"</code>, even though <code>any</code> has no variability to attach to it. This
+favors uniformity (every field's <code>type</code> is always a node; nothing
+downstream branches on "is this a string or an object") over the shorter
+bare-literal alternative <code>any</code> alone would otherwise allow.</p>
+<p>Repeated <code>record</code> and <code>field</code> OML labels use ordinary OML array-sugar
+(<a href="../../04-oml-grammar/">§4.3.1</a>) — no special syntax.</p>
+<h2 id="e6-rules">E.6 Rules<a class="headerlink" href="#e6-rules" title="Permanent link">&para;</a></h2>
+<p>Numbered for direct citation, matching
+<a href="../../03-schema-model/#33-formal-definition">§3.3</a>'s S-1..S-8 and
+<a href="../../05-osd-grammar/#55-cardinality">§5.5</a>'s conventions. Each rule states
+its violation code. <strong>This list is authoritative and closed: a conforming
+implementation's validator has exactly these checks, for input that
+already matches E.5's grammar shape — no more, no fewer</strong>, except where a
+rule explicitly notes it is inherited from a Core rule not restated here
+in full (see "Error path assignment" below).</p>
+<h3 id="top-level">Top level<a class="headerlink" href="#top-level" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-1.</strong> <code>record</code> MUST be <code>[0,]</code>; <code>root</code> MUST be exactly <code>[1,1]</code>. Missing
+  <code>root</code> → <code>schema.no-root</code>. More than one <code>root</code> → <code>schema.duplicate-root</code>.</li>
+<li><strong>R-2.</strong> <code>root</code>'s value MUST be <code>string</code>-kind and MUST resolve to a
+  declared <code>record.name</code> (R-16). Unresolved (a dangling root reference) →
+  <code>schema.unknown-type</code>, <strong>path <code>$</code></strong> — this is
+  <a href="../../08-conformance-and-errors/#84-paths">§8.4</a>'s existing whole-schema
+  fallback for exactly this case, unchanged from OSD text; §8.4.1 preserves
+  it as an explicit exception to its own two rules. Not <code>string</code>-kind →
+  <code>schema.invalid-type</code>, which is new to OSD-OML and takes the Document path
+  §8.4.1 assigns it.</li>
+</ul>
+<h3 id="record-node"><code>record-node</code><a class="headerlink" href="#record-node" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-3.</strong> <code>name</code> MUST be <code>[1,1]</code>, <code>string</code>-kind → <code>schema.missing-key</code> if
+  absent, <code>schema.invalid-type</code> if present but not <code>string</code>-kind.</li>
+<li><strong>R-3a.</strong> <code>name</code> MUST satisfy
+  <a href="../../03-schema-model/#33-formal-definition">§3.3</a> S-8 (the <code>Name</code>
+  domain, <code>[A-Za-z_][A-Za-z0-9_]*</code>) → <code>schema.invalid-name</code> if it does not.
+  This exists because OSD text's own tokenizer makes an out-of-domain
+  record name unwritable — it can't even be parsed, let alone constructed
+  — while OSD-OML's <code>name</code> is a plain string with no such constraint. Without
+  this rule, <code>schema_from_document</code> could construct a <code>Schema</code> that
+  <code>write_schema</code> has no way to represent as OSD text at all.</li>
+<li><strong>R-4.</strong> <code>name</code> MUST NOT equal any <code>scalar-name</code> keyword (R-12) or <code>any</code>
+  → <code>schema.reserved-name</code>. <strong>Comparison is exact and case-sensitive</strong>, per
+  <a href="../../03-schema-model/#33-formal-definition">§3.3</a> S-3.</li>
+<li><strong>R-5.</strong> <code>name</code> MUST be unique across all <code>record-node</code>s in the document
+  → <code>schema.duplicate-record</code>.</li>
+<li><strong>R-6.</strong> <code>field</code> MAY be <code>[0,]</code> (empty records are legal).</li>
+</ul>
+<h3 id="field-node"><code>field-node</code><a class="headerlink" href="#field-node" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-7.</strong> <code>label</code> MUST be <code>[1,1]</code>, <code>string</code>-kind, non-empty, and MUST NOT
+  contain <code>[</code> or <code>]</code> → <code>schema.missing-key</code> / <code>schema.invalid-type</code> (same
+  pattern as R-3) / <code>schema.empty-label</code> / <code>schema.bracket-in-label</code>
+  respectively. (Unlike R-3a, <code>label</code> has no identifier-domain restriction
+  — a field label is a <em>value</em>, per <a href="../../05-osd-grammar/#52-the-quoting-rule">§5.2</a>'s
+  identifier-vs-value distinction, and OSD text already allows arbitrary
+  quoted-string labels; there is no asymmetry here to close.)</li>
+<li><strong>R-8.</strong> <code>label</code> MUST be unique within its enclosing <code>record-node</code> →
+  <code>schema.duplicate-field</code>.</li>
+<li><strong>R-9.</strong> <code>type</code> MUST be <code>[1,1]</code> → <code>schema.missing-key</code> if absent.</li>
+<li><strong>R-10.</strong> <code>cardinality</code> MAY be <code>[0,1]</code>; absent and <code>{}</code> are both legal
+  and both mean the default (E.8 states which one a canonical <em>writer</em>
+  emits).</li>
+</ul>
+<h3 id="type-node"><code>type-node</code><a class="headerlink" href="#type-node" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-11.</strong> <code>kind</code> MUST be <code>[1,1]</code>, <code>string</code>-kind, and MUST be exactly one
+  of <code>scalar</code> / <code>ref</code> / <code>any</code> → <code>schema.missing-key</code> / <code>schema.invalid-type</code>
+  (wrong Document value-kind, or a <code>string</code>-kind value outside the
+  three-value set — both cases reuse the same code as R-3's "right key,
+  wrong content" pattern).</li>
+<li><strong>R-12.</strong> (<code>kind: "scalar"</code>) <code>name</code> MUST be <code>[1,1]</code>, <code>string</code>-kind, and
+  MUST be one of the seven <code>scalar-name</code> keywords → <code>schema.missing-key</code> /
+  <code>schema.invalid-type</code> / <code>schema.unknown-type</code> respectively.</li>
+<li><strong>R-13.</strong> (<code>kind: "scalar"</code>) <code>nullable</code>, if present, MUST be the literal
+  <code>true</code> → <code>schema.invalid-type</code> if present as <code>false</code> (reuses R-11's
+  "right key, wrong content" code; there was previously no stated
+  violation code for this case at all).</li>
+<li><strong>R-14.</strong> (<code>kind: "ref"</code>) <code>name</code> MUST be <code>[1,1]</code>, <code>string</code>-kind, and MUST
+  resolve to a declared <code>record.name</code> (R-16) → <code>schema.missing-key</code> /
+  <code>schema.invalid-type</code> / <code>schema.unknown-type</code>. <code>nullable</code> is not a legal
+  key in this branch (E.5) → <code>schema.unknown-key</code> if present — this is how
+  <a href="../../03-schema-model/#33-formal-definition">§3.3</a> S-7 (<code>nullable</code> only
+  on a <code>Scalar</code>) is enforced for OSD-OML: structurally, via the grammar,
+  not as a separate semantic check layered on top.</li>
+<li><strong>R-15.</strong> (<code>kind: "any"</code>) no keys beyond <code>kind</code> are legal →
+  <code>schema.unknown-key</code> if <code>name</code> or <code>nullable</code> is present.</li>
+</ul>
+<h3 id="reference-resolution">Reference resolution<a class="headerlink" href="#reference-resolution" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-16.</strong> A <code>ref-node</code>'s <code>name</code> is resolved by exact, case-sensitive
+  string lookup against the set of all declared <code>record.name</code>s in the
+  document, collected independently of edge order. <strong>Forward references
+  and mutual recursion are legal</strong> — this mirrors
+  <a href="../../05-osd-grammar/#56-types">§5.6</a>'s "resolution is by lookup in the
+  schema's environment" guarantee for OSD text exactly; OSD-OML does not
+  relax or tighten it.</li>
+</ul>
+<h3 id="cardinality-node"><code>cardinality-node</code><a class="headerlink" href="#cardinality-node" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-17.</strong> <code>min</code>, if present, MUST be <code>integer</code>-kind and non-negative →
+  <code>schema.non-integer-cardinality</code> / <code>schema.invalid-cardinality</code>.</li>
+<li><strong>R-18.</strong> <code>max</code>, if present, MUST be <code>integer</code>-kind, non-negative, and
+  <code>&gt;= min</code> (using <code>min</code>'s effective value, 0 if absent) →
+  <code>schema.non-integer-cardinality</code> / <code>schema.invalid-cardinality</code>.</li>
+<li><strong>R-19.</strong> <code>{ min: 0, max: 0 }</code> is illegal, the same reasoning as OSD
+  text's <code>[0,0]</code> ban (<a href="../../05-osd-grammar/#55-cardinality">§5.5</a>): a field
+  that can never appear is indistinguishable from an undeclared one →
+  <code>schema.invalid-cardinality</code>.</li>
+</ul>
+<h3 id="closure">Closure<a class="headerlink" href="#closure" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>R-20.</strong> Any key present on a node that is not listed in that node's
+  E.5 grammar branch → <code>schema.unknown-key</code>. This single rule is what
+  makes E.5's <code>; CLOSED</code> annotations enforceable, and is why R-1 through
+  R-19 never separately restate "no other keys are allowed."</li>
+</ul>
+<h3 id="error-path-assignment">Error path assignment<a class="headerlink" href="#error-path-assignment" title="Permanent link">&para;</a></h3>
+<p>Path-kind assignment is <strong>not</strong> an OSD-OML rule and is not restated here.
+It is Core's, in
+<a href="../../08-conformance-and-errors/#841-which-kind-each-schema-code-uses">§8.4.1</a>:
+<code>schema.missing-key</code>, <code>schema.invalid-type</code>, <code>schema.unknown-key</code> and
+<code>schema.invalid-name</code> use a Document path; every other <code>schema.*</code> code uses a
+Schema path; the whole-schema cases, including R-2's dangling root, keep <code>$</code>.</p>
+<ul>
+<li><strong>R-21.</strong> A diagnostic raised by any rule in this section MUST carry the
+  path kind §8.4.1 assigns to its code.</li>
+<li><strong>R-22.</strong> <em>Retired.</em> This number previously carried the Schema-path half of
+  the assignment, now stated in §8.4.1. The number is kept rather than reused
+  so that existing citations to R-22 resolve to an explanation instead of to
+  whatever rule would otherwise have inherited the slot — this list is
+  numbered for citation, so a vacated number is a hazard, not a tidy-up.</li>
+</ul>
+<p>The reason those four codes needed an explicit assignment at all is a
+property of this extension's input shape: OSD text's grammar establishes a
+record or field's identity before any check can run, so a Schema path was
+always the only buildable option there. OSD-OML's Document-shaped input has
+no such guarantee — a <code>record-node</code> missing its <code>name</code> has no <code>RecordName</code> to
+build a Schema path from. The rule is Core's because any future surface with
+the same property inherits the same problem.</p>
+<p>Every code cited above is defined in
+<a href="../../08-conformance-and-errors/#833-schema-schema-well-formedness">§8.3.3</a>
+as a general Schema-construction rule, not something owned by this
+extension — they apply identically regardless of which surface (OSD text
+or OSD-OML) fed the shared validator. <code>schema.missing-key</code>,
+<code>schema.invalid-type</code>, <code>schema.unknown-key</code>, and <code>schema.invalid-name</code> have
+no OSD-text analog: OSD's own grammar makes the first three structurally
+impossible to reach (e.g. a field with no type, or a stray key, cannot be
+written in OSD text at all), and the fourth is impossible for a different
+reason — OSD's <code>name</code> token cannot tokenize outside its own domain in the
+first place. OSD-OML's generic OML input is what makes all four checks
+reachable for the first time, not a rule specific to this extension.</p>
+<h2 id="e6a-illustrative-examples">E.6a Illustrative examples<a class="headerlink" href="#e6a-illustrative-examples" title="Permanent link">&para;</a></h2>
+<p>These exist to make E.6's rules easy to check by eye, not to define
+anything — if an example and a rule ever disagree, the rule wins, and
+that's a bug in the example.</p>
+<p><div class="highlight"><pre><span></span><code>record: {
+  name: "Address"
+  field: { label: "street", type: { kind: "scalar", name: "string" } }
+  field: { label: "city", type: { kind: "scalar", name: "string" } }
+}
+record: {
+  name: "Person"
+  field: { label: "name", type: { kind: "scalar", name: "string" } }
+  field: {
+    label: "nickname"
+    type: { kind: "scalar", name: "string", nullable: true }
+  }
+  field: { label: "address", type: { kind: "ref", name: "Address" } }
+  field: {
+    label: "tags"
+    cardinality: { min: 0 }
+    type: { kind: "scalar", name: "string" }
+  }
+  field: {
+    label: "scores"
+    cardinality: { min: 1, max: 5 }
+    type: { kind: "scalar", name: "number" }
+  }
+  field: { label: "payload", type: { kind: "any" } }
+}
+root: "Person"
+</code></pre></div>
+A legal, unremarkable schema exercising every branch in E.5's grammar at
+once — worth reading top to bottom once before the boundary cases below.</p>
+<p><strong>R-3a (identifier domain).</strong> <code>record: { name: "My Record!" }</code> — illegal
+→ <code>schema.invalid-name</code> (R-3a) — <code>"My Record!"</code> is a perfectly good OML
+string but not a legal <code>Name</code> (§3.3 S-8): OSD text has no way to tokenize
+it as a record name at all. <code>record: { name: "MyRecord" }</code> is legal.</p>
+<p><strong>R-4 (reserved name).</strong> <code>record: { name: "string" }</code> — illegal →
+<code>schema.reserved-name</code>, exact match against the keyword. <code>record: { name: "String" }</code>
+(capital S) is a case-mismatch — whether this collides is not yet settled
+even for OSD text (§3.3 S-3's comparison rule is newly stated but this
+specific boundary was not part of what was verified); no example is given
+for it here until that's confirmed, rather than asserting an answer.</p>
+<p><strong>R-11 (<code>kind</code> outside the three-value set).</strong>
+<div class="highlight"><pre><span></span><code>type: { kind: "text", name: "string" }
+</code></pre></div>
+illegal → <code>schema.invalid-type</code> — <code>"text"</code> is <code>string</code>-kind but not one of
+<code>scalar</code>/<code>ref</code>/<code>any</code>.</p>
+<p><strong>R-13 (<code>nullable: false</code> explicitly present).</strong>
+<div class="highlight"><pre><span></span><code>type: { kind: "scalar", name: "string", nullable: false }
+</code></pre></div>
+illegal → <code>schema.invalid-type</code>. Compare to the legal non-nullable form,
+which omits the key entirely: <code>type: { kind: "scalar", name: "string" }</code>.</p>
+<p><strong>R-14 (<code>nullable</code> not legal on <code>ref-node</code>).</strong>
+<div class="highlight"><pre><span></span><code>type: { kind: "ref", name: "Address", nullable: true }
+</code></pre></div>
+illegal → <code>schema.unknown-key</code> — <code>nullable</code> is not in <code>ref-node</code>'s closed
+key set (E.5), regardless of its value. This is the structural enforcement
+of Core's S-7.</p>
+<p><strong>R-16 (forward reference, legal).</strong> A <code>record: { name: "Person", field: [{ label: "address", type: { kind: "ref", name: "Address" } }] }</code>
+declared <em>before</em> <code>record: { name: "Address", ... }</code> is legal — R-16
+collects all record names before resolving any <code>ref</code>, so declaration order
+carries no meaning.</p>
+<p><strong>R-19 (<code>{min: 0, max: 0}</code> illegal).</strong>
+<div class="highlight"><pre><span></span><code>field: { label: "x", cardinality: { min: 0, max: 0 }, type: { kind: "scalar", name: "string" } }
+</code></pre></div>
+illegal → <code>schema.invalid-cardinality</code>.</p>
+<p><strong>R-20 (unknown key, general case).</strong>
+<div class="highlight"><pre><span></span><code>record: { name: "Person", description: "a person", field: [] }
+</code></pre></div>
+illegal → <code>schema.unknown-key</code> — <code>description</code> is not in <code>record-node</code>'s
+closed key set (E.5), even though it's a plausible-looking addition.</p>
+<p><strong>E.8 (canonical omission, general case).</strong>
+<code>field: { label: "name", type: { kind: "scalar", name: "string" } }</code> is
+the canonical form for a required, non-nullable <code>string</code> field — no
+<code>cardinality</code> edge, not <code>cardinality: {}</code>.</p>
+<p>The full end-to-end example (one complete schema, both OSD and OSD-OML
+form, plus the round-trip requirement) is in E.12.</p>
+<h2 id="e7-architecture-and-construction">E.7 Architecture and construction<a class="headerlink" href="#e7-architecture-and-construction" title="Permanent link">&para;</a></h2>
+<p>A Schema-Document MUST be parsed and written with the exact same generic
+<code>read_oml</code>/<code>write_oml</code> used for any other Document — implementations MUST
+NOT introduce a schema-aware mode into the OML layer. All schema-specific
+semantics live in a separate conversion layer above that, mirroring OSD
+text's own architecture: a grammar produces a parse tree, and a separate
+stage-2 pass does the semantic checks (<a href="../../05-osd-grammar/">§5.1</a>'s
+two-stage model). This extension swaps "OSD grammar" for "generic OML
+parsing" as stage 1 and reuses the same stage 2 — E.6's rules <em>are</em> that
+shared stage 2, applied to generic OML input instead of an OSD parse tree,
+with no separate meta-schema mechanism of its own. A free consequence:
+Schema-Documents automatically inherit every existing Document-level
+safety limit (max depth, max node count, integer digit caps,
+<a href="../../02-document-model/">§2.4</a>) — implementations need not build
+anything new for this.</p>
+<p><strong>Construction algorithm (non-normative).</strong> A reference shape for
+<code>schema_from_document</code>, not a binding procedure — per
+<a href="#e10-validation-contract">§E.10</a>'s "internal structure is permitted
+variation" principle, extended explicitly to construction order, not just
+error-reporting order. Provided because, unlike OSD text (where the
+grammar's own parse order constrains implementations toward a similar
+shape for free), a Document's edges carry no inherent evaluation order, so
+there is nothing to fall back on without stating something explicitly.</p>
+<ol>
+<li>Validate the document's shape against E.5's grammar and E.6's rules,
+   independent of any particular traversal order (R-20's closure check and
+   every per-node rule can each be evaluated locally).</li>
+<li>Collect every declared <code>record.name</code> into an environment (R-16) —
+   before resolving any <code>ref-node</code>, not interleaved with step 3.</li>
+<li>For each <code>record-node</code>, construct its <code>Record</code> (in the sense of
+   <a href="../../03-schema-model/#33-formal-definition">§3.3</a>), resolving each
+   <code>field</code>'s <code>type</code> against the environment built in step 2.</li>
+<li>Resolve <code>root</code> against the same environment.</li>
+<li>Construct the <code>Schema</code> per
+   <a href="../../03-schema-model/#33-formal-definition">§3.3</a>.</li>
+</ol>
+<p>Per <a href="#e10-validation-contract">§E.10</a>, failure at any step MUST produce no
+partial <code>Schema</code> (atomicity) and MAY report any one applicable error
+(fail-fast, no mandated cross-implementation order for which error
+surfaces first when several exist).</p>
+<p><strong>Record/field order is not semantically significant</strong>, the same as OSD
+text. Canonical serialization order for every Schema-producing operation —
+including <code>schema_from_document</code>/<code>parse_schema_oml</code> — follows
+<a href="../../03-schema-model/#33-formal-definition">§3.3's canonical serialization order</a>
+invariant unchanged; this extension states no order rule of its own.
+Consequence: raw Document equality is <em>stricter</em> than schema equivalence —
+comparing two Schema-Documents for real requires materializing to <code>Schema</code>
+first, not diffing the Documents directly.</p>
+<h2 id="e8-canonical-schema_to_document-output">E.8 Canonical <code>schema_to_document</code> output<a class="headerlink" href="#e8-canonical-schema_to_document-output" title="Permanent link">&para;</a></h2>
+<p>A canonical writer MUST follow one general rule instead of a per-field
+special case: <strong>omit any key whose value equals that key's default; MUST
+NOT emit the default explicitly.</strong> This was previously only tested at the
+level of individual vectors (e.g.
+<code>extensions-osd-oml/write/exactly-one-cardinality-omits-the-edge</code>,
+<code>extensions-osd-oml/write/any-type-has-no-name-edge</code>) without ever being
+stated as the general rule those vectors were both instances of. Stating
+it once here subsumes every specific case:</p>
+<ul>
+<li><code>nullable: true</code> is the only legal explicit value (E.5); its default is
+  effectively "absent" — never emitted, full stop.</li>
+<li><code>cardinality</code> at <code>{min: 1, max: 1}</code> (exactly-one, the default) MUST be
+  omitted entirely — MUST NOT be emitted as <code>{}</code>.</li>
+<li><code>type.name</code> on an <code>any-node</code> — not applicable; E.5's <code>any-node</code> grammar
+  branch has no <code>name</code> key to omit or emit in the first place.</li>
+</ul>
+<p>Key order within a node is not semantically significant (no rule assigns
+meaning to it) — a canonical writer MAY use any fixed, deterministic
+order, but <a href="../../03-schema-model/#33-formal-definition">§3.3</a>'s five order
+principles still govern the order of <em>record</em> and <em>field</em> edges
+themselves (E.7, unchanged from before this rewrite).</p>
+<h2 id="e9-error-code-recap">E.9 Error code recap<a class="headerlink" href="#e9-error-code-recap" title="Permanent link">&para;</a></h2>
+<p>A per-code index into E.6's rules, for "what can go wrong" lookup. <strong>This
+table is derived from E.6, not an independent source</strong> — if it and a rule
+ever disagree, the rule wins and the table has a bug.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Fired by</th>
+<th>Path kind (Sec8.4.1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema.no-root</code></td>
+<td>R-1</td>
+<td>Schema (<code>$</code> fallback)</td>
+</tr>
+<tr>
+<td><code>schema.duplicate-root</code></td>
+<td>R-1</td>
+<td>Schema (<code>$</code> fallback)</td>
+</tr>
+<tr>
+<td><code>schema.missing-key</code></td>
+<td>R-3, R-7, R-9, R-12, R-14</td>
+<td>Document (Sec8.4.1)</td>
+</tr>
+<tr>
+<td><code>schema.invalid-type</code></td>
+<td>R-2, R-3, R-7, R-11, R-12, R-13, R-14</td>
+<td>Document (Sec8.4.1)</td>
+</tr>
+<tr>
+<td><code>schema.invalid-name</code></td>
+<td>R-3a</td>
+<td>Document (Sec8.4.1)</td>
+</tr>
+<tr>
+<td><code>schema.unknown-type</code></td>
+<td>R-2 (dangling root, path <code>$</code>), R-12, R-14</td>
+<td>R-2: <code>$</code> / R-12, R-14: Schema</td>
+</tr>
+<tr>
+<td><code>schema.reserved-name</code></td>
+<td>R-4</td>
+<td>Schema</td>
+</tr>
+<tr>
+<td><code>schema.duplicate-record</code></td>
+<td>R-5</td>
+<td>Schema</td>
+</tr>
+<tr>
+<td><code>schema.empty-label</code></td>
+<td>R-7</td>
+<td>Schema</td>
+</tr>
+<tr>
+<td><code>schema.bracket-in-label</code></td>
+<td>R-7</td>
+<td>Schema</td>
+</tr>
+<tr>
+<td><code>schema.duplicate-field</code></td>
+<td>R-8</td>
+<td>Schema</td>
+</tr>
+<tr>
+<td><code>schema.unknown-key</code></td>
+<td>R-14, R-15, R-20</td>
+<td>Document (Sec8.4.1)</td>
+</tr>
+<tr>
+<td><code>schema.non-integer-cardinality</code></td>
+<td>R-17, R-18</td>
+<td>Schema</td>
+</tr>
+<tr>
+<td><code>schema.invalid-cardinality</code></td>
+<td>R-17, R-18, R-19</td>
+<td>Schema</td>
+</tr>
+</tbody>
+</table>
+<h2 id="e10-validation-contract">E.10 Validation contract<a class="headerlink" href="#e10-validation-contract" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Atomic.</strong> Converting a Schema-Document MUST either succeed with a fully
+  valid <code>Schema</code>, or fail and produce nothing — never a partial <code>Schema</code>.
+  This mirrors <code>parse_schema</code>'s existing contract for OSD text.</li>
+<li><strong>Fail-fast</strong>, not collect-all-errors. Most checks are causally dependent
+  on each other (a duplicate-name failure makes downstream
+  reference-resolution checks meaningless), and Schema-Documents are
+  expected to be machine-generated, so one bug class is likely to repeat
+  across many fields — fixing the generator fixes all instances at once.</li>
+<li><strong>No fixed cross-implementation check order is required</strong>, despite
+  fail-fast. Conformance is defined by test policy, not by mandating
+  implementation order: a vector with exactly one error asserts the exact
+  <code>code</code>/<code>path</code>; a vector with multiple simultaneous errors (if one is ever
+  added) asserts only <code>ok: false</code>, nothing about which error surfaced
+  first.</li>
+<li>"Validated in the same manner" across implementations means the same
+  <em>externally observable</em> contract (check list, codes/paths for
+  single-error cases, atomicity, the multi-error looseness above) — <strong>not</strong>
+  identical internal architecture. Internal structure (two-stage vs.
+  one-pass, etc.) is legitimate implementation-surface variation, the same
+  category as method names and builder patterns already permitted to
+  differ across implementations.</li>
+</ul>
+<h2 id="e11-api-cli-surface">E.11 API / CLI surface<a class="headerlink" href="#e11-api-cli-surface" title="Permanent link">&para;</a></h2>
+<p>Since OSD and OSD-OML are peers, not one derived from the other, there is
+no single read/write function that sensibly handles "either" without being
+told which.</p>
+<p><strong>Read side:</strong></p>
+<ul>
+<li><code>parse_schema(text) -&gt; Schema</code> — existing, OSD text specific, unchanged.</li>
+<li><code>schema_from_document(doc) -&gt; Schema</code> — new pure conversion primitive.
+  Takes an already-parsed Document and applies exactly the rules
+  described in <a href="#e6-rules">§E.6</a>.</li>
+<li><code>parse_schema_oml(text) -&gt; Schema</code> — new convenience wrapper, equal to
+  <code>schema_from_document(read_oml(text))</code>.</li>
+</ul>
+<p><strong>Write side</strong>, symmetric:</p>
+<ul>
+<li><code>write_schema(schema) -&gt; osd_text</code> — existing, unchanged.</li>
+<li><code>schema_to_document(schema) -&gt; Document</code> — new primitive.</li>
+<li><code>write_schema_oml(schema) -&gt; oml_text</code> — new wrapper.</li>
+</ul>
+<p><strong>CLI:</strong> every schema-consuming and schema-producing command (<code>validate</code>,
+<code>materialize</code>, <code>lint</code>, <code>normalize</code>, <code>extract</code>, <code>compatible-with</code>,
+<code>equivalent</code>, <code>is-empty</code>, <code>prune</code>, <code>schema format</code>, ...) MUST accept
+<code>--from</code>/<code>--to osd|osd-oml</code>, reusing the existing flag pattern the
+data-conversion commands already have. Extension-based format detection is
+explicitly rejected — it is unreliable in general, and outright impossible
+for stdin input, which has no filename to infer from. Flag values MUST
+match the format name exactly (<code>osd-oml</code>, not a shorthand like <code>oml</code>).</p>
+<p><strong>Backward compatibility:</strong> omitting <code>--from</code>/<code>--to</code> entirely MUST mean
+<code>osd</code>, unconditionally — matching prior, only-ever-OSD behavior exactly.
+<code>osd-oml</code> is always opt-in.</p>
+<h2 id="e12-worked-example">E.12 Worked example<a class="headerlink" href="#e12-worked-example" title="Permanent link">&para;</a></h2>
+<p>Both directions, for one small schema:</p>
+<p><strong>OSD:</strong></p>
+<div class="highlight"><pre><span></span><code>record Address {
+    "street": string,
+    "city": string,
+}
+record Person {
+    "name": string,
+    "nickname" [0,1]: string?,
+    "address": Address,
+}
+root Person
+</code></pre></div>
+<p><strong>OSD-OML</strong> (canonical form, one record/field per line for readability —
+compact form is also legal and parses to the same Document, per OML's own
+compact-mode guarantee, <a href="../../04-oml-grammar/#49-canonical-output">§4.9</a>):</p>
+<div class="highlight"><pre><span></span><code>record: {
+  name: "Address"
+  field: { label: "street", type: { kind: "scalar", name: "string" } }
+  field: { label: "city", type: { kind: "scalar", name: "string" } }
+}
+record: {
+  name: "Person"
+  field: { label: "name", type: { kind: "scalar", name: "string" } }
+  field: {
+    label: "nickname"
+    cardinality: { min: 0 }
+    type: { kind: "scalar", name: "string", nullable: true }
+  }
+  field: { label: "address", type: { kind: "ref", name: "Address" } }
+}
+root: "Person"
+</code></pre></div>
+<p><strong>Round-trip requirement:</strong></p>
+<div class="highlight"><pre><span></span><code>schema_from_document(read_oml(write_oml(schema_to_document(S)))) == S
+</code></pre></div>
+<p>for every valid <code>Schema</code> <code>S</code>, where <code>==</code> means <code>equivalent(S, S')</code> per
+<a href="../../06-schema-algebra/">§6.7</a>'s Schema-equivalence, not raw Document
+equality (§E.7's note on order not being significant).</p>
+<h2 id="e13-non-goals">E.13 Non-goals<a class="headerlink" href="#e13-non-goals" title="Permanent link">&para;</a></h2>
+<p>The following are explicitly out of scope for this extension and are not
+implicitly authorized by it:</p>
+<ul>
+<li><strong>A bundle format</strong> (<code>schema</code> + repeated <code>document</code> edges) combining a
+  schema with conforming documents in one OML file, for RPC- and
+  database-shaped use cases. Deferred until a concrete application needs
+  it, so the design is pulled by real requirements (streaming? partial
+  results? schema-by-reference?) instead of guessed at in the abstract.</li>
+<li>JSON/YAML/TOML/XML serialization of Schema — technically reachable later
+  via the existing codecs once Schema is Document-shaped, but not
+  specified here.</li>
+<li>A binary OML encoding of Schema — depends on a binary OML format
+  existing at all, which is itself unspecified.</li>
+</ul>
+<h2 id="e14-conformance">E.14 Conformance<a class="headerlink" href="#e14-conformance" title="Permanent link">&para;</a></h2>
+<p>An implementation conforms to this extension when it implements
+<code>schema_from_document</code>, <code>parse_schema_oml</code>, <code>schema_to_document</code>, and
+<code>write_schema_oml</code> per §E.5–§E.11, passes the extension's conformance
+vectors (tagged <code>osd-oml</code> in the test suite), and satisfies the round-trip
+requirement (§E.12) for every vector's schema. Extension conformance is
+reported independently of Core conformance, per
+<a href="../overview/#conformance-and-versioning">Extensions §Conformance and versioning</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
