@@ -3,6 +3,134 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.18.0-beta (2026-09-18)
+
+**Normative (minor)** — closes
+[#75](https://github.com/omnist-dev/omnist-spec/issues/75). **Every
+implementation shipping a YAML codec needs a change.** Nothing else does.
+
+- **New D-18: a codec for a format with an anchor/reference mechanism MUST
+  bound each anchored definition's expansion factor.** For an anchored
+  definition `a`, `W(a)` is the value slots materialized when `a` is expanded
+  (a container counts, a scalar leaf counts, a reference inside `a`
+  contributes whatever it materializes, recursively), `S(a)` is the slots
+  written in `a`'s own definition (a reference counting as exactly one,
+  whatever it points at), and `E(a) = W(a)/S(a)`. **`a` itself counts as one
+  slot on both sides**, so a bare scalar anchor reads `E = 1.00` rather than
+  dividing by zero. A plain alias contributes its target's full `W`; a
+  merge-key reference, which flattens its target's edges into the referring
+  mapping instead of nesting a copy, contributes `W(target) - 1` — and a
+  merge key over a *sequence* of aliases (`<<: [*p, *q]`, which YAML 1.1
+  permits) contributes `W - 1` for **each** alias with no slot for the
+  sequence itself, while still counting as exactly one written slot in `S`.
+  Input where any `E(a)`
+  exceeds the configured maximum MUST be rejected with the new
+  `document.limit.alias-expansion` code. Reference default **50**.
+  **D-19** requires the check *before* the expansion is materialized — `W`
+  and `S` come from the raw reference graph in time linear in input size, so
+  an over-limit input costs nothing to refuse — and, because that graph
+  computation is deliberately blind to key-collision resolution, `W` is a
+  **conservative upper bound** on the count actually materialized, exceeding
+  it where a merged key is overridden by a local key of the same name
+  (`p: &p {k: 1}` / `q: &q {<<: *p, k: 9}` computes `W(q) = 3` where the
+  reference materializes 2). Erring high is the point: refining it downward
+  would mean resolving collisions during the very check that exists to run
+  before materialization. D-19 also requires per-anchor checking as you go, or
+  an equivalent overflow guard, so the attack input cannot drive an unchecked
+  `W` past a fixed-width integer and wrap *under* the maximum. **D-20** rejects
+  a self-referential anchor, whose `W` is unbounded, with the same
+  `document.limit.alias-expansion` code; the reference satisfies neither half
+  of this yet — it rejects a direct cycle with an uncoded `cycle detected`
+  error and accepts the self-merging `a: &a {<<: *a, k: 1}` outright — and
+  both are recorded under `DIV-3`.
+- **Why this was needed.** §2.4 bounded the *result* — depth, node count,
+  integer digits — and nothing bounded the *ratio* between what an input
+  writes and what reading it materializes. A sub-1 KB YAML document of
+  nested anchors lands under the million-node cap, is accepted with no
+  diagnostic at roughly 600× amplification, and can be replayed
+  indefinitely. No limit is crossed, so no implementation was
+  non-conformant while it happened.
+- **The threshold is calibrated against `E` itself, measured.** This is the
+  third attempt at #75 and the first that measures the quantity it
+  specifies; both earlier drafts were withdrawn for calibrating against
+  input bytes or against edge counts rather than the thing being limited.
+  Measured against the reference: a `<<: *defaults` merge-key config of the
+  docker-compose/GitLab-CI kind reads **`E = 1.00` at every size tested, up
+  to 36 KB** (a merge key flattens into the referring mapping instead of
+  nesting a copy under it), the worst legitimate document measured — anchor
+  chains, scalar-constant reuse — reads **5.75**, and the amplifying shape
+  turns dangerous around **`E = 170`**. 50 is ~9× above the worst legitimate
+  reading and ~3.4× below the weakest dangerous one.
+- **The scope is conditional, and stated as such in three places.** D-18 is
+  **not** a fourth universal limit: §2.4's first three rows bind every
+  Document however it was built, D-18 binds a *codec that has* an
+  anchor/reference mechanism. Among the five formats this spec covers, only
+  YAML has one today; a Document built programmatically has no anchors and
+  no byte count, so neither of the failure modes that sank the previous
+  drafts (division by zero, route ambiguity) exists here. §9.2 says the same
+  in its own words, and E-4a pins the reach of the new code.
+- **XML's entity expansion is deliberately not re-handled.** It is the same
+  hazard — "billion laughs" is an XML attack first — but the data-XML
+  profile already rejects a DTD outright, which is stricter than this bound.
+  §2.4.1 cross-references it rather than adding a second mechanism.
+- **`docs/formats/yaml.md` now states the read-side obligation.** It
+  previously treated aliases purely as a value-fidelity question — two
+  independent edges both carrying the value — which is exactly the property
+  that makes an anchor an amplifier, and it never said so.
+- **Six vectors** in `test-suite/formats-yaml/alias-expansion.json`: a
+  nested fan-out rejected at `E = 68.20` against a declared 50, a merge-key
+  config accepted at `E = 1.00`, a merge key over a *sequence* of aliases
+  accepted at `E = 1.33` (pinning that each alias flattens in and the
+  sequence itself is not a slot — the reading the general rule is otherwise
+  ambiguous between would give `E = 1.40`), an anchor-to-anchor chain
+  accepted at `E = 1.67`, and an at-limit/one-past pair on byte-identical
+  input pinning that D-18 rejects when `E` *exceeds* the maximum, not when it
+  reaches it. Every accepted document was captured live from the reference,
+  and each vector's comment carries its own worked `W`/`S`/`E` arithmetic —
+  between them they are the in-repo record of `E` computed on real inputs
+  rather than asserted. The rejected ones are accepted by every
+  implementation today, by design — that is the defect. 231 vectors total.
+- **`DIV-3` opened in §9.4, and §9.3's resource-caps row says so.** No
+  implementation enforces D-18 yet, the Python reference included: all five
+  new vectors — both rejection cases among them — are *accepted* by the
+  reference today, confirmed by running them rather than assumed. That is
+  expected for a rule landing ahead of its rollout, and it is now recorded
+  instead of implicit.
+- **Every port's conformance runner needs one line of its own, and skipping
+  it produces a false pass rather than a failure.** Boundary vectors carry
+  the limit they were written against as a `declared_max_*` key, and a runner
+  skips a vector whose key it recognizes but cannot configure.
+  `declared_max_alias_expansion` is new here, so adopting D-18 is two steps:
+  implement the rule, *and* add the key to the runner's allowlist (Python's
+  is `_LIMIT_KEYS` in `tools/conformance/vector_runner.py`). Verified against
+  the reference rather than assumed: of the five new vectors,
+  `nested-anchor-fan-out-exceeds-expansion-limit` and
+  `expansion-one-past-declared-limit-fails` report as outright **failures**
+  until the rule is implemented, while `expansion-at-declared-limit-succeeds`
+  reports as a **pass for the wrong reason** — green today because nothing
+  enforces the limit, and still green after a port implements the rule but
+  forgets the allowlist, at which point it silently tests the port's own
+  default maximum instead of the 3 it declares and can mask a real threshold
+  bug. A failure gets triaged; a pass gets believed, which makes this the
+  more important of the two hazards. `test-suite/README.md` now lists all
+  four keys, `docs/porting-a-conformance-runner.md` makes checking the list
+  part of a submodule bump, and `DIV-3` carries the per-vector breakdown.
+- **Editorial: D-10 and D-11 now reach the fourth limit by their own text.**
+  They said "any of the three"; the finiteness and documentation obligations
+  §2.4.1 defers to them are stated as covering every limit in §2.4, and §2.4's
+  "what is fixed" paragraph no longer counts three where there are now four.
+- **Editorial: `docs/formats/yaml.md` now defines the merge key.** It cited
+  `<<` flattening in three places while the only definition of the mechanism
+  lived inside D-18, a chapter away.
+- **Editorial: the `DIV-1`/`DIV-2` retirement note moved to §9.4's preamble.**
+  It had been written inside `DIV-3`'s body — an entry whose own text says to
+  delete it once every port enforces D-18, which would have taken the
+  retirement note with it and freed two numbers for illegal reuse.
+- **Port impact is unverified and no port issues are filed yet.** YAML
+  libraries differ substantially in native alias handling, so which ports
+  need what follows from a per-port check against D-18 now that the spec
+  position is settled.
+
 ## v0.17.0-beta (2026-09-14)
 
 **Normative (minor)** — closes
