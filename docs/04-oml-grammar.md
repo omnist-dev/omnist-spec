@@ -256,12 +256,13 @@ inside a node — `a: { null: 1 }` — label position is unambiguous and the
 specific reserved-word error is produced instead. Both are errors; conformance
 vectors distinguish them by code.
 
-**OML-25. A scalar followed by leftover content at document level is
-`parse.trailing-content`**, reported at the text position of the first
-leftover token. This is the general rule `null: 1` is one instance of. Once
-the lookahead above has sent the parser down the scalar branch and the scalar
-has been consumed, whatever follows is trailing content, and an
-implementation MUST report it as such regardless of which tokenizer rule
+**OML-25. When the lookahead takes the scalar branch, anything left after
+the scalar is `parse.trailing-content`.** §8.3.1 states the general form —
+content remaining after the document's single node is trailing content,
+whatever that node was — and OML-25 is this section's case of it: the node is
+a bare scalar, reached because the lookahead above declined the edge branch.
+An implementation MUST report it at the text position of the first leftover
+**significant** token, and MUST do so regardless of which tokenizer rule
 produced the scalar. `null: 1`, `true: 1`, `nan: 1`, `inf: 1` and `5: 1`
 therefore all fail identically, at `1:5`, `1:5`, `1:4`, `1:4` and `1:2`
 respectively. That `nan` and `inf` are kept out of label position by the
@@ -272,6 +273,19 @@ appearing where the grammar does not allow it; a complete document body
 followed by more text is not that, and reporting it that way sends a reader
 looking for a bad token rather than for the second document they accidentally
 wrote.
+
+**"First leftover significant token" is §4.2.1's sense of significant.**
+Horizontal space, newlines, `;` and comments are skipped or collapse into a
+separator and are not themselves leftover content, so the reported position
+is the first *real* token after the scalar, not the whitespace in front of
+it: `1` newline `2` reports `2:1`, the `2`, not `1:2`. A **trailing comment
+is not leftover content at all** — `1 # done` is the valid single-scalar
+document `1`, because §4.2.1 skips comments before the parser can see them.
+One case sits outside this rule entirely: a top-level bare sequence such as
+`[1, 2] 3` never reaches it, because `[` in value position is not a document
+body to begin with ([§4.3.1](#431-arrays-are-sugar)) and the read fails on
+the `[` itself — measured against the reference as `parse.unexpected-token`
+at `1:1`.
 
 ## 4.7 Limits
 

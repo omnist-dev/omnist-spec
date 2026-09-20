@@ -30,7 +30,14 @@ five, recorded as `DIV-4`.
   second, undeclared strip — two byte-different inputs building one Document
   with nothing recording which byte went missing, the exact outcome D-15
   exists to prevent. Readers on those surfaces must pre-check. Six new
-  `doubled-leading-bom-is-rejected` vectors, one per surface.
+  `doubled-leading-bom-is-rejected` vectors, one per surface. **`E-24`
+  widens `parse.codec-syntax`** to cover this: §8.3.1 defined it as input
+  that is not well-formed in its own source format, and a doubled BOM on
+  YAML or XML *is* well-formed there — it fails only at the precondition
+  D-21 imposes ahead of the codec. The §8.3.8 contrast is restated so it
+  stays accurate: those codes describe the *shape* Omnist would have to
+  build, `parse.codec-syntax` covers a read that failed before any shape
+  existed.
 - **New E-23: a string-body error reports the string's opening quote**
   ([§8.4](docs/08-conformance-and-errors.md#84-paths)), not the offending
   character — for `parse.control-character`, `parse.invalid-escape`,
@@ -51,7 +58,13 @@ five, recorded as `DIV-4`.
   distinction, but it is spent before the scalar branch is taken and does not
   change the code. The `nan` vector is corrected and given `inf: 1` and
   `5: 1` companions; §4.2's OML-4 and §4.8's examples table now say the same
-  thing.
+  thing. **"Leftover" is defined rather than assumed**: the position is the
+  first leftover *significant* token in §4.2.1's sense, so `1` newline `2`
+  reports `2:1` (the `2`) and not the separator at `1:2`, and a trailing
+  comment is not leftover content at all — `1 # done` is the valid scalar
+  document `1`. Both have vectors. A top-level bare sequence such as
+  `[1, 2] 3` is explicitly outside the rule: `[` in value position is not a
+  document body, and the read fails on the bracket.
 - **The YAML merge key's edge order is now normative: sequence (source)
   order, merged entries before the referring mapping's own**
   ([YAML](docs/formats/yaml.md)). A Document is an ordered edge list, so
@@ -62,8 +75,17 @@ five, recorded as `DIV-4`.
   sequence in reverse. **Key collisions are specified too**, which #98 left
   conditional on being able to verify them: a collided key produces one edge,
   at its earliest position, carrying the referring mapping's own value if it
-  writes one and otherwise the earliest alias's — verified against PyYAML and
-  the JavaScript `yaml` library independently, which agree on every case.
+  writes one and otherwise the earliest alias's. **Nested merges and a
+  repeated alias are specified too**: a merge nests recursively with the
+  grandparent's entries first, and `<<: [*p, *p]` contributes one copy.
+  All of it verified against PyYAML 6.0.3 and the JavaScript `yaml` 2.9.0
+  independently, which produce the same values on every shape tested and the
+  same order except where PyYAML's reversed sequence flattening shows
+  through — the artifact this rule exists to rule out. **Six new merge-key
+  vectors live in `test-suite/formats-yaml/yaml.json` carrying no
+  `declared_max_*` key**, because the only vector pinning this order before
+  them carried `declared_max_alias_expansion` and was therefore skippable by
+  any port that allowlists it.
 - **New `DIV-4`** ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences))
   records what each implementation must adopt, measured rather than assumed,
   and names why none of it surfaced earlier: **a code-agnostic runner
@@ -72,6 +94,11 @@ five, recorded as `DIV-4`.
   vector the Python reference has never met since the day it was written.
   `test-suite/README.md` and `docs/porting-a-conformance-runner.md` now say
   so, and ask ports to report which comparison mode produced their numbers.
+  `DIV-4` also states that its vectors are an **E-20 "not yet implemented"**
+  skip, not an E-21 documented divergence: none of these rows is a capability
+  a language cannot provide, so no port needs to cite the entry by number to
+  skip them.
+- **Sixteen new vectors, three corrected**, taking the suite to **247**.
 
 ## v0.18.0-beta (2026-09-18)
 

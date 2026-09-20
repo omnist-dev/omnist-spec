@@ -483,30 +483,35 @@ XML and rejected it for JSON, TOML and OSD — the divergence this closes.
 OSD was the third rejecting surface, not a second stripping one:
 `parse_schema` on BOM-prefixed OSD text raised `parse.unexpected-token`.
 
-**D-21. Exactly one leading mark is consumed. A second is not.** D-15 strips
-the mark at offset zero and stops there. What remains is then handed to the
-surface's own grammar with no further encoding-level treatment, so a second
-`U+FEFF` — now itself at offset zero of the remaining text — is ordinary
-content in D-15's sense: it is admissible only where that grammar admits
-`U+FEFF` as content at that position, and a syntax error everywhere else. On
-all six surfaces this spec covers no grammar admits it there, so a doubled
-leading mark MUST be rejected — `parse.unexpected-token` on OML and OSD,
-`parse.codec-syntax` on JSON, TOML, YAML and XML
-([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)) —
-at text position `1:1`, which is computed on the text that remains after the
-strip, not on the original input.
+**D-21. Exactly one leading mark is consumed, and a second MUST be
+rejected.** D-15 strips the mark at offset zero and stops there. A reader
+MUST then reject a `U+FEFF` still standing at offset zero of the remaining
+text, on every surface, reporting it at text position `1:1` — computed on
+the text that remains after the strip, not on the original input — with
+`parse.unexpected-token` on OML and OSD and `parse.codec-syntax` on JSON,
+TOML, YAML and XML
+([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
+**An implementation MUST NOT silently consume the second mark, whatever its
+parsing library does.**
 
-**No implementation may silently swallow a second mark, whatever its parsing
-library does (D-21).** This is where the rule costs something. YAML 1.2 and
-XML 1.0 permit a leading BOM in their own right, and the common libraries for
-both discard one before the grammar ever sees it; layered under D-15's strip
-that is a *second, undeclared* strip, and two inputs differing in bytes build
-one Document with nothing recording which byte was discarded — precisely the
-outcome D-15 exists to prevent. A reader on those surfaces MUST check the
-text it is about to hand its library and reject a remaining leading `U+FEFF`
-itself. The rule is uniform across surfaces for the same reason D-15 is: a
-per-format exception here would reopen the divergence D-15 closed, one layer
-down.
+**This is a rule Omnist imposes, not one derived from each format.** That
+distinction matters, because on three of the six surfaces the remaining text
+is perfectly well-formed in its own right: YAML 1.2 and XML 1.0 both admit a
+leading byte-order mark at offset zero, which is exactly why their common
+libraries discard one before any grammar sees it, and RFC 8259 §8.1 permits
+a JSON parser to ignore *a* byte order mark without saying anything about how
+many. Only OML, OSD and TOML reject the second mark on their own grammar's
+terms. So the requirement above cannot be read off the formats; it has to be
+stated, and on YAML and XML a conformant reader has to **pre-check** the text
+it is about to hand its library rather than relying on the library to fail.
+
+**The reason is D-15's own.** A library that quietly strips one more mark
+under D-15's strip is performing a *second, undeclared* strip: two inputs
+differing in bytes build one Document, with nothing in the result recording
+which byte was discarded. That is precisely the outcome D-15 exists to
+prevent, and permitting it on the two surfaces whose libraries happen to do
+it would reopen the divergence D-15 closed, one layer down. Uniformity is
+worth the pre-check.
 
 **D-16. Labels and names compare byte-wise, never by Unicode normalization.** Two
 labels are the same label when their UTF-8 bytes are identical. `café`

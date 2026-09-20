@@ -75,8 +75,23 @@ value from the **earliest** alias in the sequence that supplies it. Over
 whether the local `a:` is written before or after the `<<:`. Over
 `p: &p {a: 1}` and `q: &q {a: 2}`, the mapping `r: {<<: [*p, *q]}` reads as
 the single edge `a = 1`: the earlier alias wins. Both rules were verified
-against two independent YAML implementations, PyYAML and the JavaScript
-`yaml` library, which agree on every case above.
+against two independent YAML implementations — PyYAML 6.0.3 and the
+JavaScript `yaml` library 2.9.0 — which produce the same **values** on every
+shape tested. They agree on **order** too except where PyYAML's reversed
+sequence flattening shows through, which is the artifact this section rules
+out: given `p: &p {a: 1, b: 5}` and `q: &q {b: 2, c: 3}`, the mapping
+`r: {<<: [*p, *q], c: 99}` reads as `a = 1`, `b = 5`, `c = 99` under this
+rule and in the JavaScript library, while PyYAML returns the same three
+values in the order `b, c, a`.
+
+**A merge nests.** An aliased mapping that itself contains a `<<` is merged
+recursively, and the grandparent's entries arrive first: for
+`g: &g {a: 1}`, `m: &m {<<: *g, b: 2}` and `n: {<<: *m, c: 3}`, `n` reads as
+`a`, `b`, `c`. **A repeated alias in one sequence contributes once.**
+`<<: [*p, *p]` yields exactly one copy of `p`'s entries, not two — the second
+occurrence supplies only keys the first already supplied, and the collision
+rule above collapses them. Both were measured in PyYAML 6.0.3 and
+`yaml` 2.9.0, which agree on both.
 
 This is also the case §2.4.1's D-19 flags when it calls `W` a *conservative*
 bound: the expansion check runs before materialization and is deliberately

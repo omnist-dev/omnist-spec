@@ -789,6 +789,48 @@
         ]
       },
       "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. Companion to oml-grammar/encoding/leading-bom-is-stripped, which is the same input with one mark. Measured: the reference already rejects this with parse.unexpected-token at 1:1 -- green on arrival."
+    },
+
+    {
+      "name": "oml-grammar/errors/newline-separated-second-scalar-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "1\n2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-25's position rule with no reserved word and no colon involved: `1` is the document's single scalar and `2` is leftover. The position is the first leftover **significant** token -- the `2` at 2:1 -- not the separator in front of it, which Sec4.2.1 collapses and which would be 1:2. Counted from the input: line 1 is `1`, line 2 is `2` at column 1. The reference reports the right position here and the wrong code, parse.unexpected-token (DIV-4)."
+    },
+
+    {
+      "name": "oml-grammar/comments/trailing-comment-after-a-lone-scalar-is-not-trailing-content",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "1 # done\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "scalar": {
+            "kind": "integer",
+            "value": 1
+          }
+        }
+      },
+      "comment": "The companion to the vector above, pinning what 'leftover' excludes. Sec4.2.1 skips comments at tokenization, so a comment emits no token and cannot be leftover content: `1 # done` is the valid single-scalar document 1. Without this vector OML-25's 'first leftover significant token' has nothing holding the word significant to Sec4.2.1's meaning, and an implementation that reported trailing content here would look defensible. Confirmed live against the reference, which accepts it and returns the scalar 1."
     }
   ]
 }

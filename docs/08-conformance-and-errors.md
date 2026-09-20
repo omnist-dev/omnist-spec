@@ -56,7 +56,7 @@ Every diagnostic carries at least:
 | `parse.leading-zero` | A `NUMBER`/`INTEGER` literal's integer part has a leading zero |
 | `parse.invalid-date` | A `DATE` or the date portion of a `DATETIME` is not a valid calendar date |
 | `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
-| `parse.codec-syntax` | Input is not well-formed in its own source format (JSON, YAML, TOML, XML) — see the note below |
+| `parse.codec-syntax` | Input a codec cannot accept: not well-formed in its own source format (JSON, YAML, TOML, XML), or refused by a byte-level precondition this spec imposes ahead of the codec — see the note below |
 | `parse.invalid-encoding` | Input is not valid UTF-8 ([§2.5](02-document-model.md#25-encoding)) |
 
 **E-3.** **Six of these codes also cover OSD's own lexical stage**:
@@ -84,16 +84,31 @@ format and carry through whatever the underlying parser said, since that
 detail is what makes the failure actionable; §8.5.2 never compares message
 text, so this costs nothing in conformance.
 
+**E-24. A byte-level precondition this spec imposes ahead of a codec reports
+here too**, even where the text would have been well-formed in its own
+format. There is exactly one such precondition today:
+[D-21](02-document-model.md#25-encoding)'s rejection of a second leading
+`U+FEFF`, which YAML and XML would otherwise accept and JSON's own rules
+leave open. This is a deliberate widening of the row above, made when D-21
+landed: the check runs on the byte stream before the codec is handed
+anything, it fails the read outright with `ok: false`, and no other family in
+this taxonomy describes a refusal at that layer. Putting it anywhere else
+would mean a new code that conveys nothing the message does not already say —
+the same argument that keeps one `parse.codec-syntax` across all four formats
+rather than four.
+
 One code covers all four formats deliberately. Splitting it per format would
 add three codes that convey nothing the message does not already say, and
 nothing in the algebra or the harness branches on which codec failed.
 
 Distinguish this from the refusal codes in
-[§8.3.8](#838-format-codec-adjustments): those are for input that is
-well-formed in its source format and outside the profile Omnist supports.
-`parse.codec-syntax` means the input is genuinely malformed. Reporting a
-refusal as a syntax error, or the reverse, sends a user looking in the wrong
-place.
+[§8.3.8](#838-format-codec-adjustments): those describe something about the
+*shape* Omnist would have to build — a `DOCTYPE`, mixed content, a dropped
+attribute — for input that is well-formed in its source format and outside
+the profile Omnist supports. `parse.codec-syntax` means the read failed
+before any such shape existed: the input is genuinely malformed, or it fell
+at the one byte-level precondition E-24 names. Reporting a profile refusal as
+a syntax error, or the reverse, sends a user looking in the wrong place.
 
 ### 8.3.2 `document.*` — building and limits
 
