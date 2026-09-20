@@ -121,6 +121,8 @@ merge `5249267`), Rust (`omnist-rs` PR #178, merge `2ef92b2`), Go
 (`omnist-go` PR #115, merge `04df6f8`), and Java (`omnist-j` PR #109,
 merge `62ccbb3`).
 
+**Update after the v0.19.0-beta port sweeps.** TypeScript ([omnist-ts#148](https://github.com/omnist-dev/omnist-ts/pull/148)), Go ([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118)) and Rust ([omnist-rs#183](https://github.com/omnist-dev/omnist-rs/pull/183)) each bumped to v0.19.0-beta, adopted D-15/D-21, E-23, OML-25 and the YAML merge-key rules, and now compare diagnostics as `(path, code)` sets with every skip an E-20 "not yet implemented" skip that names its tracking issue. The cells above for those three were re-measured from each port's own conformance run, not carried forward. Two things are deliberately not claimed: no port implements D-18 (DIV-3), and Rust's Version cell stays at its latest tagged release, 0.2.2-alpha — the v0.19.0-beta work is merged to `main` as an unreleased 0.3.0-alpha, and the Rust conformance numbers below are for that `main`. Rust's `publish.yml` runs on a `v*` tag, so tagging it publishes to crates.io, which is a separate human decision. Python and Java have not completed the sweep; the Python column is the v0.17.0-beta measurement and Java is unchanged.
+
 This bump also brought in 5 new vectors from v0.8.0-beta/v0.9.0-beta/v0.9.1-beta:
 1 new Core-level `osd-grammar` vector (the S-3 characterization case) and
 4 new `extensions-osd-oml/*` vectors (exercising the new
@@ -156,7 +158,7 @@ diverge.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.9.5 | 0.3.0-alpha | 0.2.2-alpha | 0.3.1-alpha | 0.2.3-alpha |
+| Version | 0.9.5 | 0.3.1-alpha | 0.2.2-alpha | 0.4.0-alpha | 0.2.3-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 is enforced by no port yet — DIV-3) | all three | all three | all three | all three | all three |
@@ -167,7 +169,7 @@ diverge.
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| Conformance (vectors — Python now on v0.17.0-beta pin post-D-15 sweep, of 225; TypeScript/Rust/Go/Java still on v0.9.1-beta pin, of 204, pending the same sweep) | 145 pass / 0 fail / 80 skip | 128 pass / 0 fail / 76 skip | 170 pass / 0 fail / 34 skip | 175 pass / 0 fail / 29 skip | 176 pass / 0 fail / 28 skip |
+| Conformance (vectors, compared as (path, code) sets except Python — pins differ: TypeScript, Rust (unreleased `main`) and Go are on v0.19.0-beta, of 249; Python is on v0.17.0-beta, of 225, and compares codes loosely, see DIV-4; Java is still on v0.9.1-beta, of 204, pending its sweep) | 145 pass / 0 fail / 80 skip | 189 pass / 0 fail / 60 skip | 209 pass / 0 fail / 40 skip | 215 pass / 0 fail / 34 skip | 176 pass / 0 fail / 28 skip |
 | Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (Java's own harness headline count is 29, but 10 of those are `_referee-self-test/*` fixtures — tests of the harness's own equality logic, not this port's behavior — that Java's `Track1Runner` already special-cases but still folds into the same headline number; the other four ports exclude these from their public count. Root cause confirmed, tracked in `omnist-j#110`, not urgent) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
@@ -248,7 +250,7 @@ or `skip` citing this entry. It MUST NOT report
 `expansion-at-declared-limit-succeeds` as a pass on the strength of step (a)
 alone.
 
-**DIV-4. No implementation yet satisfies the rules v0.19.0-beta settled.**
+**DIV-4. The Python reference and Java do not yet satisfy the rules v0.19.0-beta settled.**
 Four of the six rows below are rules new in that release. The
 `parse.codec-syntax` row is a pre-existing §8.3.1 code that the new
 doubled-BOM vectors are simply the first to exercise, and the `E-11` row is a
@@ -258,18 +260,20 @@ first requires them. Each row was measured,
 not assumed: the Python column comes from running the input against the
 reference at v0.9.5, and the TypeScript column from the port's own sweep
 reported on
-[omnist-ts#148](https://github.com/omnist-dev/omnist-ts/issues/148). The
-other three ports have not been measured against these rules and are left
-blank rather than guessed at.
+[omnist-ts#148](https://github.com/omnist-dev/omnist-ts/pull/148). TypeScript, Go and Rust have since completed their sweeps
+([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118),
+[omnist-rs#183](https://github.com/omnist-dev/omnist-rs/pull/183)); their
+column records that. Java has not been measured against these rules and is
+left blank rather than guessed at.
 
-| Rule | Python reference today | TypeScript today | Required |
+| Rule | Python reference today | TypeScript, Go, Rust | Required |
 |---|---|---|---|
-| **D-21**, second leading BOM ([§2.5](02-document-model.md#25-encoding)) | swallows it on **YAML and XML**: the doubled-BOM input builds the same Document as the single-BOM one. OML already rejects it correctly at `parse.unexpected-token` `1:1`; JSON, TOML and OSD reject it but with the code or path defects in the two rows below | swallows it on **YAML and XML**; rejects it on OML, OSD, JSON and TOML | reject on all six surfaces, `1:1` |
-| **`parse.codec-syntax`** ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)) | emits `parse.syntax` with **no `path` at all** for a malformed JSON or TOML read | not measured for this code | `parse.codec-syntax` with a `line:col` path (E-11) |
-| **E-11**, text positions on OSD diagnostics generally ([§8.4](08-conformance-and-errors.md#84-paths)) | reports the OSD doubled-BOM rejection at `path` `0`, a raw character offset, where E-11 requires `line:col` — the same defect as the E-23 row below on a diagnostic that is **not** a string error, so fixing E-23 alone will not close it | reports `line:col` | `1:1` |
-| **E-23**, string-error position ([§8.4](08-conformance-and-errors.md#84-paths)) | reports **every** OSD string error as a raw character offset, not only the control-character case — `path` is `18` for the escaped control character and `15` for an unterminated string, where E-11 requires a `line:col` either way. The OML side is already correct (`1:4` on all four of its string-error vectors) | reports the **offending character**, `2:8`, for OSD | the opening quote, as `line:col` |
-| **OML-25**, scalar then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` for **every** input the rule covers — `nan: 1`, `inf: 1`, `null: 1`, `true: 1`, `5: 1` and `1`-newline-`2` — at `1:4`, `1:4`, `1:5`, `1:5`, `1:2` and `2:1`. Every position is already right, so this is a code change only — and it means the reference never met the pre-existing `null: 1` vector either | emits `parse.trailing-content` for both `nan: 1` and `null: 1`: already correct. The other four inputs were not measured on this port | `parse.trailing-content` throughout |
-| **Merge-key order** ([YAML](formats/yaml.md)) | flattens a merge **sequence** in reverse, following PyYAML 6.0.3: `svc` reads `retries, region, name`, and the three-key collision shape reads `b, c, a` where the rule gives `a, b, c`. Values are right in every shape measured; only sequence order is wrong. The single-alias form, key-collision resolution, nested merges and repeated aliases all already match | source order already, in `yaml` 2.9.0: `region, retries, name` and `a, b, c` | sequence (source) order |
+| **D-21**, second leading BOM ([§2.5](02-document-model.md#25-encoding)) | swallows it on **YAML and XML**: the doubled-BOM input builds the same Document as the single-BOM one. OML already rejects it correctly at `parse.unexpected-token` `1:1`; JSON, TOML and OSD reject it but with the code or path defects in the two rows below | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | reject on all six surfaces, `1:1` |
+| **`parse.codec-syntax`** ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)) | emits `parse.syntax` with **no `path` at all** for a malformed JSON or TOML read | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `parse.codec-syntax` with a `line:col` path (E-11) |
+| **E-11**, text positions on OSD diagnostics generally ([§8.4](08-conformance-and-errors.md#84-paths)) | reports the OSD doubled-BOM rejection at `path` `0`, a raw character offset, where E-11 requires `line:col` — the same defect as the E-23 row below on a diagnostic that is **not** a string error, so fixing E-23 alone will not close it | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `1:1` |
+| **E-23**, string-error position ([§8.4](08-conformance-and-errors.md#84-paths)) | reports **every** OSD string error as a raw character offset, not only the control-character case — `path` is `18` for the escaped control character and `15` for an unterminated string, where E-11 requires a `line:col` either way. The OML side is already correct (`1:4` on all four of its string-error vectors) | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | the opening quote, as `line:col` |
+| **OML-25**, scalar then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` for **every** input the rule covers — `nan: 1`, `inf: 1`, `null: 1`, `true: 1`, `5: 1` and `1`-newline-`2` — at `1:4`, `1:4`, `1:5`, `1:5`, `1:2` and `2:1`. Every position is already right, so this is a code change only — and it means the reference never met the pre-existing `null: 1` vector either | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `parse.trailing-content` throughout |
+| **Merge-key order** ([YAML](formats/yaml.md)) | flattens a merge **sequence** in reverse, following PyYAML 6.0.3: `svc` reads `retries, region, name`, and the three-key collision shape reads `b, c, a` where the rule gives `a, b, c`. Values are right in every shape measured; only sequence order is wrong. The single-alias form, key-collision resolution, nested merges and repeated aliases all already match | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | sequence (source) order |
 
 **Why none of this surfaced until now.** The Python reference's conformance
 runner compares **code-agnostically** (§8.5.2 rule 4) — legitimately, since
@@ -295,6 +299,12 @@ cannot provide, and none of these rows is that. They are all rollout work on
 a rule that landed, the same shape as `DIV-3`. This entry exists to record
 what the work is, not to convert it into a permitted divergence, and a port
 citing `DIV-4` as an E-21 reason is misreading it.
+
+Two of the rules this entry lists were decided after the ports began: the
+leftover-after-an-edge code of omnist-spec#103 (top level is
+`parse.trailing-content`, inside `{...}` or `[...]` it stays
+`parse.unexpected-token`) is implemented by TypeScript, Go and Rust ahead of
+the spec text that will state it, and is not yet in a numbered rule.
 
 Remove this entry when every implementation satisfies all six rows. Tracked
 by omnist-spec#98, #99, #100 and #101.
