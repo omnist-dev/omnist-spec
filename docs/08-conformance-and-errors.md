@@ -373,6 +373,11 @@ OSD spelling, so there is nothing to emit that any conformant OSD reader
 would accept. The second clause of the row above already covers it ("a label
 … cannot be represented at all in the target format's own syntax"); what was
 missing was anyone saying OSD is one of the formats that clause ranges over.
+The `path` is the Schema path of the **record** holding the unwritable field
+— `R`, not `R.<label>` — because §8.4 gives no way to quote a label inside a
+path and the label here is precisely the thing with no spelling; putting the
+byte in a byte-compared path would restate the problem rather than report
+it.
 
 ## 8.4 Paths
 
@@ -413,9 +418,16 @@ from the byte offset of the failure:
 ```
 
 **E-11.** A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
-`schema.*`, `validate.*`, `materialize.*`, `algebra.*`, or `lint.*` diagnostic's
+`schema.*`, `validate.*`, `materialize.*`, `algebra.*`, `write.*`, or `lint.*`
+diagnostic's
 `path` MUST be a Document or Schema path — never a text-position path, since a
 Document or Schema already exists by the time any of those families can fire.
+`write.*` is the one family whose two kinds are chosen by surface rather than
+by code: a Document writer's diagnostic takes a Document path (the existing
+`write.unsupported-value` vectors in `test-suite/formats-*` all do), and a
+schema writer's takes a Schema path. Which Schema path is settled per case,
+the way §8.4.1 settles it for `schema.*`; [OSD-14](05-osd-grammar.md#59-canonical-output)
+is the only case today and uses the record's.
 
 **E-23. A string-body error reports the string's opening quote.**
 `parse.control-character`, `parse.invalid-escape`,

@@ -303,6 +303,19 @@ the `b`; `a: 2024-01-01T99` fails at `1:14`, the `IDENT` `T99` that
 [OML-5](#42-tokenization) produces, which is the row §4.8's table has always
 carried.
 
+**This holds whatever the leftover token is, including one that could not
+begin a document at all (OML-26).** `a: 1 }` and `a: 1 ,` fail at `1:6` with
+`parse.trailing-content`, the same as `a: 1 b: 2`, even though no document
+starts with `}` or `,`. The rule is about **where the failure is**, not about
+what the author might have meant: the document body is complete and the
+parser is past it, so the reported unit is "there is content after the
+document", which is true of a stray brace as much as of a second edge.
+Nothing is owed at top level — OML-27 below turns on an *unclosed* `{` or
+`[`, and there is none here, so a top-level `}` is not the case it
+describes. Reporting these as `parse.unexpected-token` would split one rule
+in two on a judgement about intent that a parser cannot make and that no
+conformance vector could compare.
+
 **OML-27. Inside `{...}` or `[...]` the same missing separator is
 `parse.unexpected-token`.** Nothing has ended there: a closing `}` or `]` is
 still owed, so a token appearing where a separator or that delimiter belongs

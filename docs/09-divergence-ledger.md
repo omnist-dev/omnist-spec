@@ -274,7 +274,7 @@ left blank rather than guessed at.
 | **E-11**, text positions on OSD diagnostics generally ([§8.4](08-conformance-and-errors.md#84-paths)) | reports the OSD doubled-BOM rejection at `path` `0`, a raw character offset, where E-11 requires `line:col` — the same defect as the E-23 row below on a diagnostic that is **not** a string error, so fixing E-23 alone will not close it | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `1:1` |
 | **E-23**, string-error position ([§8.4](08-conformance-and-errors.md#84-paths)) | reports **every** OSD string error as a raw character offset, not only the control-character case — `path` is `18` for the escaped control character and `15` for an unterminated string, where E-11 requires a `line:col` either way. The OML side is already correct (`1:4` on all four of its string-error vectors) | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | the opening quote, as `line:col` |
 | **OML-25**, scalar then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` for **every** input the rule covers — `nan: 1`, `inf: 1`, `null: 1`, `true: 1`, `5: 1` and `1`-newline-`2` — at `1:4`, `1:4`, `1:5`, `1:5`, `1:2` and `2:1`. Every position is already right, so this is a code change only — and it means the reference never met the pre-existing `null: 1` vector either | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `parse.trailing-content` throughout |
-| **OML-26**, complete top-level edge then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` where OML-26 requires `parse.trailing-content`, measured live at v0.9.5: `a: 1 b: 2` at `1:6` and `a: 2024-01-01T99` at `1:14`. Positions are right in both, so this is a code change only, the same shape as the OML-25 row — and as with that row it means the reference has never met the pre-existing `date-then-non-time-suffix-is-date-plus-trailing-content` vector. OML-27's two cases are already correct: `a: { b: 1 c: 2 }` at `1:11` and `a: [1 2]` at `1:7`, both `parse.unexpected-token` | reported **satisfied** — all three implemented this ahead of the spec text that now states it, carried forward from the v0.19.0-beta sweeps rather than re-measured here (see below) | `parse.trailing-content` at top level, `parse.unexpected-token` inside `{...}` and `[...]` |
+| **OML-26**, complete top-level edge then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` where OML-26 requires `parse.trailing-content`, measured live at v0.9.5: `a: 1 b: 2` at `1:6` and `a: 2024-01-01T99` at `1:14`. Positions are right in both, so this is a code change only, the same shape as the OML-25 row — and as with that row it means the reference has never met the pre-existing `date-then-non-time-suffix-is-date-plus-trailing-content` vector. The same is true of the two leftover tokens that could not begin a document, `a: 1 }` and `a: 1 ,`, both `parse.unexpected-token` at `1:6` — and on the first of those the reference's own message already reads "unexpected trailing content after the document body", so it names the condition correctly and reports the other code. OML-27's two cases are already correct: `a: { b: 1 c: 2 }` at `1:11` and `a: [1 2]` at `1:7`, both `parse.unexpected-token` | reported **satisfied** — all three implemented this ahead of the spec text that now states it, carried forward from the v0.19.0-beta sweeps rather than re-measured here (see below) | `parse.trailing-content` at top level, `parse.unexpected-token` inside `{...}` and `[...]` |
 | **Merge-key order** ([YAML](formats/yaml.md)) | flattens a merge **sequence** in reverse, following PyYAML 6.0.3: `svc` reads `retries, region, name`, and the three-key collision shape reads `b, c, a` where the rule gives `a, b, c`. Values are right in every shape measured; only sequence order is wrong. The single-alias form, key-collision resolution, nested merges and repeated aliases all already match | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | sequence (source) order |
 
 **Why none of this surfaced until now.** The Python reference's conformance
@@ -287,12 +287,12 @@ while its own suite stayed green. The rest are masked differently rather than
 not at all — that runner also reports `skip` for any expected diagnostic
 carrying no structured path, which is every `parse.codec-syntax` case it
 produces today — and the D-21 and merge-order rows do fail loudly. The lesson
-generalizes past these six rows: **a code-agnostic runner passes vectors the
+generalizes past these seven rows: **a code-agnostic runner passes vectors the
 implementation does not really satisfy**, and a port should report which
 comparison mode produced its numbers.
 
 **These vectors are an E-20 "not yet implemented" skip, not an E-21 one.**
-Eighteen vectors are new in v0.19.0-beta, three were corrected, and three more
+Eighteen vectors are new in v0.19.0-beta, three were corrected, and five more
 are new in v0.20.0-beta for OML-26/OML-27; a port that
 has not yet adopted the rules above may report the affected ones as `skip`
 under E-20's **first** category, which requires no ledger citation of its
@@ -307,7 +307,7 @@ citing `DIV-4` as an E-21 reason is misreading it.
 number.** omnist-spec#103 asked what a complete top-level edge followed by
 unseparated content reports, and the answer — `parse.trailing-content` at top
 level, `parse.unexpected-token` inside `{...}` or `[...]` — is
-**OML-26/OML-27** as of v0.20.0-beta, with three vectors pinning it. It was
+**OML-26/OML-27** as of v0.20.0-beta, with five vectors pinning it. It was
 implemented by TypeScript, Go and Rust ahead of the spec text that now states
 it, which is what the row above records; the Java port is reported to
 implement it as well, but that has not been measured here and is not claimed
@@ -316,8 +316,32 @@ as one of the three. The Python reference does not implement it.
 Remove this entry when every implementation satisfies all seven rows. Tracked
 by omnist-spec#98, #99, #100, #101 and #103.
 
-**DIV-5. No OSD writer refuses an unwritable field label (OSD-14) yet, and
-no vector can pin it.** [OSD-14](05-osd-grammar.md#59-canonical-output) is
+**DIV-5. No OSD writer escapes a label (OSD-15) or refuses an unwritable one
+(OSD-14) yet.** Two rules, one surface, and only the first of them can be
+pinned by a vector.
+
+**OSD-15, canonical escaping.** [§5.9](05-osd-grammar.md#59-canonical-output)
+listed what a canonical OSD writer emits and never said how a label is
+escaped, though §5.3.1's weak unescaping makes the inverse exact: `\` is
+written `\\`, `"` is written `\"`, nothing else is escaped. Measured live
+against the Python reference (v0.9.5), whose `to_osd` escapes nothing:
+
+| Label | What `to_osd` writes | What re-parsing it gives |
+|---|---|---|
+| `a\b` | `"a\b"` | **`ab`** — silent corruption, a different schema with no diagnostic |
+| `a"b` | `"a"b"` | `parse.unterminated-string` |
+| `a\"b` | `"a\"b"` | **`a"b`** — silent corruption |
+| `a\` (ends in a backslash) | `"a\"` | `parse.unterminated-string` |
+
+The silent-corruption rows are the reason this is a rule and not a style
+note, and they are a **latent defect in the reference**, not a rollout gap
+the spec created: the labels were always representable and were simply never
+being written correctly. The four
+`osd-grammar/canonical-output/label-*` vectors added in v0.20.0-beta pin it,
+and the reference is red on all four. **The Go, Rust, TypeScript and Java OSD
+writers were not measured for this** and nothing is claimed about them.
+
+**OSD-14, the unwritable label.** [OSD-14](05-osd-grammar.md#59-canonical-output) is
 new normative content as of **v0.20.0-beta**: a field label carrying a C0
 control character has no OSD spelling at all (§5.3.1 bans the byte in a
 string body, escape context included, and OSD unescaping is weak), so an OSD
@@ -331,7 +355,8 @@ only what was measured:
 | Go | `osd.Write` emits a backslash plus the raw control byte, which its own reader now rejects, so write-then-read no longer round-trips; from the v0.19.0-beta sweep review ([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118)) |
 | TypeScript, Rust, Java | not measured |
 
-**This entry also records that the suite cannot express the case.** A vector
+**This half of the entry also records that the suite cannot express the
+case.** A vector
 gives a schema as OSD text (§8.5.3), so a schema whose label has no OSD text
 cannot be written as a vector input at all, and §8.5.3 has no driver taking a
 schema in any other form — `write_schema` is a documented operation
@@ -342,8 +367,8 @@ the untestable-MUST shape omnist-spec#105 raises for D-14 on the read side;
 both need the same thing, a vector input form that is not already-valid text
 in the surface under test. Until that exists, adoption is verified by hand
 against the two rows above and this entry says so rather than letting a green
-suite imply coverage. Remove this entry when every port refuses the write and
-a vector pins it.
+suite imply coverage. Remove this entry when every port escapes labels per
+OSD-15 and refuses the write per OSD-14, and a vector pins the second half.
 
 ## 9.5 Adding a sixth implementation
 

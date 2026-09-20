@@ -537,6 +537,62 @@
         ]
       },
       "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. OSD's grammar, like OML's, admits BOM at offset zero and nowhere else, so rejecting the second mark is native here and D-21 adds no pre-check. Companion to osd-grammar/encoding/leading-bom-is-stripped. Measured: the reference rejects it with the right code but reports the path as the raw offset `0` rather than a line:col, which E-11 forbids -- the same raw-offset defect its string errors have, on a diagnostic that is not a string error at all; recorded as DIV-4."
+    },
+    {
+      "name": "osd-grammar/canonical-output/label-containing-a-backslash-round-trips-escaped",
+      "spec": "docs/05-osd-grammar.md#59-canonical-output",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\\\\b\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"a\\\\b\": string,\n}\nroot R\n"
+      },
+      "comment": "OSD-15: a backslash in a label is written `\\\\`. Sec5.3.1 unescapes every `\\X` to `X`, so the doubled form reads back as the one-character backslash and writing it back reproduces this exact text. The unescaped spelling `\"a\\b\"` is a different string on read -- it unescapes to `ab` -- so a writer that emits it has silently changed the schema. Measured live: the Python reference's to_osd emits exactly that unescaped form and re-parses it as `ab`, so it is red on this vector (DIV-5). The other four ports' OSD writers were not measured for this."
+    },
+    {
+      "name": "osd-grammar/canonical-output/label-containing-a-double-quote-round-trips-escaped",
+      "spec": "docs/05-osd-grammar.md#59-canonical-output",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\\\"b\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"a\\\"b\": string,\n}\nroot R\n"
+      },
+      "comment": "OSD-15: a double quote in a label is written `\\\"`. grammars/osd.abnf excludes a raw `\"` from the string body, so the escaped form is the only spelling the grammar admits at all. Measured live: the Python reference's to_osd emits the raw quote, producing `\"a\"b\"`, which its own parser then rejects with parse.unterminated-string -- red on this vector (DIV-5). Not measured on the other four ports."
+    },
+    {
+      "name": "osd-grammar/canonical-output/label-containing-both-escapes-round-trips",
+      "spec": "docs/05-osd-grammar.md#59-canonical-output",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\\\\\\\"b\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"a\\\\\\\"b\": string,\n}\nroot R\n"
+      },
+      "comment": "OSD-15 with both escapes in one label, `a\\\"b` (backslash then quote): the backslash doubles and the quote takes a backslash, independently and in that order. This is the case a writer that escapes only one of the two gets wrong while passing the two single-character vectors above. Measured live: the Python reference writes the label unescaped and re-parses it as `a\"b`, dropping the backslash -- red (DIV-5). Not measured on the other four ports."
+    },
+    {
+      "name": "osd-grammar/canonical-output/label-ending-in-a-backslash-round-trips-escaped",
+      "spec": "docs/05-osd-grammar.md#59-canonical-output",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"a\\\\\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record R {\n    \"a\\\\\": string,\n}\nroot R\n"
+      },
+      "comment": "OSD-15's sharpest case: a label ending in a backslash. Written naively as `\"a\\\"` the trailing backslash escapes the closing quote and the string never terminates; doubled, `\"a\\\\\"` unescapes to `a\\` and the quote closes. This is why OSD-15 is stated as an escaping rule rather than left to a writer's judgement about which characters \"need\" escaping. Measured live: the Python reference emits the naive form and its own parser reports parse.unterminated-string -- red (DIV-5). Not measured on the other four ports."
     }
   ]
 }
