@@ -19,18 +19,29 @@ five, recorded as `DIV-4`.
 
 - **New D-21: exactly one leading byte-order mark is consumed, and a second
   is not** ([§2.5](docs/02-document-model.md#25-encoding)). D-15 strips the
-  mark at offset zero and stops; what remains goes to the surface's own
-  grammar, which admits no `U+FEFF` as content at offset zero on any of the
-  six surfaces, so a doubled leading mark MUST be rejected —
-  `parse.unexpected-token` on OML and OSD, `parse.codec-syntax` on JSON,
-  TOML, YAML and XML, at `1:1` in every case. The second half of the rule is
-  the one that costs something: **no implementation may silently swallow a
-  second mark, whatever its parsing library does.** YAML and XML libraries
-  routinely strip one leading mark themselves, which under D-15's strip is a
-  second, undeclared strip — two byte-different inputs building one Document
-  with nothing recording which byte went missing, the exact outcome D-15
-  exists to prevent. Readers on those surfaces must pre-check. Six new
-  `doubled-leading-bom-is-rejected` vectors, one per surface. **`E-24`
+  mark at offset zero and stops, and a reader MUST then reject a `U+FEFF`
+  still standing at offset zero of what remains — `parse.unexpected-token` on
+  OML and OSD, `parse.codec-syntax` on JSON, TOML, YAML and XML, at `1:1` in
+  every case, **whatever its parsing library does.** This is stated as a rule
+  Omnist imposes, not one derived from the formats, because the formats do
+  not agree: OML, OSD and TOML reject the second mark on their own grammar's
+  terms, while YAML 1.2 and XML 1.0 admit a leading byte-order mark outright
+  and RFC 8259 §8.1 permits ignoring *a* mark without saying how many. On
+  YAML and XML the library therefore strips the second mark itself, which
+  under D-15's strip is a second, undeclared strip — two byte-different
+  inputs building one Document with nothing recording which byte went
+  missing, the exact outcome D-15 exists to prevent — so readers there must
+  **pre-check**. The cost is named rather than left to be discovered: a YAML
+  file whose first key is an *unquoted* key beginning with `U+FEFF` becomes
+  unreadable, and quoting it is the workaround. JSON, TOML and XML lose
+  nothing. Six new
+  `doubled-leading-bom-is-rejected` vectors, one per surface, plus
+  `formats-json/encoding/interior-bom-is-ordinary-content`, which pins the
+  other direction: D-21 asks every reader for a pre-check, and one written a
+  character too wide — stripping or rejecting any `U+FEFF` rather than
+  exactly the one at offset zero — would corrupt labels and values while
+  passing all six. D-21 now states that a mark anywhere else MUST be
+  preserved. **`E-24`
   widens `parse.codec-syntax`** to cover this: §8.3.1 defined it as input
   that is not well-formed in its own source format, and a doubled BOM on
   YAML or XML *is* well-formed there — it fails only at the precondition
@@ -57,8 +68,8 @@ five, recorded as `DIV-4`.
   (`nan`, `inf`) or the **parser** did (`null`, `true`, `false`) is a real
   distinction, but it is spent before the scalar branch is taken and does not
   change the code. The `nan` vector is corrected and given `inf: 1` and
-  `5: 1` companions; §4.2's OML-4 and §4.8's examples table now say the same
-  thing. **"Leftover" is defined rather than assumed**: the position is the
+  `5: 1` companions, and `true: 1` so every input the rule enumerates has a
+  vector; §4.2's OML-4 and §4.8's examples table now say the same thing. **"Leftover" is defined rather than assumed**: the position is the
   first leftover *significant* token in §4.2.1's sense, so `1` newline `2`
   reports `2:1` (the `2`) and not the separator at `1:2`, and a trailing
   comment is not leftover content at all — `1 # done` is the valid scalar
@@ -90,15 +101,16 @@ five, recorded as `DIV-4`.
   records what each implementation must adopt, measured rather than assumed,
   and names why none of it surfaced earlier: **a code-agnostic runner
   (§8.5.2 rule 4) passes vectors the implementation does not really
-  satisfy.** Four of `DIV-4`'s five rows are invisible to one, including a
-  vector the Python reference has never met since the day it was written.
+  satisfy.** `DIV-4`'s `OML-25` row is exactly that shape — right `ok`,
+  right paths, wrong code — and it covers a vector the Python reference has
+  never met since the day it was written.
   `test-suite/README.md` and `docs/porting-a-conformance-runner.md` now say
   so, and ask ports to report which comparison mode produced their numbers.
   `DIV-4` also states that its vectors are an **E-20 "not yet implemented"**
   skip, not an E-21 documented divergence: none of these rows is a capability
   a language cannot provide, so no port needs to cite the entry by number to
   skip them.
-- **Sixteen new vectors, three corrected**, taking the suite to **247**.
+- **Eighteen new vectors, three corrected**, taking the suite to **249**.
 
 ## v0.18.0-beta (2026-09-18)
 

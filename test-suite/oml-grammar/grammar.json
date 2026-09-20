@@ -788,7 +788,7 @@
           }
         ]
       },
-      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. Companion to oml-grammar/encoding/leading-bom-is-stripped, which is the same input with one mark. Measured: the reference already rejects this with parse.unexpected-token at 1:1 -- green on arrival."
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. OML is one of the three surfaces where the rule costs nothing: grammars/oml.abnf admits BOM at offset zero and nowhere else, so a second mark is already a syntax error on OML's own terms. Companion to oml-grammar/encoding/leading-bom-is-stripped, the same input with one mark. Measured: the reference already rejects this with parse.unexpected-token at 1:1 -- green on arrival."
     },
 
     {
@@ -831,6 +831,27 @@
         }
       },
       "comment": "The companion to the vector above, pinning what 'leftover' excludes. Sec4.2.1 skips comments at tokenization, so a comment emits no token and cannot be leftover content: `1 # done` is the valid single-scalar document 1. Without this vector OML-25's 'first leftover significant token' has nothing holding the word significant to Sec4.2.1's meaning, and an implementation that reported trailing content here would look defensible. Confirmed live against the reference, which accepts it and returns the scalar 1."
+    },
+
+    {
+      "name": "oml-grammar/reserved/true-bare-label-at-top-level-fails-on-trailing-colon",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "true: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:5",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "The fifth member of OML-25's list, which enumerates null/true/nan/inf/5 and until now had a vector for every one of them except `true`. `true` is an IDENT excluded from label position by the parser, exactly like `null`, so the lookahead declines the edge branch, the scalar is consumed and the `:` is leftover. `true` is 4 characters, so the colon is at 1:5. The reference emits parse.unexpected-token at 1:5 -- position right, code wrong (DIV-4)."
     }
   ]
 }

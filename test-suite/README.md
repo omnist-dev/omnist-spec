@@ -139,10 +139,11 @@ satisfy.** A diagnostic with the right `ok` and the right position but the
 wrong code reports green and nothing in the run says otherwise. Rule 4's "a
 run must state which mode produced it" exists for that reason and is not a
 formality: state the mode wherever the numbers are quoted, not only inside
-the runner's own output. Four of the five rows in
+the runner's own output. The `OML-25` row in
 [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s `DIV-4`
-were invisible for exactly this reason, one of them a vector the Python
-reference had never met since the day it was written.
+is invisible for exactly this reason — right `ok`, right paths, wrong code —
+and it covers a vector the Python reference had never met since the day it
+was written.
 
 ## Reporting
 

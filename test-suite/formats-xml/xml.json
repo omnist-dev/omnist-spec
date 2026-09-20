@@ -392,7 +392,7 @@
           }
         ]
       },
-      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. The other red surface, for the same reason as YAML: XML 1.0 permits a leading BOM and the parser strips one itself, so under D-15's strip a doubled mark disappears silently. Measured: the reference accepts this input and returns the same Document as the single-BOM form (DIV-4)."
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. The other surface where the rule costs something, for the same reason as YAML: XML 1.0 admits a leading byte-order mark outright, so the remaining text is well-formed XML and the parser discards the second mark itself, making a doubled mark disappear silently under D-15's strip. The XML reader pre-checks for the same reason the YAML one does. Measured: the reference accepts this input and returns the same Document as the single-BOM form (DIV-4)."
     }
   ]
 }

@@ -513,6 +513,30 @@ prevent, and permitting it on the two surfaces whose libraries happen to do
 it would reopen the divergence D-15 closed, one layer down. Uniformity is
 worth the pre-check.
 
+**What it costs, stated plainly: YAML loses one document shape.** A YAML file
+whose very first key is an *unquoted* key beginning with `U+FEFF` becomes
+unreadable under this rule, because after D-15's strip that key's leading
+mark is exactly the byte D-21 rejects. Measured, the loss is narrow: a
+`U+FEFF` anywhere else in that key (`a` + mark + `bc`) reads fine, a key in
+any position other than the first reads fine, and quoting the key
+(`"` + mark + `abc":`) reads fine — so the shape has a workaround and only
+the unquoted-first-key case has none. JSON, TOML and XML lose nothing at all,
+since their first significant character can only be `{`, `[`, a bare key
+character or `<`. That is the price, and it is worth naming rather than
+leaving for a port to discover: the alternative is the silent-swallow
+outcome, where the same file reads as two different Documents depending on
+which YAML library the reader was built on, and nothing reports it.
+
+**A `U+FEFF` that is not at offset zero MUST be preserved (D-21).** D-15
+already says the mark is ordinary content anywhere but offset zero; this is
+the part a pre-check can get wrong. A reader that strips or rejects every
+`U+FEFF` it finds, rather than exactly the one at offset zero of the text
+remaining after D-15, corrupts labels and values while passing every
+doubled-BOM vector in the suite. The mark is an ordinary codepoint in a label
+and in a scalar, it compares byte-wise like any other (D-16), and
+`formats-json/encoding/interior-bom-is-ordinary-content` exists to catch a
+pre-check written one character too wide.
+
 **D-16. Labels and names compare byte-wise, never by Unicode normalization.** Two
 labels are the same label when their UTF-8 bytes are identical. `café`
 written as `U+0063 U+0061 U+0066 U+00E9` and as `U+0063 U+0061 U+0066 U+0065

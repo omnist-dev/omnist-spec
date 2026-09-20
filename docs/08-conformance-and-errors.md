@@ -75,11 +75,14 @@ remaining five codes (`reserved-word-label`, `bare-word`, `empty-array`,
 `nested-array`, `separator-in-array`) describe OML's value grammar
 specifically and have no OSD equivalent.
 
-**Codec read failures** — input that is not well-formed in its own source
-format — use `parse.codec-syntax`. Every other code in this family describes
-OML or OSD specifically, so before this existed there was nothing to report
-for malformed JSON, YAML, TOML or XML, and an implementation had to invent a
-name for the most common failure a codec has. The message SHOULD name the
+**Codec read failures use `parse.codec-syntax`** — input that is not
+well-formed in its own source format, and, since D-21, input a byte-level
+precondition this spec imposes ahead of the codec refuses (E-24 below; D-21's
+second-leading-`U+FEFF` check is the only such precondition today). Every
+other code in this family describes OML or OSD specifically, so before this
+existed there was nothing to report for malformed JSON, YAML, TOML or XML,
+and an implementation had to invent a name for the most common failure a
+codec has. The message SHOULD name the
 format and carry through whatever the underlying parser said, since that
 detail is what makes the failure actionable; §8.5.2 never compares message
 text, so this costs nothing in conformance.
@@ -89,10 +92,14 @@ here too**, even where the text would have been well-formed in its own
 format. There is exactly one such precondition today:
 [D-21](02-document-model.md#25-encoding)'s rejection of a second leading
 `U+FEFF`, which YAML and XML would otherwise accept and JSON's own rules
-leave open. This is a deliberate widening of the row above, made when D-21
-landed: the check runs on the byte stream before the codec is handed
-anything, it fails the read outright with `ok: false`, and no other family in
-this taxonomy describes a refusal at that layer. Putting it anywhere else
+leave open. This is a deliberate widening — of the table row above and of the
+paragraph before it, both of which said only "not well-formed in its own
+source format" before D-21 landed. It belongs here because of where the check
+sits: it runs on the input text after D-14 has established that the input is
+valid UTF-8 and D-15 has stripped the leading mark, and before the codec's
+own parsing begins, so nothing format-specific has happened yet. It fails the
+read outright with `ok: false`, and no other family in this taxonomy
+describes a refusal at that point. Putting it anywhere else
 would mean a new code that conveys nothing the message does not already say —
 the same argument that keeps one `parse.codec-syntax` across all four formats
 rather than four.
@@ -101,11 +108,13 @@ One code covers all four formats deliberately. Splitting it per format would
 add three codes that convey nothing the message does not already say, and
 nothing in the algebra or the harness branches on which codec failed.
 
-Distinguish this from the refusal codes in
+Distinguish this from the codec-adjustment codes in
 [§8.3.8](#838-format-codec-adjustments): those describe something about the
-*shape* Omnist would have to build — a `DOCTYPE`, mixed content, a dropped
-attribute — for input that is well-formed in its source format and outside
-the profile Omnist supports. `parse.codec-syntax` means the read failed
+*shape* Omnist would have to build from input that is well-formed in its
+source format — either refusing it as outside the profile Omnist supports
+(`format.dtd-forbidden`, `format.entity-forbidden`, `format.mixed-content`,
+all error severity) or recording what the shape cost (`format.attribute-dropped`,
+`format.namespace-dropped`, warnings). `parse.codec-syntax` means the read failed
 before any such shape existed: the input is genuinely malformed, or it fell
 at the one byte-level precondition E-24 names. Reporting a profile refusal as
 a syntax error, or the reverse, sends a user looking in the wrong place.

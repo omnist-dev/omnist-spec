@@ -206,7 +206,7 @@
           }
         ]
       },
-      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. TOML's own grammar gives U+FEFF no position anywhere, so rejecting the second mark is TOML's ordinary behavior; D-15's strip of the first is the deliberate Omnist addition. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. TOML is the third surface where the rule costs nothing, for the opposite reason to OML and OSD: TOML v1.0.0's grammar gives U+FEFF no position anywhere, leading or otherwise, so rejecting the second mark is TOML's ordinary behavior and D-15's strip of the first is the deliberate Omnist addition. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
     }
   ]
 }

@@ -536,7 +536,7 @@
           }
         ]
       },
-      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. The OSD half, companion to osd-grammar/encoding/leading-bom-is-stripped. Measured: the reference rejects it with the right code but reports the path as the raw offset `0` rather than a line:col, which E-11 forbids; recorded as DIV-4."
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. OSD's grammar, like OML's, admits BOM at offset zero and nowhere else, so rejecting the second mark is native here and D-21 adds no pre-check. Companion to osd-grammar/encoding/leading-bom-is-stripped. Measured: the reference rejects it with the right code but reports the path as the raw offset `0` rather than a line:col, which E-11 forbids -- the same raw-offset defect its string errors have, on a diagnostic that is not a string error at all; recorded as DIV-4."
     }
   ]
 }

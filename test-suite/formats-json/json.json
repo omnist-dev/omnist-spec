@@ -325,7 +325,35 @@
           }
         ]
       },
-      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. A codec read failure -- input that is not well-formed in its own source format -- so the code is parse.codec-syntax per Sec8.3.1, not one of the OML/OSD-specific codes. RFC 8259 Sec8.1 permits ignoring *a* byte order mark; it does not permit ignoring two. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. RFC 8259 Sec8.1 permits a JSON parser to ignore *a* byte order mark and says nothing about how many, so JSON's own rules leave this open and D-21 settles it. The code is parse.codec-syntax, which per E-24 covers a byte-level precondition this spec imposes ahead of a codec as well as input malformed in its own format -- the OML/OSD-specific codes describe those two grammars and do not apply to a codec. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
+    },
+
+    {
+      "name": "formats-json/encoding/interior-bom-is-ordinary-content",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a﻿b\": \"x﻿y\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a﻿b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x﻿y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The other half of D-15 and D-21, and the one nothing else in the suite covers. D-15 consumes a U+FEFF at offset zero and says that anywhere else it is ordinary content; D-21 now makes every reader pre-check for a second leading mark. A pre-check written one character too wide -- stripping or rejecting any U+FEFF it finds rather than only one at offset zero -- would have passed every other vector here while silently corrupting labels and values. This vector fails it. The mark appears both inside a label and inside a scalar, and both MUST survive byte-for-byte. Measured: the reference reads this as the single edge (a<U+FEFF>b, \"x<U+FEFF>y\") -- green on arrival -- and Python's own json module agrees, since JSON has no special rule for U+FEFF inside a string."
     }
   ]
 }
