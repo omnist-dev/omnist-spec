@@ -186,6 +186,27 @@
         }
       },
       "comment": "D-15, the TOML half. A BOM carries no data -- it is meaningless for UTF-8, which has no byte-order ambiguity to mark -- so treating it as content on some surfaces and not others is how two implementations build different Documents from one file. Paired with the JSON and OSD vectors because those were the three readers that rejected a BOM before D-15."
+    },
+
+    {
+      "name": "formats-toml/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "﻿﻿a = 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. TOML is the third surface where the rule costs nothing, for the opposite reason to OML and OSD: TOML v1.0.0's grammar gives U+FEFF no position anywhere, leading or otherwise, so rejecting the second mark is TOML's ordinary behavior and D-15's strip of the first is the deliberate Omnist addition. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
     }
   ]
 }

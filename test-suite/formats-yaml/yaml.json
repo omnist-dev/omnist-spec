@@ -108,6 +108,514 @@
         ]
       },
       "comment": "YAML 1.1's core schema resolves on/off/yes/no/true/false (in various cases) as booleans, not strings -- a bare `on:` key parses to the boolean true. Since a label MUST be a string, a reader MUST refuse to build a Document from a boolean-keyed mapping rather than silently coercing it. This is the exact failure mode that breaks an unquoted GitHub Actions `on:` trigger block. Confirmed live: the reference implementation reports this as a shape/label error, not a YAML-specific one -- quoting the key (\"on\":) is the only workaround, and there is none on the read side once resolution has already happened."
+    },
+
+    {
+      "name": "formats-yaml/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "﻿﻿a: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. One of the two surfaces where the rule genuinely costs something, and one of the two where this vector is red today. YAML 1.2 admits a leading byte-order mark in its own right, so after D-15's strip the remaining text is well-formed YAML and the library discards the second mark before the grammar ever sees it -- layered under D-15's strip that is a second, undeclared strip, and two byte-different inputs build one Document with no diagnostic saying which byte went missing. That is the outcome D-15 exists to prevent, so D-21 requires the YAML reader to pre-check the text it hands its library and reject. Measured: the reference accepts this input and returns the same Document as the single-BOM form (DIV-4)."
+    },
+
+    {
+      "name": "formats-yaml/merge-key/sequence-merges-in-source-order",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "base: &base\n  region: eu-west-1\nlimits: &limits\n  retries: 3\nsvc:\n  <<: [*base, *limits]\n  name: api\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "limits",
+              {
+                "edges": [
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "svc",
+              {
+                "edges": [
+                  [
+                    "region",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "eu-west-1"
+                      }
+                    }
+                  ],
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "name",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "api"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The merge-key edge order rule, with no declared_max_* key of any kind so that no runner can skip it. Its twin in formats-yaml/alias-expansion.json carries declared_max_alias_expansion and is therefore skippable by any port that allowlists that key, which would have left the order rule with no vector exercising it at all. Merged entries come first, in sequence (source) order: base's, then limits', then svc's own -- region, retries, name. Red against the Python reference, which flattens a merge sequence in reverse (PyYAML 6.0.3 returns retries, region, name); the JavaScript yaml library 2.9.0 already returns source order. See DIV-4."
+    },
+
+    {
+      "name": "formats-yaml/merge-key/local-key-overrides-merged-key-in-its-place",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "d: &d\n  a: 1\n  b: 2\ne:\n  <<: *d\n  a: 99\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "d",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "e",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 99
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The collision half of the order rule: a key the referring mapping writes itself wins the value over the merged one, but keeps the merged key's position rather than moving to the end. So `e` is a = 99 then b = 2, not b then a. Measured identically in PyYAML 6.0.3 and yaml 2.9.0, and the Python reference already produces this -- green on arrival. Single-alias form, so the reversed-sequence artifact does not apply here."
+    },
+
+    {
+      "name": "formats-yaml/merge-key/earliest-alias-wins-a-collision-between-merged-keys",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p\n  a: 1\nq: &q\n  a: 2\nr:\n  <<: [*p, *q]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Two aliases in one sequence supplying the same key: the earliest wins, so `r` carries the single edge a = 1, not a = 2 and not two a edges. One key means order cannot distinguish source from reverse flattening here, which is why this vector is green against the Python reference today while its sibling sequence-merges-in-source-order is red. Measured identically in PyYAML 6.0.3 and yaml 2.9.0."
+    },
+
+    {
+      "name": "formats-yaml/merge-key/sequence-collision-keeps-first-position-and-value-precedence",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p\n  a: 1\n  b: 5\nq: &q\n  b: 2\n  c: 3\nr:\n  <<: [*p, *q]\n  c: 99\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 99
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Order and value precedence in one shape, and the shape that separates the two implementations. Under the rule: merged entries in sequence order give a (from p), b (from p, which is the earliest alias supplying it, so p's 5 wins over q's 2), then c (from q, at q's position); the referring mapping's own c = 99 then wins the value while keeping that position. Result a = 1, b = 5, c = 99 in that order. yaml 2.9.0 returns exactly this. PyYAML 6.0.3 returns the same three values in the order b, c, a -- the reversed-sequence artifact -- so the Python reference is red here. See DIV-4."
+    },
+
+    {
+      "name": "formats-yaml/merge-key/nested-merge-puts-the-grandparent-first",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "g: &g\n  a: 1\nm: &m\n  <<: *g\n  b: 2\nn:\n  <<: *m\n  c: 3\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "g",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "m",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "n",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A merge nests: `m` merges `g`, and `n` merges `m`, so `n` gets g's entries, then m's own, then n's own -- a, b, c. The merged-entries-first rule applies at each level, which is what puts the grandparent ahead of the parent. Every alias here is a single-alias merge, so the reversed-sequence artifact does not apply and the Python reference already produces this. Measured identically in PyYAML 6.0.3 and yaml 2.9.0."
+    },
+
+    {
+      "name": "formats-yaml/merge-key/repeated-alias-in-one-sequence-contributes-once",
+      "spec": "docs/formats/yaml.md",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p\n  a: 1\n  b: 2\nr:\n  <<: [*p, *p]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The same anchor twice in one merge sequence contributes one copy, not two: the second occurrence supplies only keys the first already supplied, and the collision rule collapses each to a single edge at its first position. A Document is an ordered edge list and repeated labels are legal in it, so this is a real question rather than an obvious one -- `r` could have carried four edges. It carries two. Measured identically in PyYAML 6.0.3 and yaml 2.9.0, and the Python reference already produces this."
     }
   ]
 }

@@ -227,13 +227,14 @@ direction. Run against the reference as it behaves today, all six vectors are
 |---|---|---|
 | `nested-anchor-fan-out-exceeds-expansion-limit` | false | **fail** — real, and nothing to do with the allowlist; this vector carries no boundary the runner could skip on |
 | `merge-key-config-expands-one-to-one-and-succeeds` | true | pass, correctly |
-| `merge-key-sequence-flattens-each-alias-and-succeeds` | true | pass, correctly |
+| `merge-key-sequence-flattens-each-alias-and-succeeds` | true | **fail**, as of v0.19.0-beta — it passed while the vector encoded the reference's own reversed merge order; omnist-spec#98 corrected the vector to source order and the reference has yet to follow (`DIV-4`) |
 | `anchor-to-anchor-chain-under-limit-succeeds` | true | pass, correctly |
 | `expansion-at-declared-limit-succeeds` | true | **a false pass** — it reports green only because nothing enforces the limit, not because the runner recognized and skipped a declared-limit vector |
 | `expansion-one-past-declared-limit-fails` | false | **fail** — real, same reason as the first |
 
-So the honest count is **two outright failures and one false pass**, not two
-failures where skips belong. The false pass is the part that matters. Adopting
+So the honest count is **three outright failures and one false pass** — two
+from D-18 and, since v0.19.0-beta, one from the merge-order correction — not
+two failures where skips belong. The false pass is the part that matters. Adopting
 D-18 is two steps, not one: **(a)** implement the rule, and **(b)** add
 `declared_max_alias_expansion` to the runner's limit-key allowlist. A port that
 does (a) and forgets (b) does not get a loud failure to tell it so —
@@ -246,6 +247,57 @@ Until a port completes both steps, its runner reports these vectors as `fail`
 or `skip` citing this entry. It MUST NOT report
 `expansion-at-declared-limit-succeeds` as a pass on the strength of step (a)
 alone.
+
+**DIV-4. No implementation yet satisfies the rules v0.19.0-beta settled.**
+Four of the six rows below are rules new in that release. The
+`parse.codec-syntax` row is a pre-existing §8.3.1 code that the new
+doubled-BOM vectors are simply the first to exercise, and the `E-11` row is a
+pre-existing path rule the same vectors are the first to catch on a
+non-string diagnostic; both are listed here because adopting D-21 is what
+first requires them. Each row was measured,
+not assumed: the Python column comes from running the input against the
+reference at v0.9.5, and the TypeScript column from the port's own sweep
+reported on
+[omnist-ts#148](https://github.com/omnist-dev/omnist-ts/issues/148). The
+other three ports have not been measured against these rules and are left
+blank rather than guessed at.
+
+| Rule | Python reference today | TypeScript today | Required |
+|---|---|---|---|
+| **D-21**, second leading BOM ([§2.5](02-document-model.md#25-encoding)) | swallows it on **YAML and XML**: the doubled-BOM input builds the same Document as the single-BOM one. OML already rejects it correctly at `parse.unexpected-token` `1:1`; JSON, TOML and OSD reject it but with the code or path defects in the two rows below | swallows it on **YAML and XML**; rejects it on OML, OSD, JSON and TOML | reject on all six surfaces, `1:1` |
+| **`parse.codec-syntax`** ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)) | emits `parse.syntax` with **no `path` at all** for a malformed JSON or TOML read | not measured for this code | `parse.codec-syntax` with a `line:col` path (E-11) |
+| **E-11**, text positions on OSD diagnostics generally ([§8.4](08-conformance-and-errors.md#84-paths)) | reports the OSD doubled-BOM rejection at `path` `0`, a raw character offset, where E-11 requires `line:col` — the same defect as the E-23 row below on a diagnostic that is **not** a string error, so fixing E-23 alone will not close it | reports `line:col` | `1:1` |
+| **E-23**, string-error position ([§8.4](08-conformance-and-errors.md#84-paths)) | reports **every** OSD string error as a raw character offset, not only the control-character case — `path` is `18` for the escaped control character and `15` for an unterminated string, where E-11 requires a `line:col` either way. The OML side is already correct (`1:4` on all four of its string-error vectors) | reports the **offending character**, `2:8`, for OSD | the opening quote, as `line:col` |
+| **OML-25**, scalar then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` for **every** input the rule covers — `nan: 1`, `inf: 1`, `null: 1`, `true: 1`, `5: 1` and `1`-newline-`2` — at `1:4`, `1:4`, `1:5`, `1:5`, `1:2` and `2:1`. Every position is already right, so this is a code change only — and it means the reference never met the pre-existing `null: 1` vector either | emits `parse.trailing-content` for both `nan: 1` and `null: 1`: already correct. The other four inputs were not measured on this port | `parse.trailing-content` throughout |
+| **Merge-key order** ([YAML](formats/yaml.md)) | flattens a merge **sequence** in reverse, following PyYAML 6.0.3: `svc` reads `retries, region, name`, and the three-key collision shape reads `b, c, a` where the rule gives `a, b, c`. Values are right in every shape measured; only sequence order is wrong. The single-alias form, key-collision resolution, nested merges and repeated aliases all already match | source order already, in `yaml` 2.9.0: `region, retries, name` and `a, b, c` | sequence (source) order |
+
+**Why none of this surfaced until now.** The Python reference's conformance
+runner compares **code-agnostically** (§8.5.2 rule 4) — legitimately, since
+§8.1 does not yet make §8.3 mandatory. One row is invisible to it outright:
+**OML-25**, where `ok` and every path already match and only the code is
+wrong, so the vector reports a pass. That is how the reference came to fail
+the `null: 1` vector's expectation for as long as that vector has existed
+while its own suite stayed green. The rest are masked differently rather than
+not at all — that runner also reports `skip` for any expected diagnostic
+carrying no structured path, which is every `parse.codec-syntax` case it
+produces today — and the D-21 and merge-order rows do fail loudly. The lesson
+generalizes past these six rows: **a code-agnostic runner passes vectors the
+implementation does not really satisfy**, and a port should report which
+comparison mode produced its numbers.
+
+**These vectors are an E-20 "not yet implemented" skip, not an E-21 one.**
+Eighteen vectors are new in v0.19.0-beta and three were corrected; a port that
+has not yet adopted the rules above may report the affected ones as `skip`
+under E-20's **first** category, which requires no ledger citation of its
+own. E-21's documented-divergence category — the one that MUST cite a ledger
+entry by number — is for a capability a target language or design genuinely
+cannot provide, and none of these rows is that. They are all rollout work on
+a rule that landed, the same shape as `DIV-3`. This entry exists to record
+what the work is, not to convert it into a permitted divergence, and a port
+citing `DIV-4` as an E-21 reason is misreading it.
+
+Remove this entry when every implementation satisfies all six rows. Tracked
+by omnist-spec#98, #99, #100 and #101.
 
 ## 9.5 Adding a sixth implementation
 

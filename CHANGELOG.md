@@ -3,6 +3,115 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.19.0-beta (2026-09-20)
+
+**Normative (minor)** — closes
+[#98](https://github.com/omnist-dev/omnist-spec/issues/98),
+[#99](https://github.com/omnist-dev/omnist-spec/issues/99),
+[#100](https://github.com/omnist-dev/omnist-spec/issues/100) and
+[#101](https://github.com/omnist-dev/omnist-spec/issues/101). Four defects
+found by the TypeScript port's sweep against v0.18.0-beta
+([omnist-ts#148](https://github.com/omnist-dev/omnist-ts/issues/148)). Each
+was a question the spec did not answer, and in three of the four the
+conformance suite had quietly answered it with whatever the Python reference
+happened to do. **Every implementation needs a change**; the reference needs
+five, recorded as `DIV-4`.
+
+- **New D-21: exactly one leading byte-order mark is consumed, and a second
+  is not** ([§2.5](docs/02-document-model.md#25-encoding)). D-15 strips the
+  mark at offset zero and stops, and a reader MUST then reject a `U+FEFF`
+  still standing at offset zero of what remains — `parse.unexpected-token` on
+  OML and OSD, `parse.codec-syntax` on JSON, TOML, YAML and XML, at `1:1` in
+  every case, **whatever its parsing library does.** This is stated as a rule
+  Omnist imposes, not one derived from the formats, because the formats do
+  not agree: OML, OSD and TOML reject the second mark on their own grammar's
+  terms, while YAML 1.2 and XML 1.0 admit a leading byte-order mark outright
+  and RFC 8259 §8.1 permits ignoring *a* mark without saying how many. On
+  YAML and XML the library therefore strips the second mark itself, which
+  under D-15's strip is a second, undeclared strip — two byte-different
+  inputs building one Document with nothing recording which byte went
+  missing, the exact outcome D-15 exists to prevent — so readers there must
+  **pre-check**. The cost is named rather than left to be discovered: a YAML
+  file whose first key is an *unquoted* key beginning with `U+FEFF` becomes
+  unreadable, and quoting it is the workaround. JSON, TOML and XML lose
+  nothing. Six new
+  `doubled-leading-bom-is-rejected` vectors, one per surface, plus
+  `formats-json/encoding/interior-bom-is-ordinary-content`, which pins the
+  other direction: D-21 asks every reader for a pre-check, and one written a
+  character too wide — stripping or rejecting any `U+FEFF` rather than
+  exactly the one at offset zero — would corrupt labels and values while
+  passing all six. D-21 now states that a mark anywhere else MUST be
+  preserved. **`E-24`
+  widens `parse.codec-syntax`** to cover this: §8.3.1 defined it as input
+  that is not well-formed in its own source format, and a doubled BOM on
+  YAML or XML *is* well-formed there — it fails only at the precondition
+  D-21 imposes ahead of the codec. The §8.3.8 contrast is restated so it
+  stays accurate: those codes describe the *shape* Omnist would have to
+  build, `parse.codec-syntax` covers a read that failed before any shape
+  existed.
+- **New E-23: a string-body error reports the string's opening quote**
+  ([§8.4](docs/08-conformance-and-errors.md#84-paths)), not the offending
+  character — for `parse.control-character`, `parse.invalid-escape`,
+  `parse.unterminated-string` and `parse.unpaired-surrogate`, on OML and on
+  OSD alike. The suite's four OML string-error vectors already followed this;
+  the OSD vector added in v0.15.0-beta expected `1:1` for a string on line 2,
+  which is right under no convention at all. Corrected to `2:5`. Every other
+  vector carrying a string-error expectation was audited against the new
+  sentence and is consistent with it.
+- **New OML-25: a scalar followed by leftover content at document level is
+  `parse.trailing-content`**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation)), at the
+  position of the first leftover token — one rule where the suite had two.
+  `null: 1` expected `parse.trailing-content` and `nan: 1` expected
+  `parse.unexpected-token` for inputs that take an identical path through the
+  parser. Whether the **tokenizer** kept the word out of label position
+  (`nan`, `inf`) or the **parser** did (`null`, `true`, `false`) is a real
+  distinction, but it is spent before the scalar branch is taken and does not
+  change the code. The `nan` vector is corrected and given `inf: 1` and
+  `5: 1` companions, and `true: 1` so every input the rule enumerates has a
+  vector; §4.2's OML-4 and §4.8's examples table now say the same thing. **"Leftover" is defined rather than assumed**: the position is the
+  first leftover *significant* token in §4.2.1's sense, so `1` newline `2`
+  reports `2:1` (the `2`) and not the separator at `1:2`, and a trailing
+  comment is not leftover content at all — `1 # done` is the valid scalar
+  document `1`. Both have vectors. A top-level bare sequence such as
+  `[1, 2] 3` is explicitly outside the rule: `[` in value position is not a
+  document body, and the read fails on the bracket.
+- **The YAML merge key's edge order is now normative: sequence (source)
+  order, merged entries before the referring mapping's own**
+  ([YAML](docs/formats/yaml.md)). A Document is an ordered edge list, so
+  `<<: [*base, *limits]` cannot be left undefined the way YAML 1.1 leaves it;
+  it reads `region, retries, name`. The v0.18.0-beta vector expected
+  `retries, region, name` while its own comment claimed the opposite — it had
+  been captured live from the reference, whose PyYAML backend flattens a merge
+  sequence in reverse. **Key collisions are specified too**, which #98 left
+  conditional on being able to verify them: a collided key produces one edge,
+  at its earliest position, carrying the referring mapping's own value if it
+  writes one and otherwise the earliest alias's. **Nested merges and a
+  repeated alias are specified too**: a merge nests recursively with the
+  grandparent's entries first, and `<<: [*p, *p]` contributes one copy.
+  All of it verified against PyYAML 6.0.3 and the JavaScript `yaml` 2.9.0
+  independently, which produce the same values on every shape tested and the
+  same order except where PyYAML's reversed sequence flattening shows
+  through — the artifact this rule exists to rule out. **Six new merge-key
+  vectors live in `test-suite/formats-yaml/yaml.json` carrying no
+  `declared_max_*` key**, because the only vector pinning this order before
+  them carried `declared_max_alias_expansion` and was therefore skippable by
+  any port that allowlists it.
+- **New `DIV-4`** ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences))
+  records what each implementation must adopt, measured rather than assumed,
+  and names why none of it surfaced earlier: **a code-agnostic runner
+  (§8.5.2 rule 4) passes vectors the implementation does not really
+  satisfy.** `DIV-4`'s `OML-25` row is exactly that shape — right `ok`,
+  right paths, wrong code — and it covers a vector the Python reference has
+  never met since the day it was written.
+  `test-suite/README.md` and `docs/porting-a-conformance-runner.md` now say
+  so, and ask ports to report which comparison mode produced their numbers.
+  `DIV-4` also states that its vectors are an **E-20 "not yet implemented"**
+  skip, not an E-21 documented divergence: none of these rows is a capability
+  a language cannot provide, so no port needs to cite the entry by number to
+  skip them.
+- **Eighteen new vectors, three corrected**, taking the suite to **249**.
+
 ## v0.18.0-beta (2026-09-18)
 
 **Normative (minor)** — closes

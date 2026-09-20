@@ -29,6 +29,76 @@ mechanism [D-18](../02-document-model.md#241-bounding-alias-expansion) means by
 plain alias multiplies; §2.4.1 states what each form contributes to the
 expansion factor.
 
+**Merged entries come first, in source order.** A Document is an ordered edge
+list ([D-1](../02-document-model.md#23-structural-invariants)), so a codec
+cannot leave this to chance the way YAML can: a YAML mapping is unordered and
+YAML 1.1's merge type says nothing about the resulting order, but an Omnist
+Document is ordered and conformance vectors compare that order byte for byte.
+The normative order is:
+
+- for `<<: *x`, the entries of `x` in `x`'s own written order, then the
+  referring mapping's own entries in theirs;
+- for `<<: [*a, *b]`, `a`'s entries, then `b`'s, then the referring mapping's
+  own — **sequence order**, the order the aliases are written in, with no
+  reversal at any level.
+
+So:
+
+```yaml
+base: &base
+  region: eu-west-1
+limits: &limits
+  retries: 3
+svc:
+  <<: [*base, *limits]
+  name: api
+```
+
+reads `svc` as the three edges `region`, `retries`, `name`, in that order.
+Source order is normative because it is the only order the written text
+explains. Some YAML libraries flatten a merge sequence in *reverse* —
+PyYAML's constructor does, which is how the reference implementation came to
+produce `retries, region, name` — and a codec built on one of those MUST
+reorder rather than pass the artifact through. See
+[omnist-spec#98](https://github.com/omnist-dev/omnist-spec/issues/98), and
+[`DIV-4`](../09-divergence-ledger.md#94-known-open-divergences) for which
+implementations have yet to adopt it.
+
+**Key collisions resolve to one edge, at the earliest position.** A key
+supplied by more than one of the merged sources, or by a merged source and
+the referring mapping both, produces exactly **one** edge. It sits at the
+position of its first occurrence in the order above, and it carries the
+referring mapping's *own* value when the mapping writes one, otherwise the
+value from the **earliest** alias in the sequence that supplies it. Over
+`d: &d {a: 1, b: 2}`, the mapping `e: {<<: *d, a: 99}` reads as `a = 99` then
+`b = 2` — the local value in the merged key's position — and this holds
+whether the local `a:` is written before or after the `<<:`. Over
+`p: &p {a: 1}` and `q: &q {a: 2}`, the mapping `r: {<<: [*p, *q]}` reads as
+the single edge `a = 1`: the earlier alias wins. Both rules were verified
+against two independent YAML implementations — PyYAML 6.0.3 and the
+JavaScript `yaml` library 2.9.0 — which produce the same **values** on every
+shape tested. They agree on **order** too except where PyYAML's reversed
+sequence flattening shows through, which is the artifact this section rules
+out: given `p: &p {a: 1, b: 5}` and `q: &q {b: 2, c: 3}`, the mapping
+`r: {<<: [*p, *q], c: 99}` reads as `a = 1`, `b = 5`, `c = 99` under this
+rule and in the JavaScript library, while PyYAML returns the same three
+values in the order `b, c, a`.
+
+**A merge nests.** An aliased mapping that itself contains a `<<` is merged
+recursively, and the grandparent's entries arrive first: for
+`g: &g {a: 1}`, `m: &m {<<: *g, b: 2}` and `n: {<<: *m, c: 3}`, `n` reads as
+`a`, `b`, `c`. **A repeated alias in one sequence contributes once.**
+`<<: [*p, *p]` yields exactly one copy of `p`'s entries, not two — the second
+occurrence supplies only keys the first already supplied, and the collision
+rule above collapses them. Both were measured in PyYAML 6.0.3 and
+`yaml` 2.9.0, which agree on both.
+
+This is also the case §2.4.1's D-19 flags when it calls `W` a *conservative*
+bound: the expansion check runs before materialization and is deliberately
+blind to collision resolution, so it counts a collided key twice where the
+reader materializes it once. Erring high there is intended, and nothing here
+changes it.
+
 **Which is exactly why the YAML reader MUST bound alias expansion.** Fully
 expanding every alias is what makes an anchor an amplifier: one written
 definition materializes again at each reference, and an anchor whose

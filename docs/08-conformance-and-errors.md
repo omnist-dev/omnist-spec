@@ -56,7 +56,7 @@ Every diagnostic carries at least:
 | `parse.leading-zero` | A `NUMBER`/`INTEGER` literal's integer part has a leading zero |
 | `parse.invalid-date` | A `DATE` or the date portion of a `DATETIME` is not a valid calendar date |
 | `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
-| `parse.codec-syntax` | Input is not well-formed in its own source format (JSON, YAML, TOML, XML) — see the note below |
+| `parse.codec-syntax` | Input a codec cannot accept: not well-formed in its own source format (JSON, YAML, TOML, XML), or refused by a byte-level precondition this spec imposes ahead of the codec — see the note below |
 | `parse.invalid-encoding` | Input is not valid UTF-8 ([§2.5](02-document-model.md#25-encoding)) |
 
 **E-3.** **Six of these codes also cover OSD's own lexical stage**:
@@ -75,25 +75,49 @@ remaining five codes (`reserved-word-label`, `bare-word`, `empty-array`,
 `nested-array`, `separator-in-array`) describe OML's value grammar
 specifically and have no OSD equivalent.
 
-**Codec read failures** — input that is not well-formed in its own source
-format — use `parse.codec-syntax`. Every other code in this family describes
-OML or OSD specifically, so before this existed there was nothing to report
-for malformed JSON, YAML, TOML or XML, and an implementation had to invent a
-name for the most common failure a codec has. The message SHOULD name the
+**Codec read failures use `parse.codec-syntax`** — input that is not
+well-formed in its own source format, and, since D-21, input a byte-level
+precondition this spec imposes ahead of the codec refuses (E-24 below; D-21's
+second-leading-`U+FEFF` check is the only such precondition today). Every
+other code in this family describes OML or OSD specifically, so before this
+existed there was nothing to report for malformed JSON, YAML, TOML or XML,
+and an implementation had to invent a name for the most common failure a
+codec has. The message SHOULD name the
 format and carry through whatever the underlying parser said, since that
 detail is what makes the failure actionable; §8.5.2 never compares message
 text, so this costs nothing in conformance.
+
+**E-24. A byte-level precondition this spec imposes ahead of a codec reports
+here too**, even where the text would have been well-formed in its own
+format. There is exactly one such precondition today:
+[D-21](02-document-model.md#25-encoding)'s rejection of a second leading
+`U+FEFF`, which YAML and XML would otherwise accept and JSON's own rules
+leave open. This is a deliberate widening — of the table row above and of the
+paragraph before it, both of which said only "not well-formed in its own
+source format" before D-21 landed. It belongs here because of where the check
+sits: it runs on the input text after D-14 has established that the input is
+valid UTF-8 and D-15 has stripped the leading mark, and before the codec's
+own parsing begins, so nothing format-specific has happened yet. It fails the
+read outright with `ok: false`, and no other family in this taxonomy
+describes a refusal at that point. Putting it anywhere else
+would mean a new code that conveys nothing the message does not already say —
+the same argument that keeps one `parse.codec-syntax` across all four formats
+rather than four.
 
 One code covers all four formats deliberately. Splitting it per format would
 add three codes that convey nothing the message does not already say, and
 nothing in the algebra or the harness branches on which codec failed.
 
-Distinguish this from the refusal codes in
-[§8.3.8](#838-format-codec-adjustments): those are for input that is
-well-formed in its source format and outside the profile Omnist supports.
-`parse.codec-syntax` means the input is genuinely malformed. Reporting a
-refusal as a syntax error, or the reverse, sends a user looking in the wrong
-place.
+Distinguish this from the codec-adjustment codes in
+[§8.3.8](#838-format-codec-adjustments): those describe something about the
+*shape* Omnist would have to build from input that is well-formed in its
+source format — either refusing it as outside the profile Omnist supports
+(`format.dtd-forbidden`, `format.entity-forbidden`, `format.mixed-content`,
+all error severity) or recording what the shape cost (`format.attribute-dropped`,
+`format.namespace-dropped`, warnings). `parse.codec-syntax` means the read failed
+before any such shape existed: the input is genuinely malformed, or it fell
+at the one byte-level precondition E-24 names. Reporting a profile refusal as
+a syntax error, or the reverse, sends a user looking in the wrong place.
 
 ### 8.3.2 `document.*` — building and limits
 
@@ -368,6 +392,21 @@ from the byte offset of the failure:
 `schema.*`, `validate.*`, `materialize.*`, `algebra.*`, or `lint.*` diagnostic's
 `path` MUST be a Document or Schema path — never a text-position path, since a
 Document or Schema already exists by the time any of those families can fire.
+
+**E-23. A string-body error reports the string's opening quote.**
+`parse.control-character`, `parse.invalid-escape`,
+`parse.unterminated-string` and `parse.unpaired-surrogate` — on OML, and on
+OSD via E-3 — MUST report the text position of the `"` or `'` that opens the
+string, not the position of the offending character inside it. The failing
+unit is the string, naming its start names that unit; the position is stable
+whether the implementation scans the body raw or after unescaping; and it is
+the only choice that answers the question at all for
+`parse.unterminated-string`, which has no offending character to point at.
+This was implicit before v0.19.0-beta — every OML vector in the suite already
+followed it — and stating it matters because an implementation that reports
+the offending character instead is wrong on a path compared byte-for-byte,
+while a runner in code-agnostic mode (§8.5.2 rule 4) still compares paths and
+will catch it.
 
 ### 8.4.1 Which kind each `schema.*` code uses
 

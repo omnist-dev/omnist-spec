@@ -14,11 +14,51 @@
         "diagnostics": [
           {
             "path": "1:4",
-            "code": "parse.unexpected-token"
+            "code": "parse.trailing-content"
           }
         ]
       },
-      "comment": "`nan` is claimed by the reserved-float-spelling tokenizer rule (rule 7) before IDENT is reached, so it never reaches label position at all -- the failure is a token-level mismatch, not the reserved-word-label error nan/inf never get."
+      "comment": "`nan` is claimed by the reserved-float-spelling tokenizer rule (rule 7) before IDENT is reached, so it never reaches label position at all and is not the reserved-word-label error nan/inf never get. But it is not a token-level mismatch either, which is what this vector claimed while expecting parse.unexpected-token until v0.19.0-beta: the parser takes the scalar branch, consumes `nan` as a NUMBER, and then fails on the leftover `:` exactly as `null: 1` does. Sec4.6.1's OML-25 now states the general rule -- any scalar followed by leftover content at document level is parse.trailing-content, at the first leftover token. `nan: 1` is 3 characters then the colon, so 1:4. Whether the tokenizer or the parser excluded the word from label position is spent before the scalar branch is taken and does not change the code. The reference emits parse.unexpected-token at 1:4 (code wrong, position right); recorded as DIV-4."
+    },
+    {
+      "name": "oml-grammar/reserved/inf-bare-is-a-number-token-not-a-label",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "inf: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-25's companion to the `nan` vector: `inf` is claimed by the same reserved-float-spelling tokenizer rule, takes the same scalar branch, and fails the same way. `inf` is 3 characters, so the leftover colon is at 1:4. The reference emits parse.unexpected-token at 1:4 (DIV-4)."
+    },
+    {
+      "name": "oml-grammar/reserved/bare-integer-then-colon-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "5: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:2",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-25 with no reserved word involved at all: an INTEGER is a scalar, the top-level lookahead (Sec4.6.1) only routes a STRING or a non-reserved IDENT to the edge branch, so `5` is consumed as the document's single scalar and the `:` is leftover. `5` is one character, so the colon is at 1:2. This is the vector that shows the rule is about scalar-then-leftover generally and not about `null`/`nan`/`inf` specifically. The reference emits parse.unexpected-token at 1:2 (DIV-4)."
     },
     {
       "name": "oml-grammar/reserved/quoted-nan-is-an-ordinary-label",
@@ -728,6 +768,90 @@
         }
       },
       "comment": "Sec2.5: labels compare byte-wise, never by Unicode normalization. Both labels render as 'cafe-acute' but differ in bytes -- one is U+00E9, the other 'e' followed by combining U+0301 -- so they are two distinct labels and the node has two edges. An implementation that normalizes to NFC or NFD on read collapses them into one edge and fails here. This is the rule most likely to be broken by accident, since some platforms normalize text input by default."
+    },
+
+    {
+      "name": "oml-grammar/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "﻿﻿a: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. OML is one of the three surfaces where the rule costs nothing: grammars/oml.abnf admits BOM at offset zero and nowhere else, so a second mark is already a syntax error on OML's own terms. Companion to oml-grammar/encoding/leading-bom-is-stripped, the same input with one mark. Measured: the reference already rejects this with parse.unexpected-token at 1:1 -- green on arrival."
+    },
+
+    {
+      "name": "oml-grammar/errors/newline-separated-second-scalar-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "1\n2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-25's position rule with no reserved word and no colon involved: `1` is the document's single scalar and `2` is leftover. The position is the first leftover **significant** token -- the `2` at 2:1 -- not the separator in front of it, which Sec4.2.1 collapses and which would be 1:2. Counted from the input: line 1 is `1`, line 2 is `2` at column 1. The reference reports the right position here and the wrong code, parse.unexpected-token (DIV-4)."
+    },
+
+    {
+      "name": "oml-grammar/comments/trailing-comment-after-a-lone-scalar-is-not-trailing-content",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "1 # done\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "scalar": {
+            "kind": "integer",
+            "value": 1
+          }
+        }
+      },
+      "comment": "The companion to the vector above, pinning what 'leftover' excludes. Sec4.2.1 skips comments at tokenization, so a comment emits no token and cannot be leftover content: `1 # done` is the valid single-scalar document 1. Without this vector OML-25's 'first leftover significant token' has nothing holding the word significant to Sec4.2.1's meaning, and an implementation that reported trailing content here would look defensible. Confirmed live against the reference, which accepts it and returns the scalar 1."
+    },
+
+    {
+      "name": "oml-grammar/reserved/true-bare-label-at-top-level-fails-on-trailing-colon",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "true: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:5",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "The fifth member of OML-25's list, which enumerates null/true/nan/inf/5 and until now had a vector for every one of them except `true`. `true` is an IDENT excluded from label position by the parser, exactly like `null`, so the lookahead declines the edge branch, the scalar is consumed and the `:` is leftover. `true` is 4 characters, so the colon is at 1:5. The reference emits parse.unexpected-token at 1:5 -- position right, code wrong (DIV-4)."
     }
   ]
 }

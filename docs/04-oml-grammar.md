@@ -69,8 +69,10 @@ Anything matching none of these is an error.
 **OML-4.** Two consequences of the order are normative and MUST be reproduced.
 
 **`nan` and `inf` can never be bare labels.** They are claimed by rule 7 before
-`IDENT` is reached, so `nan: 1` is an error. `"nan": 1` is fine, since quoting
-routes it to rule 1.
+`IDENT` is reached, so `nan: 1` is an error — specifically the scalar-then-
+leftover error of [OML-25](#461-top-level-disambiguation), not a label error:
+the parser consumes `nan` as the document's single `NUMBER` and fails on the
+leftover `:`. `"nan": 1` is fine, since quoting routes it to rule 1.
 
 **OML-5. DATE versus DATETIME needs one lookahead.** At a position where `DATE`
 matches, the tokenizer MUST check whether the next character is `T` and the text
@@ -254,6 +256,37 @@ inside a node — `a: { null: 1 }` — label position is unambiguous and the
 specific reserved-word error is produced instead. Both are errors; conformance
 vectors distinguish them by code.
 
+**OML-25. When the lookahead takes the scalar branch, anything left after
+the scalar is `parse.trailing-content`.** §8.3.1 states the general form —
+content remaining after the document's single node is trailing content,
+whatever that node was — and OML-25 is this section's case of it: the node is
+a bare scalar, reached because the lookahead above declined the edge branch.
+An implementation MUST report it at the text position of the first leftover
+**significant** token, and MUST do so regardless of which tokenizer rule
+produced the scalar. `null: 1`, `true: 1`, `nan: 1`, `inf: 1` and `5: 1`
+therefore all fail identically, at `1:5`, `1:5`, `1:4`, `1:4` and `1:2`
+respectively. That `nan` and `inf` are kept out of label position by the
+**tokenizer** (§4.2.2) while `null`/`true`/`false` are kept out by the
+**parser** is a real distinction, but it is spent before the scalar branch is
+taken and MUST NOT change the code. `parse.unexpected-token` is for a token
+appearing where the grammar does not allow it; a complete document body
+followed by more text is not that, and reporting it that way sends a reader
+looking for a bad token rather than for the second document they accidentally
+wrote.
+
+**"First leftover significant token" is §4.2.1's sense of significant.**
+Horizontal space, newlines, `;` and comments are skipped or collapse into a
+separator and are not themselves leftover content, so the reported position
+is the first *real* token after the scalar, not the whitespace in front of
+it: `1` newline `2` reports `2:1`, the `2`, not `1:2`. A **trailing comment
+is not leftover content at all** — `1 # done` is the valid single-scalar
+document `1`, because §4.2.1 skips comments before the parser can see them.
+One case sits outside this rule entirely: a top-level bare sequence such as
+`[1, 2] 3` never reaches it, because `[` in value position is not a document
+body to begin with ([§4.3.1](#431-arrays-are-sugar)) and the read fails on
+the `[` itself — measured against the reference as `parse.unexpected-token`
+at `1:1`.
+
 ## 4.7 Limits
 
 | Limit | Value | Enforced at |
@@ -281,9 +314,11 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 | `a: """` + newline + `hello` + newline + `world"""` | value `hello\nworld`; the leading newline is stripped |
 | `a: """` + newline + `says ""hi"" there"""` | two-quote runs are literal content |
 | `a: """` + newline + `x""""` (four closing quotes) | first three close the string; the fourth opens an unterminated string, error |
-| `nan: 1` | error; `nan` is a `NUMBER` token and never reaches label position |
+| `nan: 1` | error; `nan` is a `NUMBER` token and never reaches label position, so the parser consumes it as a scalar and fails on the leftover `:` — `parse.trailing-content` at `1:4` (OML-25) |
+| `inf: 1` | error, identical to `nan: 1` — `parse.trailing-content` at `1:4` |
+| `5: 1` | error; `INTEGER` is a scalar and the lookahead never routes it to label position — `parse.trailing-content` at `1:2` |
 | `"nan": 1` | valid; the edge `(nan, 1)` |
-| `null: 1` at top level | error on the leftover `:` as trailing content |
+| `null: 1` at top level | error on the leftover `:` as trailing content — `parse.trailing-content` at `1:5`, the same rule |
 | `a: { null: 1 }` | reserved-word error naming `null` |
 | `tag: "x"` newline `tag: "y"` | `[(tag,"x"), (tag,"y")]` |
 | `b: [1, 2, 3]` | `[(b,1), (b,2), (b,3)]` |

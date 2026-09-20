@@ -498,12 +498,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "1:1",
+            "path": "2:5",
             "code": "parse.control-character"
           }
         ]
       },
-      "comment": "Sec5.3.1's control-character ban applies to every raw byte in the string body, escape context included -- a control character immediately after a backslash is still a control character in the body. This was ambiguous until v0.15.0-beta: the prose said 'a literal control character', which invited the reading that only an unescaped one was forbidden, and grammars/osd.abnf's escape alternative was written as \"\\\" %x00-10FFFF, which admitted the escaped form outright. So a parser generated from the grammar and one written from the prose disagreed on these exact bytes. Grammar and prose now agree and this vector pins it."
+      "comment": "Sec5.3.1's control-character ban applies to every raw byte in the string body, escape context included -- a control character immediately after a backslash is still a control character in the body. This was ambiguous until v0.15.0-beta: the prose said 'a literal control character', which invited the reading that only an unescaped one was forbidden, and grammars/osd.abnf's escape alternative was written as \"\\\" %x00-10FFFF, which admitted the escaped form outright. So a parser generated from the grammar and one written from the prose disagreed on these exact bytes. Grammar and prose now agree and this vector pins it. The position was `1:1` until v0.19.0-beta, which is on line 1 (`record R {`) while the string is on line 2 and correct under no convention. Sec8.4's E-23 now states the convention the OML string-error vectors already followed: a string-body error reports the string's **opening quote**. Line 2 is four spaces then the quote, so the quote is at column 5 -- `2:5`. The reference reports a raw character offset (`18`) rather than a line:col here, which violates E-11; recorded as DIV-4."
     },
     {
       "name": "osd-grammar/encoding/leading-bom-is-stripped",
@@ -517,6 +517,26 @@
         "ok": true
       },
       "comment": "D-15, the OSD half. A leading U+FEFF is consumed and contributes nothing to the Schema, exactly as on OML and the codecs; the result is identical to the same input without it, and grammars/osd.abnf admits BOM at offset zero and nowhere else. OSD was the third surface that rejected a BOM before D-15 -- measured against the reference, parse_schema raised SchemaError parse.unexpected-token -- alongside the JSON and TOML readers. Red against the reference by design, like its JSON and TOML counterparts."
+    },
+
+    {
+      "name": "osd-grammar/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "text": "﻿﻿record R {\n    \"a\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. OSD's grammar, like OML's, admits BOM at offset zero and nowhere else, so rejecting the second mark is native here and D-21 adds no pre-check. Companion to osd-grammar/encoding/leading-bom-is-stripped. Measured: the reference rejects it with the right code but reports the path as the raw offset `0` rather than a line:col, which E-11 forbids -- the same raw-offset defect its string errors have, on a diagnostic that is not a string error at all; recorded as DIV-4."
     }
   ]
 }

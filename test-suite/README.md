@@ -134,6 +134,17 @@ Four rules, all normative, all from chapter 8:
    mode for implementations that have not adopted the chapter 8 code taxonomy —
    which today is all of them. A run must state which mode produced it.
 
+**A code-agnostic run passes vectors the implementation does not really
+satisfy.** A diagnostic with the right `ok` and the right position but the
+wrong code reports green and nothing in the run says otherwise. Rule 4's "a
+run must state which mode produced it" exists for that reason and is not a
+formality: state the mode wherever the numbers are quoted, not only inside
+the runner's own output. The `OML-25` row in
+[§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s `DIV-4`
+is invisible for exactly this reason — right `ok`, right paths, wrong code —
+and it covers a vector the Python reference had never met since the day it
+was written.
+
 ## Reporting
 
 Report pass, fail, and **skip** counts separately. Skip is a first-class result:
