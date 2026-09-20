@@ -215,8 +215,9 @@ override the first.
 
 ## 5.9 Canonical output
 
-**OSD-11.** An OSD writer is canonical if, for every schema, it emits text that parses back
-to an equal schema, following the canonical form below. Two conformant
+**OSD-11.** An OSD writer is canonical if, for every schema **OSD text can
+represent** (OSD-14 below names the one class it cannot), it emits text that
+parses back to an equal schema, following the canonical form below. Two conformant
 implementations parsing the *same* source and immediately writing it back
 MUST produce byte-identical text — that guarantee comes from
 [§3.3](03-schema-model.md#33-formal-definition)'s order principles plus
@@ -245,6 +246,40 @@ root R
 
 **OSD-12.** A compact mode with no indentation is permitted and MUST round-trip:
 `record R { "a": string } root R`.
+
+**OSD-14. A schema OSD text cannot represent MUST fail the write, never be
+approximated.** [§5.3.1](#531-string-unescaping) bans every raw byte below
+`U+0020` in a string body, escape context included, and OSD's unescaping is
+weak — `\X` yields `X` and nothing more — so a field label containing a C0
+control character has no OSD spelling at all: written raw the byte is
+rejected, and written after a backslash it is the same byte in the same body
+and rejected identically. An OSD writer given such a schema MUST fail with
+`write.unsupported-value`
+([§8.3.9](08-conformance-and-errors.md#839-write)), unconditionally and
+regardless of any `strict` setting, on the rule
+[§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)'s E-6
+already applies to every writer case of this shape: a writer that cannot
+represent a value fails rather than emitting something that reads back as
+different data — here, text no conformant OSD reader accepts at all. This is
+what OSD-11 above is scoped by.
+
+**The class is exactly that: a C0 control character in a field label — and
+such a schema still travels, as [OSD-OML](extensions/osd-oml.md).** Record
+names cannot reach it, because
+[§3.3](03-schema-model.md#33-formal-definition)'s S-8 confines a `Name` to
+`[A-Za-z_][A-Za-z0-9_]*` on every route into a Schema — enforced by this
+chapter's own tokenizer ([§5.3](#53-tokens)) on the OSD route and by §E.6's
+R-3a on the OSD-OML one — and `root` names a declared record, so it cannot
+either. Field labels are the asymmetry, deliberately: §E.6's R-7 leaves a
+label unrestricted beyond `[`, `]` and emptiness, because a label is a
+*value*, not an identifier ([§5.2](#52-the-quoting-rule)). OML can write one
+where OSD cannot — [OML-15](04-oml-grammar.md#45-strings) requires `\u00XX`
+for exactly these characters and OML's escaping is real rather than weak — so
+a schema `write_schema` must refuse is one `write_schema_oml` round-trips,
+and that is the route for it. Measured: the Python reference's `to_osd`
+emits the raw byte today and its own `parse_schema` then rejects what it
+wrote, the same round-trip break the Go sweep found in `osd.Write`
+([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118)).
 
 ## 5.10 Worked examples
 

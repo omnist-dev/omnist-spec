@@ -79,7 +79,8 @@ matches, the tokenizer MUST check whether the next character is `T` and the text
 after it matches `TIME`. If so, it emits `DATETIME`. If not, it emits `DATE`,
 and whatever follows is tokenized independently. So `2024-01-01T10:30` is one
 `DATETIME`, while `2024-01-01T99` is a `DATE` followed by the `IDENT` `T99` —
-which then fails as trailing content.
+which then fails as trailing content, `parse.trailing-content` at the `T99`
+per [OML-26](#461-top-level-disambiguation).
 
 ### 4.2.1 Separators
 
@@ -287,6 +288,34 @@ body to begin with ([§4.3.1](#431-arrays-are-sugar)) and the read fails on
 the `[` itself — measured against the reference as `parse.unexpected-token`
 at `1:1`.
 
+**OML-26. Leftover content after a complete *top-level edge* is
+`parse.trailing-content` as well.** OML-25 covers the scalar branch of the
+lookahead above; this covers the edge branch, and the two state one
+principle together: **`parse.trailing-content` means content after the
+document has ended.** At top level a complete edge can end the document —
+§4.6's second legal shape is a list of edges and nothing further is owed —
+so a significant token standing there with no separator in front of it is a
+second document the author accidentally wrote. An implementation MUST report
+`parse.trailing-content` at the text position of the first leftover
+significant token, in the same §4.2.1 sense OML-25's paragraph above
+defines, which applies here unchanged. `a: 1 b: 2` therefore fails at `1:6`,
+the `b`; `a: 2024-01-01T99` fails at `1:14`, the `IDENT` `T99` that
+[OML-5](#42-tokenization) produces, which is the row §4.8's table has always
+carried.
+
+**OML-27. Inside `{...}` or `[...]` the same missing separator is
+`parse.unexpected-token`.** Nothing has ended there: a closing `}` or `]` is
+still owed, so a token appearing where a separator or that delimiter belongs
+is precisely §8.3.1's "a token appears where the grammar does not allow it",
+and an implementation MUST report `parse.unexpected-token` at that token.
+`a: { b: 1 c: 2 }` fails at `1:11`, the `c`; `a: [1 2]` fails at `1:7`, the
+`2` — [§4.3.1](#431-arrays-are-sugar) makes the comma the only element
+separator, so the `2` stands where a `,` or `]` was owed. **The deciding
+fact is the enclosing delimiter, not the missing separator**, which is
+absent in all four of these inputs. Reporting them all one way would either
+send a reader inside a brace looking for a second document, or send a reader
+who has written one document too many looking for a bad token.
+
 ## 4.7 Limits
 
 | Limit | Value | Enforced at |
@@ -309,7 +338,7 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 | Input | Result |
 |---|---|
 | `2024-01-01T10:30` | one `DATETIME` value |
-| `2024-01-01T99` | `DATE` then `IDENT` `T99`, then a trailing-content error |
+| `2024-01-01T99` | `DATE` then `IDENT` `T99`, then a trailing-content error — `parse.trailing-content` at `1:14` (OML-26) |
 | `a: 'C:\no\escapes'` | raw string; value is that literal text, backslashes intact |
 | `a: """` + newline + `hello` + newline + `world"""` | value `hello\nworld`; the leading newline is stripped |
 | `a: """` + newline + `says ""hi"" there"""` | two-quote runs are literal content |

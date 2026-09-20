@@ -43,7 +43,7 @@ Every diagnostic carries at least:
 | Code | Raised when |
 |---|---|
 | `parse.unexpected-token` | A token appears where the grammar does not allow it |
-| `parse.trailing-content` | Content remains after the document's single node |
+| `parse.trailing-content` | Content remains after the document has ended — after its single scalar (OML-25) or after a complete top-level edge (OML-26) |
 | `parse.unterminated-string` | A string is not closed before end of input |
 | `parse.invalid-escape` | An unrecognized backslash escape |
 | `parse.unpaired-surrogate` | A `\uXXXX` surrogate escape without its partner |
@@ -58,6 +58,20 @@ Every diagnostic carries at least:
 | `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
 | `parse.codec-syntax` | Input a codec cannot accept: not well-formed in its own source format (JSON, YAML, TOML, XML), or refused by a byte-level precondition this spec imposes ahead of the codec — see the note below |
 | `parse.invalid-encoding` | Input is not valid UTF-8 ([§2.5](02-document-model.md#25-encoding)) |
+
+**E-25. `parse.trailing-content` and `parse.unexpected-token` divide on
+whether the document has ended, not on what is missing.** The two rows above
+are one line apart and the same input can look like either, so the boundary
+is stated here as well as in chapter 4. Content standing after a complete
+**top-level** document body — a bare scalar
+([OML-25](04-oml-grammar.md#461-top-level-disambiguation)) or a complete edge
+([OML-26](04-oml-grammar.md#461-top-level-disambiguation)) — is trailing
+content, because the body is finished and what follows is a second document.
+Inside `{...}` or `[...]` a closing delimiter is still owed, so the same
+missing separator is a token the grammar does not allow there and MUST be
+reported as `parse.unexpected-token`
+([OML-27](04-oml-grammar.md#461-top-level-disambiguation)). Neither code is a
+general fallback for the other.
 
 **E-3.** **Six of these codes also cover OSD's own lexical stage**:
 `parse.unexpected-token`, `parse.trailing-content`,
@@ -349,6 +363,16 @@ diagnostic code is needed for this case at all.
 | Code | Raised when |
 |---|---|
 | `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf/special-float/empty-node cannot be represented at all in the target format's own syntax without colliding with some other, distinct, valid input (unconditional, regardless of `strict`) |
+
+**E-26. "Target format" includes OSD, not only the four codecs.** The
+schema-writing surfaces are writers like any other and this is the code they
+use: an OSD writer handed a schema whose field label carries a C0 control
+character MUST fail with `write.unsupported-value`, unconditionally, per
+[OSD-14](05-osd-grammar.md#59-canonical-output) — §5.3.1 leaves that label no
+OSD spelling, so there is nothing to emit that any conformant OSD reader
+would accept. The second clause of the row above already covers it ("a label
+… cannot be represented at all in the target format's own syntax"); what was
+missing was anyone saying OSD is one of the formats that clause ranges over.
 
 ## 8.4 Paths
 

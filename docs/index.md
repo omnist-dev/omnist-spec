@@ -1,4 +1,4 @@
-# Omnist Specification, v0.19
+# Omnist Specification, v0.20
 
 Project home: [omnist.dev](https://omnist.dev)
 
