@@ -165,6 +165,25 @@ never as follow-up work.
 See [§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3` for
 the per-vector breakdown of what a runner reports today.
 
+## Say which comparison mode produced your numbers
+
+§8.5.2 rule 4 permits a runner to compare **code-agnostically** — `ok` plus
+the set of `path`s, never `code` — because §8.1 does not yet make §8.3
+mandatory. That is a legitimate mode and several ports are in it. It is also
+a quiet one: **a code-agnostic run passes vectors the implementation does not
+actually satisfy.** A diagnostic with the right `ok` and the right position
+but the wrong code reports green, and nothing in the run says so.
+
+This is not hypothetical. Four of the five rows in
+[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-4` are
+exactly that shape, including one where the Python reference had been failing
+a vector's stated expectation for as long as the vector existed while its own
+suite reported clean. §8.5.5 already requires a run to state which mode
+produced it; treat that as load-bearing rather than as a header field, and
+when you report conformance numbers anywhere else — a README badge, a release
+note, an issue — say the mode alongside the count. "247 pass" and "247 pass,
+code-agnostic" are different claims.
+
 ## When you find a real failure
 
 Triage before touching anything:

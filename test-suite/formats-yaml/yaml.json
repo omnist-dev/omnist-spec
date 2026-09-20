@@ -108,6 +108,27 @@
         ]
       },
       "comment": "YAML 1.1's core schema resolves on/off/yes/no/true/false (in various cases) as booleans, not strings -- a bare `on:` key parses to the boolean true. Since a label MUST be a string, a reader MUST refuse to build a Document from a boolean-keyed mapping rather than silently coercing it. This is the exact failure mode that breaks an unquoted GitHub Actions `on:` trigger block. Confirmed live: the reference implementation reports this as a shape/label error, not a YAML-specific one -- quoting the key (\"on\":) is the only workaround, and there is none on the read side once resolution has already happened."
+    },
+
+    {
+      "name": "formats-yaml/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "﻿﻿a: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. One of the two surfaces where this vector is red today. YAML 1.2 permits a leading BOM in its own right and the common libraries strip one before the grammar sees it -- layered under D-15's strip that is a second, undeclared strip, and two byte-different inputs build one Document with no diagnostic saying which byte was discarded. That is the outcome D-15 exists to prevent, so D-21 requires the reader to pre-check and reject. Measured: the reference accepts this input and returns the same Document as the single-BOM form (DIV-4)."
     }
   ]
 }

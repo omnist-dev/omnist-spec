@@ -14,11 +14,51 @@
         "diagnostics": [
           {
             "path": "1:4",
-            "code": "parse.unexpected-token"
+            "code": "parse.trailing-content"
           }
         ]
       },
-      "comment": "`nan` is claimed by the reserved-float-spelling tokenizer rule (rule 7) before IDENT is reached, so it never reaches label position at all -- the failure is a token-level mismatch, not the reserved-word-label error nan/inf never get."
+      "comment": "`nan` is claimed by the reserved-float-spelling tokenizer rule (rule 7) before IDENT is reached, so it never reaches label position at all and is not the reserved-word-label error nan/inf never get. But it is not a token-level mismatch either, which is what this vector claimed while expecting parse.unexpected-token until v0.19.0-beta: the parser takes the scalar branch, consumes `nan` as a NUMBER, and then fails on the leftover `:` exactly as `null: 1` does. Sec4.6.1's OML-25 now states the general rule -- any scalar followed by leftover content at document level is parse.trailing-content, at the first leftover token. `nan: 1` is 3 characters then the colon, so 1:4. Whether the tokenizer or the parser excluded the word from label position is spent before the scalar branch is taken and does not change the code. The reference emits parse.unexpected-token at 1:4 (code wrong, position right); recorded as DIV-4."
+    },
+    {
+      "name": "oml-grammar/reserved/inf-bare-is-a-number-token-not-a-label",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "inf: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-25's companion to the `nan` vector: `inf` is claimed by the same reserved-float-spelling tokenizer rule, takes the same scalar branch, and fails the same way. `inf` is 3 characters, so the leftover colon is at 1:4. The reference emits parse.unexpected-token at 1:4 (DIV-4)."
+    },
+    {
+      "name": "oml-grammar/reserved/bare-integer-then-colon-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "5: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:2",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-25 with no reserved word involved at all: an INTEGER is a scalar, the top-level lookahead (Sec4.6.1) only routes a STRING or a non-reserved IDENT to the edge branch, so `5` is consumed as the document's single scalar and the `:` is leftover. `5` is one character, so the colon is at 1:2. This is the vector that shows the rule is about scalar-then-leftover generally and not about `null`/`nan`/`inf` specifically. The reference emits parse.unexpected-token at 1:2 (DIV-4)."
     },
     {
       "name": "oml-grammar/reserved/quoted-nan-is-an-ordinary-label",
@@ -728,6 +768,27 @@
         }
       },
       "comment": "Sec2.5: labels compare byte-wise, never by Unicode normalization. Both labels render as 'cafe-acute' but differ in bytes -- one is U+00E9, the other 'e' followed by combining U+0301 -- so they are two distinct labels and the node has two edges. An implementation that normalizes to NFC or NFD on read collapses them into one edge and fails here. This is the rule most likely to be broken by accident, since some platforms normalize text input by default."
+    },
+
+    {
+      "name": "oml-grammar/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "﻿﻿a: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. Companion to oml-grammar/encoding/leading-bom-is-stripped, which is the same input with one mark. Measured: the reference already rejects this with parse.unexpected-token at 1:1 -- green on arrival."
     }
   ]
 }

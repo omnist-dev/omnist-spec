@@ -211,20 +211,20 @@
               {
                 "edges": [
                   [
-                    "retries",
-                    {
-                      "scalar": {
-                        "kind": "integer",
-                        "value": 3
-                      }
-                    }
-                  ],
-                  [
                     "region",
                     {
                       "scalar": {
                         "kind": "string",
                         "value": "eu-west-1"
+                      }
+                    }
+                  ],
+                  [
+                    "retries",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
                       }
                     }
                   ],
@@ -243,7 +243,7 @@
           ]
         }
       },
-      "comment": "YAML 1.1's sequence form of the merge key, `<<: [*base, *limits]`, which \u00a72.4.1 covers explicitly because the general \"a reference contributes its target's W\" rule reads two ways on it. Each alias in the sequence contributes its target's edges flattened in -- W(target) - 1 apiece, exactly as the single-alias `<<: *x` form does -- and the sequence holding them is a syntactic carrier for the merge, not a materialized container, so it contributes no slot of its own. The `<<` entry counts as exactly one written slot in S no matter how many aliases its sequence holds. So for `svc`: W = 1 + (W(base) - 1) + (W(limits) - 1) + 1 = 4 over S = 3 (svc's container, the one `<<` entry, and `name`), E = 1.33. The reading this vector exists to rule out -- plain-alias contribution per element, plus a slot for the sequence -- would give W = 7 over S = 5, E = 1.40. Document captured live from the reference: the merged keys appear in sequence order before the referring mapping's own keys, and no `<<` label survives. Like every vector in this file the reference accepts it today, but here acceptance is the correct outcome; see DIV-3 for what a runner reports on the rest."
+      "comment": "YAML 1.1's sequence form of the merge key, `<<: [*base, *limits]`, which \u00a72.4.1 covers explicitly because the general \"a reference contributes its target's W\" rule reads two ways on it. Each alias in the sequence contributes its target's edges flattened in -- W(target) - 1 apiece, exactly as the single-alias `<<: *x` form does -- and the sequence holding them is a syntactic carrier for the merge, not a materialized container, so it contributes no slot of its own. The `<<` entry counts as exactly one written slot in S no matter how many aliases its sequence holds. So for `svc`: W = 1 + (W(base) - 1) + (W(limits) - 1) + 1 = 4 over S = 3 (svc's container, the one `<<` entry, and `name`), E = 1.33. The reading this vector exists to rule out -- plain-alias contribution per element, plus a slot for the sequence -- would give W = 7 over S = 5, E = 1.40. Edge order is normative and is **sequence (source) order**: `base`'s entries, then `limits`', then the referring mapping's own -- `region, retries, name` -- with no `<<` label surviving. See docs/formats/yaml.md, which states the order and the key-collision rule. This vector previously expected `retries, region, name`, captured live from the reference, which flattens a merge sequence in reverse because PyYAML's constructor does; that is a library artifact, not the rule, and it contradicted this comment. The JavaScript `yaml` library yields source order, and omnist-spec#98 settled source order as normative. The reference must reorder; recorded as DIV-4. See DIV-3 for what a runner reports on the rest of this file."
     },
     {
       "name": "formats-yaml/alias-expansion/anchor-to-anchor-chain-under-limit-succeeds",

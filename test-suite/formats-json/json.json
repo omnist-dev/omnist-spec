@@ -305,6 +305,27 @@
         }
       },
       "comment": "D-15: a leading U+FEFF is consumed and contributes nothing to the Document, on every surface including the codecs. The result is identical to the same input without it. This does not override JSON: RFC 8259 Sec8.1 explicitly permits an implementation parsing JSON to ignore a byte order mark rather than treating it as an error. Before D-15 the reference rejected this input while accepting the OML equivalent, which is the divergence the uniform rule closes."
+    },
+
+    {
+      "name": "formats-json/encoding/doubled-leading-bom-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "json",
+        "text": "﻿﻿{\"a\":1}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops. The text that remains is parsed by this surface's own grammar, which admits no U+FEFF as content at offset zero, so the second mark is a syntax error. The position is 1:1 because it is computed on the text remaining after the strip. A codec read failure -- input that is not well-formed in its own source format -- so the code is parse.codec-syntax per Sec8.3.1, not one of the OML/OSD-specific codes. RFC 8259 Sec8.1 permits ignoring *a* byte order mark; it does not permit ignoring two. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
     }
   ]
 }

@@ -369,6 +369,21 @@ from the byte offset of the failure:
 `path` MUST be a Document or Schema path — never a text-position path, since a
 Document or Schema already exists by the time any of those families can fire.
 
+**E-23. A string-body error reports the string's opening quote.**
+`parse.control-character`, `parse.invalid-escape`,
+`parse.unterminated-string` and `parse.unpaired-surrogate` — on OML, and on
+OSD via E-3 — MUST report the text position of the `"` or `'` that opens the
+string, not the position of the offending character inside it. The failing
+unit is the string, naming its start names that unit; the position is stable
+whether the implementation scans the body raw or after unescaping; and it is
+the only choice that answers the question at all for
+`parse.unterminated-string`, which has no offending character to point at.
+This was implicit before v0.19.0-beta — every OML vector in the suite already
+followed it — and stating it matters because an implementation that reports
+the offending character instead is wrong on a path compared byte-for-byte,
+while a runner in code-agnostic mode (§8.5.2 rule 4) still compares paths and
+will catch it.
+
 ### 8.4.1 Which kind each `schema.*` code uses
 
 Saying "a Document or Schema path" leaves the choice open, and paths are

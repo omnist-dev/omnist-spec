@@ -483,6 +483,31 @@ XML and rejected it for JSON, TOML and OSD — the divergence this closes.
 OSD was the third rejecting surface, not a second stripping one:
 `parse_schema` on BOM-prefixed OSD text raised `parse.unexpected-token`.
 
+**D-21. Exactly one leading mark is consumed. A second is not.** D-15 strips
+the mark at offset zero and stops there. What remains is then handed to the
+surface's own grammar with no further encoding-level treatment, so a second
+`U+FEFF` — now itself at offset zero of the remaining text — is ordinary
+content in D-15's sense: it is admissible only where that grammar admits
+`U+FEFF` as content at that position, and a syntax error everywhere else. On
+all six surfaces this spec covers no grammar admits it there, so a doubled
+leading mark MUST be rejected — `parse.unexpected-token` on OML and OSD,
+`parse.codec-syntax` on JSON, TOML, YAML and XML
+([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)) —
+at text position `1:1`, which is computed on the text that remains after the
+strip, not on the original input.
+
+**No implementation may silently swallow a second mark, whatever its parsing
+library does (D-21).** This is where the rule costs something. YAML 1.2 and
+XML 1.0 permit a leading BOM in their own right, and the common libraries for
+both discard one before the grammar ever sees it; layered under D-15's strip
+that is a *second, undeclared* strip, and two inputs differing in bytes build
+one Document with nothing recording which byte was discarded — precisely the
+outcome D-15 exists to prevent. A reader on those surfaces MUST check the
+text it is about to hand its library and reject a remaining leading `U+FEFF`
+itself. The rule is uniform across surfaces for the same reason D-15 is: a
+per-format exception here would reopen the divergence D-15 closed, one layer
+down.
+
 **D-16. Labels and names compare byte-wise, never by Unicode normalization.** Two
 labels are the same label when their UTF-8 bytes are identical. `café`
 written as `U+0063 U+0061 U+0066 U+00E9` and as `U+0063 U+0061 U+0066 U+0065
