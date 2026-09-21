@@ -33,6 +33,11 @@ test-suite/
   formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare
 ```
 
+Every surface's `encoding/` group (in `oml-grammar/`, `osd-grammar/` and the
+four `formats-*/` files) holds the §2.5 vectors for that surface: the BOM
+rules D-15 and D-21, and, since v0.21.0-beta, D-14's byte-level vectors and
+their valid-UTF-8 controls.
+
 More directories are added per operation as vectors are written. One directory
 per driver; file names group related cases.
 
@@ -50,6 +55,48 @@ Every vector is a JSON object with the same six keys.
 | `expect` | Either a success value or `{"ok": false, "diagnostics": [...]}`. |
 
 A file holds `{"vectors": [ ... ]}`.
+
+### `bytes_hex`: giving a read-side input as bytes
+
+The three read-side drivers — `parse`, `parse_schema` and `parse_schema_oml`
+— take their source text either as `text` or as `bytes_hex`, **exactly one of
+the two**. `bytes_hex` is the input's bytes as lowercase hexadecimal, two
+digits per byte, no separators and no prefix. §8.5.3's **E-27** is the
+normative statement; this is the orientation.
+
+```json
+{
+  "operation": "parse",
+  "input": { "format": "json", "bytes_hex": "7b2261223a2278e282227d" }
+}
+```
+
+It exists for [D-14](../docs/02-document-model.md#25-encoding), the rule that
+input MUST be valid UTF-8. A vector file is JSON and a JSON string holds
+text, so a `text` field can carry any valid input and none of the invalid
+ones — bytes that are not valid UTF-8 are exactly the bytes a JSON string
+cannot hold. D-14 was therefore an untestable MUST until this form existed
+(omnist-spec#105), and a reader that silently accepted malformed bytes
+reported a clean suite.
+
+Two consequences worth stating plainly:
+
+- **`tools/check_vectors.py` does not require a `bytes_hex` value to
+  decode.** Most of these vectors do not decode; that is what they are for.
+  It checks the spelling — hex digits, even length, lowercase, read-side
+  operation, not alongside `text` — and nothing about the content.
+- **A runner hands the decoded bytes to the implementation as bytes**, through
+  a byte-oriented entry point — a bytes-taking reader, a byte stream, or any
+  entry point that reads a file or standard input, **the CLI included**. It
+  MUST NOT decode them to a string with `U+FFFD` replacement or any other
+  lossy scheme and run the result: that substitutes a different input and
+  reports on a question the vector did not ask. Only an implementation with
+  no byte-oriented entry point anywhere reports these as `skip` under E-21,
+  citing [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
+  `DIV-6`. **No port's runner reads `bytes_hex` yet**, so none of them can
+  run these vectors at all today — and a runner that fails them on the
+  unknown field is reporting a `fail`, not a skip, until it either runs them
+  or reports an E-20 "not yet implemented" skip.
 
 ## Canonical document encoding
 

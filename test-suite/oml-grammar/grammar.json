@@ -952,6 +952,76 @@
         ]
       },
       "comment": "The sibling of the stray-closing-brace vector, for the other token that cannot begin a document. A comma is an element separator inside `[...]` (Sec4.3.1) and has no top-level role at all, but OML-26 does not branch on what the leftover token could have meant -- the body is complete and the comma is after it. Counting: a(1) :(2) sp(3) 1(4) sp(5) ,(6), so 1:6. Measured live against the Python reference: parse.unexpected-token at 1:6 -- position right, code wrong; recorded as DIV-4."
+    },
+
+    {
+      "name": "oml-grammar/encoding/invalid-utf8-overlong-encoding-inside-a-string-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "bytes_hex": "613a202278c0af220a"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "D-14 on OML, with the overlong class: `c0 af` is a two-byte encoding of U+002F (`/`), which UTF-8 requires to be the single byte `2f`. Overlong forms are the security-relevant class -- a reader that accepts them lets the same character arrive in two spellings, which is how a filter on `/` is walked past -- and they are why D-14 is a MUST rather than a SHOULD. Rejected at 1:1 like every other D-14 case, though the bad bytes are five bytes in. Measured against the Python reference (v0.9.5) 2026-09-21: its readers take `str`, so these bytes cannot be handed to one at all, and its CLI decodes both file and stdin input strictly -- `open(path, encoding=\"utf-8\")` and a utf-8/strict `sys.stdin` -- so it fails with an uncaught UnicodeDecodeError and no diagnostic rather than reporting this code. No silent repair, but not conformant either; recorded as DIV-6. The other four ports were not measured for this vector."
+    },
+
+    {
+      "name": "oml-grammar/encoding/invalid-utf8-on-a-later-line-is-still-rejected-at-1-1",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "bytes_hex": "613a20310a623a202280220a"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "The bad byte is on line 2, and the path is still 1:1. This is the vector that would catch an implementation that decodes far enough to count lines and then reports the position it reached -- a natural implementation and a wrong one under D-14, whose whole-input rule is what keeps this path comparable byte-for-byte across readers that buffer differently. Line 1 is complete and well-formed on its own; it still contributes no Document, because the input is rejected as a whole before any parse begins. Measured against the Python reference (v0.9.5) 2026-09-21: its readers take `str`, so these bytes cannot be handed to one at all, and its CLI decodes both file and stdin input strictly -- `open(path, encoding=\"utf-8\")` and a utf-8/strict `sys.stdin` -- so it fails with an uncaught UnicodeDecodeError and no diagnostic rather than reporting this code. No silent repair, but not conformant either; recorded as DIV-6. The other four ports were not measured for this vector."
+    },
+
+    {
+      "name": "oml-grammar/encoding/valid-multi-byte-characters-are-accepted",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "bytes_hex": "613a2022c3a9e282acf09f9880220a"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "é€😀"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The OML control: the same three characters as the JSON one (U+00E9, U+20AC, U+1F600), given as bytes, must read back as exactly those characters. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
     }
   ]
 }

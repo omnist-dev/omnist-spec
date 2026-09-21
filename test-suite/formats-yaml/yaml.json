@@ -616,6 +616,55 @@
         }
       },
       "comment": "The same anchor twice in one merge sequence contributes one copy, not two: the second occurrence supplies only keys the first already supplied, and the collision rule collapses each to a single edge at its first position. A Document is an ordered edge list and repeated labels are legal in it, so this is a real question rather than an obvious one -- `r` could have carried four edges. It carries two. Measured identically in PyYAML 6.0.3 and yaml 2.9.0, and the Python reference already produces this."
+    },
+
+    {
+      "name": "formats-yaml/encoding/invalid-utf8-encoded-surrogate-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "bytes_hex": "613a202278eda080220a"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "D-14 on YAML, with the encoded-surrogate class: `ed a0 80` is the UTF-8-shaped encoding of U+D800, a high surrogate. Surrogates are not characters -- UTF-8 excludes the whole D800..DFFF range -- so this is malformed input even though every byte is individually well-formed-looking and the sequence has the right length and continuation bits. A reader that validates only the bit pattern and not the resulting code point accepts it, which is the defect this vector exists to catch. Measured against the Python reference (v0.9.5) 2026-09-21: its readers take `str`, so these bytes cannot be handed to one at all, and its CLI decodes both file and stdin input strictly -- `open(path, encoding=\"utf-8\")` and a utf-8/strict `sys.stdin` -- so it fails with an uncaught UnicodeDecodeError and no diagnostic rather than reporting this code. No silent repair, but not conformant either; recorded as DIV-6. The other four ports were not measured for this vector."
+    },
+
+    {
+      "name": "formats-yaml/encoding/valid-multi-byte-characters-are-accepted",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "bytes_hex": "613a2022c3a9e282acf09f9880220a"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "é€😀"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The YAML control: the same three characters as the other surfaces' controls, given as bytes. Quoted so YAML's core schema resolves the scalar as a string rather than tag-resolving it. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
     }
   ]
 }

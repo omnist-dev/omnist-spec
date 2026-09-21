@@ -24,6 +24,71 @@ SUITE = ROOT / "test-suite"
 # Tab, LF and CR are the three control characters JSON permits unescaped.
 ALLOWED_CONTROLS = {0x09, 0x0A, 0x0D}
 
+# Sec8.5.3's E-27: the read-side drivers, the only ones whose `input` carries
+# source text and so the only ones that may give that input as bytes.
+BYTES_HEX_OPERATIONS = {"parse", "parse_schema", "parse_schema_oml"}
+
+HEX_DIGITS = set("0123456789abcdef")
+
+
+def check_input_form(rel: str, name: str, vec: dict) -> list[str]:
+    """E-27: `text` and `bytes_hex` are mutually exclusive, and `bytes_hex`
+    is lowercase hex of even length on a read-side operation only.
+
+    Deliberately not a UTF-8 check. A `bytes_hex` vector exists to express
+    input that is *not* valid UTF-8 (D-14) -- requiring it to decode would
+    reject exactly the vectors the field was added for.
+    """
+    errors: list[str] = []
+    inp = vec.get("input")
+    if not isinstance(inp, dict):
+        return errors
+    has_text = "text" in inp
+    operation = vec.get("operation")
+    if "bytes_hex" not in inp:
+        if operation in BYTES_HEX_OPERATIONS and not has_text:
+            errors.append(
+                f"{rel}: {name!r} has neither 'text' nor 'bytes_hex' -- "
+                f"E-27 requires exactly one on a read-side operation"
+            )
+        return errors
+    raw = inp["bytes_hex"]
+    # An explicit null is a wrong type, not an absent field: reporting it as
+    # "has neither" would send an author looking for a missing key that is
+    # right there.
+    if raw is None:
+        errors.append(
+            f"{rel}: {name!r} 'bytes_hex' is null -- it must be a string of "
+            f"lowercase hexadecimal digits"
+        )
+        return errors
+    if has_text:
+        errors.append(
+            f"{rel}: {name!r} has both 'text' and 'bytes_hex' -- E-27 "
+            f"requires exactly one"
+        )
+    if operation not in BYTES_HEX_OPERATIONS:
+        errors.append(
+            f"{rel}: {name!r} uses 'bytes_hex' on operation {operation!r} -- "
+            f"E-27 allows it only on "
+            f"{', '.join(sorted(BYTES_HEX_OPERATIONS))}"
+        )
+    if not isinstance(raw, str):
+        errors.append(f"{rel}: {name!r} 'bytes_hex' is not a string")
+        return errors
+    if len(raw) % 2:
+        errors.append(
+            f"{rel}: {name!r} 'bytes_hex' has odd length {len(raw)} -- "
+            f"two hex digits per byte"
+        )
+    bad = sorted(set(raw) - HEX_DIGITS)
+    if bad:
+        errors.append(
+            f"{rel}: {name!r} 'bytes_hex' contains {bad!r} -- lowercase "
+            f"hexadecimal digits only, no separators and no prefix"
+        )
+    return errors
+
 
 def main() -> int:
     files = sorted(SUITE.glob("*/*.json"))
@@ -79,6 +144,8 @@ def main() -> int:
                 if field not in vec:
                     errors.append(f"{rel}: {name!r} has no {field!r}")
 
+            errors.extend(check_input_form(str(rel), name, vec))
+
     if errors:
         for err in errors:
             print(f"error: {err}", file=sys.stderr)
@@ -90,7 +157,8 @@ def main() -> int:
 
     print(
         f"{total} vectors across {len(files)} files: valid JSON, no raw control "
-        f"characters, unique names, required fields present."
+        f"characters, unique names, required fields present, "
+        f"'bytes_hex' inputs well-formed (E-27)."
     )
     return 0
 

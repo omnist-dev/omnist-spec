@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 146 vectors as of this writing — dispatched by operation
+JSON-vector suite — 273 vectors as of v0.21.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -164,6 +164,68 @@ never as follow-up work.
 
 See [§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3` for
 the per-vector breakdown of what a runner reports today.
+
+## Byte inputs: `bytes_hex` and the one wrong way to run it
+
+New in **v0.21.0-beta**. A read-side vector (`parse`, `parse_schema`,
+`parse_schema_oml`) may give its input as `bytes_hex` — lowercase hex, two
+digits per byte — instead of `text`, per
+[§8.5.3](08-conformance-and-errors.md#853-operation-drivers)'s **E-27**.
+Exactly one of the two is present. Fourteen vectors use it today, all of them
+[§2.5](02-document-model.md#25-encoding)'s: eight pinning
+[D-14](02-document-model.md#25-encoding)'s rejection of invalid UTF-8 across
+the six surfaces, six valid-UTF-8 controls proving the reader still accepts
+multi-byte characters.
+
+Your runner does three things with it:
+
+1. **Decode the hex to bytes.** Nothing else — no normalization, no trimming.
+2. **Hand those bytes to your implementation as bytes**, through a
+   byte-oriented entry point. Any entry point you provide that reads a file,
+   standard input or a byte stream is one — **your CLI counts**, and so does
+   a bytes-taking reader. If the only one you have is the CLI, run these
+   vectors through the CLI; the signature of the reader behind it does not
+   matter, because D-14 binds the place the bytes enter. The "write the bytes
+   to a temporary file" route only works if you have a file-reading entry
+   point to point at it, which for some ports is exactly and only the CLI.
+3. **Compare as usual.** The expected diagnostic for every D-14 vector is
+   `parse.invalid-encoding` at `1:1` — always `1:1`, on every surface, wherever
+   in the input the bad byte sits, because nothing decoded and the whole input
+   is what failed.
+
+**The wrong way, and it is the tempting one:** decode the bytes into your
+language's string type with replacement (`U+FFFD`), with a surrogate-escape
+scheme, or with any other lossy recovery, and then run the vector through
+your ordinary string-taking reader. That is not the vector's input. For a
+D-14 vector it asks your reader a question about a string of replacement
+characters — which is *valid* UTF-8 — and whatever it answers says nothing
+about the rule. It can report a pass for the one behaviour D-14 explicitly
+forbids.
+
+**Which non-result you report matters, and E-21 is narrower than it looks.**
+If you have simply not taught your runner the `bytes_hex` field yet, that is
+an **E-20** "not yet implemented" skip — no ledger citation needed. (Until
+you report it as one, a runner that chokes on the unknown field is reporting
+a `fail`, which is fine and loud, but say which it is.) **E-21** — the
+documented-divergence skip, citing
+[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-6` — is only
+for an implementation with **no** byte-oriented entry point anywhere: no
+bytes-taking reader, no file/stdin/stream entry point, and no CLI. Check your
+CLI before you reach for it; on the ports measured so far, none qualifies. If
+you have a byte-oriented entry point and these vectors fail through it, that
+is a plain `fail` and a real bug, not a skip.
+
+If your language's string type can itself hold ill-formed UTF-8 — Go's
+`string` is a byte sequence, and Go is the measured case in `DIV-6` — your
+string-taking reader is itself a byte-oriented entry point, and §2.5 spells
+out what that means concretely: reject any reader input `s` for which
+`utf8.ValidString(s)` is false. The reverse case is Rust, where `&str`
+carries validity as its own invariant and the reader has nothing left to
+check; there the CLI is the entry point that matters. And note what D-14 does
+**not** reach: a lone UTF-16 surrogate in a JavaScript or Java string, or a
+surrogate-escape artefact in a Python `str`, is a property of an
+already-decoded string, not of bytes you read, and §2.5 puts both out of
+scope.
 
 ## Say which comparison mode produced your numbers
 

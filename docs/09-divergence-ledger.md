@@ -169,6 +169,7 @@ diverge.
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
+| D-14, invalid UTF-8 rejected (§2.5 — no port reports `parse.invalid-encoding`; see DIV-6 for sources and the exact measurements) | CLI decodes strictly, then dies with an uncaught decode error and no diagnostic (measured) | not measured | `&str` readers; CLI `read_to_string` rejects at the decode, report unmeasured | JSON/OML/OSD accept silently; YAML/TOML/XML report `parse.codec-syntax` | CLI decodes stdin lossily; file input strict |
 | Conformance (vectors, compared as (path, code) sets except Python — pins differ: TypeScript, Rust (unreleased `main`) and Go are on v0.19.0-beta, of 249; Python is on v0.17.0-beta, of 225, and compares codes loosely, see DIV-4; Java is still on v0.9.1-beta, of 204, pending its sweep) | 145 pass / 0 fail / 80 skip | 189 pass / 0 fail / 60 skip | 209 pass / 0 fail / 40 skip | 215 pass / 0 fail / 34 skip | 176 pass / 0 fail / 28 skip |
 | Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (Java's own harness headline count is 29, but 10 of those are `_referee-self-test/*` fixtures — tests of the harness's own equality logic, not this port's behavior — that Java's `Track1Runner` already special-cases but still folds into the same headline number; the other four ports exclude these from their public count. Root cause confirmed, tracked in `omnist-j#110`, not urgent) |
 | Fuzz testing | yes | yes | yes | yes | yes |
@@ -362,13 +363,73 @@ cannot be written as a vector input at all, and §8.5.3 has no driver taking a
 schema in any other form — `write_schema` is a documented operation
 ([§E.11](extensions/osd-oml.md#e11-api-cli-surface)) that the driver table and
 the [Operations & Models Reference](operations-and-models-reference.md) both
-omit. So OSD-14 ships as a rule with no vector behind it, which is exactly
-the untestable-MUST shape omnist-spec#105 raises for D-14 on the read side;
-both need the same thing, a vector input form that is not already-valid text
-in the surface under test. Until that exists, adoption is verified by hand
+omit. So OSD-14 ships as a rule with no vector behind it.
+
+**The read-side half of that problem is fixed as of v0.21.0-beta; this one is
+not.** omnist-spec#105 raised the same untestable-MUST shape for D-14, and
+[§8.5.3](08-conformance-and-errors.md#853-operation-drivers)'s **E-27** now
+lets a read-side vector give its input as `bytes_hex` — bytes, not
+already-valid text — which is what D-14 needed. It does nothing for OSD-14,
+and the difference is worth naming so nobody reads the mechanism as broader
+than it is: E-27 covers the three drivers that take *source text* and gives
+them a way to carry bytes instead. OSD-14 is a **write**-side rule whose
+input is a Schema, and what it still needs is a driver that accepts a schema
+in some form other than OSD text — a canonical Schema encoding, or a
+`write_schema` driver fed by `schema_from_document`. Until that exists,
+adoption is verified by hand
 against the two rows above and this entry says so rather than letting a green
 suite imply coverage. Remove this entry when every port escapes labels per
 OSD-15 and refuses the write per OSD-14, and a vector pins the second half.
+
+**DIV-6. No port's conformance runner reads `bytes_hex` yet, and no port is
+known to report `parse.invalid-encoding`.** E-27 and D-14's fourteen byte-level
+vectors are new normative content and new suite content as of
+**v0.21.0-beta**. Two separate gaps, and they close independently:
+
+1. **The runner gap.** A runner that does not know the `bytes_hex` field
+   cannot run these vectors at all — depending on how it dispatches, it may
+   error, or fail them for want of a `text` field, neither of which is a
+   skip. Until it learns the form, the honest report is an **E-20 "not yet
+   implemented" skip**, which needs no ledger citation of its own; a runner
+   that fails them on the unknown field is reporting a `fail` until it does
+   one or the other.
+
+   **E-21 is a much narrower door than it first looks.** Per
+   [E-27](08-conformance-and-errors.md#853-operation-drivers), *any* entry
+   point the implementation provides that reads a file, standard input or a
+   byte stream is a byte-oriented entry point — **including its CLI** — and a
+   runner MUST present the bytes through one if the implementation has one
+   anywhere. The E-21 skip is for an implementation that has **none at all**.
+   On the evidence in the table below, no port measured so far qualifies:
+   Python, Rust and Java each decode bytes in their CLI, and a Go `string` is
+   itself a byte sequence. A port citing this entry as an E-21 reason without
+   first checking its own CLI is misreading it, the same way `DIV-4` warns
+   against.
+2. **The rule gap.** Implementing D-14 as
+   [§2.5](02-document-model.md#25-encoding) now states it: reject invalid
+   UTF-8 with `parse.invalid-encoding` at `1:1`, on every surface and at
+   every byte-oriented entry point.
+
+**A port MUST NOT report these vectors as passing by decoding the bytes with
+replacement** (`U+FFFD`), with a surrogate-escape scheme, or with any other
+lossy recovery and running the result through a string-taking reader. The
+decoded string is valid UTF-8 and is not the vector's input, so a green
+result there is a pass reported for the one behaviour D-14 forbids. Skip it
+instead; §8.5.5 makes skip a first-class result precisely so this is never
+the cheaper option.
+
+Measured or documented behaviour today, and only that:
+
+| Implementation | What is known | Source |
+|---|---|---|
+| Python reference (v0.9.5) | **Its CLI is its byte-oriented entry point** (`omnist/cli.py`: `sys.stdin.read()` for `-`, `open(path, encoding="utf-8")` for a file), so this is where D-14 binds and where these vectors must be run. Both paths decode **strictly**, so nothing is repaired — but the read dies with an **uncaught `UnicodeDecodeError` and no diagnostic at all**, where D-14 requires `parse.invalid-encoding` at `1:1`. That is the defect. Its library readers take `str` and accept smuggled ill-formed content (surrogate-escaped, or already `U+FFFD`-replaced) without complaint — `read_json`, `read_oml` and `parse_schema` all do — and that is **not** a defect: D-14 is a rule about bytes and §2.5 permits a string-typed entry point to treat its input as already decoded. Valid multi-byte input (U+00E9, U+20AC, U+1F600) is accepted on all six surfaces | measured live 2026-09-21 for this entry |
+| Go | JSON, OML and OSD readers **silently accept** invalid UTF-8; YAML, TOML and XML report `parse.codec-syntax`, which D-14 now explicitly says is the wrong code for this. Go's `string` is a byte slice, so its string-taking readers are byte-oriented entry points and D-14 binds them — this is not a case for the E-21 skip | [omnist-go#119](https://github.com/omnist-dev/omnist-go/issues/119), from the omnist-go#118 review |
+| Rust | Readers take `&str`, whose own invariant is validity, so ill-formed bytes cannot reach one and §2.5's string-typed clause covers them. The CLI uses `read_to_string`, which rejects them at the decode — that CLI is Rust's byte-oriented entry point, so the E-21 skip does not apply here either, and **what it reports for the rejection was not measured** | the omnist-rs#183 review |
+| Java | `Cli.java` decodes stdin **lossily**, `new String(bytes, UTF_8)`, which substitutes `U+FFFD` — the repair D-14 forbids. File input uses `Files.readString`, which is strict | the omnist-j#112 review |
+| TypeScript | **Not measured.** Nothing is claimed here | — |
+
+Remove this entry when every port's runner reads `bytes_hex` and every port
+either passes these vectors or carries a standing E-21 skip citing it.
 
 ## 9.5 Adding a sixth implementation
 
