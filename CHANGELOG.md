@@ -15,43 +15,67 @@ port probed for it, three of six surfaces silently accepted malformed input
 while its suite stayed green. This release gives the suite a byte-level input
 form, says what D-14 binds and what it reports, and pins it with vectors.
 
-- **New `bytes_hex` vector input, and new `E-26`**
+- **New `bytes_hex` vector input, and new `E-27`**
   ([§8.5.3](docs/08-conformance-and-errors.md#853-operation-drivers)). The
   three read-side drivers — `parse`, `parse_schema`, `parse_schema_oml` —
   take their input either as `text` or as `bytes_hex`, **exactly one of the
   two**: lowercase hexadecimal, two digits per byte, no separators, no
-  prefix. Every other driver takes an already-built Document or a Schema, so
-  there are no input bytes for a byte-level rule to be about and none of them
-  accepts the field. E-26 also states how a runner presents the bytes —
-  decoded to bytes, handed to a byte-oriented entry point, unchanged — and
-  the one thing it MUST NOT do: decode them with `U+FFFD` replacement or a
+  prefix. No other driver accepts the field, and the reason is narrower than
+  "they have no text" — a `validate` vector's `schema` *is* OSD text, as
+  §8.5.3 says. But there the text is a fixture, a way of writing down the
+  Schema the operation works on; only `parse`, `parse_schema` and
+  `parse_schema_oml` have the reading of a source text **as the operation**,
+  so they are the only three where a rule about the input's bytes can be
+  pinned. E-27 also states how a runner presents the bytes: decoded, to a
+  **byte-oriented entry point** — any entry point that reads a file, standard
+  input or a byte stream, **the CLI included**, whatever the signature of the
+  reader behind it — and a runner MUST use one if the implementation has one
+  anywhere. What it MUST NOT do is decode them with `U+FFFD` replacement or a
   surrogate-escape scheme and run the result as though that string were the
-  input. It is not, it is valid UTF-8, and for a D-14 vector it reports a
+  input: it is not, it is valid UTF-8, and for a D-14 vector it reports a
   pass for the one behaviour the rule forbids. Tooling over the suite MUST
-  NOT require a `bytes_hex` value to decode, for the same reason.
+  NOT require a `bytes_hex` value to decode, for the same reason. The two
+  non-results are kept apart: a runner that has not learned the field yet
+  reports an **E-20** "not yet implemented" skip, and **E-21** is only for an
+  implementation with no byte-oriented entry point anywhere — a `fail` is
+  what a byte-oriented entry point that fails these vectors earns.
 - **`parse.invalid-encoding`'s path is `1:1`, always**
   ([D-14](docs/02-document-model.md#25-encoding),
   [§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1),
   [§8.4](docs/08-conformance-and-errors.md#84-paths)). The rule had a code and
   no path, which leaves a diagnostic nothing can compare. It is `1:1` on every
-  surface, whatever byte failed and wherever it sits — deliberately not the
-  offset of the offending byte, because a `parse.*` path is a line and column
-  counted over the input's characters and when D-14 fires the characters are
-  exactly what failed to exist. The whole input is the failing unit, and `1:1`
-  is this spec's existing name for that (D-21 already reports a whole-input
-  refusal there). **E-11 is unchanged.** No maximal-subpart convention is
-  introduced: that rule governs how many `U+FFFD` a *replacing* decoder emits,
-  and D-14 forbids replacing — one input produces at most one
-  `parse.invalid-encoding` diagnostic however many malformed sequences it
-  contains.
+  surface, whatever byte failed and wherever it sits: a **fixed value rather
+  than a computed one**, which is what makes it the exception to §8.4's
+  "computed from the byte offset of the failure". D-14 fails the decoding of
+  the input *as a whole*, so there is no decoded text for an offset to be
+  resolved against — and naming the offending byte's own offset would require
+  this spec to say which byte of an ill-formed sequence is *the* failing one.
+  Unicode answers that with its substitution-of-maximal-subparts rule, whose
+  job is to tell a *replacing* decoder how many `U+FFFD` to emit, and D-14
+  forbids replacing, so **no maximal-subpart convention and no substitute for
+  one is adopted**. `1:1` is this spec's existing name for a whole-input text
+  refusal (D-21 reports there too). **E-11 is unchanged**, and one input
+  produces at most one `parse.invalid-encoding` diagnostic however many
+  malformed sequences it contains.
 - **D-14 now says which entry points it binds**
   ([§2.5](docs/02-document-model.md#25-encoding)). The test is whether the
   entry point ever sees bytes. A byte-oriented one — bytes, a file, stdin, a
-  byte stream — MUST validate. A string-typed one MAY treat its input as
-  already decoded, since in most languages a string cannot be ill-formed UTF-8
-  at all; where the language's string type *can* hold ill-formed bytes (Go's
-  `string` is a byte slice) the reader is byte-oriented wearing a string's
-  clothes and MUST validate. **An entry point that decodes bytes into a string
+  byte stream, and a CLI reading any of those — MUST validate. **A
+  string-typed one MAY treat its input as already decoded, in every
+  language**: D-14 is a rule about ill-formed *UTF-8 byte sequences*, and once
+  a value is the language's text type, whatever it holds got there through a
+  decode this implementation did not perform. Two things that look like this
+  rule are therefore explicitly out of scope — a **UTF-16 lone surrogate** in
+  a JavaScript or Java string, and a **surrogate-escape artefact**
+  (`U+DC80`..`U+DCFF`) in a Python `str` — both properties of an
+  already-decoded string rather than of bytes; a surface's own grammar may
+  still reject a value on its own terms, and OML's unpaired-`\uXXXX` rule is a
+  different rule about escape syntax. The one string type that *is* bytes gets
+  a testable sentence of its own: Go's `string` is a byte sequence, so a
+  conformant Go implementation **MUST reject any reader input `s` for which
+  `utf8.ValidString(s)` is false**, with `parse.invalid-encoding` at `1:1`.
+  Rust's `&str` is the opposite case and needs no check. **An entry point that
+  decodes bytes into a string
   on the caller's behalf — a CLI, a file-reading convenience, a stdin wrapper
   — is byte-oriented**, and MUST NOT decode with replacement: that is D-14's
   existing no-silent-repair clause, moved one call earlier to where it is
@@ -63,9 +87,12 @@ form, says what D-14 binds and what it reports, and pins it with vectors.
   the rule that fires on it.
 - **Code correction: invalid UTF-8 is never `parse.codec-syntax`**
   ([§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
-  E-24 widened `parse.codec-syntax` to cover a byte-level precondition ahead
-  of a codec, and D-21's second-BOM check is the only such precondition —
-  D-14 is checked earlier still and has its own code. A codec handed bytes
+  E-24 widened `parse.codec-syntax` to cover a precondition this spec imposes
+  ahead of a codec, and D-21's second-BOM check is the only such precondition
+  — D-14 is checked earlier still, on the bytes, and has its own code. **E-24
+  is retitled** for that reason: it used to say "a **byte-level** precondition",
+  which now reads as though it covered D-14, and D-21 in fact runs on text
+  that has already decoded cleanly. A codec handed bytes
   that are not valid UTF-8 MUST report `parse.invalid-encoding`, whatever its
   parsing library would have said. The table row and E-24 both now say so;
   the two are distinguishable by when they run, D-14 on the bytes and D-21 on
@@ -88,27 +115,44 @@ form, says what D-14 binds and what it reports, and pins it with vectors.
   implemented" skip** until each one learns the form — or an **E-21** skip,
   citing `DIV-6`, for an implementation with no byte-oriented entry point at
   all. A port MUST NOT report them as passing by decoding with replacement.
-  The entry records only measured or documented behaviour: the Python
-  reference's readers take `str` and silently accept smuggled ill-formed
-  content, while its CLI decodes strictly and dies with an uncaught
-  `UnicodeDecodeError` rather than a diagnostic (measured live for this
-  release); Go silently accepts invalid UTF-8 on JSON/OML/OSD and reports
+  On the evidence gathered, **no port measured so far is eligible for that
+  E-21 skip** — Python, Rust and Java each decode bytes in their CLI, and a Go
+  `string` is itself a byte sequence. The entry records only measured or
+  documented behaviour: the Python reference's **CLI is its byte-oriented
+  entry point**, decodes strictly on both stdin and file paths (so it repairs
+  nothing) and dies with an uncaught `UnicodeDecodeError` and no diagnostic
+  where D-14 requires `parse.invalid-encoding` at `1:1` — measured live for
+  this release, and that is the defect; its `str`-taking library readers
+  accepting smuggled ill-formed content is **permitted**, not a defect; Go silently accepts invalid UTF-8 on JSON/OML/OSD and reports
   `parse.codec-syntax` on YAML/TOML/XML (omnist-go#119); Rust's readers take
   `&str` and its CLI uses `read_to_string`, safe by construction (the
   omnist-rs#183 review); Java's `Cli.java` decodes stdin lossily with
   `new String(bytes, UTF_8)` while file input is strict (the omnist-j#112
   review); **TypeScript was not measured and nothing is claimed about it.**
 - **`DIV-5` updated.** Its closing paragraph said OSD-14 and D-14 both needed
-  the same missing mechanism. Half of that is now built: E-26 covers
+  the same missing mechanism. Half of that is now built: E-27 covers
   **read-side** vectors, whose input is source text. OSD-14 is a write-side
   rule whose input is a Schema, and it still needs a driver accepting a schema
   in some form other than OSD text. The entry now says which half moved.
 - **Tooling.** `tools/check_vectors.py` checks `bytes_hex` — hex digits,
   lowercase, even length, read-side operation only, never alongside `text`,
-  and exactly one of the two present on a read-side vector — and deliberately
-  does **not** check that the bytes decode.
+  exactly one of the two present on a read-side vector, and an explicit
+  `null` reported as the wrong type it is rather than as an absent field —
+  and deliberately does **not** check that the bytes decode.
   `docs/porting-a-conformance-runner.md` gains a section on running these
   vectors, and `test-suite/README.md` documents the field.
+- **`tools/check_rule_coverage.py` now fails on a rule number defined
+  twice.** This release's first draft gave the new `bytes_hex` rule `E-26`, a
+  number v0.20.0-beta had already spent on an unrelated rule ("target format"
+  includes OSD), and every check in this repo stayed green — the same failure
+  the ledger's retired-`DIV-1`/`DIV-2` preamble guards against by hand, in a
+  namespace nothing was guarding. A definition is a bold label opening a
+  paragraph or list item (`**E-24.`, `- **E-21.`, `**E-20.**`) **in the file
+  that owns that namespace**, which is what keeps a citation used as a
+  heading — the ledger's own `**OSD-15, canonical escaping.**` — from
+  counting as a second definition of a chapter 5 rule. Sub-rules like `E-4a`
+  are their own labels. Verified both ways: green on this tree, and red on
+  this PR's own earlier head, where it names both `E-26` definitions by line.
 
 ## v0.20.0-beta (2026-09-20)
 

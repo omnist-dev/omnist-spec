@@ -61,7 +61,7 @@ A file holds `{"vectors": [ ... ]}`.
 The three read-side drivers — `parse`, `parse_schema` and `parse_schema_oml`
 — take their source text either as `text` or as `bytes_hex`, **exactly one of
 the two**. `bytes_hex` is the input's bytes as lowercase hexadecimal, two
-digits per byte, no separators and no prefix. §8.5.3's **E-26** is the
+digits per byte, no separators and no prefix. §8.5.3's **E-27** is the
 normative statement; this is the orientation.
 
 ```json
@@ -86,15 +86,17 @@ Two consequences worth stating plainly:
   It checks the spelling — hex digits, even length, lowercase, read-side
   operation, not alongside `text` — and nothing about the content.
 - **A runner hands the decoded bytes to the implementation as bytes**, through
-  whatever byte-oriented entry point it has (a bytes-taking reader, a byte
-  stream, a temporary file). It MUST NOT decode them to a string with
-  `U+FFFD` replacement or any other lossy scheme and run the result: that
-  substitutes a different input and reports on a question the vector did not
-  ask. An implementation with no byte-oriented entry point at all reports
-  these vectors as `skip` under E-21, citing
-  [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
-  `DIV-6`. No port's runner supports `bytes_hex` yet, so every one of them
-  skips these today.
+  a byte-oriented entry point — a bytes-taking reader, a byte stream, or any
+  entry point that reads a file or standard input, **the CLI included**. It
+  MUST NOT decode them to a string with `U+FFFD` replacement or any other
+  lossy scheme and run the result: that substitutes a different input and
+  reports on a question the vector did not ask. Only an implementation with
+  no byte-oriented entry point anywhere reports these as `skip` under E-21,
+  citing [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
+  `DIV-6`. **No port's runner reads `bytes_hex` yet**, so none of them can
+  run these vectors at all today — and a runner that fails them on the
+  unknown field is reporting a `fail`, not a skip, until it either runs them
+  or reports an E-20 "not yet implemented" skip.
 
 ## Canonical document encoding
 

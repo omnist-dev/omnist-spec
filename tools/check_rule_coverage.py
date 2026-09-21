@@ -15,6 +15,11 @@ Table rows count. A row is a paragraph in disguise: `docs/03-schema-model.md`
 carried a MUST-level requirement on `infer` and `any` inside a table cell,
 unrestated anywhere in prose and uncitable, which an earlier version of this
 script skipped wholesale.
+
+A citable number also has to mean one thing. Since v0.21.0-beta this script
+also fails when a rule label is *defined* twice -- omnist-spec#105's first
+head gave a new rule the `E-26` that v0.20.0-beta had already spent on an
+unrelated one, and nothing here noticed.
 """
 
 from __future__ import annotations
@@ -42,6 +47,73 @@ ENFORCED = {
 REPORTED: dict[str, str] = {}
 
 NORMATIVE = re.compile(r"\bMUST\b|\bSHALL\b")
+
+# Where each rule namespace is defined. A label may be *cited* anywhere; it
+# may be *defined* only in its owning file, which is what makes the
+# duplicate check below precise: the ledger leads paragraphs with
+# `**OSD-15, canonical escaping.**`, which is a citation of chapter 5's rule
+# used as a heading, not a second definition of it.
+DEFINING_FILE = dict(
+    (path, prefix) for path, prefix in ENFORCED.items()
+)
+DEFINING_FILE["docs/09-divergence-ledger.md"] = "DIV"
+
+# A definition is a bold label opening a paragraph or a list item:
+#
+#     **E-24. A precondition this spec imposes ...
+#     - **E-21. Documented divergence.** ...
+#     **E-20.** **A skip MUST cite a reason ...
+#     **DIV-6. No port's conformance runner reads ...
+#
+# The label must be followed by `.`, `,`, or the closing `**`, which is what
+# separates a definition from a citation mid-sentence (`per E-24, the code
+# is ...`) or a bolded cross-reference inside running text. Sub-rules carry
+# their own letter (`E-4a`) and are separate labels, not repeats of `E-4`.
+DEFINITION = re.compile(
+    r"^[ \t]*(?:[-*+][ \t]+|\d+\.[ \t]+)?\*\*"
+    r"(?P<label>(?:D|S|A|C|E|R|OML|OSD|DIV)-\d+[a-z]?)"
+    r"(?=[.,]|\*\*)"
+)
+
+
+def duplicate_definitions() -> list[str]:
+    """Fail when one rule label is defined twice.
+
+    omnist-spec#105's first head shipped a second `E-26` -- a new rule given
+    a number v0.20.0-beta had already spent on an unrelated one -- and every
+    check in this repo stayed green. A spent number silently coming to mean
+    two things is the same failure the ledger's retired `DIV-1`/`DIV-2`
+    preamble guards against by hand, applied to every namespace.
+    """
+    seen: dict[str, list[str]] = {}
+    for rel, prefix in DEFINING_FILE.items():
+        path = ROOT / rel
+        lines = path.read_text(encoding="utf-8").splitlines()
+        in_fence = False
+        for lineno, line in enumerate(lines, start=1):
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            m = DEFINITION.match(line)
+            if not m:
+                continue
+            label = m.group("label")
+            # Only a label from this file's own namespace is a definition
+            # here; anything else is a citation being used as a heading.
+            if label.rsplit("-", 1)[0] != prefix:
+                continue
+            seen.setdefault(label, []).append(f"{rel}:{lineno}")
+
+    errors = []
+    for label, places in sorted(seen.items()):
+        if len(places) > 1:
+            errors.append(
+                f"rule {label} is defined {len(places)} times: "
+                + ", ".join(places)
+            )
+    return errors
 
 
 def _paragraphs(lines: list[str]):
@@ -125,8 +197,19 @@ def main() -> int:
         note = "covered" if not gaps else f"{len(gaps)} outside the {prefix}- spine"
         print(f"{path}: {note} (reported, not enforced)")
 
+    dupes = duplicate_definitions()
+    if dupes:
+        failed = True
+        print(f"error: {len(dupes)} rule number(s) defined more than once:",
+              file=sys.stderr)
+        for line in dupes:
+            print(f"  {line}", file=sys.stderr)
+    else:
+        print("rule numbers: every definition is unique within its namespace")
+
     if failed:
-        print("\nEvery normative paragraph needs a citable rule number.",
+        print("\nEvery normative paragraph needs a citable rule number, and "
+              "every rule number needs exactly one definition.",
               file=sys.stderr)
         return 1
     return 0
