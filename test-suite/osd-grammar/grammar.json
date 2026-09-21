@@ -593,6 +593,40 @@
         "schema": "record R {\n    \"a\\\\\": string,\n}\nroot R\n"
       },
       "comment": "OSD-15's sharpest case: a label ending in a backslash. Written naively as `\"a\\\"` the trailing backslash escapes the closing quote and the string never terminates; doubled, `\"a\\\\\"` unescapes to `a\\` and the quote closes. This is why OSD-15 is stated as an escaping rule rather than left to a writer's judgement about which characters \"need\" escaping. Measured live: the Python reference emits the naive form and its own parser reports parse.unterminated-string -- red (DIV-5). Not measured on the other four ports."
+    },
+
+    {
+      "name": "osd-grammar/encoding/invalid-utf8-lone-continuation-byte-in-a-label-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse_schema",
+      "purpose": "error-case",
+      "input": {
+        "bytes_hex": "7265636f72642052207b0a2020202022618062223a20737472696e672c0a7d0a726f6f7420520a"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "D-14 binds OSD as well as OML and the four codecs -- Sec2.5 opens by saying these rules apply to every text surface, and parse_schema is a read-side driver that takes `bytes_hex` for that reason (E-26). `80` is a continuation byte standing alone inside a quoted field label. The code is parse.invalid-encoding, not one of the six parse.* codes E-3 shares with OSD's lexical stage: the input never reaches a lexer. Measured against the Python reference (v0.9.5) 2026-09-21: its readers take `str`, so these bytes cannot be handed to one at all, and its CLI decodes both file and stdin input strictly -- `open(path, encoding=\"utf-8\")` and a utf-8/strict `sys.stdin` -- so it fails with an uncaught UnicodeDecodeError and no diagnostic rather than reporting this code. No silent repair, but not conformant either; recorded as DIV-6. The other four ports were not measured for this vector."
+    },
+
+    {
+      "name": "osd-grammar/encoding/valid-multi-byte-label-is-accepted",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "bytes_hex": "7265636f72642052207b0a2020202022c3a9e282acf09f9880223a20737472696e672c0a7d0a726f6f7420520a"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "The OSD control for the vector above: a field label made of the same three multi-byte characters (U+00E9, U+20AC, U+1F600) is ordinary, valid input and the schema parses. Measured against the Python reference (v0.9.5) 2026-09-21: accepted."
     }
   ]
 }

@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 146 vectors as of this writing — dispatched by operation
+JSON-vector suite — 273 vectors as of v0.21.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -164,6 +164,48 @@ never as follow-up work.
 
 See [§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3` for
 the per-vector breakdown of what a runner reports today.
+
+## Byte inputs: `bytes_hex` and the one wrong way to run it
+
+New in **v0.21.0-beta**. A read-side vector (`parse`, `parse_schema`,
+`parse_schema_oml`) may give its input as `bytes_hex` — lowercase hex, two
+digits per byte — instead of `text`, per
+[§8.5.3](08-conformance-and-errors.md#853-operation-drivers)'s **E-26**.
+Exactly one of the two is present. Fourteen vectors use it today, all of them
+[§2.5](02-document-model.md#25-encoding)'s: eight pinning
+[D-14](02-document-model.md#25-encoding)'s rejection of invalid UTF-8 across
+the six surfaces, six valid-UTF-8 controls proving the reader still accepts
+multi-byte characters.
+
+Your runner does three things with it:
+
+1. **Decode the hex to bytes.** Nothing else — no normalization, no trimming.
+2. **Hand those bytes to your implementation as bytes**, through whatever
+   byte-oriented entry point you have: a bytes-taking reader, a byte stream,
+   or a temporary file you point your file reader at. That is the entry point
+   D-14 binds.
+3. **Compare as usual.** The expected diagnostic for every D-14 vector is
+   `parse.invalid-encoding` at `1:1` — always `1:1`, on every surface, wherever
+   in the input the bad byte sits, because nothing decoded and the whole input
+   is what failed.
+
+**The wrong way, and it is the tempting one:** decode the bytes into your
+language's string type with replacement (`U+FFFD`), with a surrogate-escape
+scheme, or with any other lossy recovery, and then run the vector through
+your ordinary string-taking reader. That is not the vector's input. For a
+D-14 vector it asks your reader a question about a string of replacement
+characters — which is *valid* UTF-8 — and whatever it answers says nothing
+about the rule. It can report a pass for the one behaviour D-14 explicitly
+forbids. If your reader only ever takes a string and nothing in your library
+decodes bytes on the caller's behalf, that is a real structural limit: report
+these vectors as `skip` under **E-21**, citing
+[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-6`. A skip is
+honest and tracked; a decoded-with-replacement pass is neither.
+
+If your language's string type can itself hold ill-formed UTF-8 — Go's
+`string` is a byte slice, and Go is the measured case in `DIV-6` — you do not
+get the skip. Your string-taking reader is a byte-oriented entry point
+wearing a string's clothes, and D-14 binds it.
 
 ## Say which comparison mode produced your numbers
 

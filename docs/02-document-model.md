@@ -437,11 +437,69 @@ correct, which is the most dangerous class of divergence a data format has:
 one system validates the reading it sees, another acts on a different one.
 
 **D-14. Input MUST be valid UTF-8.** A malformed byte sequence is an error,
-reported as `parse.invalid-encoding` ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
+reported as `parse.invalid-encoding` ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1))
+at text position `1:1`.
 An implementation MUST NOT substitute `U+FFFD` or otherwise repair the input
 and continue: silent repair is exactly how two readers end up with different
 Documents, since what a replacement character stands in for is not
 recoverable.
+
+**The path is `1:1` always, and deliberately not the offset of the offending
+byte.** A `parse.*` path is a text position (E-11), 1-based line and column
+counted over the input's *characters* — and when D-14 fires the characters
+are exactly what failed to come into existence, so there is no text for a
+line and column to be counted on. The failing unit is therefore the whole
+input, and `1:1` is this spec's existing name for that: D-21 already reports
+a whole-input refusal there, computed on text the offending byte is not even
+part of. Reporting the byte offset instead would either require a second
+path kind for one code, or quietly redefine `line:col` as a byte count on
+this one diagnostic, and both are worse than losing a detail the message is
+free to carry. **No maximal-subpart convention is introduced.** Unicode's
+substitution-of-maximal-subparts rule decides how many `U+FFFD` a
+*replacing* decoder emits for a run of bad bytes; D-14 forbids replacing, so
+there is nothing for that rule to govern here and a conformant
+implementation MUST NOT emit more than one `parse.invalid-encoding`
+diagnostic for one input, however many malformed sequences it contains.
+
+**Which entry points D-14 binds.** The test is whether the entry point ever
+sees bytes:
+
+- **D-14 binds every byte-oriented entry point, and it MUST validate** —
+  one taking a byte array, a file path, standard input, or a byte stream. It
+  MUST reject malformed input with `parse.invalid-encoding` at `1:1`.
+- **A string-typed entry point MAY treat its input as already decoded.** In
+  most languages a string cannot be ill-formed UTF-8 at all, so the check
+  has nothing to find and D-14 is satisfied by construction. Where the
+  language's string type *can* hold ill-formed bytes — Go's `string` is a
+  byte slice, and is the worked case — the reader is byte-oriented wearing a
+  string's clothes and MUST validate.
+- **An entry point that decodes bytes into a string on the caller's behalf
+  is byte-oriented for D-14**, whatever its reader's signature says. A CLI, a
+  file-reading convenience function, or a stdin wrapper MUST NOT decode with
+  replacement and hand the result on: that is the silent repair the
+  paragraph above forbids, moved one call earlier, and it is the likelier
+  place to commit it, because the repair is usually a default argument on a
+  decode call rather than anything the parser does. Such an entry point MUST
+  fail the read per the first bullet.
+
+This is also what makes D-14 conformance-checkable: the vectors for it give
+their input as bytes ([§8.5.3](08-conformance-and-errors.md#853-operation-drivers)),
+and a runner for an implementation whose readers genuinely only ever accept
+the language's string type — with no byte-oriented entry point at all —
+skips them under [E-21](08-conformance-and-errors.md#855-reporting) citing
+[`DIV-6`](09-divergence-ledger.md#94-known-open-divergences). It MUST NOT
+decode them with replacement and run the result as though it were the
+vector's input, which would report a pass for the one behaviour D-14
+forbids.
+
+**Where D-14 sits in the read order.** D-14 runs first, on the bytes, before
+any text exists. Only then does D-15 strip a leading `U+FEFF` from the
+decoded text, D-21 reject a second mark still standing at offset zero, and
+the surface's own grammar or codec begin parsing.
+[E-24](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)
+states the same order from the error-code side. The ordering is not
+cosmetic: a BOM is `EF BB BF`, so a truncated one is malformed UTF-8 and
+D-14 — not D-15 — is the rule that fires on it.
 
 **D-15. A leading byte-order mark MUST be stripped, on every surface.**
 `U+FEFF` at offset zero is consumed and contributes nothing to the Document.

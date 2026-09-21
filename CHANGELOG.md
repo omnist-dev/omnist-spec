@@ -3,6 +3,113 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.21.0-beta (2026-09-21)
+
+**Normative (minor)** — closes
+[#105](https://github.com/omnist-dev/omnist-spec/issues/105). D-14 has
+required valid UTF-8 since chapter 2 existed, and **no vector could reach
+it**: a vector file is JSON, a JSON string holds text, and bytes that are not
+valid UTF-8 are exactly the bytes a JSON string cannot carry. The requirement
+was untestable by the suite's shape, not merely untested — and on the one
+port probed for it, three of six surfaces silently accepted malformed input
+while its suite stayed green. This release gives the suite a byte-level input
+form, says what D-14 binds and what it reports, and pins it with vectors.
+
+- **New `bytes_hex` vector input, and new `E-26`**
+  ([§8.5.3](docs/08-conformance-and-errors.md#853-operation-drivers)). The
+  three read-side drivers — `parse`, `parse_schema`, `parse_schema_oml` —
+  take their input either as `text` or as `bytes_hex`, **exactly one of the
+  two**: lowercase hexadecimal, two digits per byte, no separators, no
+  prefix. Every other driver takes an already-built Document or a Schema, so
+  there are no input bytes for a byte-level rule to be about and none of them
+  accepts the field. E-26 also states how a runner presents the bytes —
+  decoded to bytes, handed to a byte-oriented entry point, unchanged — and
+  the one thing it MUST NOT do: decode them with `U+FFFD` replacement or a
+  surrogate-escape scheme and run the result as though that string were the
+  input. It is not, it is valid UTF-8, and for a D-14 vector it reports a
+  pass for the one behaviour the rule forbids. Tooling over the suite MUST
+  NOT require a `bytes_hex` value to decode, for the same reason.
+- **`parse.invalid-encoding`'s path is `1:1`, always**
+  ([D-14](docs/02-document-model.md#25-encoding),
+  [§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1),
+  [§8.4](docs/08-conformance-and-errors.md#84-paths)). The rule had a code and
+  no path, which leaves a diagnostic nothing can compare. It is `1:1` on every
+  surface, whatever byte failed and wherever it sits — deliberately not the
+  offset of the offending byte, because a `parse.*` path is a line and column
+  counted over the input's characters and when D-14 fires the characters are
+  exactly what failed to exist. The whole input is the failing unit, and `1:1`
+  is this spec's existing name for that (D-21 already reports a whole-input
+  refusal there). **E-11 is unchanged.** No maximal-subpart convention is
+  introduced: that rule governs how many `U+FFFD` a *replacing* decoder emits,
+  and D-14 forbids replacing — one input produces at most one
+  `parse.invalid-encoding` diagnostic however many malformed sequences it
+  contains.
+- **D-14 now says which entry points it binds**
+  ([§2.5](docs/02-document-model.md#25-encoding)). The test is whether the
+  entry point ever sees bytes. A byte-oriented one — bytes, a file, stdin, a
+  byte stream — MUST validate. A string-typed one MAY treat its input as
+  already decoded, since in most languages a string cannot be ill-formed UTF-8
+  at all; where the language's string type *can* hold ill-formed bytes (Go's
+  `string` is a byte slice) the reader is byte-oriented wearing a string's
+  clothes and MUST validate. **An entry point that decodes bytes into a string
+  on the caller's behalf — a CLI, a file-reading convenience, a stdin wrapper
+  — is byte-oriented**, and MUST NOT decode with replacement: that is D-14's
+  existing no-silent-repair clause, moved one call earlier to where it is
+  likelier to be violated, since the repair is usually a default argument on a
+  decode call rather than anything the parser does. The read order is stated
+  too — D-14 on the bytes, then D-15's BOM strip, then D-21's second-BOM
+  check, then the grammar or codec — which is not cosmetic: a BOM is
+  `EF BB BF`, so a *truncated* BOM is malformed UTF-8 and D-14, not D-15, is
+  the rule that fires on it.
+- **Code correction: invalid UTF-8 is never `parse.codec-syntax`**
+  ([§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1)).
+  E-24 widened `parse.codec-syntax` to cover a byte-level precondition ahead
+  of a codec, and D-21's second-BOM check is the only such precondition —
+  D-14 is checked earlier still and has its own code. A codec handed bytes
+  that are not valid UTF-8 MUST report `parse.invalid-encoding`, whatever its
+  parsing library would have said. The table row and E-24 both now say so;
+  the two are distinguishable by when they run, D-14 on the bytes and D-21 on
+  text that decoded cleanly.
+- **Fourteen new vectors**, taking the suite to **273**. Eight pin D-14's
+  rejection across all six surfaces, each with the bad bytes inside plausible
+  content rather than dangling at the end: a truncated three-byte sequence
+  (`e2 82`) on JSON and XML, an overlong encoding (`c0 af`) on OML, a lone
+  continuation byte (`80`) on JSON, OML and OSD, an encoded surrogate
+  (`ed a0 80`) on YAML, and a byte above the Unicode range (`f5 80 80 80`) on
+  TOML. Two of them exist to pin the path specifically: one puts the bad byte
+  at offset zero and one puts it on line 2, and both expect `1:1`. Six
+  valid-UTF-8 controls — U+00E9, U+20AC and U+1F600, two, three and four bytes
+  — keep a reader from satisfying D-14 by rejecting everything multi-byte.
+  Measured against the Python reference (v0.9.5): all six controls are
+  accepted with exactly the expected Document.
+- **New `DIV-6`**
+  ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)). No port's
+  runner reads `bytes_hex` yet, so these vectors are an **E-20 "not yet
+  implemented" skip** until each one learns the form — or an **E-21** skip,
+  citing `DIV-6`, for an implementation with no byte-oriented entry point at
+  all. A port MUST NOT report them as passing by decoding with replacement.
+  The entry records only measured or documented behaviour: the Python
+  reference's readers take `str` and silently accept smuggled ill-formed
+  content, while its CLI decodes strictly and dies with an uncaught
+  `UnicodeDecodeError` rather than a diagnostic (measured live for this
+  release); Go silently accepts invalid UTF-8 on JSON/OML/OSD and reports
+  `parse.codec-syntax` on YAML/TOML/XML (omnist-go#119); Rust's readers take
+  `&str` and its CLI uses `read_to_string`, safe by construction (the
+  omnist-rs#183 review); Java's `Cli.java` decodes stdin lossily with
+  `new String(bytes, UTF_8)` while file input is strict (the omnist-j#112
+  review); **TypeScript was not measured and nothing is claimed about it.**
+- **`DIV-5` updated.** Its closing paragraph said OSD-14 and D-14 both needed
+  the same missing mechanism. Half of that is now built: E-26 covers
+  **read-side** vectors, whose input is source text. OSD-14 is a write-side
+  rule whose input is a Schema, and it still needs a driver accepting a schema
+  in some form other than OSD text. The entry now says which half moved.
+- **Tooling.** `tools/check_vectors.py` checks `bytes_hex` — hex digits,
+  lowercase, even length, read-side operation only, never alongside `text`,
+  and exactly one of the two present on a read-side vector — and deliberately
+  does **not** check that the bytes decode.
+  `docs/porting-a-conformance-runner.md` gains a section on running these
+  vectors, and `test-suite/README.md` documents the field.
+
 ## v0.20.0-beta (2026-09-20)
 
 **Normative (minor)** — closes

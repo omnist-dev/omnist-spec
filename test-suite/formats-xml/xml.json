@@ -393,6 +393,62 @@
         ]
       },
       "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. The other surface where the rule costs something, for the same reason as YAML: XML 1.0 admits a leading byte-order mark outright, so the remaining text is well-formed XML and the parser discards the second mark itself, making a doubled mark disappear silently under D-15's strip. The XML reader pre-checks for the same reason the YAML one does. Measured: the reference accepts this input and returns the same Document as the single-BOM form (DIV-4)."
+    },
+
+    {
+      "name": "formats-xml/encoding/invalid-utf8-truncated-sequence-in-text-content-is-rejected",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "bytes_hex": "3c723e3c613e78e2823c2f613e3c2f723e"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "D-14 on XML, with the truncated class (`e2 82`, a three-byte sequence missing its third byte) inside element text content, where real data sits. XML is the surface most likely to get this wrong for a reason of its own: an XML document can declare its encoding, and a parser handed bytes may try to sniff or honour that declaration. It makes no difference here -- there is no declaration, and D-14 fixes the encoding at UTF-8 for every Omnist surface regardless. The code is parse.invalid-encoding, not parse.codec-syntax, even though an XML parser handed these bytes would likely report an encoding error of its own. Measured against the Python reference (v0.9.5) 2026-09-21: its readers take `str`, so these bytes cannot be handed to one at all, and its CLI decodes both file and stdin input strictly -- `open(path, encoding=\"utf-8\")` and a utf-8/strict `sys.stdin` -- so it fails with an uncaught UnicodeDecodeError and no diagnostic rather than reporting this code. No silent repair, but not conformant either; recorded as DIV-6. The other four ports were not measured for this vector."
+    },
+
+    {
+      "name": "formats-xml/encoding/valid-multi-byte-characters-are-accepted",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "bytes_hex": "3c723e3c613ec3a9e282acf09f98803c2f613e3c2f723e"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "é€😀"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The XML control: the same three characters as the other surfaces' controls, in element text content, given as bytes. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
     }
   ]
 }

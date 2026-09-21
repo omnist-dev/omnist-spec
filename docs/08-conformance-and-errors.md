@@ -56,8 +56,8 @@ Every diagnostic carries at least:
 | `parse.leading-zero` | A `NUMBER`/`INTEGER` literal's integer part has a leading zero |
 | `parse.invalid-date` | A `DATE` or the date portion of a `DATETIME` is not a valid calendar date |
 | `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
-| `parse.codec-syntax` | Input a codec cannot accept: not well-formed in its own source format (JSON, YAML, TOML, XML), or refused by a byte-level precondition this spec imposes ahead of the codec — see the note below |
-| `parse.invalid-encoding` | Input is not valid UTF-8 ([§2.5](02-document-model.md#25-encoding)) |
+| `parse.codec-syntax` | Input a codec cannot accept: not well-formed in its own source format (JSON, YAML, TOML, XML), or refused by a byte-level precondition this spec imposes ahead of the codec — see the note below. **Not** the code for invalid UTF-8, which has its own row |
+| `parse.invalid-encoding` | Input is not valid UTF-8 ([D-14](02-document-model.md#25-encoding)). Its `path` is always `1:1`, on every surface, whatever byte failed and wherever it sits |
 
 **E-25. `parse.trailing-content` and `parse.unexpected-token` divide on
 whether the document has ended, not on what is missing.** The two rows above
@@ -117,6 +117,17 @@ describes a refusal at that point. Putting it anywhere else
 would mean a new code that conveys nothing the message does not already say —
 the same argument that keeps one `parse.codec-syntax` across all four formats
 rather than four.
+
+**[D-14](02-document-model.md#25-encoding) is not a second such
+precondition**, though it is checked earlier still. It has its own code:
+a codec handed bytes that are not valid UTF-8 MUST report
+`parse.invalid-encoding`, not `parse.codec-syntax`, whatever its parsing
+library would have said about them — and at `1:1`, per D-14. The two are
+distinguishable by when they run. D-14 fires on the bytes, before any text
+exists for a codec or a grammar to have an opinion about; D-21 fires on text
+that has already decoded cleanly. So D-21 is the one precondition E-24 widens
+`parse.codec-syntax` to cover, not a general home for every byte-level
+refusal.
 
 One code covers all four formats deliberately. Splitting it per format would
 add three codes that convey nothing the message does not already say, and
@@ -417,6 +428,16 @@ from the byte offset of the failure:
 14:8                     line 14, column 8
 ```
 
+**`parse.invalid-encoding` is always `1:1`.** It is the one `parse.*` code
+whose path is fixed rather than computed, because
+[D-14](02-document-model.md#25-encoding) fires before the input has decoded
+into the characters a line and column would be counted over. The whole input
+failed, and `1:1` is how this spec names a whole-input text refusal already
+(D-21 reports there too). E-11 below is unchanged by this: the path is still
+a text-position path, and a runner comparing paths byte-for-byte compares
+this one like any other. One input produces at most one such diagnostic, no
+matter how many malformed sequences it contains.
+
 **E-11.** A `parse.*` diagnostic's `path` MUST be a text-position path. A `document.*`,
 `schema.*`, `validate.*`, `materialize.*`, `algebra.*`, `write.*`, or `lint.*`
 diagnostic's
@@ -539,8 +560,8 @@ Matching rules, all normative:
 
 | `operation` | `input` | success `expect` |
 |---|---|---|
-| `parse` | `{format, text}` | `{ok, document}` |
-| `parse_schema` | `{text}` | `{ok}` — `schema: <canonical OSD text>` MAY additionally be present, compared byte for byte per §3.3/§5.9, for a vector specifically pinning declaration-order or formatting round-trip fidelity rather than mere acceptance |
+| `parse` | `{format, text}` or `{format, bytes_hex}` (E-26) | `{ok, document}` |
+| `parse_schema` | `{text}` or `{bytes_hex}` (E-26) | `{ok}` — `schema: <canonical OSD text>` MAY additionally be present, compared byte for byte per §3.3/§5.9, for a vector specifically pinning declaration-order or formatting round-trip fidelity rather than mere acceptance |
 | `validate` | `{schema, document}` | `{ok}` |
 | `materialize` | `{schema, document}` | `{ok, document}` |
 | `write` | `{document, format}` | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
@@ -554,7 +575,7 @@ Matching rules, all normative:
 | `infer_with_report` | `{samples, allow_any}` | `{ok, schema, fallbacks}` — `fallbacks` is a list of `{location, reason}`, always present on success (empty when nothing was opened) |
 | `lint` | `{schema}` | `{ok, findings}` — `findings` is a list of `{code, severity, location}`; message text is never compared (§8.5.2 rule 1) so no `message` field is required |
 | `schema_from_document` | `{document}` | `{ok, schema: <canonical OSD text>}` — compared byte for byte, same rule as `parse_schema`'s implicit round-trip (§3.3, principle 1: nothing merges, so declaration order is preserved from the input Document's own edge order) |
-| `parse_schema_oml` | `{text}` | `{ok, schema: <canonical OSD text>}` — same comparison as `schema_from_document`; this operation is `schema_from_document(read_oml(text))`, per [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
+| `parse_schema_oml` | `{text}` or `{bytes_hex}` (E-26) | `{ok, schema: <canonical OSD text>}` — same comparison as `schema_from_document`; this operation is `schema_from_document(read_oml(text))`, per [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
 | `schema_to_document` | `{schema}` | `{ok, document}` — compared as a Document (§8.5.4's canonical encoding), which is order-sensitive per D-1/D-3; this is where §3.3's order principles actually become observable for this direction |
 | `write_schema_oml` | `{schema}` | `{ok, text}` — compared byte for byte as OML text, same rule as `write`'s Document-writer vectors; this is `write_oml(schema_to_document(schema))`, per [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
 
@@ -615,6 +636,46 @@ XML-comparison algorithm.) One reference implementation: strip via
 `text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
 the existing outer-whitespace trim every `write` vector comparison already
 does.
+
+**E-26. A read-side vector MAY give its input as bytes, as `bytes_hex`.**
+The three drivers above whose `input` carries the source text of a document
+or a schema — `parse`, `parse_schema` and `parse_schema_oml` — accept
+`bytes_hex` in place of `text`. **Exactly one of the two MUST be present**:
+never both, and never neither. `bytes_hex` is the input's bytes written as
+lowercase hexadecimal, two digits per byte, with no separators and no
+prefix, so its length is always even; the empty string is a legal (empty)
+input. Every other field of the vector is unaffected — `format` still selects
+the codec, and a success `expect` compares exactly as it would for a `text`
+vector.
+
+E-26 exists for one requirement, and adds nothing the suite could already
+express: a vector file is JSON, a JSON string holds text, and bytes that are
+not valid UTF-8 are exactly the bytes no JSON string can carry. So
+[D-14](02-document-model.md#25-encoding) was a MUST no vector could reach
+until this form existed. **Tooling over the suite MUST NOT require a
+`bytes_hex` value to decode as UTF-8** — the vectors that matter here do not
+decode at all, and one that does is a control proving the reader still
+accepts well-formed multi-byte input.
+
+The remaining drivers take no `bytes_hex`. Each of them takes an
+already-built Document or a Schema rather than source text, so there are no
+input bytes for a byte-level rule to be about.
+
+**How a runner presents `bytes_hex` to the implementation under test.**
+Decode the hex to bytes and hand *those bytes* to the reader through a
+byte-oriented entry point — a bytes-taking reader, a byte stream, or a
+temporary file — which is what D-14 binds. **A runner MUST NOT decode the
+bytes into a string with `U+FFFD` replacement, with a surrogate-escape
+scheme, or with any other lossy recovery, and then run the vector as though
+that string were the input.** It is not the input, the result says nothing
+about the rule, and for a vector expecting `parse.invalid-encoding` it
+reports a pass or a fail on a question never asked. An implementation with
+no byte-oriented entry point at all — every reader takes the language's
+string type, and nothing in the library decodes bytes on the caller's behalf
+— reports these vectors as `skip` under **E-21**, citing
+[`DIV-6`](09-divergence-ledger.md#94-known-open-divergences); that is a real
+structural limit of the target language, which is what E-21 is for, and §8.5.5
+makes reporting it a first-class result rather than a loss.
 
 ### 8.5.4 Canonical document encoding
 

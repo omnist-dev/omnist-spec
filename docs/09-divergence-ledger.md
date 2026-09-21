@@ -362,13 +362,62 @@ cannot be written as a vector input at all, and §8.5.3 has no driver taking a
 schema in any other form — `write_schema` is a documented operation
 ([§E.11](extensions/osd-oml.md#e11-api-cli-surface)) that the driver table and
 the [Operations & Models Reference](operations-and-models-reference.md) both
-omit. So OSD-14 ships as a rule with no vector behind it, which is exactly
-the untestable-MUST shape omnist-spec#105 raises for D-14 on the read side;
-both need the same thing, a vector input form that is not already-valid text
-in the surface under test. Until that exists, adoption is verified by hand
+omit. So OSD-14 ships as a rule with no vector behind it.
+
+**The read-side half of that problem is fixed as of v0.21.0-beta; this one is
+not.** omnist-spec#105 raised the same untestable-MUST shape for D-14, and
+[§8.5.3](08-conformance-and-errors.md#853-operation-drivers)'s **E-26** now
+lets a read-side vector give its input as `bytes_hex` — bytes, not
+already-valid text — which is what D-14 needed. It does nothing for OSD-14,
+and the difference is worth naming so nobody reads the mechanism as broader
+than it is: E-26 covers the three drivers that take *source text* and gives
+them a way to carry bytes instead. OSD-14 is a **write**-side rule whose
+input is a Schema, and what it still needs is a driver that accepts a schema
+in some form other than OSD text — a canonical Schema encoding, or a
+`write_schema` driver fed by `schema_from_document`. Until that exists,
+adoption is verified by hand
 against the two rows above and this entry says so rather than letting a green
 suite imply coverage. Remove this entry when every port escapes labels per
 OSD-15 and refuses the write per OSD-14, and a vector pins the second half.
+
+**DIV-6. No port's conformance runner reads `bytes_hex` yet, and no port is
+known to report `parse.invalid-encoding`.** E-26 and D-14's fourteen byte-level
+vectors are new normative content and new suite content as of
+**v0.21.0-beta**. Two separate gaps, and they close independently:
+
+1. **The runner gap.** A runner that does not know the `bytes_hex` field
+   cannot run these vectors at all. Until it learns the form, they are an
+   **E-20 "not yet implemented" skip**, which needs no ledger citation of its
+   own. A runner for an implementation with no byte-oriented entry point
+   anywhere — every reader takes the language's string type and nothing
+   decodes bytes on the caller's behalf — skips them under **E-21** instead,
+   citing this entry by number; that is a structural limit of the target
+   language, which is what E-21 is for.
+2. **The rule gap.** Implementing D-14 as
+   [§2.5](02-document-model.md#25-encoding) now states it: reject invalid
+   UTF-8 with `parse.invalid-encoding` at `1:1`, on every surface and at
+   every byte-oriented entry point.
+
+**A port MUST NOT report these vectors as passing by decoding the bytes with
+replacement** (`U+FFFD`), with a surrogate-escape scheme, or with any other
+lossy recovery and running the result through a string-taking reader. The
+decoded string is valid UTF-8 and is not the vector's input, so a green
+result there is a pass reported for the one behaviour D-14 forbids. Skip it
+instead; §8.5.5 makes skip a first-class result precisely so this is never
+the cheaper option.
+
+Measured or documented behaviour today, and only that:
+
+| Implementation | What is known | Source |
+|---|---|---|
+| Python reference (v0.9.5) | Its readers take `str`, so malformed bytes cannot reach one directly; handed a `str` carrying smuggled ill-formed content (surrogate-escaped, or already replaced with `U+FFFD`), `read_json`, `read_oml` and `parse_schema` all **accept it silently**. Its CLI decodes strictly on both input paths — `open(path, encoding="utf-8")` for a file, a utf-8/strict `sys.stdin` — and so does not repair, but it fails with an **uncaught `UnicodeDecodeError` and no diagnostic at all** rather than `parse.invalid-encoding`. Valid multi-byte input (U+00E9, U+20AC, U+1F600) is accepted on all six surfaces | measured live 2026-09-21 for this entry |
+| Go | JSON, OML and OSD readers **silently accept** invalid UTF-8; YAML, TOML and XML report `parse.codec-syntax`, which D-14 now explicitly says is the wrong code for this. Go's `string` is a byte slice, so its string-taking readers are byte-oriented entry points and D-14 binds them — this is not a case for the E-21 skip | [omnist-go#119](https://github.com/omnist-dev/omnist-go/issues/119), from the omnist-go#118 review |
+| Rust | Readers take `&str` and the CLI uses `read_to_string`, so ill-formed bytes cannot reach a reader and the CLI rejects them at the decode. Safe by construction; what it reports for the rejection was not measured | the omnist-rs#183 review |
+| Java | `Cli.java` decodes stdin **lossily**, `new String(bytes, UTF_8)`, which substitutes `U+FFFD` — the repair D-14 forbids. File input uses `Files.readString`, which is strict | the omnist-j#112 review |
+| TypeScript | **Not measured.** Nothing is claimed here | — |
+
+Remove this entry when every port's runner reads `bytes_hex` and every port
+either passes these vectors or carries a standing E-21 skip citing it.
 
 ## 9.5 Adding a sixth implementation
 
