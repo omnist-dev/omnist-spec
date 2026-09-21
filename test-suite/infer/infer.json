@@ -119,6 +119,30 @@
       "comment": "infer_with_report's allow_any=true path: opens the field to any AND reports the opening with a location and reason -- never silent."
     },
     {
+      "name": "infer/allow-any/mixed-object-and-scalar-shapes-open-to-any-when-allowed",
+      "spec": "docs/06-schema-algebra.md#610-infersamples",
+      "operation": "infer_with_report",
+      "purpose": "edge-case",
+      "input": {
+        "samples": [
+          "id: 7\n",
+          "id: { a: 1 }\n"
+        ],
+        "allow_any": true
+      },
+      "expect": {
+        "ok": true,
+        "schema": "record Root {\n    \"id\": any,\n}\nroot Root\n",
+        "fallbacks": [
+          {
+            "location": "Root.id",
+            "reason": "mixes objects and values"
+          }
+        ]
+      },
+      "comment": "S-21's reporting half for the shape-conflict branch, the sibling of conflicting-scalar-kinds-open-to-any-when-allowed: the same two samples as mixed-object-and-scalar-shapes-fail-by-default, with allow_any true. Sec6.10's infer_type pseudocode fixes the reason text verbatim -- AnyFallback(record_name + \".\" + label, \"mixes objects and values\") -- so the vector encodes the spec's own wording, and the Python reference was measured live and emits exactly that, with one fallback at Root.id. Without this vector an implementation could report the scalar-conflict opening and stay silent on this one while passing the whole suite, which is precisely what S-21 forbids."
+    },
+    {
       "name": "infer/errors/zero-samples-is-an-error",
       "spec": "docs/06-schema-algebra.md#610-infersamples",
       "operation": "infer",

@@ -165,8 +165,13 @@ in full (see "Error path assignment" below).
   pattern as R-3) / `schema.empty-label` / `schema.bracket-in-label`
   respectively. (Unlike R-3a, `label` has no identifier-domain restriction
   — a field label is a *value*, per [§5.2](../05-osd-grammar.md#52-the-quoting-rule)'s
-  identifier-vs-value distinction, and OSD text already allows arbitrary
-  quoted-string labels; there is no asymmetry here to close.)
+  identifier-vs-value distinction, and OSD text allows arbitrary quoted-string
+  labels; there is no asymmetry here to close.) One consequence runs the other
+  way and is handled on the OSD side rather than here: a label carrying a C0
+  control character is constructible through this rule and has no OSD text at
+  all, so an OSD *writer* refuses it per
+  [OSD-14](../05-osd-grammar.md#59-canonical-output) while `write_schema_oml`
+  writes it normally — this surface is the one that can carry it.
 - **R-8.** `label` MUST be unique within its enclosing `record-node` →
   `schema.duplicate-field`.
 - **R-9.** `type` MUST be `[1,1]` → `schema.missing-key` if absent.

@@ -215,8 +215,9 @@ override the first.
 
 ## 5.9 Canonical output
 
-**OSD-11.** An OSD writer is canonical if, for every schema, it emits text that parses back
-to an equal schema, following the canonical form below. Two conformant
+**OSD-11.** An OSD writer is canonical if, for every schema **OSD text can
+represent** (OSD-14 below names the one class it cannot), it emits text that
+parses back to an equal schema, following the canonical form below. Two conformant
 implementations parsing the *same* source and immediately writing it back
 MUST produce byte-identical text — that guarantee comes from
 [§3.3](03-schema-model.md#33-formal-definition)'s order principles plus
@@ -234,7 +235,9 @@ form:
 - a trailing comma after every field, including the last;
 - `root` last;
 - cardinality omitted when it is `[1,1]`;
-- labels always quoted, types never quoted.
+- labels always quoted, types never quoted;
+- **OSD-15.** in a quoted label, a backslash MUST be written `\\` and a
+  double quote MUST be written `\"`, and no other character is escaped.
 
 ```osd
 record R {
@@ -245,6 +248,88 @@ root R
 
 **OSD-12.** A compact mode with no indentation is permitted and MUST round-trip:
 `record R { "a": string } root R`.
+
+**Why OSD-15's two escapes are exactly the two that are needed, and why
+OSD-11 needs them.** [§5.3.1](#531-string-unescaping) computes a string's
+value by stripping the quotes and replacing every backslash pair `\X` with
+the single character `X`. Written the other way round, that makes the
+escaping rule an exact inverse: a backslash in the value has to be doubled,
+or it will consume whatever character follows it; a double quote has to be
+backslashed, or it will close the string early; and **nothing else may be
+escaped**, because `\X` yields `X` for any `X`, so escaping an ordinary
+character is harmless on read but breaks OSD-11's byte-identical guarantee
+between two writers that disagree about which characters to escape. The
+grammar already admits both forms — `grammars/osd.abnf`'s `string` excludes a
+raw `"` from the body and allows `"\" %x20-10FFFF` — so this adds no syntax;
+it states which of the admitted spellings a canonical writer emits, which
+§5.9's list did not say at all. The rule round-trips every label including
+the two that break a naive writer: a label **ending** in a backslash
+(`a\` is written `"a\\"`, where a single trailing backslash would escape the
+closing quote) and a label made only of backslashes and quotes. Both were
+verified by reading back the text this rule says to write.
+
+**Measured: the Python reference does not do this**, and it is the more
+dangerous of the two failure modes. Its `to_osd` escapes nothing, so the
+label `a\b` is written `"a\b"` and reads back as `ab` — **silent
+corruption**, a different schema with no diagnostic anywhere — while the
+label `a"b` is written `"a"b"` and at least fails loudly with
+`parse.unterminated-string`. This is exactly the collision shape OSD-14
+below refuses to permit, reached by a path OSD-14 does not cover because
+these labels *are* representable; they were simply never being written
+correctly. Recorded as `DIV-5`.
+
+**OSD-14. A schema OSD text cannot represent MUST fail the write, never be
+approximated.** [§5.3.1](#531-string-unescaping) bans every raw byte below
+`U+0020` in a string body, escape context included, and OSD's unescaping is
+weak — `\X` yields `X` and nothing more — so a field label containing a C0
+control character has no OSD spelling at all: written raw the byte is
+rejected, and written after a backslash it is the same byte in the same body
+and rejected identically. An OSD writer given such a schema MUST fail with
+`write.unsupported-value`
+([§8.3.9](08-conformance-and-errors.md#839-write)), unconditionally and
+regardless of any `strict` setting, on the rule
+[§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments)'s E-6
+already applies to every writer case of this shape: a writer that cannot
+represent a value fails rather than emitting something that reads back as
+different data — here, text no conformant OSD reader accepts at all. This is
+what OSD-11 above is scoped by.
+
+**OSD-14's diagnostic uses the Schema path of the record, not of the
+field.** [§8.4](08-conformance-and-errors.md#84-paths)'s Schema paths are
+`RecordName` and `RecordName.label`, and it offers no quoting or escaping for
+a label inside a path — so the field form would require putting the exact
+byte that has no spelling into a path compared byte-for-byte, which is the
+problem restated rather than reported. The record form is unambiguous, needs
+no new path syntax, and names a unit the reader can act on: the message,
+which §8.5.2 never compares, is where the label belongs.
+
+**The class is exactly that, once OSD-15 is in force: a C0 control character
+in a field label — and such a schema still travels, as
+[OSD-OML](extensions/osd-oml.md).** Backslash and double quote look like the
+same problem and are not: OSD-15 above gives both a spelling, and after it
+every model-legal label except the C0 case round-trips, verified by reading
+back the text OSD-15 says to write for labels containing a backslash, a
+quote, both, `U+007F`, `U+2028`, a space, a colon and a `#`. Two shapes that
+also have no OSD text are **not** part of this class because they are not
+legal labels to begin with: a label containing `[` or `]` and the empty
+label, which [§5.4](#54-records-and-fields)'s OSD-2 and the bracket rule
+reject on read and which [§3.3](03-schema-model.md#33-formal-definition)
+excludes from the model, not merely from this surface. Record
+names cannot reach it, because
+[§3.3](03-schema-model.md#33-formal-definition)'s S-8 confines a `Name` to
+`[A-Za-z_][A-Za-z0-9_]*` on every route into a Schema — enforced by this
+chapter's own tokenizer ([§5.3](#53-tokens)) on the OSD route and by §E.6's
+R-3a on the OSD-OML one — and `root` names a declared record, so it cannot
+either. Field labels are the asymmetry, deliberately: §E.6's R-7 leaves a
+label unrestricted beyond `[`, `]` and emptiness, because a label is a
+*value*, not an identifier ([§5.2](#52-the-quoting-rule)). OML can write one
+where OSD cannot — [OML-15](04-oml-grammar.md#45-strings) requires `\u00XX`
+for exactly these characters and OML's escaping is real rather than weak — so
+a schema `write_schema` must refuse is one `write_schema_oml` round-trips,
+and that is the route for it. Measured: the Python reference's `to_osd`
+emits the raw byte today and its own `parse_schema` then rejects what it
+wrote, the same round-trip break the Go sweep found in `osd.Write`
+([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118)).
 
 ## 5.10 Worked examples
 

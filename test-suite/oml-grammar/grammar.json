@@ -852,6 +852,106 @@
         ]
       },
       "comment": "The fifth member of OML-25's list, which enumerates null/true/nan/inf/5 and until now had a vector for every one of them except `true`. `true` is an IDENT excluded from label position by the parser, exactly like `null`, so the lookahead declines the edge branch, the scalar is consumed and the `:` is leftover. `true` is 4 characters, so the colon is at 1:5. The reference emits parse.unexpected-token at 1:5 -- position right, code wrong (DIV-4)."
+    },
+    {
+      "name": "oml-grammar/shape/missing-separator-after-top-level-edge-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1 b: 2"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:6",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-26. The edge `a: 1` is complete, and a complete top-level edge can end the document (Sec4.6's second legal shape), so the `b` standing there with no separator is content after the document ended -- parse.trailing-content, at the first leftover significant token. Counting: a(1) :(2) space(3) 1(4) space(5) b(6), so 1:6. Measured live against the Python reference: parse.unexpected-token at 1:6 -- position right, code wrong, recorded as DIV-4. TypeScript, Go and Rust implement OML-26 per their v0.19.0-beta sweeps and are expected to pass; Java has not been measured against this rule and is not claimed (DIV-4)."
+    },
+    {
+      "name": "oml-grammar/shape/missing-separator-inside-a-node-is-an-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: { b: 1 c: 2 }"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:11",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-27, the other side of OML-26 and the reason it is scoped to top level: inside `{...}` a closing brace is still owed, so the identical missing separator is a token where the grammar does not allow one rather than content after a finished document. Counting: a(1) :(2) sp(3) {(4) sp(5) b(6) :(7) sp(8) 1(9) sp(10) c(11), so 1:11. Measured live against the Python reference: parse.unexpected-token at 1:11 -- agrees on both code and position."
+    },
+    {
+      "name": "oml-grammar/arrays/missing-comma-between-elements-is-an-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1 2]"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:7",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-27 inside brackets. Sec4.3.1 makes the comma the only element separator, so after `1` the grammar owes a `,` or a `]` and the `2` is neither. Not parse.separator-in-array, which Sec8.3.1 reserves for a newline or `;` used as an array separator -- there is no separator here at all. Not parse.trailing-content either: the `]` is still owed, so nothing has ended. Counting: a(1) :(2) sp(3) [(4) 1(5) sp(6) 2(7), so 1:7. Measured live against the Python reference: parse.unexpected-token at 1:7 -- agrees on both code and position."
+    },
+    {
+      "name": "oml-grammar/shape/stray-closing-brace-after-a-top-level-edge-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1 }"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:6",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "OML-26 holds whatever the leftover token is, including one that could not begin a document: no document starts with `}`. Nothing is owed at top level -- OML-27 turns on an unclosed `{` or `[` and there is none here -- so the document body is complete and the `}` is content after it. Counting: a(1) :(2) sp(3) 1(4) sp(5) }(6), so 1:6. Measured live against the Python reference: parse.unexpected-token at 1:6, and its own message reads \"unexpected trailing content after the document body (token RBRACE '}')\" -- it already calls this trailing content and reports the other code. Position right, code wrong; recorded as DIV-4."
+    },
+    {
+      "name": "oml-grammar/shape/stray-comma-after-a-top-level-edge-is-trailing-content",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1 ,"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:6",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "The sibling of the stray-closing-brace vector, for the other token that cannot begin a document. A comma is an element separator inside `[...]` (Sec4.3.1) and has no top-level role at all, but OML-26 does not branch on what the leftover token could have meant -- the body is complete and the comma is after it. Counting: a(1) :(2) sp(3) 1(4) sp(5) ,(6), so 1:6. Measured live against the Python reference: parse.unexpected-token at 1:6 -- position right, code wrong; recorded as DIV-4."
     }
   ]
 }

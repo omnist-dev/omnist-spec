@@ -3,6 +3,125 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.20.0-beta (2026-09-20)
+
+**Normative (minor)** — closes
+[#103](https://github.com/omnist-dev/omnist-spec/issues/103),
+[#104](https://github.com/omnist-dev/omnist-spec/issues/104) and
+[#95](https://github.com/omnist-dev/omnist-spec/issues/95). Two questions the
+spec left open — one found by the independent review of the TypeScript sweep,
+one by the Go sweep — and one branch of an existing MUST that no vector
+pinned. **Every implementation needs a change for #103** (the four ports that
+already implement it need none; the Python reference does). #104 needs a
+change in every OSD writer. #95 needs nothing from an implementation that was
+already correct, which is the point of adding it.
+
+- **New OML-26 and OML-27: where `parse.trailing-content` stops and
+  `parse.unexpected-token` begins**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation)). OML-25
+  settled leftover content after a top-level *scalar* in v0.19.0-beta and
+  said nothing about leftover content after a complete top-level *edge* —
+  yet §4.8's table and OML-5's own prose had both been assigning a code to
+  exactly that shape since long before, and the reference disagreed with
+  both. One principle now covers all of it: **`parse.trailing-content` means
+  content after the document has ended.** At top level a complete edge can
+  end the document, so unseparated content after one is trailing content, at
+  the first leftover significant token (**OML-26**) — `a: 1 b: 2` at `1:6`,
+  `a: 2024-01-01T99` at `1:14`. Inside `{...}` or `[...]` a closing
+  delimiter is still owed, so the identical missing separator is a token the
+  grammar does not allow there and stays `parse.unexpected-token`
+  (**OML-27**) — `a: { b: 1 c: 2 }` at `1:11`, `a: [1 2]` at `1:7`. The
+  deciding fact is the enclosing delimiter, not the missing separator.
+  OML-26 holds **whatever the leftover token is**, including one that could
+  not begin a document at all: `a: 1 }` and `a: 1 ,` are trailing content at
+  `1:6` too. The rule is about where the failure is, not about what the
+  author might have meant, and splitting it on a judgement about intent
+  would give no conformance vector anything to compare.
+  §8.3.1's `parse.trailing-content` row is widened to name both branches and
+  **new `E-25`** states the boundary on the error-code side as well, since
+  the two rows sit one line apart and the same input can look like either.
+  Five new vectors; the existing `date-then-non-time-suffix-is-date-plus-
+  trailing-content` vector is unchanged and is now backed by a rule.
+  TypeScript, Go and Rust implement this per their v0.19.0-beta sweeps, which
+  is carried forward rather than re-measured here, and Java is not claimed.
+  The Python reference emits `parse.unexpected-token` for every top-level
+  case, with the positions already right — a code change only, recorded as a
+  new `DIV-4` row.
+- **New OSD-15: canonical OSD escaping, which §5.9 never stated**
+  ([§5.9](docs/05-osd-grammar.md#59-canonical-output)). The canonical-form
+  list said "labels always quoted" and stopped there, giving no escaping rule
+  at all — while §5.3.1's weak unescaping (`\X` yields `X`) makes the inverse
+  exact and mandatory: a backslash MUST be written `\\`, a double quote MUST
+  be written `\"`, and **nothing else** may be escaped, since escaping an
+  ordinary character is harmless on read but breaks OSD-11's byte-identical
+  guarantee between two writers that disagree about which characters to
+  escape. The grammar already admitted both forms, so this adds no syntax; it
+  says which admitted spelling is canonical. **Measured, the Python reference
+  escapes nothing**, and the consequence is the worse of the two possible
+  ones: the label `a\b` is written `"a\b"` and reads back as `ab` — a
+  different schema, silently, with no diagnostic anywhere — while `a"b` at
+  least fails loudly with `parse.unterminated-string`. Four new
+  `osd-grammar/canonical-output/label-*` vectors cover a backslash, a quote,
+  both in one label, and a label ending in a backslash (the case where a
+  naive writer's trailing backslash escapes its own closing quote). The
+  reference is red on all four; the other four ports' OSD writers were not
+  measured. Recorded in `DIV-5`.
+- **New OSD-14: an OSD writer refuses a schema OSD text cannot represent**
+  ([§5.9](docs/05-osd-grammar.md#59-canonical-output)). Since v0.15.0-beta
+  §5.3.1 has banned every raw byte below `U+0020` in an OSD string body,
+  escape context included, and OSD's unescaping is weak — `\X` yields `X`
+  and nothing else — so a field label carrying a C0 control character has
+  **no OSD spelling at all**. OSD-11 promised a round trip "for every
+  schema", which for that class was unsatisfiable. The writer now fails with
+  `write.unsupported-value`, unconditionally and regardless of `strict`, on
+  the same "fail, don't invent" rule §8.3.8's E-6 already applies to every
+  writer case of this shape; OSD-11 is scoped to the schemas the surface can
+  represent. **New `E-26`** says the obvious thing §8.3.9 had never said:
+  "target format" includes OSD, not only the four codecs. The class is
+  exactly field labels — S-8 keeps record names and `root` out of reach on
+  every route, enforced by §5.3's tokenizer on the OSD side and by R-3a on
+  the OSD-OML side — and such a schema **still travels, as OSD-OML**, since
+  OML-15 requires `\u00XX` for exactly these characters and OML's escaping
+  is real rather than weak. `write_schema_oml` round-trips what
+  `write_schema` must refuse. R-7's parenthetical in the OSD-OML extension
+  is corrected to say so. The diagnostic's `path` is the Schema path of the
+  **record**, `R` rather than `R.<label>`: §8.4 offers no way to quote a
+  label inside a path, and putting the byte that has no spelling into a path
+  compared byte-for-byte would restate the problem instead of reporting it.
+  **E-11** now names `write.*` among the families taking a Document or Schema
+  path, which it had omitted entirely. The "exactly one class" claim holds
+  only once OSD-15 is in force — backslash and quote look like the same
+  problem and are not — and two further shapes with no OSD text are excluded
+  because they are not legal labels at all: a label containing `[` or `]` and
+  the empty label, which §3.3 and §5.4's OSD-2 reject from the model, not
+  merely from this surface.
+- **New `infer/allow-any/mixed-object-and-scalar-shapes-open-to-any-when-allowed`**
+  ([§6.10](docs/06-schema-algebra.md#610-infersamples)). S-21 requires
+  `infer` to report **every** `any`-opening it introduces under `allow_any`,
+  and the suite pinned the reporting half for only one of the two branches
+  that can open a field: the scalar-kind conflict. The shape conflict — one
+  sample has the label as a scalar, another as a node — had a vector for its
+  `allow_any: false` hard failure and nothing for its reporting path, so an
+  implementation could report one opening, stay silent on the other, and
+  pass the whole suite. The new vector mirrors the scalar-conflict one:
+  same two samples as `mixed-object-and-scalar-shapes-fail-by-default`,
+  `allow_any: true`, asserting the opened schema and the `fallbacks` entry.
+  The reason text is §6.10's own pseudocode verbatim, `mixes objects and
+  values`, not a reference accident — the Python reference was measured live
+  and emits exactly that.
+- **New `DIV-5`** ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences))
+  for OSD-14's rollout, with only what was measured: the Python reference's
+  `to_osd` emits the raw byte and its own `parse_schema` then rejects what it
+  wrote; Go's `osd.Write` emits a backslash plus the raw byte, which its own
+  reader rejects ([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118));
+  TypeScript, Rust and Java are not measured and are not claimed. The entry
+  also records that **no vector can pin OSD-14 today**: a vector gives a
+  schema as OSD text (§8.5.3), so a schema with no OSD text cannot be a
+  vector input, and no driver takes a schema in any other form. That is the
+  same untestable-MUST shape [#105](https://github.com/omnist-dev/omnist-spec/issues/105)
+  raises for D-14 on the read side, and both need the same missing thing.
+- **Ten new vectors**, taking the suite to **259**.
+
 ## v0.19.0-beta (2026-09-20)
 
 **Normative (minor)** — closes
