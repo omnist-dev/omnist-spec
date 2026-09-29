@@ -68,21 +68,28 @@ is not in this release: codec failure positions are a separate issue.
   `$.record[0].field[0].bogus`, `missing-required-key-is-invalid`
   `$.record[0].field[0]`. They pinned Schema paths before v0.22.0-beta. No port
   result changes: every port skips OSD-OML, and none of these was run.
-- **Nine new vectors**, taking the suite to **282**: five with-a-separator cases
-  for OML-26 (`}` after a newline, `;` then `}`, `,`, `]`, and a non-label
-  token), `1`, a newline, `}` for OML-25, a negative control (`a: 1`, a newline,
-  `b: 2` is two edges), and one each for OML and OSD with U+1F600 before the
-  failure on the same line, so bytes, UTF-16 units and code points all give
-  different columns. Every position was counted by hand and every input run
-  against the Python reference.
+- **Fourteen new vectors**, taking the suite to **287**: ten with-a-separator
+  cases for OML-26 (`}` after a newline, `;` then `}`, `,`, `]`, `5`, `nan`, `{`,
+  `[2]`, `:`, and `}` after a braced edge value), `1`, a newline, `}` for OML-25,
+  a negative control (`a: 1`, a newline, `b: 2` is two edges), and one each for
+  OML and OSD with U+1F600 before the failure on the same line, so bytes, UTF-16
+  units and code points all give different columns. Every position was counted
+  by hand and every input run against the Python reference. Their comments state
+  the rule and point at `DIV-7` rather than restating per-port results.
+- **Two open cases stated as open**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation), E-29): a
+  document that is only `}`, and which position a lone `CR` is reported at. The
+  text says what is specified and that the rest is not. E-28 and E-29 are
+  scoped to OML and OSD text; codec positions are
+  [#114](https://github.com/omnist-dev/omnist-spec/issues/114). E-20's first
+  category now says it covers a rule or behaviour not yet adopted.
 - **New `DIV-7`**
   ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)). Measured per
-  port against each port's merged code: Python fails 3 of the nine, TypeScript 5,
-  Rust 5, Go 5, Java 7. Until a port implements the rules it reports the vectors
-  it fails as an **E-20 "not yet implemented" skip** citing `DIV-7`. The entry is
-  removed when every port passes all nine. It also records, as an open question
-  and not a rule, that codec failure positions differ between ports before any
-  multi-byte character is involved.
+  port at the pre-squash heads of the v0.21.0-beta adoption PRs (Rust through its
+  library): of the fourteen, Python fails 7, TypeScript 9, Rust 9, Go 10, Java
+  12. Until a port implements the rules it reports the vectors it fails as an
+  **E-20 "not yet implemented" skip** citing `DIV-7`. It also records the two
+  open cases with measured results.
 
 ## v0.21.0-beta (2026-09-21)
 
