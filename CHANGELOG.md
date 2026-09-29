@@ -6,13 +6,11 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
 ## v0.22.0-beta (2026-09-29)
 
 **Normative (minor)** — resolves
-[#109](https://github.com/omnist-dev/omnist-spec/issues/109) and
-[#111](https://github.com/omnist-dev/omnist-spec/issues/111), and the column
-half of [#110](https://github.com/omnist-dev/omnist-spec/issues/110). Three
-questions the v0.21.0-beta port sweeps raised and the text left open. The
-`schema.*` path half of #110 and the codec vector are **not** in this release;
-they are stopped on a contradiction between a rule and existing vectors, and a
-question the spec has no answer to, both left open on the issue.
+[#109](https://github.com/omnist-dev/omnist-spec/issues/109),
+[#110](https://github.com/omnist-dev/omnist-spec/issues/110) and
+[#111](https://github.com/omnist-dev/omnist-spec/issues/111). Three questions
+the v0.21.0-beta port sweeps raised and the text left open. #110's codec vector
+is not in this release: codec failure positions are a separate issue.
 
 - **A separator in front of a stray token makes no difference**
   ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation), OML-26,
@@ -55,6 +53,21 @@ question the spec has no answer to, both left open on the issue.
   `canonical` that the self-test cannot supply. §8.5.3's "`write` is the only
   operation where `ok: true` and `diagnostics` coexist" was wrong for XML `parse`
   and is corrected.
+- **New E-30: the `schema.*` path rule, per code**
+  ([§8.4.1](docs/08-conformance-and-errors.md#841-which-kind-each-schema-code-uses);
+  #110, part 2). A diagnostic about a well-formed field's type, nullability or
+  cardinality is at the field path `R.a`; one about the lexical shape of a field
+  declaration, a label, or a whole record is at the record path `R`; root
+  problems at `$`; the four schema-construction codes at a Document path (E-12).
+  That is why `schema.quoted-type` is `R` and `schema.unknown-type` is `R.a`.
+  A table lists every `schema.*` code once. Every existing `schema.*` vector was
+  checked by script against it.
+- **Three OSD-OML vectors corrected** to follow E-12 and osd-oml.md E.9, which
+  they contradicted: `non-string-field-label-is-invalid` now expects
+  `$.record[0].field[0].label`, `unknown-key-is-invalid`
+  `$.record[0].field[0].bogus`, `missing-required-key-is-invalid`
+  `$.record[0].field[0]`. They pinned Schema paths before v0.22.0-beta. No port
+  result changes: every port skips OSD-OML, and none of these was run.
 - **Nine new vectors**, taking the suite to **282**: five with-a-separator cases
   for OML-26 (`}` after a newline, `;` then `}`, `,`, `]`, and a non-label
   token), `1`, a newline, `}` for OML-25, a negative control (`a: 1`, a newline,

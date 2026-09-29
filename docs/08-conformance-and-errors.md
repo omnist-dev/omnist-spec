@@ -528,6 +528,46 @@ which to build a Schema path at all.
   `schema.duplicate-root`, and a dangling root reference. The other two are
   `algebra.*` codes, outside this section's scope and unaffected by it.
 
+- **E-30.** **Which Schema path a code takes is fixed per code, by what the
+  diagnostic is about.** A diagnostic about a field's **type, nullability or
+  cardinality**, where a well-formed field exists, MUST be reported at the
+  **field path** `R.a`. A diagnostic about the **lexical shape of a field
+  declaration or about its label**, or about a **record as a whole**, MUST be
+  reported at the **record path** `R` (for `schema.reserved-name`, the bare
+  record name, which is the same thing). This is why `schema.quoted-type` is
+  `R` while `schema.unknown-type` is `R.a`, though both look at a field's type
+  position: a quoted string there means the declaration is not a well-formed
+  field at all, so there is no field to name, and the two directions of the
+  quoting rule ([§5.2](05-osd-grammar.md#52-the-quoting-rule)) are lexical;
+  `schema.unknown-type` is raised on a field that is well formed and merely
+  names a type that does not exist. Root problems take `$`, and the four
+  schema-construction codes of E-12 take a Document path.
+
+| Code | Path kind | Why |
+|---|---|---|
+| `schema.no-root` | `$` | no root declaration exists to name |
+| `schema.duplicate-root` | `$` | the whole schema, not one record |
+| `schema.unknown-type` | field `R.a`; `$` for a dangling root | the field's type names nothing; a root has no field |
+| `schema.nullable-ref` | field `R.a` | nullability of a well-formed field |
+| `schema.nullable-any` | field `R.a` | nullability of a well-formed field |
+| `schema.invalid-cardinality` | field `R.a` | cardinality of a well-formed field |
+| `schema.non-integer-cardinality` | field `R.a` | cardinality of a well-formed field |
+| `schema.empty-cardinality` | field `R.a` | cardinality of a well-formed field |
+| `schema.unquoted-label` | record `R` | lexical: the declaration is not a field yet |
+| `schema.quoted-type` | record `R` | lexical: the declaration is not a field yet |
+| `schema.empty-label` | record `R` | about the label, and `R.` names nothing |
+| `schema.bracket-in-label` | record `R` | about the label, which would make an ambiguous path |
+| `schema.duplicate-field` | record `R` | about two fields at once, so the record they share |
+| `schema.duplicate-record` | record `R` | a record as a whole |
+| `schema.reserved-name` | bare record name | a record's own name |
+| `schema.missing-key` | Document path (E-12) | schema-construction input: the node lacking the key |
+| `schema.invalid-type` | Document path (E-12) | schema-construction input: the wrong-kind value |
+| `schema.unknown-key` | Document path (E-12) | schema-construction input: the unrecognized key |
+| `schema.invalid-name` | Document path (E-12) | schema-construction input: the record's `name` |
+
+`schema.invalid-name` is defined by E-12 and OSD-OML R-3a and has no row in
+§8.3.3's table; it is listed here so the table is complete.
+
 This applies to any surface, present or future, that can construct a Schema
 without a grammar fixing identity first — it is a property of the codes, not
 of the extension that first made them reachable.
