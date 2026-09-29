@@ -207,16 +207,17 @@ If you have simply not taught your runner the `bytes_hex` field yet, that is
 an **E-20** "not yet implemented" skip — no ledger citation needed. (Until
 you report it as one, a runner that chokes on the unknown field is reporting
 a `fail`, which is fine and loud, but say which it is.) **E-21** — the
-documented-divergence skip, citing
-[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-6` — is only
+documented-divergence skip, which needs its own
+[§9.4](09-divergence-ledger.md#94-known-open-divergences) ledger entry — is only
 for an implementation with **no** byte-oriented entry point anywhere: no
 bytes-taking reader, no file/stdin/stream entry point, and no CLI. Check your
-CLI before you reach for it; on the ports measured so far, none qualifies. If
+CLI before you reach for it; none of the five ports qualifies, and all five
+report `parse.invalid-encoding` as of v0.21.0-beta. If
 you have a byte-oriented entry point and these vectors fail through it, that
 is a plain `fail` and a real bug, not a skip.
 
 If your language's string type can itself hold ill-formed UTF-8 — Go's
-`string` is a byte sequence, and Go is the measured case in `DIV-6` — your
+`string` is a byte sequence, and Go is the worked example — your
 string-taking reader is itself a byte-oriented entry point, and §2.5 spells
 out what that means concretely: reject any reader input `s` for which
 `utf8.ValidString(s)` is false. The reverse case is Rust, where `&str`
@@ -231,20 +232,20 @@ scope.
 
 §8.5.2 rule 4 permits a runner to compare **code-agnostically** — `ok` plus
 the set of `path`s, never `code` — because §8.1 does not yet make §8.3
-mandatory. That is a legitimate mode and several ports are in it. It is also
-a quiet one: **a code-agnostic run passes vectors the implementation does not
+mandatory. That is a legitimate mode; the Python reference's runner used it until
+v0.21.0-beta. It is also a quiet one: **a code-agnostic run passes vectors the implementation does not
 actually satisfy.** A diagnostic with the right `ok` and the right position
 but the wrong code reports green, and nothing in the run says so.
 
 This is not hypothetical.
-[§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-4` has a row
-of exactly that shape — `OML-25`, where the reference's `ok` and paths match
+The retired `DIV-4` (§9.4) had a row of exactly
+that shape — `OML-25`, where the reference's `ok` and paths match
 every affected vector and only the code is wrong — and the reference had
 therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "249 pass" and "249 pass,
+note, an issue — say the mode alongside the count. "273 pass" and "273 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure

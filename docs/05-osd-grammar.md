@@ -268,7 +268,7 @@ the two that break a naive writer: a label **ending** in a backslash
 closing quote) and a label made only of backslashes and quotes. Both were
 verified by reading back the text this rule says to write.
 
-**Measured: the Python reference does not do this**, and it is the more
+**Measured on the Python reference before v0.21.0-beta, which did not do this**, and it is the more
 dangerous of the two failure modes. Its `to_osd` escapes nothing, so the
 label `a\b` is written `"a\b"` and reads back as `ab` — **silent
 corruption**, a different schema with no diagnostic anywhere — while the
@@ -276,7 +276,8 @@ label `a"b` is written `"a"b"` and at least fails loudly with
 `parse.unterminated-string`. This is exactly the collision shape OSD-14
 below refuses to permit, reached by a path OSD-14 does not cover because
 these labels *are* representable; they were simply never being written
-correctly. Recorded as `DIV-5`.
+correctly. That defect is fixed as of v0.21.0-beta and every port now escapes per
+OSD-15; the four `label-*` vectors pin it.
 
 **OSD-14. A schema OSD text cannot represent MUST fail the write, never be
 approximated.** [§5.3.1](#531-string-unescaping) bans every raw byte below

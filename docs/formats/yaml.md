@@ -60,9 +60,8 @@ explains. Some YAML libraries flatten a merge sequence in *reverse* —
 PyYAML's constructor does, which is how the reference implementation came to
 produce `retries, region, name` — and a codec built on one of those MUST
 reorder rather than pass the artifact through. See
-[omnist-spec#98](https://github.com/omnist-dev/omnist-spec/issues/98), and
-[`DIV-4`](../09-divergence-ledger.md#94-known-open-divergences) for which
-implementations have yet to adopt it.
+[omnist-spec#98](https://github.com/omnist-dev/omnist-spec/issues/98). All five
+implementations pass the vectors that pin source order as of v0.21.0-beta.
 
 **Key collisions resolve to one edge, at the earliest position.** A key
 supplied by more than one of the merged sources, or by a merged source and

@@ -206,7 +206,7 @@
           }
         ]
       },
-      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. TOML is the third surface where the rule costs nothing, for the opposite reason to OML and OSD: TOML v1.0.0's grammar gives U+FEFF no position anywhere, leading or otherwise, so rejecting the second mark is TOML's ordinary behavior and D-15's strip of the first is the deliberate Omnist addition. Measured: the reference rejects the input but emits parse.syntax with no path at all (DIV-4)."
+      "comment": "D-21: D-15 consumes exactly one leading U+FEFF and stops, and a reader MUST then reject a second mark still standing at offset zero of what remains. That is a rule Omnist imposes, not one read off each format -- the formats disagree, and this vector's own note below says what this one would do unaided. The position is 1:1 because it is computed on the text remaining after the strip, not on the original input. TOML is the third surface where the rule costs nothing, for the opposite reason to OML and OSD: TOML v1.0.0's grammar gives U+FEFF no position anywhere, leading or otherwise, so rejecting the second mark is TOML's ordinary behavior and D-15's strip of the first is the deliberate Omnist addition. Before the v0.21.0-beta port sweeps, implementations differed on this; every port now passes it."
     },
 
     {
@@ -227,7 +227,7 @@
           }
         ]
       },
-      "comment": "D-14 on TOML, with the out-of-range class: `f5` starts a four-byte sequence for a code point at or above U+140000, and Unicode stops at U+10FFFF, so no continuation bytes can rescue it -- `f5 80 80 80` is malformed however it is read. TOML's own specification already requires a valid UTF-8 document, so unlike D-15's BOM strip this rule asks nothing of a TOML reader that TOML did not already ask; what D-14 adds is the code and the path. Measured against the Python reference (v0.9.5) 2026-09-21: its readers take `str`, so these bytes cannot be handed to one at all, and its CLI decodes both file and stdin input strictly -- `open(path, encoding=\"utf-8\")` and a utf-8/strict `sys.stdin` -- so it fails with an uncaught UnicodeDecodeError and no diagnostic rather than reporting this code. No silent repair, but not conformant either; recorded as DIV-6. The other four ports were not measured for this vector."
+      "comment": "D-14 on TOML, with the out-of-range class: `f5` starts a four-byte sequence for a code point at or above U+140000, and Unicode stops at U+10FFFF, so no continuation bytes can rescue it -- `f5 80 80 80` is malformed however it is read. TOML's own specification already requires a valid UTF-8 document, so unlike D-15's BOM strip this rule asks nothing of a TOML reader that TOML did not already ask; what D-14 adds is the code and the path. Before the v0.21.0-beta port sweeps, implementations differed on this; every port now passes it."
     },
 
     {

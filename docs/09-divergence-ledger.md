@@ -103,84 +103,73 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last source-audited: 2026-09-13**, directly against each port's own
-merged PR, real CI run, and (for this round) each port's actual recorded
-submodule gitlink and committed test assertions — not carried forward
-from a prior edit, and not taken from self-reported summary numbers alone
-(see the Java note below for why that distinction mattered this round).
-All five ports have bumped their `omnist-spec` submodule pin to
-**v0.9.1-beta** (`47a84d6`) and confirmed the new
-[§3.3](03-schema-model.md#33-formal-definition) S-8 (`Name` domain) and
-S-3 (case-sensitive reserved-name matching) rules were already
-pre-existing behavior everywhere (no code change needed anywhere, per
-source-level verification done alongside this bump — every port's
-reserved-name check was already a plain, case-sensitive equality, and
-every port's `name` tokenizer already matched the S-8 domain): Python
-(`omnist` PR #342, merge `18e5cbd`), TypeScript (`omnist-ts` PR #146,
-merge `5249267`), Rust (`omnist-rs` PR #178, merge `2ef92b2`), Go
-(`omnist-go` PR #115, merge `04df6f8`), and Java (`omnist-j` PR #109,
-merge `62ccbb3`).
+**Last updated: 2026-09-29**, from each port's own merged and
+independently reviewed PR and its own conformance run, not carried forward
+from an earlier edit. All five ports have adopted spec **v0.21.0-beta**:
+Python ([omnist#349](https://github.com/omnist-dev/omnist/pull/349)),
+TypeScript ([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/pull/150)),
+Go ([omnist-go#120](https://github.com/omnist-dev/omnist-go/pull/120)),
+Rust ([omnist-rs#184](https://github.com/omnist-dev/omnist-rs/pull/184)) and
+Java ([omnist-j#114](https://github.com/omnist-dev/omnist-j/pull/114)). Every
+port's runner now compares diagnostics as `(path, code)` sets. Python's runner
+was code-agnostic until #349; on the same suite it reported 159 pass / 17 fail /
+97 skip before that rewrite.
 
-**Update after the v0.19.0-beta port sweeps.** TypeScript ([omnist-ts#148](https://github.com/omnist-dev/omnist-ts/pull/148)), Go ([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118)) and Rust ([omnist-rs#183](https://github.com/omnist-dev/omnist-rs/pull/183)) each bumped to v0.19.0-beta, adopted D-15/D-21, E-23, OML-25 and the YAML merge-key rules, and now compare diagnostics as `(path, code)` sets with every skip an E-20 "not yet implemented" skip that names its tracking issue. The cells above for those three were re-measured from each port's own conformance run, not carried forward. Two things are deliberately not claimed: no port implements D-18 (DIV-3), and Rust's Version cell stays at its latest tagged release, 0.2.2-alpha — the v0.19.0-beta work is merged to `main` as an unreleased 0.3.0-alpha, and the Rust conformance numbers below are for that `main`. Rust's `publish.yml` runs on a `v*` tag, so tagging it publishes to crates.io, which is a separate human decision. Python and Java have not completed the sweep; the Python column is the v0.17.0-beta measurement and Java is unchanged.
+Two Version cells need a note. Rust's 0.3.0-alpha was tagged on 2026-09-29 at
+the merge commit of the v0.21.0-beta work (`179f3b6`) and is published to
+crates.io (0.3.0-alpha). Java's 0.2.5-alpha release workflow (Maven Central)
+completed successfully on 2026-09-29; its visibility on Maven Central has not
+been verified.
 
-This bump also brought in 5 new vectors from v0.8.0-beta/v0.9.0-beta/v0.9.1-beta:
-1 new Core-level `osd-grammar` vector (the S-3 characterization case) and
-4 new `extensions-osd-oml/*` vectors (exercising the new
-`schema.invalid-name` code and related rules from OSD-OML's v1.1 rewrite,
-[extensions/osd-oml.md](extensions/osd-oml.md)). **No port implements
-OSD-OML yet** — the 4 extension vectors correctly report as *skips*
-everywhere, same as the existing 24; the 1 new Core vector passes
-everywhere. Each port with an "implement OSD-OML" tracking issue added a
-note about the new S-8/`schema.invalid-name` requirement: Go
-(`omnist-go#111`), Java (`omnist-j#105`), Rust (`omnist-rs#175`), and
-Python and TypeScript filed theirs for the first time this round
-(`omnist#341`, `omnist-ts#145`). No port cut a version bump — pure
-pin/doc-metadata updates, none altered any port's own library behavior.
-
-**A same-day spec-side bug surfaced and was fixed mid-round**: the new
-S-3 vector's own JSON content had an unquoted field label (a shell-quoting
-artifact from vector generation, not a spec-content error), which made it
-fail to parse before ever exercising the check it existed to test. Caught
-by Python's port session during its pin-bump verification — exactly the
-kind of thing this cross-port verification step exists to catch. Fixed in
-[omnist-spec#60](https://github.com/omnist-dev/omnist-spec/pull/60)
-(v0.9.1-beta); every port from Python onward verified against the
-corrected vector, not the original v0.9.0-beta one.
-
-**A self-reported number needed correcting**: Java's PR #109 description
-stated "205 pass / 0 fail / 28 skip," which doesn't sum to the expected
-204 total. The actual committed `ConformanceTest.java` assertions are
-correct (`176`/`0`/`28`, matching every other port's math) — the PR body's
-figure had accidentally summed in Track 1's 29 fixture-passes without
-also adding Track 1's skip count. Not a real defect, just confirms why
-this table cites committed test assertions over summary prose when they
-diverge.
+Three things are deliberately not claimed as done anywhere: no port enforces
+the alias expansion limit D-18 (`DIV-3`), no port implements the OSD-OML
+extension (§9.6), and whether `a: 1`, a newline, then `}` is a
+`parse.trailing-content` case is an open spec question
+([omnist-spec#109](https://github.com/omnist-dev/omnist-spec/issues/109)), not a
+divergence.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.9.5 | 0.3.1-alpha | 0.2.2-alpha | 0.4.0-alpha | 0.2.4-alpha |
+| Version | 0.10.0 | 0.4.0-alpha | 0.3.0-alpha | 0.5.0-alpha | 0.2.5-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 is enforced by no port yet — DIV-3) | all three | all three | all three | all three | all three |
 | OML read/write | complete | complete | complete | complete | complete |
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
+| OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14) | both done | both done (OSD-15 fixed in #150) | both done (`to_osd` returns `Result`) | both done (`osd.Write` returns an error) | both done |
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
-| D-14, invalid UTF-8 rejected (§2.5 — no port reports `parse.invalid-encoding`; see DIV-6 for sources and the exact measurements) | CLI decodes strictly, then dies with an uncaught decode error and no diagnostic (measured) | not measured | `&str` readers; CLI `read_to_string` rejects at the decode, report unmeasured | JSON/OML/OSD accept silently; YAML/TOML/XML report `parse.codec-syntax` | CLI decodes stdin lossily; file input strict |
-| Conformance (vectors, compared as (path, code) sets except Python — pins differ: TypeScript, Rust (unreleased `main`) and Go are on v0.19.0-beta, of 249; Python is on v0.17.0-beta, of 225, and compares codes loosely, see DIV-4; Java is still on v0.9.1-beta, of 204, pending its sweep) | 145 pass / 0 fail / 80 skip | 189 pass / 0 fail / 60 skip | 209 pass / 0 fail / 40 skip | 215 pass / 0 fail / 34 skip | 176 pass / 0 fail / 28 skip |
-| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (Java's own harness headline count is 29, but 10 of those are `_referee-self-test/*` fixtures — tests of the harness's own equality logic, not this port's behavior — that Java's `Track1Runner` already special-cases but still folds into the same headline number; the other four ports exclude these from their public count. Root cause confirmed, tracked in `omnist-j#110`, not urgent) |
+| D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI | yes, via the CLI | yes, via `omnist-cli` | yes, at the front of all six readers | yes, on stdin |
+| Conformance (Track 2 JSON vectors, 273 at v0.21.0-beta, all compared as `(path, code)` sets) | 233 pass / 0 fail / 40 skip | 213 pass / 0 fail / 60 skip | 233 pass / 0 fail / 40 skip | 239 pass / 0 fail / 34 skip | 239 pass / 0 fail / 34 skip |
+| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (harness headline 29/0/0: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
 
-**Skip counts above are not directly comparable across ports** — 24 of
-each port's skips are the shared `extensions-osd-oml/*` vectors (no port
-implements OSD-OML), but the remainder differs for pre-existing,
-independently-tracked reasons: Rust's 6 extra skips and Go's 1 extra skip
-predate this round (see each port's own conformance docs for the specific
-gaps) and are unrelated to this bump.
+**What each port skips.** Python: 28
+OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
+alias-expansion (`DIV-3`), 6 `declared_max_depth` / `declared_max_nodes` /
+`declared_max_int_digits` vectors (its limits are module constants). TypeScript:
+28 OSD-OML, 6 alias-expansion (`DIV-3`), 6 compile-time limits, and 20
+`schema.*` vectors
+([omnist-ts#149](https://github.com/omnist-dev/omnist-ts/issues/149):
+`SchemaError` has no structured code or path). Rust: 28 OSD-OML
+([omnist-rs#175](https://github.com/omnist-dev/omnist-rs/issues/175)), 6
+alias-expansion ([omnist-rs#180](https://github.com/omnist-dev/omnist-rs/issues/180),
+`DIV-3`), 6 `document-model/limits` (compile-time constants,
+[omnist-rs#181](https://github.com/omnist-dev/omnist-rs/issues/181)). Go: 28
+OSD-OML ([omnist-go#111](https://github.com/omnist-dev/omnist-go/issues/111)),
+6 alias-expansion ([omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
+`DIV-3`). Java: 28 OSD-OML ([omnist-j#105](https://github.com/omnist-dev/omnist-j/issues/105)),
+6 alias-expansion ([omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113),
+`DIV-3`). Skip counts are therefore not comparable across ports beyond those
+shared categories.
+
+**Note on the D-14 row.** D-14 has vectors (E-27's `bytes_hex`) and all five
+ports pass them. OSD-14 has none: its "done" cells rest on the unit tests each
+port's PR reports (`DIV-5`).
 
 ## 9.4 Known open divergences
 
@@ -195,12 +184,15 @@ two were previously indistinguishable, so a bare `D-3` could mean either an
 edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
-**`DIV-1` and `DIV-2` are retired numbers and MUST NOT be reused.** Both
-entries closed and were deleted; the numbers stay spent so a citation to
-either in an older document, issue, or port changelog cannot silently come to
-mean something else. This note lives here, in the preamble, rather than inside
-any single entry — an entry is deleted when it closes, and a retirement note
-that rides along inside one disappears with it.
+**`DIV-1`, `DIV-2`, `DIV-4` and `DIV-6` are retired numbers and MUST NOT be
+reused.** All four entries closed and were deleted; the numbers stay spent so a
+citation to any of them in an older document, issue, vector comment, or port
+changelog cannot silently come to mean something else. `DIV-4` (the rules
+v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
+when the v0.21.0-beta sweep left every port satisfying every row. This note
+lives here, in the preamble, rather than inside any single entry — an entry is
+deleted when it closes, and a retirement note that rides along inside one
+disappears with it.
 
 Because a closed entry is deleted rather than archived, a citation to one
 can outlive it. **Before removing an entry, search the docs for inbound
@@ -209,227 +201,55 @@ pointing at nothing.
 
 **DIV-3. No implementation enforces the alias expansion limit (D-18) yet.**
 D-18, D-19 and D-20 ([§2.4.1](02-document-model.md#241-bounding-alias-expansion))
-are new normative content as of **v0.18.0-beta**. As of that release no port
-enforces them, the Python reference included: all six vectors in
-`test-suite/formats-yaml/alias-expansion.json` — both rejection cases among
-them — are currently *accepted* by the reference, verified by running them,
-not assumed. This is a rollout gap, not a design defect and not a
-divergence any implementation intends to keep: it is the expected interval
-between a spec rule landing and the ports adopting it. Tracked by
-omnist-spec#75 and the PR that introduced the rule. Remove this entry when
-every port enforces D-18.
+are normative content as of **v0.18.0-beta**, and as of v0.21.0-beta no port
+enforces them. This is a rollout gap, not a design defect and not a divergence
+any implementation intends to keep: it is the expected interval between a spec
+rule landing and the ports adopting it. Tracked by omnist-spec#75, and per port
+by [omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
+[omnist-rs#180](https://github.com/omnist-dev/omnist-rs/issues/180) and
+[omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113). Remove this
+entry when every port enforces D-18.
 
-**What a runner actually reports today, vector by vector — and the one that
-lies.** An earlier draft of this entry claimed the two declared-limit boundary
-vectors "report as failures rather than skips" until a port allowlists
-`declared_max_alias_expansion`. That is wrong, and wrong in the dangerous
-direction. Run against the reference as it behaves today, all six vectors are
-*accepted*, which means:
+**What a runner reports today.** All five ports skip the six vectors in
+`test-suite/formats-yaml/alias-expansion.json` as E-20 skips citing this entry.
+Java has a partial stop-gap, not an implementation: SnakeYAML's default cap of
+50 collection aliases rejects legitimate merge-key configs with 51 or more
+references (documented in omnist-j#113).
 
-| vector | `expect.ok` | reported today |
-|---|---|---|
-| `nested-anchor-fan-out-exceeds-expansion-limit` | false | **fail** — real, and nothing to do with the allowlist; this vector carries no boundary the runner could skip on |
-| `merge-key-config-expands-one-to-one-and-succeeds` | true | pass, correctly |
-| `merge-key-sequence-flattens-each-alias-and-succeeds` | true | **fail**, as of v0.19.0-beta — it passed while the vector encoded the reference's own reversed merge order; omnist-spec#98 corrected the vector to source order and the reference has yet to follow (`DIV-4`) |
-| `anchor-to-anchor-chain-under-limit-succeeds` | true | pass, correctly |
-| `expansion-at-declared-limit-succeeds` | true | **a false pass** — it reports green only because nothing enforces the limit, not because the runner recognized and skipped a declared-limit vector |
-| `expansion-one-past-declared-limit-fails` | false | **fail** — real, same reason as the first |
-
-So the honest count is **three outright failures and one false pass** — two
-from D-18 and, since v0.19.0-beta, one from the merge-order correction — not
-two failures where skips belong. The false pass is the part that matters. Adopting
-D-18 is two steps, not one: **(a)** implement the rule, and **(b)** add
-`declared_max_alias_expansion` to the runner's limit-key allowlist. A port that
-does (a) and forgets (b) does not get a loud failure to tell it so —
-`expansion-at-declared-limit-succeeds` keeps reporting green while being run
+**Adopting D-18 is two steps, not one:** **(a)** implement the rule, and
+**(b)** add `declared_max_alias_expansion` to the runner's limit-key allowlist.
+A port that does (a) and forgets (b) gets no loud failure to tell it so —
+`expansion-at-declared-limit-succeeds` would report green while being run
 against that port's own default maximum instead of the 3 the vector declares,
 so it exercises the wrong boundary and can mask a real threshold bug
-indefinitely. A failure gets triaged. A pass gets believed.
+indefinitely. A failure gets triaged. A pass gets believed. Until a port
+completes both steps, its runner MUST NOT report that vector as a pass on the
+strength of step (a) alone.
 
-Until a port completes both steps, its runner reports these vectors as `fail`
-or `skip` citing this entry. It MUST NOT report
-`expansion-at-declared-limit-succeeds` as a pass on the strength of step (a)
-alone.
+**DIV-5. OSD-14 has no vector, so its adoption rests on each port's unit tests.**
+[OSD-14](05-osd-grammar.md#59-canonical-output), new in **v0.20.0-beta**: a
+field label carrying a C0 control character has no OSD spelling, so an OSD
+writer handed such a schema MUST fail with `write.unsupported-value` rather than
+emit text no conformant reader accepts. As of v0.21.0-beta all five ports
+implement it and report it done, verified by the unit tests in each port's PR
+and by nothing else — the suite cannot check it. The companion rule, OSD-15
+(canonical label escaping), is adopted by all five ports and is pinned by the
+four `osd-grammar/canonical-output/label-*` vectors, which pass everywhere; it
+needs no entry.
 
-**DIV-4. The Python reference and Java do not yet satisfy the rules v0.19.0-beta and v0.20.0-beta settled.**
-Four of the seven rows below are rules new in v0.19.0-beta, and the `OML-26`
-row is new in v0.20.0-beta. The
-`parse.codec-syntax` row is a pre-existing §8.3.1 code that the new
-doubled-BOM vectors are simply the first to exercise, and the `E-11` row is a
-pre-existing path rule the same vectors are the first to catch on a
-non-string diagnostic; both are listed here because adopting D-21 is what
-first requires them. Each row was measured,
-not assumed: the Python column comes from running the input against the
-reference at v0.9.5, and the TypeScript column from the port's own sweep
-reported on
-[omnist-ts#148](https://github.com/omnist-dev/omnist-ts/pull/148). TypeScript, Go and Rust have since completed their sweeps
-([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118),
-[omnist-rs#183](https://github.com/omnist-dev/omnist-rs/pull/183)); their
-column records that. Java has not been measured against these rules and is
-left blank rather than guessed at.
-
-| Rule | Python reference today | TypeScript, Go, Rust | Required |
-|---|---|---|---|
-| **D-21**, second leading BOM ([§2.5](02-document-model.md#25-encoding)) | swallows it on **YAML and XML**: the doubled-BOM input builds the same Document as the single-BOM one. OML already rejects it correctly at `parse.unexpected-token` `1:1`; JSON, TOML and OSD reject it but with the code or path defects in the two rows below | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | reject on all six surfaces, `1:1` |
-| **`parse.codec-syntax`** ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)) | emits `parse.syntax` with **no `path` at all** for a malformed JSON or TOML read | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `parse.codec-syntax` with a `line:col` path (E-11) |
-| **E-11**, text positions on OSD diagnostics generally ([§8.4](08-conformance-and-errors.md#84-paths)) | reports the OSD doubled-BOM rejection at `path` `0`, a raw character offset, where E-11 requires `line:col` — the same defect as the E-23 row below on a diagnostic that is **not** a string error, so fixing E-23 alone will not close it | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `1:1` |
-| **E-23**, string-error position ([§8.4](08-conformance-and-errors.md#84-paths)) | reports **every** OSD string error as a raw character offset, not only the control-character case — `path` is `18` for the escaped control character and `15` for an unterminated string, where E-11 requires a `line:col` either way. The OML side is already correct (`1:4` on all four of its string-error vectors) | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | the opening quote, as `line:col` |
-| **OML-25**, scalar then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` for **every** input the rule covers — `nan: 1`, `inf: 1`, `null: 1`, `true: 1`, `5: 1` and `1`-newline-`2` — at `1:4`, `1:4`, `1:5`, `1:5`, `1:2` and `2:1`. Every position is already right, so this is a code change only — and it means the reference never met the pre-existing `null: 1` vector either | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | `parse.trailing-content` throughout |
-| **OML-26**, complete top-level edge then leftover ([§4.6.1](04-oml-grammar.md#461-top-level-disambiguation)) | emits `parse.unexpected-token` where OML-26 requires `parse.trailing-content`, measured live at v0.9.5: `a: 1 b: 2` at `1:6` and `a: 2024-01-01T99` at `1:14`. Positions are right in both, so this is a code change only, the same shape as the OML-25 row — and as with that row it means the reference has never met the pre-existing `date-then-non-time-suffix-is-date-plus-trailing-content` vector. The same is true of the two leftover tokens that could not begin a document, `a: 1 }` and `a: 1 ,`, both `parse.unexpected-token` at `1:6` — and on the first of those the reference's own message already reads "unexpected trailing content after the document body", so it names the condition correctly and reports the other code. OML-27's two cases are already correct: `a: { b: 1 c: 2 }` at `1:11` and `a: [1 2]` at `1:7`, both `parse.unexpected-token` | reported **satisfied** — all three implemented this ahead of the spec text that now states it, carried forward from the v0.19.0-beta sweeps rather than re-measured here (see below) | `parse.trailing-content` at top level, `parse.unexpected-token` inside `{...}` and `[...]` |
-| **Merge-key order** ([YAML](formats/yaml.md)) | flattens a merge **sequence** in reverse, following PyYAML 6.0.3: `svc` reads `retries, region, name`, and the three-key collision shape reads `b, c, a` where the rule gives `a, b, c`. Values are right in every shape measured; only sequence order is wrong. The single-alias form, key-collision resolution, nested merges and repeated aliases all already match | **satisfied** — the port's `(path, code)` runner passes the vectors for this row | sequence (source) order |
-
-**Why none of this surfaced until now.** The Python reference's conformance
-runner compares **code-agnostically** (§8.5.2 rule 4) — legitimately, since
-§8.1 does not yet make §8.3 mandatory. One row is invisible to it outright:
-**OML-25**, where `ok` and every path already match and only the code is
-wrong, so the vector reports a pass. That is how the reference came to fail
-the `null: 1` vector's expectation for as long as that vector has existed
-while its own suite stayed green. The rest are masked differently rather than
-not at all — that runner also reports `skip` for any expected diagnostic
-carrying no structured path, which is every `parse.codec-syntax` case it
-produces today — and the D-21 and merge-order rows do fail loudly. The lesson
-generalizes past these seven rows: **a code-agnostic runner passes vectors the
-implementation does not really satisfy**, and a port should report which
-comparison mode produced its numbers.
-
-**These vectors are an E-20 "not yet implemented" skip, not an E-21 one.**
-Eighteen vectors are new in v0.19.0-beta, three were corrected, and five more
-are new in v0.20.0-beta for OML-26/OML-27; a port that
-has not yet adopted the rules above may report the affected ones as `skip`
-under E-20's **first** category, which requires no ledger citation of its
-own. E-21's documented-divergence category — the one that MUST cite a ledger
-entry by number — is for a capability a target language or design genuinely
-cannot provide, and none of these rows is that. They are all rollout work on
-a rule that landed, the same shape as `DIV-3`. This entry exists to record
-what the work is, not to convert it into a permitted divergence, and a port
-citing `DIV-4` as an E-21 reason is misreading it.
-
-**The leftover-after-an-edge question is settled and now carries a rule
-number.** omnist-spec#103 asked what a complete top-level edge followed by
-unseparated content reports, and the answer — `parse.trailing-content` at top
-level, `parse.unexpected-token` inside `{...}` or `[...]` — is
-**OML-26/OML-27** as of v0.20.0-beta, with five vectors pinning it. It was
-implemented by TypeScript, Go and Rust ahead of the spec text that now states
-it, which is what the row above records; the Java port is reported to
-implement it as well, but that has not been measured here and is not claimed
-as one of the three. The Python reference does not implement it.
-
-Remove this entry when every implementation satisfies all seven rows. Tracked
-by omnist-spec#98, #99, #100, #101 and #103.
-
-**DIV-5. No OSD writer escapes a label (OSD-15) or refuses an unwritable one
-(OSD-14) yet.** Two rules, one surface, and only the first of them can be
-pinned by a vector.
-
-**OSD-15, canonical escaping.** [§5.9](05-osd-grammar.md#59-canonical-output)
-listed what a canonical OSD writer emits and never said how a label is
-escaped, though §5.3.1's weak unescaping makes the inverse exact: `\` is
-written `\\`, `"` is written `\"`, nothing else is escaped. Measured live
-against the Python reference (v0.9.5), whose `to_osd` escapes nothing:
-
-| Label | What `to_osd` writes | What re-parsing it gives |
-|---|---|---|
-| `a\b` | `"a\b"` | **`ab`** — silent corruption, a different schema with no diagnostic |
-| `a"b` | `"a"b"` | `parse.unterminated-string` |
-| `a\"b` | `"a\"b"` | **`a"b`** — silent corruption |
-| `a\` (ends in a backslash) | `"a\"` | `parse.unterminated-string` |
-
-The silent-corruption rows are the reason this is a rule and not a style
-note, and they are a **latent defect in the reference**, not a rollout gap
-the spec created: the labels were always representable and were simply never
-being written correctly. The four
-`osd-grammar/canonical-output/label-*` vectors added in v0.20.0-beta pin it,
-and the reference is red on all four. **The Go, Rust, TypeScript and Java OSD
-writers were not measured for this** and nothing is claimed about them.
-
-**OSD-14, the unwritable label.** [OSD-14](05-osd-grammar.md#59-canonical-output) is
-new normative content as of **v0.20.0-beta**: a field label carrying a C0
-control character has no OSD spelling at all (§5.3.1 bans the byte in a
-string body, escape context included, and OSD unescaping is weak), so an OSD
-writer handed such a schema MUST fail with `write.unsupported-value` rather
-than emit text no conformant reader accepts. Measured behaviour today, and
-only what was measured:
-
-| Implementation | Behaviour |
-|---|---|
-| Python reference (v0.9.5) | `to_osd` emits the raw byte — `record R {`, newline, `    "a<U+0001>b": string,` — and the reference's own `parse_schema` then rejects what it wrote, `parse.control-character`. Run live, not assumed |
-| Go | `osd.Write` emits a backslash plus the raw control byte, which its own reader now rejects, so write-then-read no longer round-trips; from the v0.19.0-beta sweep review ([omnist-go#118](https://github.com/omnist-dev/omnist-go/pull/118)) |
-| TypeScript, Rust, Java | not measured |
-
-**This half of the entry also records that the suite cannot express the
-case.** A vector
-gives a schema as OSD text (§8.5.3), so a schema whose label has no OSD text
-cannot be written as a vector input at all, and §8.5.3 has no driver taking a
-schema in any other form — `write_schema` is a documented operation
-([§E.11](extensions/osd-oml.md#e11-api-cli-surface)) that the driver table and
-the [Operations & Models Reference](operations-and-models-reference.md) both
-omit. So OSD-14 ships as a rule with no vector behind it.
-
-**The read-side half of that problem is fixed as of v0.21.0-beta; this one is
-not.** omnist-spec#105 raised the same untestable-MUST shape for D-14, and
-[§8.5.3](08-conformance-and-errors.md#853-operation-drivers)'s **E-27** now
-lets a read-side vector give its input as `bytes_hex` — bytes, not
-already-valid text — which is what D-14 needed. It does nothing for OSD-14,
-and the difference is worth naming so nobody reads the mechanism as broader
-than it is: E-27 covers the three drivers that take *source text* and gives
-them a way to carry bytes instead. OSD-14 is a **write**-side rule whose
-input is a Schema, and what it still needs is a driver that accepts a schema
-in some form other than OSD text — a canonical Schema encoding, or a
-`write_schema` driver fed by `schema_from_document`. Until that exists,
-adoption is verified by hand
-against the two rows above and this entry says so rather than letting a green
-suite imply coverage. Remove this entry when every port escapes labels per
-OSD-15 and refuses the write per OSD-14, and a vector pins the second half.
-
-**DIV-6. No port's conformance runner reads `bytes_hex` yet, and no port is
-known to report `parse.invalid-encoding`.** E-27 and D-14's fourteen byte-level
-vectors are new normative content and new suite content as of
-**v0.21.0-beta**. Two separate gaps, and they close independently:
-
-1. **The runner gap.** A runner that does not know the `bytes_hex` field
-   cannot run these vectors at all — depending on how it dispatches, it may
-   error, or fail them for want of a `text` field, neither of which is a
-   skip. Until it learns the form, the honest report is an **E-20 "not yet
-   implemented" skip**, which needs no ledger citation of its own; a runner
-   that fails them on the unknown field is reporting a `fail` until it does
-   one or the other.
-
-   **E-21 is a much narrower door than it first looks.** Per
-   [E-27](08-conformance-and-errors.md#853-operation-drivers), *any* entry
-   point the implementation provides that reads a file, standard input or a
-   byte stream is a byte-oriented entry point — **including its CLI** — and a
-   runner MUST present the bytes through one if the implementation has one
-   anywhere. The E-21 skip is for an implementation that has **none at all**.
-   On the evidence in the table below, no port measured so far qualifies:
-   Python, Rust and Java each decode bytes in their CLI, and a Go `string` is
-   itself a byte sequence. A port citing this entry as an E-21 reason without
-   first checking its own CLI is misreading it, the same way `DIV-4` warns
-   against.
-2. **The rule gap.** Implementing D-14 as
-   [§2.5](02-document-model.md#25-encoding) now states it: reject invalid
-   UTF-8 with `parse.invalid-encoding` at `1:1`, on every surface and at
-   every byte-oriented entry point.
-
-**A port MUST NOT report these vectors as passing by decoding the bytes with
-replacement** (`U+FFFD`), with a surrogate-escape scheme, or with any other
-lossy recovery and running the result through a string-taking reader. The
-decoded string is valid UTF-8 and is not the vector's input, so a green
-result there is a pass reported for the one behaviour D-14 forbids. Skip it
-instead; §8.5.5 makes skip a first-class result precisely so this is never
-the cheaper option.
-
-Measured or documented behaviour today, and only that:
-
-| Implementation | What is known | Source |
-|---|---|---|
-| Python reference (v0.9.5) | **Its CLI is its byte-oriented entry point** (`omnist/cli.py`: `sys.stdin.read()` for `-`, `open(path, encoding="utf-8")` for a file), so this is where D-14 binds and where these vectors must be run. Both paths decode **strictly**, so nothing is repaired — but the read dies with an **uncaught `UnicodeDecodeError` and no diagnostic at all**, where D-14 requires `parse.invalid-encoding` at `1:1`. That is the defect. Its library readers take `str` and accept smuggled ill-formed content (surrogate-escaped, or already `U+FFFD`-replaced) without complaint — `read_json`, `read_oml` and `parse_schema` all do — and that is **not** a defect: D-14 is a rule about bytes and §2.5 permits a string-typed entry point to treat its input as already decoded. Valid multi-byte input (U+00E9, U+20AC, U+1F600) is accepted on all six surfaces | measured live 2026-09-21 for this entry |
-| Go | JSON, OML and OSD readers **silently accept** invalid UTF-8; YAML, TOML and XML report `parse.codec-syntax`, which D-14 now explicitly says is the wrong code for this. Go's `string` is a byte slice, so its string-taking readers are byte-oriented entry points and D-14 binds them — this is not a case for the E-21 skip | [omnist-go#119](https://github.com/omnist-dev/omnist-go/issues/119), from the omnist-go#118 review |
-| Rust | Readers take `&str`, whose own invariant is validity, so ill-formed bytes cannot reach one and §2.5's string-typed clause covers them. The CLI uses `read_to_string`, which rejects them at the decode — that CLI is Rust's byte-oriented entry point, so the E-21 skip does not apply here either, and **what it reports for the rejection was not measured** | the omnist-rs#183 review |
-| Java | `Cli.java` decodes stdin **lossily**, `new String(bytes, UTF_8)`, which substitutes `U+FFFD` — the repair D-14 forbids. File input uses `Files.readString`, which is strict | the omnist-j#112 review |
-| TypeScript | **Not measured.** Nothing is claimed here | — |
-
-Remove this entry when every port's runner reads `bytes_hex` and every port
-either passes these vectors or carries a standing E-21 skip citing it.
+**Why this is still listed.** A vector gives a schema as OSD text (§8.5.3), so a
+schema whose label has no OSD text cannot be written as a vector input at all,
+and §8.5.3 has no driver taking a schema in any other form — `write_schema` is a
+documented operation ([§E.11](extensions/osd-oml.md#e11-api-cli-surface)) that
+the driver table and the
+[Operations & Models Reference](operations-and-models-reference.md) both omit.
+E-27's `bytes_hex` fixed the same untestable-MUST shape for D-14 on the read
+side and does nothing here: OSD-14 is a **write**-side rule whose input is a
+Schema, and it still needs a driver that accepts a schema in some form other
+than OSD text — a canonical Schema encoding, or a `write_schema` driver fed by
+`schema_from_document`. Until that exists, adoption is verified by hand and this
+entry says so rather than letting a green suite imply coverage. Remove this
+entry when a vector pins OSD-14 and every port passes it.
 
 ## 9.5 Adding a sixth implementation
 

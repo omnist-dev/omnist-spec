@@ -511,8 +511,8 @@ implementation has one **anywhere** — a CLI, or any library function that
 reads a file, standard input or a byte stream, is one, whatever the
 signature of the reader sitting behind it. Only an implementation offering
 no byte-oriented entry point at all reports these vectors as a skip, under
-[E-21](08-conformance-and-errors.md#855-reporting) citing
-[`DIV-6`](09-divergence-ledger.md#94-known-open-divergences); a runner that
+[E-21](08-conformance-and-errors.md#855-reporting) with its own
+[§9.4](09-divergence-ledger.md#94-known-open-divergences) ledger entry; a runner that
 has merely not learned the `bytes_hex` input form yet reports E-20, "not yet
 implemented". What no runner may do is decode the bytes with replacement and
 run the result as though it were the vector's input, which would report a

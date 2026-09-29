@@ -695,8 +695,8 @@ reports `skip` under **E-20**, "not yet implemented" — no ledger citation
 needed, and it becomes a pass or a real fail once the work lands. An
 implementation that offers **no byte-oriented entry point at all** — no
 bytes-taking reader, no file or stdin or stream entry point, and no CLI —
-reports `skip` under **E-21**, citing
-[`DIV-6`](09-divergence-ledger.md#94-known-open-divergences); that is a
+reports `skip` under **E-21**, with its own
+[§9.4](09-divergence-ledger.md#94-known-open-divergences) ledger entry; that is a
 structural limit of the target language, which is what E-21 is for, and
 §8.5.5 makes reporting it a first-class result rather than a loss. Having a
 byte-oriented entry point that fails these vectors is neither: it is a
