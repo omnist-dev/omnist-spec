@@ -92,11 +92,12 @@ Two consequences worth stating plainly:
   lossy scheme and run the result: that substitutes a different input and
   reports on a question the vector did not ask. Only an implementation with
   no byte-oriented entry point anywhere reports these as `skip` under E-21,
-  citing [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
-  `DIV-6`. **No port's runner reads `bytes_hex` yet**, so none of them can
-  run these vectors at all today — and a runner that fails them on the
-  unknown field is reporting a `fail`, not a skip, until it either runs them
-  or reports an E-20 "not yet implemented" skip.
+  and documenting the gap as its own
+  [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences) ledger
+  entry. All five ports' runners read `bytes_hex` as of v0.21.0-beta; a
+  runner that has not learned the field yet is reporting a `fail`, not a
+  skip, until it either runs the vectors or reports an E-20 "not yet
+  implemented" skip.
 
 ## Canonical document encoding
 
@@ -186,8 +187,8 @@ satisfy.** A diagnostic with the right `ok` and the right position but the
 wrong code reports green and nothing in the run says otherwise. Rule 4's "a
 run must state which mode produced it" exists for that reason and is not a
 formality: state the mode wherever the numbers are quoted, not only inside
-the runner's own output. The `OML-25` row in
-[§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s `DIV-4`
+the runner's own output. The `OML-25` row of the retired `DIV-4`
+(§9.4)
 is invisible for exactly this reason — right `ok`, right paths, wrong code —
 and it covers a vector the Python reference had never met since the day it
 was written.

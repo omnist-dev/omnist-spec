@@ -871,7 +871,7 @@
           }
         ]
       },
-      "comment": "OML-26. The edge `a: 1` is complete, and a complete top-level edge can end the document (Sec4.6's second legal shape), so the `b` standing there with no separator is content after the document ended -- parse.trailing-content, at the first leftover significant token. Counting: a(1) :(2) space(3) 1(4) space(5) b(6), so 1:6. Measured live against the Python reference: parse.unexpected-token at 1:6 -- position right, code wrong, recorded as DIV-4. TypeScript, Go and Rust implement OML-26 per their v0.19.0-beta sweeps and are expected to pass; Java has not been measured against this rule and is not claimed (DIV-4)."
+      "comment": "OML-26. The edge `a: 1` is complete, and a complete top-level edge can end the document (Sec4.6's second legal shape), so the `b` standing there with no separator is content after the document ended -- parse.trailing-content, at the first leftover significant token. Counting: a(1) :(2) space(3) 1(4) space(5) b(6), so 1:6. Measured live against the Python reference before it adopted OML-26: parse.unexpected-token at 1:6 -- position right, code wrong. All five ports pass this vector as of v0.21.0-beta."
     },
     {
       "name": "oml-grammar/shape/missing-separator-inside-a-node-is-an-unexpected-token",
