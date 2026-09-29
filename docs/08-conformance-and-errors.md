@@ -42,8 +42,8 @@ Every diagnostic carries at least:
 
 | Code | Raised when |
 |---|---|
-| `parse.unexpected-token` | A token appears where the grammar does not allow it |
-| `parse.trailing-content` | Content remains after the document has ended — after its single scalar (OML-25) or after a complete top-level edge (OML-26) |
+| `parse.unexpected-token` | A token appears where the grammar does not allow it — inside `{...}` or `[...]`, or mid-edge; **not** content after the document has ended, which is `parse.trailing-content` |
+| `parse.trailing-content` | Content remains after the document has ended — after its single scalar (OML-25) or after a complete top-level edge (OML-26), **with or without a separator in front of it** |
 | `parse.unterminated-string` | A string is not closed before end of input |
 | `parse.invalid-escape` | An unrecognized backslash escape |
 | `parse.unpaired-surrogate` | A `\uXXXX` surrogate escape without its partner |
@@ -67,6 +67,11 @@ is stated here as well as in chapter 4. Content standing after a complete
 ([OML-25](04-oml-grammar.md#461-top-level-disambiguation)) or a complete edge
 ([OML-26](04-oml-grammar.md#461-top-level-disambiguation)) — is trailing
 content, because the body is finished and what follows is a second document.
+**A separator in front of the content makes no difference**: a newline or `;`
+is a legal end to the body and the document may already be over, so
+`a: 1` newline `}` is trailing content exactly as `a: 1 }` is. (The one thing
+that is not leftover is a token that can begin an edge standing after a
+separator: that is the next edge, per OML-26.)
 Inside `{...}` or `[...]` a closing delimiter is still owed, so the same
 missing separator is a token the grammar does not allow there and MUST be
 reported as `parse.unexpected-token`
@@ -422,19 +427,51 @@ schema-side/pre-schema equivalent of "the whole thing, not a part of it."
 
 **Text-position paths** are for `parse.*` diagnostics (§8.3.1) — stage 1
 fails before any Document exists, so there is no `$`-rooted structure for a
-Document path to descend into. The format is `line:col`, 1-based, computed
-from the byte offset of the failure:
+Document path to descend into. The format is `line:col`, both 1-based:
 
 ```
 1:1                      the very first character
 14:8                     line 14, column 8
 ```
 
+- **E-28.** **`col` is the number of Unicode code points
+  before the failing character on its line, plus one.** It is not a count of
+  UTF-8 bytes and not a count of UTF-16 code units, so a character outside the
+  ASCII range advances it by exactly one, whatever its encoded width: in
+  `a: "` followed by U+1F600 and `" nope`, the `n` is at `1:8`, not at `1:11`
+  (bytes, where U+1F600 is four) and not at `1:9` (UTF-16 units, where it is
+  two). The failure is *located* by the byte offset in the input — that is
+  where the reader stopped — but the column it reports is derived from that
+  offset by counting code points back to the start of the line, so a
+  byte-oriented implementation MUST convert and a UTF-16 one MUST NOT count
+  `String.length`.
+- **E-29.** **`line` starts at 1 and advances after each `LF` (U+000A).** A
+  `CRLF` is one line break, as `newline` in
+  [`grammars/oml.abnf`](https://github.com/omnist-dev/omnist-spec/blob/master/grammars/oml.abnf)
+  defines it (`CRLF / LF`), and its `CR` belongs to the line it ends. A lone
+  `CR` is not a line break in either grammar — OML's `newline` does not admit it
+  and OSD's `ws` treats it as ordinary whitespace, with comments running to the
+  next `LF` in both — so it never advances `line`, and where a grammar admits it
+  at all it is one code point of the column like any other character. **What
+  is not specified** is which position an implementation reports for a lone
+  `CR` where OML rejects it, the `CR` itself or the character after it; the
+  ports differ (DIV-7), and this section does not choose.
+- The origin is the text the grammar sees: a leading `U+FEFF` that
+  [D-15](02-document-model.md#25-encoding) strips is not counted, which is what
+  D-21's "computed on the text that remains" already says.
+
+E-28 and E-29 fix the *unit* of a position in **OML and OSD text**, the two
+grammars this section can speak for. They are not yet stated for the codecs:
+which character a codec's own parser blames for a `parse.codec-syntax` failure,
+and how its column is counted, is not settled here and the ports differ
+([omnist-spec#114](https://github.com/omnist-dev/omnist-spec/issues/114) is the
+open issue); only D-21's `1:1` and D-14's `1:1` are fixed.
+
 **`parse.invalid-encoding` is the one `parse.*` code whose path is a fixed
 value rather than a computed one: it is always `1:1`.** The rule behind it,
 [D-14](02-document-model.md#25-encoding), fails the decoding of the input as
-a whole, so there is no decoded text for the offset above to be resolved
-against, and naming the offending byte's own offset would require this spec
+a whole, so there is no decoded text for a `line:col` position to be resolved
+against, and naming the offending byte's own position would require this spec
 to decide which byte of an ill-formed sequence is the failing one — which it
 deliberately does not do. `1:1` is how this spec names a whole-input text
 refusal already (D-21 reports there too). E-11 below is unchanged by this:
@@ -494,6 +531,46 @@ which to build a Schema path at all.
   rules. Three of §8.4's five fall under this section: `schema.no-root`,
   `schema.duplicate-root`, and a dangling root reference. The other two are
   `algebra.*` codes, outside this section's scope and unaffected by it.
+
+- **E-30.** **Which Schema path a code takes is fixed per code, by what the
+  diagnostic is about.** A diagnostic about a field's **type, nullability or
+  cardinality**, where a well-formed field exists, MUST be reported at the
+  **field path** `R.a`. A diagnostic about the **lexical shape of a field
+  declaration or about its label**, or about a **record as a whole**, MUST be
+  reported at the **record path** `R` (for `schema.reserved-name`, the bare
+  record name, which is the same thing). This is why `schema.quoted-type` is
+  `R` while `schema.unknown-type` is `R.a`, though both look at a field's type
+  position: a quoted string there means the declaration is not a well-formed
+  field at all, so there is no field to name, and the two directions of the
+  quoting rule ([§5.2](05-osd-grammar.md#52-the-quoting-rule)) are lexical;
+  `schema.unknown-type` is raised on a field that is well formed and merely
+  names a type that does not exist. Root problems take `$`, and the four
+  schema-construction codes of E-12 take a Document path.
+
+| Code | Path kind | Why |
+|---|---|---|
+| `schema.no-root` | `$` | no root declaration exists to name |
+| `schema.duplicate-root` | `$` | the whole schema, not one record |
+| `schema.unknown-type` | field `R.a`; `$` for a dangling root | the field's type names nothing; a root has no field |
+| `schema.nullable-ref` | field `R.a` | nullability of a well-formed field |
+| `schema.nullable-any` | field `R.a` | nullability of a well-formed field |
+| `schema.invalid-cardinality` | field `R.a` | cardinality of a well-formed field |
+| `schema.non-integer-cardinality` | field `R.a` | cardinality of a well-formed field |
+| `schema.empty-cardinality` | field `R.a` | cardinality of a well-formed field |
+| `schema.unquoted-label` | record `R` | lexical: the declaration is not a field yet |
+| `schema.quoted-type` | record `R` | lexical: the declaration is not a field yet |
+| `schema.empty-label` | record `R` | about the label, and `R.` names nothing |
+| `schema.bracket-in-label` | record `R` | about the label, which would make an ambiguous path |
+| `schema.duplicate-field` | record `R` | about two fields at once, so the record they share |
+| `schema.duplicate-record` | record `R` | a record as a whole |
+| `schema.reserved-name` | bare record name | a record's own name |
+| `schema.missing-key` | Document path (E-12) | schema-construction input: the node lacking the key |
+| `schema.invalid-type` | Document path (E-12) | schema-construction input: the wrong-kind value |
+| `schema.unknown-key` | Document path (E-12) | schema-construction input: the unrecognized key |
+| `schema.invalid-name` | Document path (E-12) | schema-construction input: the record's `name` |
+
+`schema.invalid-name` is defined by E-12 and OSD-OML R-3a and has no row in
+§8.3.3's table; it is listed here so the table is complete.
 
 This applies to any surface, present or future, that can construct a Schema
 without a grammar fixing identity first — it is a property of the codes, not
@@ -584,8 +661,24 @@ Matching rules, all normative:
 | `write_schema_oml` | `{schema}` | `{ok, text}` — compared byte for byte as OML text, same rule as `write`'s Document-writer vectors; this is `write_oml(schema_to_document(schema))`, per [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
 
 Every operation's failure `expect` is `{ok: false, diagnostics: [...]}`, per
-§8.5.2 — `write` is the only operation where `ok: true` and `diagnostics` can
-coexist, noted above.
+§8.5.2 (`lint` is the exception: its failure `expect` is `{ok: false,
+findings}`) — `write` is the only operation whose *own* result can carry
+`diagnostics` beside `ok: true`, noted above; `parse` of XML can also, for the
+read-side warnings of [§8.3.8](#838-format-codec-adjustments)
+(`format.attribute-dropped`, `format.namespace-dropped`).
+
+**How each field is compared, per operation.** The rows above that say "byte
+for byte" name the *canonical* comparison: the implementation's canonical output
+text against the expected text, with no re-parse. `infer` and
+`infer_with_report` are the one place a schema is **not** compared that way:
+[§6.10](06-schema-algebra.md#610-infersamples) never normalizes `infer`'s
+output and its record names are implementation-derived, and
+[conformance-harness.md §4](conformance-harness.md) compares `infer` output up
+to a renaming of records for that reason; this section itself states no
+comparison for their `schema`. The Track 1 fixtures' `exact` mode is a third,
+structural comparison that Track 2 does not use. The per-operation list, for
+both tracks, is in
+[Porting a Conformance Runner](porting-a-conformance-runner.md#which-comparison-each-operation-needs).
 
 **The 4 OSD-OML operations split across the same two comparison shapes
 every other operation already uses, not a third one.** `schema_from_document`/
@@ -754,7 +847,8 @@ tracking convergence, which is the whole point of
 required:**
 
 - **Not yet implemented.** The operation or feature doesn't exist yet in
-  this implementation. Temporary by nature — expected to become a `pass`
+  this implementation, or the rule or behaviour a vector pins has not been
+  adopted yet. Temporary by nature — expected to become a `pass`
   once the work lands. No ledger entry is required for this category on its
   own, though the usual issue tracker SHOULD have something open for it.
 - **E-21. Documented divergence.** The vector's outcome depends on a capability

@@ -123,10 +123,9 @@ been verified.
 
 Three things are deliberately not claimed as done anywhere: no port enforces
 the alias expansion limit D-18 (`DIV-3`), no port implements the OSD-OML
-extension (§9.6), and whether `a: 1`, a newline, then `}` is a
-`parse.trailing-content` case is an open spec question
-([omnist-spec#109](https://github.com/omnist-dev/omnist-spec/issues/109)), not a
-divergence.
+extension (§9.6), and none of the rules v0.22.0-beta settles (OML-26's
+with-a-separator cases, E-28's code-point column) is claimed for any port
+beyond what `DIV-7` records.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
@@ -147,6 +146,10 @@ divergence.
 | Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (harness headline 29/0/0: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
+
+The Track 2 row above is the v0.21.0-beta suite, 273 vectors. v0.22.0-beta adds
+fourteen (287 in all); no port has adopted that release yet, and `DIV-7` records
+how each fares on the nine, measured, not carried forward.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -250,6 +253,70 @@ than OSD text — a canonical Schema encoding, or a `write_schema` driver fed by
 `schema_from_document`. Until that exists, adoption is verified by hand and this
 entry says so rather than letting a green suite imply coverage. Remove this
 entry when a vector pins OSD-14 and every port passes it.
+
+**DIV-7. Fourteen vectors new in v0.22.0-beta that some ports fail today, and two cases the spec leaves open.**
+Twelve belong to #109 (ten with-a-separator cases for OML-26, the scalar
+counterpart for OML-25, and OML-26's negative control) and two pin E-28's
+code-point column
+([omnist-spec#109](https://github.com/omnist-dev/omnist-spec/issues/109),
+[#110](https://github.com/omnist-dev/omnist-spec/issues/110)). This is a rollout
+gap, not a divergence any implementation intends to keep: the expected interval
+between a spec rule landing and the ports adopting it.
+
+**How it was measured.** At the pre-squash branch heads of each port's merged
+v0.21.0-beta adoption PR: Python `6a5c10b`
+([omnist#349](https://github.com/omnist-dev/omnist/pull/349)), TypeScript
+`a3ed41c` ([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/pull/150)),
+Rust `871cbd0` ([omnist-rs#184](https://github.com/omnist-dev/omnist-rs/pull/184)),
+Go `5535786` ([omnist-go#120](https://github.com/omnist-dev/omnist-go/pull/120))
+and Java `a2e7b5f` ([omnist-j#114](https://github.com/omnist-dev/omnist-j/pull/114)).
+Python, TypeScript and Java through `format FILE --json` (OSD through `schema
+format`), Go through `omnist parse --from oml FILE` and `omnist schema normalize
+FILE`, reading the `path: code` its message prints. **Rust through its library**
+(`omnist::oml::read_oml` and `omnist::osd::parse_schema`, reading `ParseError`'s
+`position()` and `code`, `SchemaError`'s `path` and `code`), because
+`omnist-cli` prints only message text and, for OSD, a byte offset ("at 31");
+Rust's `2:21` below is a library result, not a CLI one.
+
+| Vectors (under `oml-grammar/shape/` unless noted) | Python | TypeScript | Rust | Go | Java |
+|---|---|---|---|---|---|
+| `separator-then-closing-brace-after-a-top-level-edge…`, `semicolon-then-closing-brace-after-a-top-level-edge…`, `closing-brace-after-a-braced-edge-value…` (`2:1`, `1:7`, `2:1`) | pass | pass | pass | `parse.unexpected-token` | `parse.unexpected-token` |
+| `separator-then-comma…`, `-then-closing-bracket…`, `-then-a-non-label-token…`, `-then-nan…`, `-then-opening-brace…`, `-then-an-array…`, `-then-colon…` (all `2:1`) | `parse.unexpected-token` | `parse.unexpected-token` | `parse.unexpected-token` | `parse.unexpected-token` | `parse.unexpected-token` |
+| `separator-then-closing-brace-after-a-scalar-document…`, `edge-after-a-separator-is-the-next-edge-not-leftover` | pass | pass | pass | pass | pass |
+| `oml-grammar/errors/column-counts-code-points-after-an-astral-character` (`1:12`) | pass | `1:13` (UTF-16 units) | `1:15` (bytes) | pass | `1:13` (UTF-16 units) |
+| `osd-grammar/errors/column-counts-code-points-after-an-astral-character` (`2:18`) | pass | `2:19` (UTF-16 units) | `2:21` (bytes) | pass | `2:19` (UTF-16 units) |
+
+Of the fourteen, Python fails 7, TypeScript 9, Rust 9, Go 10 and Java 12. In
+every OML-26 row the position is already right and only the code differs.
+**Not measured:** any port through its conformance runner, and OSD on `CRLF` or
+a lone `CR`.
+
+**What a runner reports today.** Until a port implements the rules, its runner
+reports each vector it fails as an **E-20 "not yet implemented" skip citing this
+entry** (E-20's first category covers a rule or behaviour not yet adopted, as
+well as a missing operation), never as a pass and never as a `fail` its CI has
+to carry (E-22). A port drops the skip for a vector in the same change that
+fixes it; a vector a port passes is a pass, so the skip list is per vector.
+**Remove this entry when every port passes all fourteen** and the two open
+cases below are either pinned or dropped.
+
+**Open, not pinned by any vector, no rule invented.**
+- *A document that is only `}`* (§4.6.1: OML-25 and OML-26 both need a complete
+  body, so neither applies). Measured, `}` then a newline: all five ports report
+  `parse.unexpected-token` at `1:1` (Go's message says "expected a value"). They
+  agree today; the spec does not require it.
+- *A lone `CR`* (E-29 does not say which position is reported). Measured, OML
+  `a: 1`, a lone `CR`, `}`: Python, TypeScript and Rust report
+  `parse.unexpected-token` at `1:5`, the `CR`; Go and Java report it at `1:6`,
+  the character after. `CRLF` agrees: line 2 column 1 in all five.
+
+**Not covered by any vector: a codec's failure position**
+([omnist-spec#114](https://github.com/omnist-dev/omnist-spec/issues/114)). E-28
+fixes the unit for OML and OSD only. Which character a codec's own parser blames
+is not fixed, and the ports differ before any multi-byte character is
+involved: for `{"a": "e", "b": x}` (the `x` is column 17) Python, Rust and Go
+report `1:17`; Java reports `1:18` (`java -jar target/omnist-j-0.2.5-alpha-cli.jar
+format FILE --from json --json`); TypeScript's CLI reports no position at all.
 
 ## 9.5 Adding a sixth implementation
 

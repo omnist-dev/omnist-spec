@@ -3,6 +3,94 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.22.0-beta (2026-09-29)
+
+**Normative (minor)** — resolves
+[#109](https://github.com/omnist-dev/omnist-spec/issues/109),
+[#110](https://github.com/omnist-dev/omnist-spec/issues/110) and
+[#111](https://github.com/omnist-dev/omnist-spec/issues/111). Three questions
+the v0.21.0-beta port sweeps raised and the text left open. #110's codec vector
+is not in this release: codec failure positions are a separate issue.
+
+- **A separator in front of a stray token makes no difference**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation), OML-26,
+  [§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1),
+  E-25; #109). OML-26 used to cover a leftover token only "with no separator in
+  front of it", so `a: 1`, a newline, `}` could be read either way. Now any
+  leftover significant token after a complete top-level edge that cannot continue
+  the edge list is `parse.trailing-content`, with or without a separator. The
+  test is stated exactly: the edge list continues if and only if a separator is
+  followed by a token that can begin an edge, which is a `STRING` or an `IDENT`
+  (the two alternatives of `label`); `}`, `]`, `,`, `:`, `{`, `[` and every
+  scalar-only token, `nan` and `inf` included, are leftover. OML-25 gets the
+  scalar counterpart (`1`, a newline, `}` is `2:1`), OML-27 states that
+  "with or without a separator" is a top-level rule, and both §8.3.1 rows, E-25
+  and §4.8's examples table are reconciled. One principle:
+  `parse.trailing-content` means content after the document has ended.
+- **`line:col`'s column counts Unicode code points, and `line` counts `LF`**
+  ([§8.4](docs/08-conformance-and-errors.md#84-paths), new E-28 and E-29,
+  [D-14](docs/02-document-model.md#25-encoding); #110, part 1). §8.4 said the
+  position was "computed from the byte offset of the failure" without saying the
+  unit of the column, and the three readings (bytes, code points, UTF-16 units)
+  agree until a multi-byte character precedes the failure. E-28 fixes code
+  points; the byte offset still *locates* the failure and the column is derived
+  from it. E-29 states what the grammars already imply: a line ends at `LF`, a
+  `CRLF` is one break, a lone `CR` is not one. The "byte offset" wording is gone
+  from §8.4 and D-14's `1:1` rationale.
+- **The porting guide names three comparison modes**
+  ([Porting a Conformance Runner](docs/porting-a-conformance-runner.md),
+  [§8.5.3](docs/08-conformance-and-errors.md#853-operation-drivers),
+  [conformance-harness.md §4](docs/conformance-harness.md),
+  [test-suite/README.md](test-suite/README.md); #111). `exact` is *structural*
+  and belongs to Track 1 and the referee self-test; `canonical` is a byte-exact
+  string comparison and is what Track 2 needs for `parse_schema`'s `schema`,
+  `normalize`, `prune`, `extract`, `schema_from_document` and `parse_schema_oml`;
+  `isomorphic` is `infer` and `infer_with_report` only. The guide now has the
+  operation-to-mode table per track and, per Track 2 operation, every `expect`
+  field a runner must compare (including `infer_with_report`'s `fallbacks`,
+  `lint`'s findings, and a successful `write` or XML `parse` carrying
+  `diagnostics`), each citing the text that requires it, and a mutation check for
+  `canonical` that the self-test cannot supply. §8.5.3's "`write` is the only
+  operation where `ok: true` and `diagnostics` coexist" was wrong for XML `parse`
+  and is corrected.
+- **New E-30: the `schema.*` path rule, per code**
+  ([§8.4.1](docs/08-conformance-and-errors.md#841-which-kind-each-schema-code-uses);
+  #110, part 2). A diagnostic about a well-formed field's type, nullability or
+  cardinality is at the field path `R.a`; one about the lexical shape of a field
+  declaration, a label, or a whole record is at the record path `R`; root
+  problems at `$`; the four schema-construction codes at a Document path (E-12).
+  That is why `schema.quoted-type` is `R` and `schema.unknown-type` is `R.a`.
+  A table lists every `schema.*` code once. Every existing `schema.*` vector was
+  checked by script against it.
+- **Three OSD-OML vectors corrected** to follow E-12 and osd-oml.md E.9, which
+  they contradicted: `non-string-field-label-is-invalid` now expects
+  `$.record[0].field[0].label`, `unknown-key-is-invalid`
+  `$.record[0].field[0].bogus`, `missing-required-key-is-invalid`
+  `$.record[0].field[0]`. They pinned Schema paths before v0.22.0-beta. No port
+  result changes: every port skips OSD-OML, and none of these was run.
+- **Fourteen new vectors**, taking the suite to **287**: ten with-a-separator
+  cases for OML-26 (`}` after a newline, `;` then `}`, `,`, `]`, `5`, `nan`, `{`,
+  `[2]`, `:`, and `}` after a braced edge value), `1`, a newline, `}` for OML-25,
+  a negative control (`a: 1`, a newline, `b: 2` is two edges), and one each for
+  OML and OSD with U+1F600 before the failure on the same line, so bytes, UTF-16
+  units and code points all give different columns. Every position was counted
+  by hand and every input run against the Python reference. Their comments state
+  the rule and point at `DIV-7` rather than restating per-port results.
+- **Two open cases stated as open**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation), E-29): a
+  document that is only `}`, and which position a lone `CR` is reported at. The
+  text says what is specified and that the rest is not. E-28 and E-29 are
+  scoped to OML and OSD text; codec positions are
+  [#114](https://github.com/omnist-dev/omnist-spec/issues/114). E-20's first
+  category now says it covers a rule or behaviour not yet adopted.
+- **New `DIV-7`**
+  ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)). Measured per
+  port at the pre-squash heads of the v0.21.0-beta adoption PRs (Rust through its
+  library): of the fourteen, Python fails 7, TypeScript 9, Rust 9, Go 10, Java
+  12. Until a port implements the rules it reports the vectors it fails as an
+  **E-20 "not yet implemented" skip** citing `DIV-7`. It also records the two
+  open cases with measured results.
+
 ## v0.21.0-beta (2026-09-21)
 
 **Normative (minor)** — closes

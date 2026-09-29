@@ -175,10 +175,17 @@ two documents differing only in edge order are genuinely different
 documents, not a false mismatch to paper over).
 
 **Schema comparison has two legitimate meanings, and this track uses both,
-chosen per operation — never one default for everything:**
+chosen per operation — never one default for everything. Track 2's JSON
+vectors use a third mode as well, `canonical` (a byte-exact string
+comparison, [§8.5.3](08-conformance-and-errors.md#853-operation-drivers)), and
+it is not `exact`: `exact` below is *structural* and belongs to this track and
+its referee self-test. [Porting a Conformance Runner](porting-a-conformance-runner.md)
+has the operation-to-mode table for both tracks.**
 
 - **`exact`** — every record name, and every field's label/type/cardinality,
-  must match. Used for `normalize`, `prune`, `extract`: their output naming
+  must match; declaration order and formatting are not compared (structural:
+  both texts are re-parsed first). Used, **in this track**, for `normalize`,
+  `prune`, `extract`: their output naming
   is spec-determined (`normalize`'s sorted-minimum-representative rule,
   §6.8, is exactly what makes two implementations' output
   cross-comparable), so exact equality is the correct, meaningful check.

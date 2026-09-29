@@ -506,6 +506,25 @@
       "comment": "Sec5.3.1's control-character ban applies to every raw byte in the string body, escape context included -- a control character immediately after a backslash is still a control character in the body. This was ambiguous until v0.15.0-beta: the prose said 'a literal control character', which invited the reading that only an unescaped one was forbidden, and grammars/osd.abnf's escape alternative was written as \"\\\" %x00-10FFFF, which admitted the escaped form outright. So a parser generated from the grammar and one written from the prose disagreed on these exact bytes. Grammar and prose now agree and this vector pins it. The position was `1:1` until v0.19.0-beta, which is on line 1 (`record R {`) while the string is on line 2 and correct under no convention. Sec8.4's E-23 now states the convention the OML string-error vectors already followed: a string-body error reports the string's **opening quote**. Line 2 is four spaces then the quote, so the quote is at column 5 -- `2:5`. Every port passes this vector as of v0.21.0-beta."
     },
     {
+      "name": "osd-grammar/errors/column-counts-code-points-after-an-astral-character",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\n    \"😀\": string, \"b\u0001\": string,\n}\nroot R\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:18",
+            "code": "parse.control-character"
+          }
+        ]
+      },
+      "comment": "E-28 (omnist-spec#110) on OSD: the column counts code points. Line 2 puts a label holding U+1F600 (one code point, four UTF-8 bytes, two UTF-16 units) before a second string that carries a literal U+0001, so the failure is parse.control-character reported at that second string's opening quote (E-23, via E-3). Counting code points: four spaces (1-4), \" (5), U+1F600 (6), \" (7), : (8), space (9), string (10-15), comma (16), space (17), \" (18), so 2:18. As bytes it would be 2:21, as UTF-16 units 2:19. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+    },
+    {
       "name": "osd-grammar/encoding/leading-bom-is-stripped",
       "spec": "docs/02-document-model.md#25-encoding",
       "operation": "parse_schema",
