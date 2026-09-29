@@ -115,12 +115,11 @@ port's runner now compares diagnostics as `(path, code)` sets. Python's runner
 was code-agnostic until #349; on the same suite it reported 159 pass / 17 fail /
 97 skip before that rewrite.
 
-Two Version cells need a caveat. Rust's 0.3.0-alpha was tagged on 2026-09-29 at
-the merge commit of the v0.21.0-beta work (`179f3b6`); its `publish.yml` run
-was still in progress and crates.io still listed 0.2.2-alpha as the newest
-release when this was written, so 0.3.0-alpha is tagged but not yet confirmed
-published. Java's 0.2.5-alpha is the latest tag; its Maven Central release run
-waits for manual approval, so that version is not necessarily published yet.
+Two Version cells need a note. Rust's 0.3.0-alpha was tagged on 2026-09-29 at
+the merge commit of the v0.21.0-beta work (`179f3b6`) and is published to
+crates.io (0.3.0-alpha). Java's 0.2.5-alpha release workflow (Maven Central)
+completed successfully on 2026-09-29; its visibility on Maven Central has not
+been verified.
 
 Three things are deliberately not claimed as done anywhere: no port enforces
 the alias expansion limit D-18 (`DIV-3`), no port implements the OSD-OML
