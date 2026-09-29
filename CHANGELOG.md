@@ -3,6 +3,74 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.22.0-beta (2026-09-29)
+
+**Normative (minor)** — resolves
+[#109](https://github.com/omnist-dev/omnist-spec/issues/109) and
+[#111](https://github.com/omnist-dev/omnist-spec/issues/111), and the column
+half of [#110](https://github.com/omnist-dev/omnist-spec/issues/110). Three
+questions the v0.21.0-beta port sweeps raised and the text left open. The
+`schema.*` path half of #110 and the codec vector are **not** in this release;
+they are stopped on a contradiction between a rule and existing vectors, and a
+question the spec has no answer to, both left open on the issue.
+
+- **A separator in front of a stray token makes no difference**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation), OML-26,
+  [§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1),
+  E-25; #109). OML-26 used to cover a leftover token only "with no separator in
+  front of it", so `a: 1`, a newline, `}` could be read either way. Now any
+  leftover significant token after a complete top-level edge that cannot continue
+  the edge list is `parse.trailing-content`, with or without a separator. The
+  test is stated exactly: the edge list continues if and only if a separator is
+  followed by a token that can begin an edge, which is a `STRING` or an `IDENT`
+  (the two alternatives of `label`); `}`, `]`, `,`, `:`, `{`, `[` and every
+  scalar-only token, `nan` and `inf` included, are leftover. OML-25 gets the
+  scalar counterpart (`1`, a newline, `}` is `2:1`), OML-27 states that
+  "with or without a separator" is a top-level rule, and both §8.3.1 rows, E-25
+  and §4.8's examples table are reconciled. One principle:
+  `parse.trailing-content` means content after the document has ended.
+- **`line:col`'s column counts Unicode code points, and `line` counts `LF`**
+  ([§8.4](docs/08-conformance-and-errors.md#84-paths), new E-28 and E-29,
+  [D-14](docs/02-document-model.md#25-encoding); #110, part 1). §8.4 said the
+  position was "computed from the byte offset of the failure" without saying the
+  unit of the column, and the three readings (bytes, code points, UTF-16 units)
+  agree until a multi-byte character precedes the failure. E-28 fixes code
+  points; the byte offset still *locates* the failure and the column is derived
+  from it. E-29 states what the grammars already imply: a line ends at `LF`, a
+  `CRLF` is one break, a lone `CR` is not one. The "byte offset" wording is gone
+  from §8.4 and D-14's `1:1` rationale.
+- **The porting guide names three comparison modes**
+  ([Porting a Conformance Runner](docs/porting-a-conformance-runner.md),
+  [§8.5.3](docs/08-conformance-and-errors.md#853-operation-drivers),
+  [conformance-harness.md §4](docs/conformance-harness.md),
+  [test-suite/README.md](test-suite/README.md); #111). `exact` is *structural*
+  and belongs to Track 1 and the referee self-test; `canonical` is a byte-exact
+  string comparison and is what Track 2 needs for `parse_schema`'s `schema`,
+  `normalize`, `prune`, `extract`, `schema_from_document` and `parse_schema_oml`;
+  `isomorphic` is `infer` and `infer_with_report` only. The guide now has the
+  operation-to-mode table per track and, per Track 2 operation, every `expect`
+  field a runner must compare (including `infer_with_report`'s `fallbacks`,
+  `lint`'s findings, and a successful `write` or XML `parse` carrying
+  `diagnostics`), each citing the text that requires it, and a mutation check for
+  `canonical` that the self-test cannot supply. §8.5.3's "`write` is the only
+  operation where `ok: true` and `diagnostics` coexist" was wrong for XML `parse`
+  and is corrected.
+- **Nine new vectors**, taking the suite to **282**: five with-a-separator cases
+  for OML-26 (`}` after a newline, `;` then `}`, `,`, `]`, and a non-label
+  token), `1`, a newline, `}` for OML-25, a negative control (`a: 1`, a newline,
+  `b: 2` is two edges), and one each for OML and OSD with U+1F600 before the
+  failure on the same line, so bytes, UTF-16 units and code points all give
+  different columns. Every position was counted by hand and every input run
+  against the Python reference.
+- **New `DIV-7`**
+  ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)). Measured per
+  port against each port's merged code: Python fails 3 of the nine, TypeScript 5,
+  Rust 5, Go 5, Java 7. Until a port implements the rules it reports the vectors
+  it fails as an **E-20 "not yet implemented" skip** citing `DIV-7`. The entry is
+  removed when every port passes all nine. It also records, as an open question
+  and not a rule, that codec failure positions differ between ports before any
+  multi-byte character is involved.
+
 ## v0.21.0-beta (2026-09-21)
 
 **Normative (minor)** — closes

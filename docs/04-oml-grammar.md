@@ -279,7 +279,11 @@ wrote.
 Horizontal space, newlines, `;` and comments are skipped or collapse into a
 separator and are not themselves leftover content, so the reported position
 is the first *real* token after the scalar, not the whitespace in front of
-it: `1` newline `2` reports `2:1`, the `2`, not `1:2`. A **trailing comment
+it: `1` newline `2` reports `2:1`, the `2`, not `1:2`. **A separator in front
+of the leftover token changes neither the code nor the rule** — `1` newline
+`}` is `parse.trailing-content` at `2:1`, the same as `1 }` is at `1:3`; a
+lone scalar followed by anything at all, on any line, is a finished document
+followed by more text. A **trailing comment
 is not leftover content at all** — `1 # done` is the valid single-scalar
 document `1`, because §4.2.1 skips comments before the parser can see them.
 One case sits outside this rule entirely: a top-level bare sequence such as
@@ -289,32 +293,60 @@ the `[` itself — measured against the reference as `parse.unexpected-token`
 at `1:1`.
 
 **OML-26. Leftover content after a complete *top-level edge* is
-`parse.trailing-content` as well.** OML-25 covers the scalar branch of the
-lookahead above; this covers the edge branch, and the two state one
-principle together: **`parse.trailing-content` means content after the
-document has ended.** At top level a complete edge can end the document —
-§4.6's second legal shape is a list of edges and nothing further is owed —
-so a significant token standing there with no separator in front of it is a
-second document the author accidentally wrote. An implementation MUST report
-`parse.trailing-content` at the text position of the first leftover
-significant token, in the same §4.2.1 sense OML-25's paragraph above
-defines, which applies here unchanged. `a: 1 b: 2` therefore fails at `1:6`,
-the `b`; `a: 2024-01-01T99` fails at `1:14`, the `IDENT` `T99` that
-[OML-5](#42-tokenization) produces, which is the row §4.8's table has always
-carried.
+`parse.trailing-content` as well, with or without a separator in front of
+it.** OML-25 covers the scalar branch of the lookahead above; this covers the
+edge branch, and the two state one principle together:
+**`parse.trailing-content` means content after the document has ended.** At
+top level a complete edge can end the document — §4.6's second legal shape is
+a list of edges and nothing further is owed, and `document` in
+`grammars/oml.abnf` allows a separator after the last edge — so what stands
+after a complete top-level edge is one of exactly two things: the **next
+edge**, or **content after the document**. There is no third reading, and in
+particular whether a newline or `;` sits in front of the token does not make
+one.
+
+**Which is which is decided by one test.** After a complete top-level edge, the
+edge list continues if and only if a **separator** is followed by a token that
+**can begin an edge**. A token can begin an edge when it is a `STRING` or an
+`IDENT` — the two alternatives of `label` in the grammar — and no other
+token can: not `}`, `]`, `,`, `:`, `{`, `[`, and not any scalar-only token
+(`INTEGER`, `NUMBER` — which includes the reserved `nan` and `inf` spellings —
+`DATE`, `TIME`, `DATETIME`). Everything else is leftover:
+
+- **A token with no separator in front of it is always leftover**, including a
+  `STRING` or `IDENT` that could begin an edge if a separator were present:
+  `a: 1 b: 2` fails at `1:6`, the `b`; `a: 2024-01-01T99` fails at `1:14`, the
+  `IDENT` `T99` that [OML-5](#42-tokenization) produces, which is the row
+  §4.8's table has always carried; `a: 1 }` and `a: 1 ,` fail at `1:6`.
+- **A token that cannot begin an edge is leftover even after a separator.**
+  `a: 1` newline `}` fails at `2:1` and `a: 1; }` at `1:7`; `a: 1` newline `,`
+  and `a: 1` newline `]` fail at `2:1`, and so does `a: 1` newline `5`. The
+  separator is a legal end to the edge, and after it the document may already be
+  over; the `}` is then content after that end, which is what the principle
+  above says `parse.trailing-content` is. It is **not** `parse.unexpected-token`
+  on the ground that "an edge is owed after a separator": no edge is owed — the
+  separator may trail the document — and a rule that turned on whether a newline
+  precedes the token would make the code depend on incidental whitespace.
+- **A `STRING` or `IDENT` after a separator is the next edge**, not leftover, so
+  `a: 1` newline `b: 2` is two edges and valid. If that edge is itself malformed
+  — `a: 1` newline `null: 2` — the error is the edge's own (here
+  `parse.reserved-word-label`, as anywhere else a bare `null` stands in label
+  position), not `parse.trailing-content`.
+
+An implementation MUST report `parse.trailing-content` at the text position of
+the first leftover significant token, in the same §4.2.1 sense OML-25's
+paragraph above defines, which applies here unchanged: the reported position is
+the leftover token itself, never the separator in front of it.
 
 **This holds whatever the leftover token is, including one that could not
-begin a document at all (OML-26).** `a: 1 }` and `a: 1 ,` fail at `1:6` with
-`parse.trailing-content`, the same as `a: 1 b: 2`, even though no document
-starts with `}` or `,`. The rule is about **where the failure is**, not about
-what the author might have meant: the document body is complete and the
+begin a document at all.** The rule is about **where the failure is**, not
+about what the author might have meant: the document body is complete and the
 parser is past it, so the reported unit is "there is content after the
-document", which is true of a stray brace as much as of a second edge.
-Nothing is owed at top level — OML-27 below turns on an *unclosed* `{` or
-`[`, and there is none here, so a top-level `}` is not the case it
-describes. Reporting these as `parse.unexpected-token` would split one rule
-in two on a judgement about intent that a parser cannot make and that no
-conformance vector could compare.
+document", which is true of a stray brace as much as of a second edge. Nothing
+is owed at top level — OML-27 below turns on an *unclosed* `{` or `[`, and there
+is none here, so a top-level `}` is not the case it describes. Reporting these
+as `parse.unexpected-token` would split one rule in two on a judgement about
+intent that a parser cannot make and that no conformance vector could compare.
 
 **OML-27. Inside `{...}` or `[...]` the same missing separator is
 `parse.unexpected-token`.** Nothing has ended there: a closing `}` or `]` is
@@ -325,7 +357,10 @@ and an implementation MUST report `parse.unexpected-token` at that token.
 `2` — [§4.3.1](#431-arrays-are-sugar) makes the comma the only element
 separator, so the `2` stands where a `,` or `]` was owed. **The deciding
 fact is the enclosing delimiter, not the missing separator**, which is
-absent in all four of these inputs. Reporting them all one way would either
+absent in all four of these inputs. Nor does OML-26's "with or without a
+separator" reach in here: it is a top-level rule, and inside a delimiter pair a
+token where the grammar does not allow one is `parse.unexpected-token` whether
+or not a separator stands in front of it. Reporting them all one way would either
 send a reader inside a brace looking for a second document, or send a reader
 who has written one document too many looking for a bad token.
 
@@ -362,6 +397,11 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 | `"nan": 1` | valid; the edge `(nan, 1)` |
 | `null: 1` at top level | error on the leftover `:` as trailing content — `parse.trailing-content` at `1:5`, the same rule |
 | `a: { null: 1 }` | reserved-word error naming `null` |
+| `a: 1` newline `}` | error; the separator ends the edge and `}` cannot begin another — `parse.trailing-content` at `2:1` (OML-26) |
+| `a: 1; }` | error, identical in kind — `parse.trailing-content` at `1:7` |
+| `a: 1` newline `,` or `]` | error; neither token can begin an edge — `parse.trailing-content` at `2:1` |
+| `1` newline `}` | error; a scalar document followed by more text — `parse.trailing-content` at `2:1` (OML-25) |
+| `a: 1` newline `b: 2` | valid; `b` can begin an edge after a separator, so this is two edges, `[(a,1), (b,2)]` |
 | `tag: "x"` newline `tag: "y"` | `[(tag,"x"), (tag,"y")]` |
 | `b: [1, 2, 3]` | `[(b,1), (b,2), (b,3)]` |
 | `[]` in value position | error, empty array |

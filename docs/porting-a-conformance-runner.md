@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 273 vectors as of v0.21.0-beta — dispatched by operation
+JSON-vector suite — 282 vectors as of v0.22.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -21,24 +21,54 @@ all three existing ports did.
 
 ## What to build, in order
 
-**1. A referee.** Structural comparison, using *your own* implementation's
-parser and equality — never another port's. Document comparison needs
-nothing beyond your `Doc`/`Node` type's own equality, provided it's
-order-sensitive (order is data, per [§2.3](02-document-model.md#23-structural-invariants)
-D-1/D-3). Schema comparison needs two modes: `exact` (every record name and
-field must match — used for `normalize`/`prune`/`extract`, whose output
-naming is spec-determined) and `isomorphic` (same structure up to record
-renaming — used only for `infer`, since [§6.10](06-schema-algebra.md#610-infersamples)
-never normalizes its output). If your library doesn't yet expose an
-isomorphism check, you'll need to add one — it's a real, narrow addition (see
-`omnist`'s `Schema.isomorphic_to()`, added for exactly this), not a
-substitute for whatever your library already uses as its canonical
-"same schema" comparison.
+**1. A referee.** Comparison, using *your own* implementation's parser and
+equality — never another port's. Document comparison needs nothing beyond
+your `Doc`/`Node` type's own equality, provided it's order-sensitive (order is
+data, per [§2.3](02-document-model.md#23-structural-invariants) D-1/D-3).
+
+Schema comparison needs **three modes**, and *which one an operation uses
+depends on the track*. Two ports built one structural referee and reused it
+for everything; this table exists so a fourth does not.
+
+| Mode | What it does | Used by |
+|---|---|---|
+| `exact` | **Structural.** Re-parse both texts with your own OSD parser, then require every record name and every field's label, type and cardinality to match. Declaration order and formatting are *not* compared. | **Track 1** — `normalize`, `prune`, `extract` — and the referee self-test. [`conformance-harness.md`](conformance-harness.md) §4, §6. |
+| `canonical` | **Byte-exact string comparison.** Your implementation's canonical output text against the vector's expected text. No re-parse, no normalization of your own. | **Track 2** — every schema-valued `expect` field except `infer`'s and `infer_with_report`'s (table below). [§8.5.3](08-conformance-and-errors.md#853-operation-drivers): "compared byte for byte per §3.3/§5.9". |
+| `isomorphic` | **Structural up to a renaming of records.** | `infer` and `infer_with_report`'s `schema`, on both tracks — the one case where a structural comparison is the *correct* one, because [§6.10](06-schema-algebra.md#610-infersamples) never normalizes `infer`'s output and its record names are implementation-derived. |
+
+**`exact` and `canonical` are not interchangeable, in either direction.**
+Making `exact` byte-exact fails the referee self-test on purpose-built cases
+(`01-schema-exact-equal-different-field-order` and
+`07-schema-exact-equal-different-env-declaration-order` are *meant* to compare
+equal). Using `exact` for Track 2 passes vectors a formatting bug should fail:
+a structural comparison re-parses both sides, so two texts that differ
+byte for byte — wrong indentation, wrong join character, wrong escaping, two
+fields swapped — can still parse to the same Schema and report green.
+TypeScript and Rust both shipped exactly that
+([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/issues/150),
+[omnist-rs#184](https://github.com/omnist-dev/omnist-rs/issues/184)); changing
+canonical OSD output's indentation, or `to_osd`'s join character, left every
+canonical-output vector green, which is also how
+[OSD-15](05-osd-grammar.md#59-canonical-output)'s escaping bug went unseen. Build `canonical` as its
+own comparison next to `exact`, used only by the Track 2 runner. And do not
+overcorrect the other way: `infer` output is *not* canonical, so comparing it
+byte for byte fails correct implementations over record names §6.10 never
+fixed.
+
+If your library doesn't yet expose an isomorphism check, you'll need to add
+one — it's a real, narrow addition (see `omnist`'s `Schema.isomorphic_to()`,
+added for exactly this), not a substitute for whatever your library already
+uses as its canonical "same schema" comparison.
 
 Prove the referee trustworthy **before** it judges anything: port the
 10-case self-test under `conformance/fixtures/_referee-self-test/` and get
 it passing first. All three existing ports did this as their literal step
-one.
+one. The self-test covers `exact` and `isomorphic` only: `canonical` is a string
+comparison and has no fixtures there, so prove it with a mutation of your own
+instead — change one detail of your canonical output (an indentation width, the
+join character, one escape, the order of two fields) and confirm at least one
+Track 2 vector goes red. A `canonical` comparison that survives that mutation is
+a structural one under another name.
 
 **2. Track 1's fixture runner.** Walk `conformance/fixtures/`'s
 per-operation directories, invoke each operation (CLI or direct library
@@ -49,7 +79,62 @@ each vector's `operation` field per [§8.5.3](08-conformance-and-errors.md#853-o
 table, compare `expect` against your result per
 [§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching)'s rules
 (message text never compared; diagnostics compare as a set of `(path,
-code)`, never severity; no partial matching).
+code)`, never severity; no partial matching), with the mode each operation's
+schema-valued or document-valued field needs, from the table under "Which
+comparison each operation needs" below.
+
+## Which comparison each operation needs
+
+Every row cites the text that requires it; nothing here is a requirement of
+this page's own. Message text is never compared in either track
+([§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching) rule 1).
+
+### Track 1 — fixtures
+
+Source: [`conformance-harness.md`](conformance-harness.md) §2 (contract), §3
+(fixture shapes), §4 (comparison), §6 (self-test).
+
+| Operation | What is compared | Mode |
+|---|---|---|
+| `write` | output OML against `expected.oml` | Document equality: read both with your own reader, order-sensitive (§4 `compare_document`) |
+| `normalize`, `prune` | output OSD against `expected.osd` | `exact` (§4) |
+| `extract` | on success `expected/output.osd`; `expected/ok.txt` either way | `exact` (§4) |
+| `infer` | on success `expected/output.osd`; `expected/ok.txt` either way | `isomorphic` (§4) |
+| `validate` | `expected/ok.txt`; on failure `expected/diagnostics.json` | paths; `code` is informational until §9.3 reads "yes" for every implementation (§2, the `lint` findings note) |
+| `materialize` | `expected/ok.txt`; on success `expected/output.oml`, on failure `expected/diagnostics.json` | Document equality; failure as `validate` |
+| `is_empty`, `compatible_with`, `equivalent` | `expected.txt`, a boolean | equality |
+| `lint` | `expected.json` findings | `severity` and `location` exactly; `code` informational (§2) |
+
+### Track 2 — JSON vectors
+
+Source: [§8.5.3](08-conformance-and-errors.md#853-operation-drivers) (drivers),
+§8.5.2 (diagnostics matching), §8.5.4 (document encoding). For a **failing**
+vector, every operation alike: `ok` is `false` and `diagnostics` is compared as
+a **set** of `(path, code)` pairs — every expected pair present, none extra
+(§8.5.2 rules 2 and 3, E-17), severity never compared. Paths are compared byte
+for byte (E-9, E-11). Rule 4's code-agnostic mode is the one permitted
+relaxation, and the run MUST say it was used.
+
+| `operation` | `expect` fields on success | What a runner MUST compare, and how |
+|---|---|---|
+| `parse` | `ok`, `document`; `diagnostics` on the XML vectors that read a dropped attribute or namespace | `document`: Document equality, order-sensitive (§8.5.4, D-1/D-3). If the vector lists `diagnostics`, they are compared as a `(path, code)` set and an unlisted one is unexpected (§8.3.8, E-5, E-17 rule 3). |
+| `parse_schema` | `ok`; `schema` only when the vector pins round-trip fidelity | `schema` present: **`canonical`**, byte for byte (§8.5.3, §3.3/§5.9). Absent: acceptance only. |
+| `validate` | `ok` | `ok`; on failure the `(path, code)` set. |
+| `materialize` | `ok`, `document` | `document`: Document equality; on failure the `(path, code)` set. |
+| `write` | `ok`, `text`; `diagnostics` MAY accompany a success (`format.temporal-stringified`, `format.interleaving-lost`) | `text`: byte for byte, with §8.5.3 E-18's whitespace rule for XML; `diagnostics` as a `(path, code)` set. On failure the `(path, code)` set. The `strict` key some `write` vectors carry in `input` selects strict mode ([§8.3.9](08-conformance-and-errors.md#839-write)). |
+| `compatible_with`, `equivalent` | `result` | the boolean. |
+| `is_empty` | `empty` | the boolean. |
+| `normalize`, `prune` | `schema` | **`canonical`** (§8.5.3; §9.2: "compared as canonical OSD text byte for byte"). |
+| `extract` | `ok`, `schema` | **`canonical`**: `extract` ends by delegating to `normalize` ([§6.9](06-schema-algebra.md#69-extracts-keep) step 5), and §9.2 lists `extract` beside `normalize`/`prune`. On failure the `(path, code)` set (`algebra.extract-invalidates-root`). |
+| `infer` | `ok`, `schema` | **`isomorphic`** ([§6.10](06-schema-algebra.md#610-infersamples): output never normalized). On failure the `(path, code)` set. |
+| `infer_with_report` | `ok`, `schema`, `fallbacks` | `schema`: **`isomorphic`**. `fallbacks`: a list of `{location, reason}`, always present on success and empty when nothing was opened (§8.5.3); compare it, empty included — a runner that ignores it passes an implementation that never reports. `reason` is one of the two spellings §6.10 fixes, so it is not message text under rule 1. §8.5.3 does not say whether the list is compared as a sequence or a set, and no vector holds more than one entry. |
+| `lint` | `ok`, `findings` | `ok`, and each finding's `code`, `severity` and `location` (§8.5.3); no `message`. Failure vectors carry `ok: false` and `findings` too, not `diagnostics`. |
+| `schema_from_document`, `parse_schema_oml` | `ok`, `schema` | **`canonical`** (§8.5.3, same comparison as `parse_schema`). On failure the `(path, code)` set. |
+| `schema_to_document` | `ok`, `document` | Document equality, order-sensitive (§8.5.3, §8.5.4). |
+| `write_schema_oml` | `ok`, `text` | byte for byte as OML text (§8.5.3, same rule as `write`). |
+
+**Read-side vectors** (`parse`, `parse_schema`, `parse_schema_oml`) take their
+source as `text` or as `bytes_hex`, exactly one (E-27; see the section below).
 
 **A trap specific to temporal scalars, found the hard way (omnist-spec#51).**
 A vector's `expect.document` `value` field for a `date`/`time`/`datetime`
@@ -245,7 +330,7 @@ therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "273 pass" and "273 pass,
+note, an issue — say the mode alongside the count. "282 pass" and "282 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure

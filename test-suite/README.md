@@ -182,6 +182,15 @@ Four rules, all normative, all from chapter 8:
    mode for implementations that have not adopted the chapter 8 code taxonomy —
    which today is all of them. A run must state which mode produced it.
 
+These four rules cover `diagnostics`. How the other `expect` fields compare is
+per operation: a Document structurally and order-sensitively, schema text either
+**`canonical`** (byte for byte — `parse_schema`'s `schema`, `normalize`,
+`prune`, `extract`, `schema_from_document`, `parse_schema_oml`) or, for `infer`
+and `infer_with_report`, **`isomorphic`**. Track 1's structural `exact` mode is a
+third comparison and is not used here. The list of what each operation must
+compare is in
+[Porting a Conformance Runner](../docs/porting-a-conformance-runner.md#which-comparison-each-operation-needs).
+
 **A code-agnostic run passes vectors the implementation does not really
 satisfy.** A diagnostic with the right `ok` and the right position but the
 wrong code reports green and nothing in the run says otherwise. Rule 4's "a
