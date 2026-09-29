@@ -88,12 +88,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "R",
+            "path": "$.record[0].field[0].label",
             "code": "schema.invalid-type"
           }
         ]
       },
-      "comment": "E.10: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a general Schema-construction code defined in chapter 8, not owned by this extension."
+      "comment": "E.10: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a general Schema-construction code defined in chapter 8, not owned by this extension. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; no port runs it (every port skips OSD-OML), so no port result changes. The wrong-kind value is `label` on the first `field` of the first `record`, so `$.record[0].field[0].label`, the same shape as the sibling `$.record[0].field[0].type.kind` vector."
     },
     {
       "name": "extensions-osd-oml/parse-errors/empty-field-label-is-invalid",
@@ -259,12 +259,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "R.a",
+            "path": "$.record[0].field[0].bogus",
             "code": "schema.unknown-key"
           }
         ]
       },
-      "comment": "8.3.3: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. `schema.unknown-key` is defined in chapter 8 as a general Schema-construction rule, with no OSD-text analog since its grammar has no way to write a stray key at all."
+      "comment": "8.3.3: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. `schema.unknown-key` is defined in chapter 8 as a general Schema-construction rule, with no OSD-text analog since its grammar has no way to write a stray key at all. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; no port runs it (every port skips OSD-OML), so no port result changes. The unrecognized key is `bogus` on the first `field` of the first `record`, so `$.record[0].field[0].bogus`, the same shape as the sibling `$.record[1].field[0].type.nullable` unknown-key vector."
     },
     {
       "name": "extensions-osd-oml/parse-errors/missing-required-key-is-invalid",
@@ -278,12 +278,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "R.a",
+            "path": "$.record[0].field[0]",
             "code": "schema.missing-key"
           }
         ]
       },
-      "comment": "8.3.3: `field.type` is [1,1] (E.8) but absent here entirely. `schema.missing-key` is a general Schema-construction rule with no OSD-text analog -- OSD's grammar has no production for a field with no type, so this case cannot be written in OSD text at all."
+      "comment": "8.3.3: `field.type` is [1,1] (E.8) but absent here entirely. `schema.missing-key` is a general Schema-construction rule with no OSD-text analog -- OSD's grammar has no production for a field with no type, so this case cannot be written in OSD text at all. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; no port runs it (every port skips OSD-OML), so no port result changes. The absent key is `type`, and E-12 roots the path at the node the violation occurs on, not at the missing key -- its own example is `$.record[0]` for a record node missing its `name`, not `$.record[0].name` -- so the path is the field node that lacks `type`: `$.record[0].field[0]`."
     },
     {
       "name": "extensions-osd-oml/parse-errors/invalid-scalar-name-is-invalid",
