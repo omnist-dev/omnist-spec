@@ -320,7 +320,9 @@ token can: not `}`, `]`, `,`, `:`, `{`, `[`, and not any scalar-only token
   §4.8's table has always carried; `a: 1 }` and `a: 1 ,` fail at `1:6`.
 - **A token that cannot begin an edge is leftover even after a separator.**
   `a: 1` newline `}` fails at `2:1` and `a: 1; }` at `1:7`; `a: 1` newline `,`
-  and `a: 1` newline `]` fail at `2:1`, and so does `a: 1` newline `5`. The
+  and `a: 1` newline `]` fail at `2:1`, and so do `a: 1` newline `5`, `nan`,
+  `{`, `[2]` and `:`; so does `a: {b: 1}` newline `}`, whose own braces are
+  balanced, so OML-27 does not apply. The
   separator is a legal end to the edge, and after it the document may already be
   over; the `}` is then content after that end, which is what the principle
   above says `parse.trailing-content` is. It is **not** `parse.unexpected-token`
@@ -347,6 +349,12 @@ is owed at top level — OML-27 below turns on an *unclosed* `{` or `[`, and the
 is none here, so a top-level `}` is not the case it describes. Reporting these
 as `parse.unexpected-token` would split one rule in two on a judgement about
 intent that a parser cannot make and that no conformance vector could compare.
+
+**Not specified: a document that begins with a token that is neither a scalar
+nor a label.** OML-26 needs a complete edge and OML-25 a complete scalar, so
+for input such as `}` alone no document has begun and neither rule applies;
+this specification does not say which code it gets. The ports' current
+behaviour is recorded in DIV-7 (§9.4), and it is a fact about them, not a rule.
 
 **OML-27. Inside `{...}` or `[...]` the same missing separator is
 `parse.unexpected-token`.** Nothing has ended there: a closing `}` or `]` is

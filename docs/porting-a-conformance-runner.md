@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 282 vectors as of v0.22.0-beta — dispatched by operation
+JSON-vector suite — 287 vectors as of v0.22.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -34,7 +34,7 @@ for everything; this table exists so a fourth does not.
 |---|---|---|
 | `exact` | **Structural.** Re-parse both texts with your own OSD parser, then require every record name and every field's label, type and cardinality to match. Declaration order and formatting are *not* compared. | **Track 1** — `normalize`, `prune`, `extract` — and the referee self-test. [`conformance-harness.md`](conformance-harness.md) §4, §6. |
 | `canonical` | **Byte-exact string comparison.** Your implementation's canonical output text against the vector's expected text. No re-parse, no normalization of your own. | **Track 2** — every schema-valued `expect` field except `infer`'s and `infer_with_report`'s (table below). [§8.5.3](08-conformance-and-errors.md#853-operation-drivers): "compared byte for byte per §3.3/§5.9". |
-| `isomorphic` | **Structural up to a renaming of records.** | `infer` and `infer_with_report`'s `schema`, on both tracks — the one case where a structural comparison is the *correct* one, because [§6.10](06-schema-algebra.md#610-infersamples) never normalizes `infer`'s output and its record names are implementation-derived. |
+| `isomorphic` | **Structural up to a renaming of records.** | `infer` and `infer_with_report`'s `schema` (stated for Track 1 in `conformance-harness.md` §4; §8.5.3 states no comparison for Track 2's, and the same reasoning applies) — the one case where a structural comparison is the *correct* one, because [§6.10](06-schema-algebra.md#610-infersamples) never normalizes `infer`'s output and its record names are implementation-derived. |
 
 **`exact` and `canonical` are not interchangeable, in either direction.**
 Making `exact` byte-exact fails the referee self-test on purpose-built cases
@@ -45,8 +45,8 @@ a structural comparison re-parses both sides, so two texts that differ
 byte for byte — wrong indentation, wrong join character, wrong escaping, two
 fields swapped — can still parse to the same Schema and report green.
 TypeScript and Rust both shipped exactly that
-([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/issues/150),
-[omnist-rs#184](https://github.com/omnist-dev/omnist-rs/issues/184)); changing
+([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/pull/150),
+[omnist-rs#184](https://github.com/omnist-dev/omnist-rs/pull/184)); changing
 canonical OSD output's indentation, or `to_osd`'s join character, left every
 canonical-output vector green, which is also how
 [OSD-15](05-osd-grammar.md#59-canonical-output)'s escaping bug went unseen. Build `canonical` as its
@@ -127,7 +127,7 @@ relaxation, and the run MUST say it was used.
 | `normalize`, `prune` | `schema` | **`canonical`** (§8.5.3; §9.2: "compared as canonical OSD text byte for byte"). |
 | `extract` | `ok`, `schema` | **`canonical`**: `extract` ends by delegating to `normalize` ([§6.9](06-schema-algebra.md#69-extracts-keep) step 5), and §9.2 lists `extract` beside `normalize`/`prune`. On failure the `(path, code)` set (`algebra.extract-invalidates-root`). |
 | `infer` | `ok`, `schema` | **`isomorphic`** ([§6.10](06-schema-algebra.md#610-infersamples): output never normalized). On failure the `(path, code)` set. |
-| `infer_with_report` | `ok`, `schema`, `fallbacks` | `schema`: **`isomorphic`**. `fallbacks`: a list of `{location, reason}`, always present on success and empty when nothing was opened (§8.5.3); compare it, empty included — a runner that ignores it passes an implementation that never reports. `reason` is one of the two spellings §6.10 fixes, so it is not message text under rule 1. §8.5.3 does not say whether the list is compared as a sequence or a set, and no vector holds more than one entry. |
+| `infer_with_report` | `ok`, `schema`, `fallbacks` | `schema`: **`isomorphic`**. `fallbacks`: a list of `{location, reason}`, always present on success and empty when nothing was opened (§8.5.3); compare it, empty included — a runner that ignores it passes an implementation that never reports. `reason` is one of the two spellings §6.10 fixes, so it is not message text under rule 1. `location` is `RecordName.label` (§6.10) and `infer`'s record names are implementation-derived, so whether `location` is compared exactly or modulo the record renaming is not settled by the text; the vectors' entries look like `Root.id`. Nor does §8.5.3 say whether the list is compared as a sequence or a set, and no vector holds more than one entry. |
 | `lint` | `ok`, `findings` | `ok`, and each finding's `code`, `severity` and `location` (§8.5.3); no `message`. Failure vectors carry `ok: false` and `findings` too, not `diagnostics`. |
 | `schema_from_document`, `parse_schema_oml` | `ok`, `schema` | **`canonical`** (§8.5.3, same comparison as `parse_schema`). On failure the `(path, code)` set. |
 | `schema_to_document` | `ok`, `document` | Document equality, order-sensitive (§8.5.3, §8.5.4). |
@@ -330,7 +330,7 @@ therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "282 pass" and "282 pass,
+note, an issue — say the mode alongside the count. "287 pass" and "287 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure

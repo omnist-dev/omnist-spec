@@ -446,7 +446,7 @@ recoverable.
 
 **The path is `1:1` always: a fixed value, not a computed position.** Every
 other `parse.*` path is a `line:col` position in the decoded text, its column
-counted in code points ([§8.4](08-conformance-and-errors.md#84-paths), E-28).
+counted in code points for OML and OSD ([§8.4](08-conformance-and-errors.md#84-paths), E-28).
 D-14's is not, because what failed is the decoding of the input *as a whole* —
 the diagnostic is raised before any position in the decoded text exists to be
 computed. Taking the offending byte's own position instead would require this

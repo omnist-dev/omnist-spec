@@ -434,7 +434,7 @@ Document path to descend into. The format is `line:col`, both 1-based:
 14:8                     line 14, column 8
 ```
 
-- **E-28.** **`col` is the number of Unicode code points (scalar values)
+- **E-28.** **`col` is the number of Unicode code points
   before the failing character on its line, plus one.** It is not a count of
   UTF-8 bytes and not a count of UTF-16 code units, so a character outside the
   ASCII range advances it by exactly one, whatever its encoded width: in
@@ -452,16 +452,20 @@ Document path to descend into. The format is `line:col`, both 1-based:
   `CR` is not a line break in either grammar — OML's `newline` does not admit it
   and OSD's `ws` treats it as ordinary whitespace, with comments running to the
   next `LF` in both — so it never advances `line`, and where a grammar admits it
-  at all it is one code point of the column like any other character.
+  at all it is one code point of the column like any other character. **What
+  is not specified** is which position an implementation reports for a lone
+  `CR` where OML rejects it, the `CR` itself or the character after it; the
+  ports differ (DIV-7), and this section does not choose.
 - The origin is the text the grammar sees: a leading `U+FEFF` that
   [D-15](02-document-model.md#25-encoding) strips is not counted, which is what
   D-21's "computed on the text that remains" already says.
 
-E-28 and E-29 apply to every text-position path, `parse.*` on every surface.
-They fix the *unit* of a position. Which character a codec's own parser blames
-for a `parse.codec-syntax` failure — the one it cannot read, or the one after
-it — is that parser's business and this section does not settle it; only D-21's
-`1:1` is fixed.
+E-28 and E-29 fix the *unit* of a position in **OML and OSD text**, the two
+grammars this section can speak for. They are not yet stated for the codecs:
+which character a codec's own parser blames for a `parse.codec-syntax` failure,
+and how its column is counted, is not settled here and the ports differ
+([omnist-spec#114](https://github.com/omnist-dev/omnist-spec/issues/114) is the
+open issue); only D-21's `1:1` and D-14's `1:1` are fixed.
 
 **`parse.invalid-encoding` is the one `parse.*` code whose path is a fixed
 value rather than a computed one: it is always `1:1`.** The rule behind it,
@@ -668,8 +672,10 @@ for byte" name the *canonical* comparison: the implementation's canonical output
 text against the expected text, with no re-parse. `infer` and
 `infer_with_report` are the one place a schema is **not** compared that way:
 [§6.10](06-schema-algebra.md#610-infersamples) never normalizes `infer`'s
-output and its record names are implementation-derived, so those two compare up
-to a renaming of records. The Track 1 fixtures' `exact` mode is a third,
+output and its record names are implementation-derived, and
+[conformance-harness.md §4](conformance-harness.md) compares `infer` output up
+to a renaming of records for that reason; this section itself states no
+comparison for their `schema`. The Track 1 fixtures' `exact` mode is a third,
 structural comparison that Track 2 does not use. The per-operation list, for
 both tracks, is in
 [Porting a Conformance Runner](porting-a-conformance-runner.md#which-comparison-each-operation-needs).
@@ -841,7 +847,8 @@ tracking convergence, which is the whole point of
 required:**
 
 - **Not yet implemented.** The operation or feature doesn't exist yet in
-  this implementation. Temporary by nature — expected to become a `pass`
+  this implementation, or the rule or behaviour a vector pins has not been
+  adopted yet. Temporary by nature — expected to become a `pass`
   once the work lands. No ledger entry is required for this category on its
   own, though the usual issue tracker SHOULD have something open for it.
 - **E-21. Documented divergence.** The vector's outcome depends on a capability
