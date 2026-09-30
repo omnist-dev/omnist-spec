@@ -146,9 +146,9 @@ extension (§9.6).
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI | yes, via the CLI | yes, via `omnist-cli` | yes, at the front of all six readers | yes, on stdin |
 | Conformance (Track 2 JSON vectors, 287 at v0.22.0-beta, all compared as `(path, code)` sets) | 247 pass / 0 fail / 40 skip | 227 pass / 0 fail / 60 skip | 247 pass / 0 fail / 40 skip | 253 pass / 0 fail / 34 skip | 253 pass / 0 fail / 34 skip |
-| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (harness headline 282/0/34, which folds in Track 2 and the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
+| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (Java's Track 1 headline is 29/0/0: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110); its whole-harness headline including Track 2 is 282/0/34) |
 | Fuzz testing | yes | yes | yes | yes | yes |
-| Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
+| Test coverage | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.66% line / 99.19% branch measured, gated at 99.6% / 99.1% (about 1 line and 2 branches of headroom, `docs/limitations.md`) |
 
 The Track 2 row above is the v0.22.0-beta suite, 287 vectors. v0.23.0-beta added
 11 vectors (298 in all); `DIV-8` records how each port fares on those.
