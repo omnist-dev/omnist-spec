@@ -305,8 +305,21 @@ For a candidate node `a`:
   each alias materializes, exactly as for an anchored node; the absence of an
   anchor changes nothing about its `E`.
 - A **mapping written inline as a merge source** (YAML `<<: {a: 1}`) is a
-  candidate. Its slots are written where it appears, it contributes `W - 1`
-  to the referring mapping like any merge source, and its own `E` is 1.00.
+  candidate. In the referrer's `S`, the `<<` entry's value counts as one slot,
+  exactly as an alias there does, and the inline mapping's own written values
+  add their slots on top; the inline container is that one slot, not a second.
+  In `W` the inline container is flattened away like any merge source's, so
+  the inline mapping contributes `W - 1`. Worked, for
+  `t: {<<: {a: 1}, z: 1}`:
+
+  ```
+  W(t) = 1 + 1 + 1 = 3     S(t) = 4  (t, the << slot, a, z)     E(t) = 0.75
+  ```
+
+  The inline mapping's own `E` is computed like any candidate's, over its own
+  subtree (`W = S = 2` for `{a: 1}`): it is 1.00 only when it contains no
+  aliases. Aliases written inside it add to its `W` and count one slot each in
+  its `S`, so it can exceed the maximum on its own.
   The sequence carrying a merge key's aliases is not a candidate: it is a
   syntactic carrier and holds no slot (below).
 - A container nested inside another candidate is checked on its own **and**
@@ -420,9 +433,9 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   and a wrapped `W` can compare *under* the maximum, turning the attack input
   into an accept. `W` accumulation MUST be saturating (or arbitrary-precision)
   regardless of when the check runs, because an unanchored container can carry
-  a `W` as large as an anchored one. An implementation that does defer the check MUST otherwise
-  guard against that overflow, with a checked or saturating accumulation or an
-  arbitrary-precision `W`.
+  a `W` as large as an anchored one. An implementation that does defer the
+  check MUST otherwise guard against that overflow, with a checked or
+  saturating accumulation or an arbitrary-precision `W`.
 - **D-20.** An anchored definition that refers to itself, directly or through
   a cycle of other definitions, has unbounded `W` and MUST be rejected under
   this limit, with `document.limit.alias-expansion` — the same code as any
@@ -457,31 +470,41 @@ laughs" attack is an XML attack first — but the data-XML profile in
 reaches the Document builder. That is a stronger rule than this one, not a
 gap in it, and it is deliberately not restated here: one refusal per hazard.
 
-**On the reference default of 50.** It is calibrated against `E` as defined
-above, measured on real documents. Legitimate anchored YAML clusters far
-below it: a merge-key configuration of the `<<: *defaults` kind that
-docker-compose and GitLab CI use reads `E = 1.00` for the *anchored
-defaults block* at every size tested, up to 36 KB, because a merge key
-flattens into the referring mapping rather than nesting under it;
-anchor-to-anchor chains and scalar-constant reuse read at most 5.75.
+**On the reference default of 50.** It was first calibrated against `E` as
+measured on anchored nodes only, where legitimate YAML read far below it: a
+merge-key configuration of the `<<: *defaults` kind that docker-compose and
+GitLab CI use reads `E = 1.00` for the *anchored defaults block* at every size
+tested, up to 36 KB, because a merge key flattens into the referring mapping
+rather than nesting under it; anchor-to-anchor chains and scalar-constant
+reuse read at most 5.75. That is no longer the whole picture, because the
+container rule also measures the mappings that do the merging.
 
 **A mapping that merges a large anchor does not read 1.00, anchored or not.**
 Its `E` is about `(keys + 2) / 3`: `job: {<<: *base, script: x}` writes three
-slots (the container, `<<`, `script`) and materializes `keys + 2`, so with 60
-base keys `E(job) = 20.67` and with 150 it is `50.67` and is rejected at the
-default. That is intended. The candidate rule checks every container, so a
-mapping that writes almost nothing of its own while pulling in a large block
-is exactly the ratio D-18 bounds; the earlier "1.00 at every size" reading
-held only because unanchored referrers were never measured. An input whose
-merging mappings each carry enough local keys of their own stays well under
-the limit, and an implementation MAY raise the maximum under D-10 and D-11
-for a workload that needs it. The amplifying shape — nested anchors, each level referring to the
-previous one several times — crosses into dangerous territory around
-`E = 170` and climbs steeply from there. 50 sits roughly 9× above the worst
-legitimate document measured and roughly 3.4× below the weakest dangerous
-one, and it fires well before the input grows large enough to reach the node
-cap. An implementation MAY configure a different value, subject to D-10 and
-D-11 like any other limit in §2.4: finite, and documented.
+slots (the container, `<<`, `script`) and materializes `keys + 2`. Measured
+under the container rule:
+
+- 100 services each merging a 20-key defaults block: worst `E = 7.33`.
+- 100 services each merging a 60-key defaults block: worst `E = 20.67`.
+- a `job` merging a 150-key base and writing one key of its own: `E = 50.67`,
+  rejected at the default.
+- a 100-key block aliased 100 times at the document root: `E = 50.50`,
+  rejected at the default.
+
+So realistic merges reach 20 and beyond, and the largest shapes reach the
+limit. That is intended: a mapping that writes almost nothing of its own while
+pulling in a large block is exactly the ratio D-18 bounds, and the earlier
+"1.00 at every size" reading held only because unanchored referrers were never
+measured. A workload that legitimately needs more MAY raise the maximum; that
+is the documented escape hatch under D-10 and D-11, not a defect.
+
+The amplifying shape — nested anchors, each level referring to the previous
+one several times — crosses into dangerous territory around `E = 170` and
+climbs steeply from there. 50 sits roughly 3.4× below the weakest dangerous
+shape measured, and it fires well before the input grows large enough to
+reach the node cap. An implementation MAY configure a different value,
+subject to D-10 and D-11 like any other limit in §2.4: finite, and
+documented.
 
 ---
 

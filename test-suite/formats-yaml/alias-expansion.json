@@ -1386,6 +1386,164 @@
         ]
       },
       "comment": "Byte-identical input to the previous vector with the declared maximum lowered to 4: E(job) = 4.67 exceeds it, so the unanchored job mapping is rejected. The real-world analogue is 150 base keys against the default 50 (E = 50.67). Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/inline-merge-source-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "text": "base: &b {k1: 1, k2: 2, k3: 3}\nt: {<<: {x1: *b, x2: *b}, z: 1}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "k1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "x1",
+                    {
+                      "edges": [
+                        [
+                          "k1",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "k2",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "k3",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "x2",
+                    {
+                      "edges": [
+                        [
+                          "k1",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "k2",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "k3",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "z",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Boundary pair, accepted half, for a mapping written inline as a merge source. base has 3 scalars: W=S=4. The inline mapping {x1: *b, x2: *b} has W = 1 + 4 + 4 = 9 and S = 1 + 2 = 3 (its container and two aliases), E = 3.00, exactly the declared maximum of 3, which MUST succeed. t contributes the inline mapping as W - 1 = 8: W(t) = 1 + 8 + 1 = 10, S(t) = 5 (t, the << slot that is the inline container, x1, x2, z), E(t) = 2.00. Root: W = 1 + 4 + 10 = 15, S = 1 + 4 + 5 = 10, E = 1.50. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/inline-merge-source-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "text": "base: &b {k1: 1, k2: 2, k3: 3, k4: 4}\nt: {<<: {x1: *b, x2: *b}, z: 1}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Boundary pair, rejected half: the same shape with 4 base scalars. base: W=S=5. The inline mapping: W = 1 + 5 + 5 = 11, S = 3, E = 3.67 against a declared maximum of 3. t: W = 1 + 10 + 1 = 12, S = 5, E = 2.40. Root: W = 1 + 5 + 12 = 18, S = 1 + 5 + 5 = 11, E = 1.64. Only the inline mapping exceeds the maximum, so it is what pins the rule that an inline merge source is a candidate. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
     }
   ]
 }

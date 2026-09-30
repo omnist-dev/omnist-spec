@@ -22,9 +22,9 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
   anchored defaults block; a mapping that merges a large anchor has `E` of
   about `(keys + 2) / 3`, so `job: {<<: *base, script: x}` is accepted with 60
   base keys and rejected with 150 at the default 50. Stated as intended.
-- **Eight new vectors**, taking the suite to **310**, all in
+- **Ten new vectors**, taking the suite to **312**, all in
   `formats-yaml/alias-expansion.json`: two unanchored rejections, a root-only
-  rejection, an unanchored boundary pair, a shared-defaults false-positive
+  rejection, an unanchored boundary pair, an inline-merge-source boundary pair, a shared-defaults false-positive
   guard and a large-anchor merge accepted and rejected by declared maximum.
 - **Ledger `DIV-3` updated:** D-18 now also requires the container check;
   omnist-go#124 implements the anchored-only version and no port implements
