@@ -152,6 +152,8 @@ extension (§9.6).
 
 The Track 2 row above is the v0.22.0-beta suite, 287 vectors. v0.23.0-beta added
 11 vectors (298 in all); `DIV-8` records how each port fares on those.
+v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port fares on
+those.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -196,7 +198,7 @@ changelog cannot silently come to mean something else. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
 when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
 fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
-fourteen. `DIV-3`, `DIV-5` and `DIV-8` are live. This note
+fourteen. `DIV-3`, `DIV-5`, `DIV-8` and `DIV-9` are live. This note
 lives here, in the preamble, rather than inside any single entry — an entry is
 deleted when it closes, and a retirement note that rides along inside one
 disappears with it.
@@ -317,14 +319,46 @@ one skips it under E-20 until the same change that fixes it drops the skip.
 report `parse.codec-syntax` with some `line:col` (E-11, E-31), Go to fix
 OML-28 and the XML position, and every runner to implement E-32.
 
-**Not pinned by any vector.** A JSON candidate, `[1, 2`, was dropped: Go reports
-`document.unlabeled-element` for it, not `parse.codec-syntax`. And `a: [1`,
-newline, `]` and `a: [1`, newline, `,2]`, on which Python, TypeScript, Rust and
-Java accept the document and Go reports `parse.separator-in-array` at `2:1`:
-§4.3.1's last rule says separators are otherwise insignificant inside `[...]`,
-but `grammars/oml.abnf` gives the first element no trailing `SEP`. These two
-cases are outside OML-28 and it does not specify them; they are open as
-[omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117).
+**Not pinned by any vector.** A JSON candidate, `[1, 2`, was dropped: Go
+reports `document.unlabeled-element` for it, not `parse.codec-syntax`. The
+other case recorded here, a newline or `;` before `,` or `]`, is now specified
+(OML-28, `grammars/oml.abnf`) and pinned by four vectors; `DIV-9` records the
+rollout.
+
+**DIV-9. Four vectors new in v0.24.0-beta that Go fails today: a newline or `;` before `,` or `]` inside an array (OML-28, [omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117)).**
+The four are `oml-grammar/arrays/newline-before-closing-bracket-after-first-element-is-insignificant`
+(`a: [1`, newline, `]`), `newline-before-comma-after-first-element-is-insignificant`
+(`a: [1`, newline, `, 2]`), `newline-before-closing-bracket-after-later-element-is-insignificant`
+(`a: [1, 2`, newline, `]`) and `semicolon-before-closing-bracket-is-insignificant`
+(`a: [1;]`). This is a rollout gap, not a divergence any implementation intends
+to keep.
+
+**How it was measured.** At each port's default-branch tip on 2026-09-30, read
+only, from a scratch detached worktree: Python `e72ba20`, TypeScript `aee2311`,
+Rust `e07b19b`, Go `1de5e84` and Java `ac12dc1` (the same commits as `DIV-8`).
+Python and TypeScript through `format FILE --json`, Java through `format FILE
+--json`, Go through `omnist parse --from oml FILE`, Rust through its library
+(`omnist::oml::read_oml`). No port was measured through its conformance runner.
+
+| Vector input | Python | TypeScript | Rust | Go | Java |
+|---|---|---|---|---|---|
+| `a: [1` newline `]` | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
+| `a: [1` newline `, 2]` | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
+| `a: [1, 2` newline `]` | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
+| `a: [1;]` | pass | pass | pass | `1:7` `parse.separator-in-array` | pass |
+| `a: [1` newline `2]` (existing negative vector, control) | `2:1` `parse.separator-in-array` | same | same | same | same |
+
+Go fails all four, two more than the two cases #117 recorded: the third,
+`a: [1, 2` newline `]`, was valid under the previous ABNF as well, so Go
+diverged from the grammar there already, and `a: [1;]` fails at the `;`.
+Counting behaviour only, Python, TypeScript, Rust and Java fail 0 of the four
+and Go 4.
+
+**What a runner reports today.** A port that passes a vector is a pass; a port
+that fails one skips it under E-20 "not yet implemented", citing this entry, and
+the same change that fixes it drops the skip (E-22). No runner change is needed.
+**Remove this entry when every port passes all four**, which needs Go to treat a
+`SEP` before `,` or `]` as insignificant.
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded

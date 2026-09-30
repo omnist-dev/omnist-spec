@@ -179,10 +179,13 @@ elements MUST NOT themselves be arrays: there is nothing to nest into.
 
 Rules:
 
-- Comma is the only element separator. A newline or `;` inside `[...]` standing
-  where a comma was owed is an error: `parse.separator-in-array` when an
-  element follows it, `parse.unexpected-token` when nothing does
-  ([OML-28](#461-top-level-disambiguation)).
+- Comma is the only element separator. A newline or `;` standing where a comma
+  was owed is an error: `parse.separator-in-array` when an element follows it,
+  `parse.unexpected-token` when nothing does
+  ([OML-28](#461-top-level-disambiguation)). A newline or `;` before a `,` or
+  a `]`, after any element including the first, is not an error: it is
+  insignificant, so `a: [1` newline `]`, `a: [1` newline `, 2]`,
+  `a: [1, 2` newline `]` and `a: [1;]` are all valid.
 - A trailing comma before `]` is legal.
 - `[]` is an error, not a zero-edge expansion. An empty array and an absent
   label are the same Document, and OML does not offer two spellings for one
@@ -397,10 +400,12 @@ turns on the next significant token, in [§4.2.1](#421-separators)'s sense:
   where `,` or `]` was owed, which for an unterminated array is the end of
   input. `a: [1, 2` newline is `2:1`, `a: [1` newline is `2:1`, and
   `x: {a: [1, 2` newline `}` is `2:1`, the `}`.
-- **A `,` or `]`** is the delimiter that was owed. This rule does not apply and
-  does not specify these cases: whether a newline or `;` in front of a `,` or
-  `]` after an array's first element is accepted is open
-  ([omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117)).
+- **A `,` or `]`** is the delimiter that was owed, so the newline or `;` was
+  not standing in for anything. It is insignificant, after the first element
+  as after every later one (the `[SEP]` that follows each `array-element` in
+  `grammars/oml.abnf`): `a: [1` newline `]`, `a: [1` newline `, 2]`,
+  `a: [1, 2` newline `]` and `a: [1;]` are valid, each expanding to the
+  edges it would without the separator.
 
 **The code depends on what follows the run, never on whether a newline happens
 to precede the end of input.** `a: [1, 2` with a trailing newline and without
@@ -451,6 +456,9 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 | `b: [1, 2, 3]` | `[(b,1), (b,2), (b,3)]` |
 | `a: [1` newline `2]` | error; a newline where a comma was owed, followed by an element — `parse.separator-in-array` at `2:1` (OML-28) |
 | `a: [1;2]` | error, identical in kind — `parse.separator-in-array` at `1:7` |
+| `a: [1` newline `]` | valid; the newline is insignificant before `]`, so the one edge `(a,1)` (OML-28) |
+| `a: [1` newline `, 2]` | valid; insignificant before `,`, so `[(a,1), (a,2)]` (OML-28) |
+| `a: [1;]` | valid; `;` is insignificant before `]`, so `[(a,1)]` (OML-28) |
 | `a: [1, 2` newline | error; an unterminated array, nothing follows the newline — `parse.unexpected-token` at `2:1`, the end of input (OML-28) |
 | `[]` in value position | error, empty array |
 | `a: {}` | `[(a, [])]` |
