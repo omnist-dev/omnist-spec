@@ -424,6 +424,26 @@
         }
       },
       "comment": "The control for this file's two rejection vectors, and the reason the `bytes_hex` checker in tools/check_vectors.py deliberately does not require the bytes to decode: this one does. Two-, three- and four-byte sequences in one string (c3a9 e282ac f09f9880 -- U+00E9, U+20AC, U+1F600), so a reader that satisfies D-14 by rejecting anything multi-byte fails here rather than passing the pair above for the wrong reason. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
+    },
+    {
+      "name": "formats-json/syntax/missing-value-is-a-codec-syntax-error",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": }"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "E-31/E-32: malformed JSON. A value is required after the colon and the next character is `}`; no JSON parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col`: which character a codec blames is implementation-defined (E-31), so a runner compares the code and only that the path is a well-formed text position. Every other path in the suite is still compared byte for byte. Port status: DIV-8 (Sec9.4)."
     }
   ]
 }

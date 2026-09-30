@@ -30,6 +30,63 @@ BYTES_HEX_OPERATIONS = {"parse", "parse_schema", "parse_schema_oml"}
 
 HEX_DIGITS = set("0123456789abcdef")
 
+# Sec8.5.2's E-32: the one placeholder path a vector may use, and the one
+# place it may stand. Everything else in the suite is compared byte for byte.
+PATH_PLACEHOLDER = "line:col"
+PLACEHOLDER_CODE = "parse.codec-syntax"
+PLACEHOLDER_FORMATS = {"json", "yaml", "toml", "xml"}
+DOUBLED_BOM_TEXT = "﻿﻿"
+DOUBLED_BOM_HEX = "efbbbfefbbbf"
+
+
+def check_path_placeholder(rel: str, name: str, vec: dict) -> list[str]:
+    """E-32: `"line:col"` as a diagnostic's `path` means "compare the code,
+    not the path". Allowed only on a `parse.codec-syntax` entry of a `parse`
+    vector over json/yaml/toml/xml, as the vector's only diagnostic, and never
+    on D-21's doubled-mark input, whose `1:1` is fixed and stays compared.
+    """
+    errors: list[str] = []
+    expect = vec.get("expect")
+    diags = expect.get("diagnostics") if isinstance(expect, dict) else None
+    if not isinstance(diags, list):
+        return errors
+    # Typo guard: a path that is the placeholder in all but case or padding
+    # would otherwise pass silently as an ordinary, byte-compared path.
+    for d in diags:
+        path = d.get("path") if isinstance(d, dict) else None
+        if (isinstance(path, str) and path != PATH_PLACEHOLDER
+                and path.strip().lower() == PATH_PLACEHOLDER):
+            errors.append(
+                f"{rel}: {name!r} has path {path!r}, a near-miss of the "
+                f"placeholder {PATH_PLACEHOLDER!r} -- E-32 spells it exactly, "
+                f"lowercase, no surrounding whitespace"
+            )
+    marked = [d for d in diags
+              if isinstance(d, dict) and d.get("path") == PATH_PLACEHOLDER]
+    if not marked:
+        return errors
+    where = f"{rel}: {name!r} uses the path placeholder {PATH_PLACEHOLDER!r}"
+    inp = vec.get("input") if isinstance(vec.get("input"), dict) else {}
+    if vec.get("operation") != "parse":
+        errors.append(f"{where} on operation {vec.get('operation')!r} -- "
+                      f"E-32 allows it only on 'parse'")
+    if inp.get("format") not in PLACEHOLDER_FORMATS:
+        errors.append(f"{where} on format {inp.get('format')!r} -- E-32 "
+                      f"allows it only on {', '.join(sorted(PLACEHOLDER_FORMATS))}; "
+                      f"OML and OSD positions are pinned")
+    for d in marked:
+        if d.get("code") != PLACEHOLDER_CODE:
+            errors.append(f"{where} on code {d.get('code')!r} -- E-32 "
+                          f"allows it only on {PLACEHOLDER_CODE!r}")
+    if len(diags) != 1:
+        errors.append(f"{where} in a vector with {len(diags)} diagnostics -- "
+                      f"E-32 requires it to be the only one")
+    if (str(inp.get("text", "")).startswith(DOUBLED_BOM_TEXT)
+            or str(inp.get("bytes_hex", "")).startswith(DOUBLED_BOM_HEX)):
+        errors.append(f"{where} on a doubled leading mark -- D-21's 1:1 is "
+                      f"fixed and stays compared byte for byte")
+    return errors
+
 
 def check_input_form(rel: str, name: str, vec: dict) -> list[str]:
     """E-27: `text` and `bytes_hex` are mutually exclusive, and `bytes_hex`
@@ -145,6 +202,7 @@ def main() -> int:
                     errors.append(f"{rel}: {name!r} has no {field!r}")
 
             errors.extend(check_input_form(str(rel), name, vec))
+            errors.extend(check_path_placeholder(str(rel), name, vec))
 
     if errors:
         for err in errors:
@@ -158,7 +216,8 @@ def main() -> int:
     print(
         f"{total} vectors across {len(files)} files: valid JSON, no raw control "
         f"characters, unique names, required fields present, "
-        f"'bytes_hex' inputs well-formed (E-27)."
+        f"'bytes_hex' inputs well-formed (E-27), path placeholder only where "
+        f"E-32 allows it."
     )
     return 0
 

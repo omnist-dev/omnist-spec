@@ -42,7 +42,7 @@ Every diagnostic carries at least:
 
 | Code | Raised when |
 |---|---|
-| `parse.unexpected-token` | A token appears where the grammar does not allow it — inside `{...}` or `[...]`, or mid-edge; **not** content after the document has ended, which is `parse.trailing-content` |
+| `parse.unexpected-token` | A token appears where the grammar does not allow it — inside `{...}` or `[...]`, or mid-edge, including an unterminated array whose newline or `;` is followed by no element (OML-28); **not** content after the document has ended, which is `parse.trailing-content` |
 | `parse.trailing-content` | Content remains after the document has ended — after its single scalar (OML-25) or after a complete top-level edge (OML-26), **with or without a separator in front of it** |
 | `parse.unterminated-string` | A string is not closed before end of input |
 | `parse.invalid-escape` | An unrecognized backslash escape |
@@ -52,7 +52,7 @@ Every diagnostic carries at least:
 | `parse.bare-word` | A bare identifier in value position that is not `null`/`true`/`false` |
 | `parse.empty-array` | `[]` in OML value position |
 | `parse.nested-array` | An array element that is itself an array |
-| `parse.separator-in-array` | A newline or `;` used as an array separator |
+| `parse.separator-in-array` | A newline or `;` used as an array separator: it stands where a comma was owed **and an element follows it** (OML-28). With nothing following it the code is `parse.unexpected-token` |
 | `parse.leading-zero` | A `NUMBER`/`INTEGER` literal's integer part has a leading zero |
 | `parse.invalid-date` | A `DATE` or the date portion of a `DATETIME` is not a valid calendar date |
 | `parse.invalid-time` | A `TIME`, the time portion of a `DATETIME`, or a `tz-offset` is out of its valid clock range |
@@ -76,7 +76,11 @@ Inside `{...}` or `[...]` a closing delimiter is still owed, so the same
 missing separator is a token the grammar does not allow there and MUST be
 reported as `parse.unexpected-token`
 ([OML-27](04-oml-grammar.md#461-top-level-disambiguation)). Neither code is a
-general fallback for the other.
+general fallback for the other. One case inside `[...]` has a code of its own:
+a newline or `;` where a comma was owed, followed by an element, is
+`parse.separator-in-array`; followed by nothing an element could start, it is
+`parse.unexpected-token`
+([OML-28](04-oml-grammar.md#461-top-level-disambiguation)).
 
 **E-3.** **Six of these codes also cover OSD's own lexical stage**:
 `parse.unexpected-token`, `parse.trailing-content`,
@@ -400,7 +404,9 @@ it.
 ## 8.4 Paths
 
 **E-9.** A path locates a diagnostic. Paths are normative and MUST be byte-identical
-across implementations, because conformance vectors match on them.
+across implementations, because conformance vectors match on them. The one
+exception is the exact value of a `parse.codec-syntax` position, which is
+implementation-defined within the bound E-31 states.
 
 **Document paths** start at `$` and descend by label. A repeated label is
 disambiguated by a zero-based occurrence index in brackets.
@@ -461,11 +467,37 @@ Document path to descend into. The format is `line:col`, both 1-based:
   D-21's "computed on the text that remains" already says.
 
 E-28 and E-29 fix the *unit* of a position in **OML and OSD text**, the two
-grammars this section can speak for. They are not yet stated for the codecs:
-which character a codec's own parser blames for a `parse.codec-syntax` failure,
-and how its column is counted, is not settled here and the ports differ
-([omnist-spec#114](https://github.com/omnist-dev/omnist-spec/issues/114) is the
-open issue); only D-21's `1:1` and D-14's `1:1` are fixed.
+grammars this section can speak for. A codec's own parser blames a character of
+its own choosing, which E-31 settles.
+
+- **E-31.** **A `parse.codec-syntax` position is a real position inside the
+  input, and which one is implementation-defined.** Except for the one case
+  whose position this specification fixes — [D-21](02-document-model.md#25-encoding)'s
+  rejected second leading mark, `1:1` — a `parse.codec-syntax` diagnostic's
+  `path` MUST be a text-position path (E-11) that lies inside the input:
+  `line` at least 1 and at most one more than the number of `LF` characters
+  (E-29), and `col` at least 1 and at most one more than the number of code
+  points on that line, since the position just past the last character is where
+  a failure at end of input stands. Where the codec's library reports no
+  position at all, the implementation MUST report `1:1`; it MUST NOT omit the
+  diagnostic, omit its path, or report `0:0`, which is not a position.
+  **Which character the codec blames is implementation-defined.** The
+  libraries recover differently and this specification does not ask an
+  implementation to post-process their errors: for the JSON text
+  `{"a": "e", "b": x}`, whose `x` is column 17, the mainstream parsers blame
+  column 17 or column 18. A conformance runner therefore does not compare the
+  value ([E-32](#852-diagnostics-matching)). **E-28 still governs a column the
+  implementation converts itself** from an offset it holds; a column taken
+  straight from a library that counts in another unit is the library's, and the
+  only requirement on it is the bound above. **`1:1` is a valid answer for every
+input, and that is intended.** The placeholder checks that a position is
+present and well-formed, not that it is accurate: an implementation that
+reports `1:1` for every codec syntax error satisfies E-31 and E-32. The bound
+"inside the input" is a requirement on implementations that a runner MAY check
+(E-32b); the well-formedness pattern cannot. Nothing else changes: D-21's `1:1`
+  stays fixed and stays compared byte for byte, `parse.invalid-encoding` stays
+  `1:1` (D-14), and E-11 still requires a text position on every `parse.*`
+  diagnostic.
 
 **`parse.invalid-encoding` is the one `parse.*` code whose path is a fixed
 value rather than a computed one: it is always `1:1`.** The rule behind it,
@@ -637,11 +669,53 @@ Matching rules, all normative:
    set of paths. This is the mode implementations that have not yet adopted
    §8.3 run in. A run MUST state which mode produced its results.
 
+**E-32. A vector MAY give a `parse.codec-syntax` diagnostic's `path` as the
+placeholder `"line:col"`, meaning "compare the code; do not compare the path,
+only that it is a well-formed text position".** It exists for exactly one
+purpose: [E-31](#84-paths) makes the blamed character of a codec syntax error
+implementation-defined, so no single `path` value could be expected of every
+implementation.
+
+```json
+"expect": {
+  "ok": false,
+  "diagnostics": [
+    { "path": "line:col", "code": "parse.codec-syntax" }
+  ]
+}
+```
+
+- **E-32a. Where it is allowed.** The E-32 placeholder stands only on an entry whose `code` is
+  `parse.codec-syntax`, in a vector whose `operation` is `parse` and whose
+  `input.format` is `json`, `yaml`, `toml` or `xml`, and only when
+  `expect.diagnostics` has exactly one entry (a syntax error stops the read, so
+  one input yields one). It MUST NOT stand on any other code, on an OML or OSD
+  diagnostic, on a Document or Schema path, or on a vector pinning a fixed
+  position — D-21's second leading mark keeps its exact `1:1`. Anywhere else it
+  is a defect in the vector.
+- **E-32b. How it matches.** The E-32 entry is satisfied by a reported diagnostic with the
+  same `code` whose `path` is a well-formed text position: two decimal numbers
+  of at least 1, no sign, no leading zero, no whitespace, joined by `:` —
+  `^[1-9][0-9]*:[1-9][0-9]*$`. A runner MAY also check the bound in E-31 against
+  the vector's `input`; it MUST NOT compare the value any closer. A diagnostic
+  with another code, a missing path or a path such as `0:0` fails the vector.
+  Rules 2 and 3 above apply unchanged: the reported list is still a set with no
+  extra diagnostic.
+- **In code-agnostic mode** (rule 4) the code is not compared, so the entry is
+  satisfied by any reported diagnostic whose `path` is well-formed.
+- **Every other path in the suite stays compared byte for byte** (E-9). The
+  placeholder is a literal string that no real path can equal, so it is
+  unambiguous, and it relaxes one vector's one entry, not a rule about
+  codecs in general.
+- A runner that does not implement the placeholder fails these vectors: it
+  would compare the string `line:col` to a real path. Until it does it reports
+  them as E-20 "not yet implemented" skips, per [§9.4](09-divergence-ledger.md#94-known-open-divergences).
+
 ### 8.5.3 Operation drivers
 
 | `operation` | `input` | success `expect` |
 |---|---|---|
-| `parse` | `{format, text}` or `{format, bytes_hex}` (E-27) | `{ok, document}` |
+| `parse` | `{format, text}` or `{format, bytes_hex}` (E-27) | `{ok, document}`; on failure a `parse.codec-syntax` entry's `path` MAY be the placeholder `"line:col"` (E-32) |
 | `parse_schema` | `{text}` or `{bytes_hex}` (E-27) | `{ok}` — `schema: <canonical OSD text>` MAY additionally be present, compared byte for byte per §3.3/§5.9, for a vector specifically pinning declaration-order or formatting round-trip fidelity rather than mere acceptance |
 | `validate` | `{schema, document}` | `{ok}` |
 | `materialize` | `{schema, document}` | `{ok, document}` |

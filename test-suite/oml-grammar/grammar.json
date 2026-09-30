@@ -233,6 +233,146 @@
       "comment": "Comma is the only element separator inside [...]. A newline immediately after a real comma is legal and purely decorative (Sec4.3.1's fourth rule: separators and comments are otherwise insignificant inside [...]) -- this vector's original input mistakenly had a comma present (\"b: [1,\\n2, 3]\\n\"), which never exercised the illegal case its name claimed and was correctly flagged by the omnist-py session (omnist#284, closed not-a-bug) before implementation. This corrected input has NO comma between 1 and 2, so the newline is the only thing standing in for a separator, which is exactly the illegal case. Confirmed live: fails at line 2, col 1 with 'expected , or ] in array'."
     },
     {
+      "name": "oml-grammar/arrays/unterminated-array-then-newline-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1, 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): parse.separator-in-array needs a newline or `;` where a comma was owed AND an element after it. Here the newline is followed by nothing -- the end of input, at 2:1 -- so it is not 'used as an array separator' and the code is parse.unexpected-token at the token where `,` or `]` was owed. Position counted by hand: the text is `a: [1, 2` then one LF, so the end of input is line 2, column 1. Companion to the with-an-element vector arrays/newline-inside-array-is-an-error, which is separator-in-array at 2:1. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/one-element-array-then-newline-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): the one-element form of arrays/unterminated-array-then-newline-is-unexpected-token. `a: [1` then LF: the newline owes a comma or `]`, nothing follows it, so the code is parse.unexpected-token at the end of input, line 2 column 1. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/unterminated-array-then-newline-then-closing-brace-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "x: {a: [1, 2\n}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): an unterminated array inside a brace. After `2` and the newline a `,` or `]` is owed and the next significant token is `}`, which is not a value-start token, so the code is parse.unexpected-token, blamed on the `}` at line 2 column 1 (OML-27's 'a token where a separator or that delimiter belongs'). The array is still unterminated when the `}` is met. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/semicolon-inside-array-is-an-error",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1;2]"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:7",
+            "code": "parse.separator-in-array"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): the `;` form of arrays/newline-inside-array-is-an-error. A `;` stands where a comma was owed and an element, `2`, follows it, so the code is parse.separator-in-array, reported at the element and not at the `;`: `a: [1;2]` has `a` at column 1, `:` 2, a space 3, `[` 4, `1` 5, `;` 6 and `2` 7, so 1:7. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/unterminated-array-with-no-trailing-newline-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1, 2"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:9",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): the control that shows the code does not depend on a newline preceding the end of input. `a: [1, 2` has eight characters and no LF, so the end of input is 1:9; the code is the same parse.unexpected-token as arrays/unterminated-array-then-newline-is-unexpected-token, and only the position differs. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/colon-after-newline-in-array-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1\n:"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): after the newline a `,` or `]` is owed and the next significant token is `:`, which is not a value-start token, so the code is parse.unexpected-token at the `:`, line 2 column 1 -- not parse.separator-in-array. The text is `a: [1`, one LF, then `:` with no trailing newline. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/semicolon-at-end-of-input-in-array-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1;"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:7",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): the `;` form of arrays/one-element-array-then-newline-is-unexpected-token. A `;` stands where a comma was owed and nothing follows it, so the code is parse.unexpected-token at the end of input. `a: [1;` has `a` at column 1, `:` 2, a space 3, `[` 4, `1` 5 and `;` 6, so the end of input is 1:7. Port status: DIV-8 (Sec9.4)."
+    },
+    {
       "name": "oml-grammar/strings/raw-string-performs-no-escape-processing",
       "spec": "docs/04-oml-grammar.md#45-strings",
       "operation": "parse",

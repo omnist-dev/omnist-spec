@@ -3,6 +3,52 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.23.0-beta (2026-09-30)
+
+**Normative (minor)** — resolves
+[#114](https://github.com/omnist-dev/omnist-spec/issues/114) and
+[#115](https://github.com/omnist-dev/omnist-spec/issues/115). Two questions the
+v0.22.0-beta port sweeps raised and the text left open.
+
+- **A codec syntax error's position is real but implementation-defined**
+  ([§8.4](docs/08-conformance-and-errors.md#84-paths), new E-31;
+  [§8.5.2](docs/08-conformance-and-errors.md#852-diagnostics-matching), new E-32;
+  #114). Apart from D-21's fixed `1:1`, a `parse.codec-syntax` path MUST be a
+  `line:col` inside the input, or `1:1` where the codec reports none, and it MUST
+  NOT be omitted or be `0:0`. Which character is blamed is left to the codec
+  library. To make that testable, a vector may give the expected path as the
+  placeholder `line:col` (E-32): the runner compares the code and that the path is
+  well-formed, and nothing else; every other path in the suite is still byte for
+  byte. It is allowed only on `parse.codec-syntax`, on JSON, YAML, TOML or XML
+  `parse` input, as the sole diagnostic, and never on D-21. The "codec positions
+  are not yet stated" paragraph in §8.4 is gone; E-28's code-point column still
+  governs a column an implementation converts itself. `tools/check_vectors.py`
+  validates the placeholder and rejects it anywhere else, and
+  [test-suite/README.md](test-suite/README.md) and the
+  [porting guide](docs/porting-a-conformance-runner.md) describe the new
+  comparison.
+- **`parse.separator-in-array` needs an element after the separator**
+  ([§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation), new OML-28,
+  [§4.3.1](docs/04-oml-grammar.md#431-arrays-are-sugar),
+  [§8.3.1](docs/08-conformance-and-errors.md#831-parse-text-to-document-stage-1);
+  #115). Inside `[...]`, a newline or `;` where a comma was owed is
+  `parse.separator-in-array` only when a value-start token follows (a scalar
+  token, an `IDENT`, `{` or `[`); when `}`, `:` or the end of input follows, it is
+  `parse.unexpected-token` at that token. The code no longer depends on whether a
+  newline happens to precede the end of input. Both §8.3.1 rows, E-25's
+  neighbourhood, §4.3.1's bullet and §4.8's examples are reconciled.
+- **Eleven new vectors**, taking the suite to **298**: seven for OML-28
+  (`a: [1, 2` newline, `a: [1` newline, `x: {a: [1, 2` newline `}`, `a: [1;2]`,
+  `a: [1, 2` with no trailing newline, `a: [1` newline `:`, and `a: [1;`) and one malformed document per codec
+  under the placeholder (`{"a": }`, `a: b: c`, `a = `, `<a><b></a>`). Positions
+  were counted by hand and every input measured against all five ports.
+- **New ledger entry `DIV-8`**
+  ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)) records the
+  rollout: only measured per-port results, the E-20 skip route for a runner that
+  does not implement the placeholder, and a removal condition. `DIV-8` is the
+  next unused number (`DIV-1`, `DIV-2`, `DIV-4` and `DIV-6` are retired).
+  `DIV-7` is untouched.
+
 ## v0.22.0-beta (2026-09-29)
 
 **Normative (minor)** — resolves

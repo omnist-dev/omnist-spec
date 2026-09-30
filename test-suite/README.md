@@ -182,6 +182,16 @@ Four rules, all normative, all from chapter 8:
    mode for implementations that have not adopted the chapter 8 code taxonomy —
    which today is all of them. A run must state which mode produced it.
 
+**One narrow exception to comparing paths byte for byte (E-32).** A
+`parse.codec-syntax` diagnostic on JSON, YAML, TOML or XML input may carry the
+expected path `line:col`, which is a literal placeholder, not a position. It
+means: compare the `code`, and check only that the reported path is a
+well-formed text position (`^[1-9][0-9]*:[1-9][0-9]*$`) — which character a
+codec's own parser blames is implementation-defined (E-31). It is allowed only
+there, as the vector's only diagnostic; `tools/check_vectors.py` rejects it on
+any other code, on OML or OSD, and on D-21's doubled-mark vectors, whose `1:1`
+stays compared. Every other path is compared byte for byte.
+
 These four rules cover `diagnostics`. How the other `expect` fields compare is
 per operation: a Document structurally and order-sensitively, schema text either
 **`canonical`** (byte for byte — `parse_schema`'s `schema`, `normalize`,

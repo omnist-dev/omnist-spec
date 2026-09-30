@@ -179,8 +179,10 @@ elements MUST NOT themselves be arrays: there is nothing to nest into.
 
 Rules:
 
-- Comma is the only element separator. A newline or `;` inside `[...]` is an
-  error.
+- Comma is the only element separator. A newline or `;` inside `[...]` standing
+  where a comma was owed is an error: `parse.separator-in-array` when an
+  element follows it, `parse.unexpected-token` when nothing does
+  ([OML-28](#461-top-level-disambiguation)).
 - A trailing comma before `]` is legal.
 - `[]` is an error, not a zero-edge expansion. An empty array and an absent
   label are the same Document, and OML does not offer two spellings for one
@@ -368,9 +370,44 @@ fact is the enclosing delimiter, not the missing separator**, which is
 absent in all four of these inputs. Nor does OML-26's "with or without a
 separator" reach in here: it is a top-level rule, and inside a delimiter pair a
 token where the grammar does not allow one is `parse.unexpected-token` whether
-or not a separator stands in front of it. Reporting them all one way would either
+or not a separator stands in front of it — **except as
+[OML-28](#461-top-level-disambiguation) provides**: inside `[...]`, a newline or
+`;` followed by a value-start token is `parse.separator-in-array`, not this
+code. Reporting them all one way would either
 send a reader inside a brace looking for a second document, or send a reader
 who has written one document too many looking for a bad token.
+
+**OML-28. Inside `[...]`, `parse.separator-in-array` is reported only when a
+newline or `;` stands where a comma was owed and an element follows it;
+otherwise the code is `parse.unexpected-token`.** After an array element a `,`
+or a `]` is owed ([§4.3.1](#431-arrays-are-sugar)). When what stands there is a
+run containing a newline or `;` (the `SEP` of `grammars/oml.abnf`), the code
+turns on the next significant token, in [§4.2.1](#421-separators)'s sense:
+
+- **A value-start token** — `STRING`, `INTEGER`, `NUMBER`, `DATE`, `TIME`,
+  `DATETIME`, any `IDENT`, `{` or `[` — means the newline or `;` was standing in
+  for a comma. The code is `parse.separator-in-array`, at that token, never at
+  the newline or `;` in front of it: `b: [1` newline `2]` is `2:1` and
+  `a: [1;2]` is `1:7`. The element that follows need not be a valid one —
+  `b: [1` newline `foo]` and `b: [1` newline `[2]]` are the same code at `2:1`,
+  because the missing comma is the first thing wrong.
+- **`}`, `:` or the end of input** means nothing follows that a comma would
+  have separated, so the newline or `;` was not "used as an array separator"
+  (§8.3.1). The code is `parse.unexpected-token`, at that token — the token
+  where `,` or `]` was owed, which for an unterminated array is the end of
+  input. `a: [1, 2` newline is `2:1`, `a: [1` newline is `2:1`, and
+  `x: {a: [1, 2` newline `}` is `2:1`, the `}`.
+- **A `,` or `]`** is the delimiter that was owed. This rule does not apply and
+  does not specify these cases: whether a newline or `;` in front of a `,` or
+  `]` after an array's first element is accepted is open
+  ([omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117)).
+
+**The code depends on what follows the run, never on whether a newline happens
+to precede the end of input.** `a: [1, 2` with a trailing newline and without
+one are both `parse.unexpected-token`; only the position moves, from `2:1` to
+`1:9`, because the end of input has moved. A plain space is not a `SEP` run, so
+`a: [1 2]` stays [OML-27](#461-top-level-disambiguation)'s
+`parse.unexpected-token` at `1:7`.
 
 ## 4.7 Limits
 
@@ -412,6 +449,9 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 | `a: 1` newline `b: 2` | valid; `b` can begin an edge after a separator, so this is two edges, `[(a,1), (b,2)]` |
 | `tag: "x"` newline `tag: "y"` | `[(tag,"x"), (tag,"y")]` |
 | `b: [1, 2, 3]` | `[(b,1), (b,2), (b,3)]` |
+| `a: [1` newline `2]` | error; a newline where a comma was owed, followed by an element — `parse.separator-in-array` at `2:1` (OML-28) |
+| `a: [1;2]` | error, identical in kind — `parse.separator-in-array` at `1:7` |
+| `a: [1, 2` newline | error; an unterminated array, nothing follows the newline — `parse.unexpected-token` at `2:1`, the end of input (OML-28) |
 | `[]` in value position | error, empty array |
 | `a: {}` | `[(a, [])]` |
 | `"hello"` alone | the document is the single scalar `hello` |

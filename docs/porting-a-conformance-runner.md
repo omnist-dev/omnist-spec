@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 287 vectors as of v0.22.0-beta — dispatched by operation
+JSON-vector suite — 298 vectors as of v0.23.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -112,8 +112,15 @@ Source: [§8.5.3](08-conformance-and-errors.md#853-operation-drivers) (drivers),
 vector, every operation alike: `ok` is `false` and `diagnostics` is compared as
 a **set** of `(path, code)` pairs — every expected pair present, none extra
 (§8.5.2 rules 2 and 3, E-17), severity never compared. Paths are compared byte
-for byte (E-9, E-11). Rule 4's code-agnostic mode is the one permitted
-relaxation, and the run MUST say it was used.
+for byte (E-9, E-11), **with one exception: an expected `path` of the string
+`line:col` (E-32) is a placeholder** that a `parse.codec-syntax` vector uses
+because a codec's blamed character is implementation-defined (E-31). For that
+entry compare the `code`, and check only that the reported path is a
+well-formed text position, `^[1-9][0-9]*:[1-9][0-9]*$`; do not compare its
+value. Every other path in the suite stays byte for byte. A runner that skips
+this step fails the four `formats-*/syntax/` vectors. Rule 4's code-agnostic
+mode is the one permitted relaxation of the code, and the run MUST say it was
+used.
 
 | `operation` | `expect` fields on success | What a runner MUST compare, and how |
 |---|---|---|
@@ -330,7 +337,7 @@ therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "287 pass" and "287 pass,
+note, an issue — say the mode alongside the count. "298 pass" and "298 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure
