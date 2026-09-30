@@ -356,7 +356,7 @@ intent that a parser cannot make and that no conformance vector could compare.
 nor a label.** OML-26 needs a complete edge and OML-25 a complete scalar, so
 for input such as `}` alone no document has begun and neither rule applies;
 this specification does not say which code it gets. The ports' current
-behaviour is recorded in DIV-7 (§9.4), and it is a fact about them, not a rule.
+behaviour is recorded under "Open, unpinned behaviours" (§9.4), and it is a fact about them, not a rule.
 
 **OML-27. Inside `{...}` or `[...]` the same missing separator is
 `parse.unexpected-token`.** Nothing has ended there: a closing `}` or `]` is

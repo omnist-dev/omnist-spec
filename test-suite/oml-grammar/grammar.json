@@ -1111,7 +1111,7 @@
           }
         ]
       },
-      "comment": "OML-26 with a separator in front of the leftover token (omnist-spec#109). The newline is a legal end to the edge `a: 1`, and `document` allows a separator after the last edge, so the document may already be over; `}` cannot begin an edge, so it is not the next edge and is content after the document -- parse.trailing-content, not parse.unexpected-token. The position is the `}` itself, never the newline in front of it: line 2, column 1, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26 with a separator in front of the leftover token (omnist-spec#109). The newline is a legal end to the edge `a: 1`, and `document` allows a separator after the last edge, so the document may already be over; `}` cannot begin an edge, so it is not the next edge and is content after the document -- parse.trailing-content, not parse.unexpected-token. The position is the `}` itself, never the newline in front of it: line 2, column 1, so 2:1."
     },
     {
       "name": "oml-grammar/shape/semicolon-then-closing-brace-after-a-top-level-edge-is-trailing-content",
@@ -1131,7 +1131,7 @@
           }
         ]
       },
-      "comment": "The same rule as the newline vector above with `;` as the separator, and a space between the separator and the brace: `;` and a newline are interchangeable edge separators (Sec4.1), so OML-26 treats them alike. Counting: a(1) :(2) space(3) 1(4) ;(5) space(6) }(7), so 1:7 -- the horizontal space after the separator is skipped and the `}` is the first significant token after it. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "The same rule as the newline vector above with `;` as the separator, and a space between the separator and the brace: `;` and a newline are interchangeable edge separators (Sec4.1), so OML-26 treats them alike. Counting: a(1) :(2) space(3) 1(4) ;(5) space(6) }(7), so 1:7 -- the horizontal space after the separator is skipped and the `}` is the first significant token after it."
     },
     {
       "name": "oml-grammar/shape/separator-then-comma-after-a-top-level-edge-is-trailing-content",
@@ -1151,7 +1151,7 @@
           }
         ]
       },
-      "comment": "OML-26: `,` cannot begin an edge, so after the separator it is leftover, not the next edge. The comma is an element separator inside `[...]` only and has no top-level role; OML-26 does not branch on what the author might have meant. That an edge is owed after a separator is not a reason to report parse.unexpected-token: nothing is owed at top level, since the separator may trail the document. Counting: `,` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26: `,` cannot begin an edge, so after the separator it is leftover, not the next edge. The comma is an element separator inside `[...]` only and has no top-level role; OML-26 does not branch on what the author might have meant. That an edge is owed after a separator is not a reason to report parse.unexpected-token: nothing is owed at top level, since the separator may trail the document. Counting: `,` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/separator-then-closing-bracket-after-a-top-level-edge-is-trailing-content",
@@ -1171,7 +1171,7 @@
           }
         ]
       },
-      "comment": "The sibling of the comma vector for `]`: no `[` is open, so it closes nothing and cannot begin an edge, and after the separator it is content after the document ended. Counting: `]` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "The sibling of the comma vector for `]`: no `[` is open, so it closes nothing and cannot begin an edge, and after the separator it is content after the document ended. Counting: `]` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/separator-then-a-non-label-token-after-a-top-level-edge-is-trailing-content",
@@ -1191,7 +1191,7 @@
           }
         ]
       },
-      "comment": "OML-26 names exactly which tokens can begin an edge: a STRING or an IDENT, the two alternatives of `label`. An INTEGER is neither, so after a separator it is leftover, and this vector is what keeps the rule from being read as 'punctuation only'. Counting: `5` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26 names exactly which tokens can begin an edge: a STRING or an IDENT, the two alternatives of `label`. An INTEGER is neither, so after a separator it is leftover, and this vector is what keeps the rule from being read as 'punctuation only'. Counting: `5` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/separator-then-nan-after-a-top-level-edge-is-trailing-content",
@@ -1211,7 +1211,7 @@
           }
         ]
       },
-      "comment": "OML-26: `nan` is tokenized as a NUMBER (OML-3 rule 7), never an IDENT, so it cannot begin an edge even though it is spelled like a bare label. After the separator it is leftover. Counting: `nan` starts line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26: `nan` is tokenized as a NUMBER (OML-3 rule 7), never an IDENT, so it cannot begin an edge even though it is spelled like a bare label. After the separator it is leftover. Counting: `nan` starts line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/separator-then-opening-brace-after-a-top-level-edge-is-trailing-content",
@@ -1231,7 +1231,7 @@
           }
         ]
       },
-      "comment": "OML-26: `{` cannot begin an edge -- it opens a value, and a value only follows a label and a colon. After the separator it is leftover, whether or not it would ever have been closed. Counting: `{` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26: `{` cannot begin an edge -- it opens a value, and a value only follows a label and a colon. After the separator it is leftover, whether or not it would ever have been closed. Counting: `{` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/separator-then-an-array-after-a-top-level-edge-is-trailing-content",
@@ -1251,7 +1251,7 @@
           }
         ]
       },
-      "comment": "OML-26: `[` cannot begin an edge, and a bare array is not a document body (Sec4.3.1). The first leftover significant token is the `[`, so the position is 2:1 -- not the `2` or the `]` inside it. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26: `[` cannot begin an edge, and a bare array is not a document body (Sec4.3.1). The first leftover significant token is the `[`, so the position is 2:1 -- not the `2` or the `]` inside it."
     },
     {
       "name": "oml-grammar/shape/separator-then-colon-after-a-top-level-edge-is-trailing-content",
@@ -1271,7 +1271,7 @@
           }
         ]
       },
-      "comment": "OML-26: `:` is only ever the second half of an edge and cannot begin one. After the separator it is leftover. Counting: `:` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26: `:` is only ever the second half of an edge and cannot begin one. After the separator it is leftover. Counting: `:` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/closing-brace-after-a-braced-edge-value-is-trailing-content",
@@ -1291,7 +1291,7 @@
           }
         ]
       },
-      "comment": "OML-26 when the complete top-level edge ends in a closed brace: `a: {b: 1}` is complete and its own braces are balanced, so nothing is owed inside it (OML-27 does not apply) and the `}` on line 2 is content after the document ended. Counting: the second `}` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-26 when the complete top-level edge ends in a closed brace: `a: {b: 1}` is complete and its own braces are balanced, so nothing is owed inside it (OML-27 does not apply) and the `}` on line 2 is content after the document ended. Counting: the second `}` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/separator-then-closing-brace-after-a-scalar-document-is-trailing-content",
@@ -1311,7 +1311,7 @@
           }
         ]
       },
-      "comment": "OML-25's counterpart of the with-a-separator edge vectors above, and the case the two rules were written to keep consistent: `1` is the document's single scalar, the newline ends it, and `}` is content after it. Same code as `1 }` (1:3) and as `1` newline `2` (2:1): a separator in front of the leftover token changes neither the code nor the position rule. Counting: `}` is the first character of line 2, so 2:1. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "OML-25's counterpart of the with-a-separator edge vectors above, and the case the two rules were written to keep consistent: `1` is the document's single scalar, the newline ends it, and `}` is content after it. Same code as `1 }` (1:3) and as `1` newline `2` (2:1): a separator in front of the leftover token changes neither the code nor the position rule. Counting: `}` is the first character of line 2, so 2:1."
     },
     {
       "name": "oml-grammar/shape/edge-after-a-separator-is-the-next-edge-not-leftover",
@@ -1331,7 +1331,7 @@
           ]
         }
       },
-      "comment": "The negative control for OML-26's test ('a separator followed by a token that can begin an edge continues the edge list'): `b` is an IDENT after a separator, so it is the next edge and not leftover, and the document is two edges. Without this vector an implementation could satisfy every stray-token vector by rejecting anything that follows the first edge. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "The negative control for OML-26's test ('a separator followed by a token that can begin an edge continues the edge list'): `b` is an IDENT after a separator, so it is the next edge and not leftover, and the document is two edges. Without this vector an implementation could satisfy every stray-token vector by rejecting anything that follows the first edge."
     },
     {
       "name": "oml-grammar/errors/column-counts-code-points-after-an-astral-character",
@@ -1351,7 +1351,7 @@
           }
         ]
       },
-      "comment": "E-28 (omnist-spec#110): the column of a text position counts Unicode code points, not bytes and not UTF-16 units. U+1F600 is one code point, four UTF-8 bytes and two UTF-16 units, so the three readings all differ here. The failure is the invalid escape `\\q`, reported at the opening quote of its string (E-23) -- an input chosen so that the position needs no judgement about which character is blamed. Counting code points: a(1) :(2) space(3) \"(4) U+1F600(5) \"(6) ;(7) space(8) b(9) :(10) space(11) \"(12), so 1:12. As bytes it would be 1:15, as UTF-16 units 1:13. Ports' current results for this vector are recorded in DIV-7 (Sec9.4)."
+      "comment": "E-28 (omnist-spec#110): the column of a text position counts Unicode code points, not bytes and not UTF-16 units. U+1F600 is one code point, four UTF-8 bytes and two UTF-16 units, so the three readings all differ here. The failure is the invalid escape `\\q`, reported at the opening quote of its string (E-23) -- an input chosen so that the position needs no judgement about which character is blamed. Counting code points: a(1) :(2) space(3) \"(4) U+1F600(5) \"(6) ;(7) space(8) b(9) :(10) space(11) \"(12), so 1:12. As bytes it would be 1:15, as UTF-16 units 1:13."
     },
 
     {

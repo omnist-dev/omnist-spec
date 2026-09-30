@@ -461,7 +461,7 @@ Document path to descend into. The format is `line:col`, both 1-based:
   at all it is one code point of the column like any other character. **What
   is not specified** is which position an implementation reports for a lone
   `CR` where OML rejects it, the `CR` itself or the character after it; the
-  ports differ (DIV-7), and this section does not choose.
+  ports differ ("Open, unpinned behaviours", §9.4), and this section does not choose.
 - The origin is the text the grammar sees: a leading `U+FEFF` that
   [D-15](02-document-model.md#25-encoding) strips is not counted, which is what
   D-21's "computed on the text that remains" already says.

@@ -103,29 +103,32 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last updated: 2026-09-29**, from each port's own merged and
+**Last updated: 2026-09-30**, from each port's own merged and
 independently reviewed PR and its own conformance run, not carried forward
-from an earlier edit. All five ports have adopted spec **v0.21.0-beta**:
-Python ([omnist#349](https://github.com/omnist-dev/omnist/pull/349)),
-TypeScript ([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/pull/150)),
-Go ([omnist-go#120](https://github.com/omnist-dev/omnist-go/pull/120)),
-Rust ([omnist-rs#184](https://github.com/omnist-dev/omnist-rs/pull/184)) and
-Java ([omnist-j#114](https://github.com/omnist-dev/omnist-j/pull/114)). Every
-port's runner now compares diagnostics as `(path, code)` sets. Python's runner
-was code-agnostic until #349; on the same suite it reported 159 pass / 17 fail /
-97 skip before that rewrite.
+from an earlier edit. Last source-audited 2026-09-30. All five ports have
+adopted spec **v0.22.0-beta** (287 Track 2 vectors) and compare diagnostics as
+`(path, code)` sets with strict runners:
+Python ([omnist#351](https://github.com/omnist-dev/omnist/pull/351), `e72ba20`),
+TypeScript ([omnist-ts#151](https://github.com/omnist-dev/omnist-ts/pull/151), `aee2311`),
+Go ([omnist-go#122](https://github.com/omnist-dev/omnist-go/pull/122), `1de5e84`),
+Rust ([omnist-rs#185](https://github.com/omnist-dev/omnist-rs/pull/185), `e07b19b`) and
+Java ([omnist-j#117](https://github.com/omnist-dev/omnist-j/pull/117), `ac12dc1`).
+All five pass all fourteen vectors v0.22.0-beta added.
 
-Two Version cells need a note. Rust's 0.3.0-alpha was tagged on 2026-09-29 at
-the merge commit of the v0.21.0-beta work (`179f3b6`) and is published to
-crates.io (0.3.0-alpha). Java's 0.2.5-alpha release workflow (Maven Central)
-completed successfully on 2026-09-29; its visibility on Maven Central has not
-been verified.
+**Versions.** The Version row is each port's latest **tag**. Three ports'
+default branch carries a newer, untagged version: Python `0.10.1` (latest tag
+and PyPI release `0.10.0`), Go `v0.5.1-alpha` (latest tag `v0.5.0-alpha`) and
+Rust `0.3.1-alpha` (latest tag `v0.3.0-alpha`, published to crates.io).
+TypeScript `v0.4.1-alpha` is tagged and is **not** published to npm. Go is
+distributed by tag only. Java `v0.2.6-alpha` is tagged, but its Maven Central
+release run is waiting for maintainer approval, and the earlier `0.2.5-alpha`
+upload is waiting for a manual Publish in the Central Portal; Maven Central's
+`maven-metadata.xml` for `dev.omnist:omnist-j` lists `0.2.1-alpha` and
+`0.2.2-alpha` only, so the latest public release is `0.2.2-alpha`.
 
-Three things are deliberately not claimed as done anywhere: no port enforces
-the alias expansion limit D-18 (`DIV-3`), no port implements the OSD-OML
-extension (§9.6), and none of the rules v0.22.0-beta settles (OML-26's
-with-a-separator cases, E-28's code-point column) is claimed for any port
-beyond what `DIV-7` records.
+Two things are deliberately not claimed as done anywhere: no port enforces the
+alias expansion limit D-18 (`DIV-3`), and no port implements the OSD-OML
+extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
@@ -142,15 +145,13 @@ beyond what `DIV-7` records.
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI | yes, via the CLI | yes, via `omnist-cli` | yes, at the front of all six readers | yes, on stdin |
-| Conformance (Track 2 JSON vectors, 273 at v0.21.0-beta, all compared as `(path, code)` sets) | 233 pass / 0 fail / 40 skip | 213 pass / 0 fail / 60 skip | 233 pass / 0 fail / 40 skip | 239 pass / 0 fail / 34 skip | 239 pass / 0 fail / 34 skip |
-| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (harness headline 29/0/0: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
+| Conformance (Track 2 JSON vectors, 287 at v0.22.0-beta, all compared as `(path, code)` sets) | 247 pass / 0 fail / 40 skip | 227 pass / 0 fail / 60 skip | 247 pass / 0 fail / 40 skip | 253 pass / 0 fail / 34 skip | 253 pass / 0 fail / 34 skip |
+| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (harness headline 282/0/34, which folds in Track 2 and the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100%, gated | 100%, gated | 100%, gated | 100%, gated | 100%, gated |
 
-The Track 2 row above is the v0.21.0-beta suite, 273 vectors. v0.22.0-beta adds
-fourteen (287 in all); no port has adopted that release yet, and `DIV-7` records
-how each fares on the nine, measured, not carried forward. v0.23.0-beta adds
-eleven more (298 in all), and `DIV-8` records how each fares on those.
+The Track 2 row above is the v0.22.0-beta suite, 287 vectors. v0.23.0-beta added
+11 vectors (298 in all); `DIV-8` records how each port fares on those.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -188,12 +189,14 @@ two were previously indistinguishable, so a bare `D-3` could mean either an
 edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
-**`DIV-1`, `DIV-2`, `DIV-4` and `DIV-6` are retired numbers and MUST NOT be
-reused.** All four entries closed and were deleted; the numbers stay spent so a
+**`DIV-1`, `DIV-2`, `DIV-4`, `DIV-6` and `DIV-7` are retired numbers and MUST
+NOT be reused.** All five entries closed and were deleted; the numbers stay spent so a
 citation to any of them in an older document, issue, vector comment, or port
 changelog cannot silently come to mean something else. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
-when the v0.21.0-beta sweep left every port satisfying every row. This note
+when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
+fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
+fourteen. `DIV-3`, `DIV-5` and `DIV-8` are live. This note
 lives here, in the preamble, rather than inside any single entry — an entry is
 deleted when it closes, and a retirement note that rides along inside one
 disappears with it.
@@ -255,79 +258,14 @@ than OSD text — a canonical Schema encoding, or a `write_schema` driver fed by
 entry says so rather than letting a green suite imply coverage. Remove this
 entry when a vector pins OSD-14 and every port passes it.
 
-**DIV-7. Fourteen vectors new in v0.22.0-beta that some ports fail today, and two cases the spec leaves open.**
-Twelve belong to #109 (ten with-a-separator cases for OML-26, the scalar
-counterpart for OML-25, and OML-26's negative control) and two pin E-28's
-code-point column
-([omnist-spec#109](https://github.com/omnist-dev/omnist-spec/issues/109),
-[#110](https://github.com/omnist-dev/omnist-spec/issues/110)). This is a rollout
-gap, not a divergence any implementation intends to keep: the expected interval
-between a spec rule landing and the ports adopting it.
-
-**How it was measured.** At the pre-squash branch heads of each port's merged
-v0.21.0-beta adoption PR: Python `6a5c10b`
-([omnist#349](https://github.com/omnist-dev/omnist/pull/349)), TypeScript
-`a3ed41c` ([omnist-ts#150](https://github.com/omnist-dev/omnist-ts/pull/150)),
-Rust `871cbd0` ([omnist-rs#184](https://github.com/omnist-dev/omnist-rs/pull/184)),
-Go `5535786` ([omnist-go#120](https://github.com/omnist-dev/omnist-go/pull/120))
-and Java `a2e7b5f` ([omnist-j#114](https://github.com/omnist-dev/omnist-j/pull/114)).
-Python, TypeScript and Java through `format FILE --json` (OSD through `schema
-format`), Go through `omnist parse --from oml FILE` and `omnist schema normalize
-FILE`, reading the `path: code` its message prints. **Rust through its library**
-(`omnist::oml::read_oml` and `omnist::osd::parse_schema`, reading `ParseError`'s
-`position()` and `code`, `SchemaError`'s `path` and `code`), because
-`omnist-cli` prints only message text and, for OSD, a byte offset ("at 31");
-Rust's `2:21` below is a library result, not a CLI one.
-
-| Vectors (under `oml-grammar/shape/` unless noted) | Python | TypeScript | Rust | Go | Java |
-|---|---|---|---|---|---|
-| `separator-then-closing-brace-after-a-top-level-edge…`, `semicolon-then-closing-brace-after-a-top-level-edge…`, `closing-brace-after-a-braced-edge-value…` (`2:1`, `1:7`, `2:1`) | pass | pass | pass | `parse.unexpected-token` | `parse.unexpected-token` |
-| `separator-then-comma…`, `-then-closing-bracket…`, `-then-a-non-label-token…`, `-then-nan…`, `-then-opening-brace…`, `-then-an-array…`, `-then-colon…` (all `2:1`) | `parse.unexpected-token` | `parse.unexpected-token` | `parse.unexpected-token` | `parse.unexpected-token` | `parse.unexpected-token` |
-| `separator-then-closing-brace-after-a-scalar-document…`, `edge-after-a-separator-is-the-next-edge-not-leftover` | pass | pass | pass | pass | pass |
-| `oml-grammar/errors/column-counts-code-points-after-an-astral-character` (`1:12`) | pass | `1:13` (UTF-16 units) | `1:15` (bytes) | pass | `1:13` (UTF-16 units) |
-| `osd-grammar/errors/column-counts-code-points-after-an-astral-character` (`2:18`) | pass | `2:19` (UTF-16 units) | `2:21` (bytes) | pass | `2:19` (UTF-16 units) |
-
-Of the fourteen, Python fails 7, TypeScript 9, Rust 9, Go 10 and Java 12. In
-every OML-26 row the position is already right and only the code differs.
-**Not measured:** any port through its conformance runner, and OSD on `CRLF` or
-a lone `CR`.
-
-**What a runner reports today.** Until a port implements the rules, its runner
-reports each vector it fails as an **E-20 "not yet implemented" skip citing this
-entry** (E-20's first category covers a rule or behaviour not yet adopted, as
-well as a missing operation), never as a pass and never as a `fail` its CI has
-to carry (E-22). A port drops the skip for a vector in the same change that
-fixes it; a vector a port passes is a pass, so the skip list is per vector.
-**Remove this entry when every port passes all fourteen** and the two open
-cases below are either pinned or dropped.
-
-**Open, not pinned by any vector, no rule invented.**
-- *A document that is only `}`* (§4.6.1: OML-25 and OML-26 both need a complete
-  body, so neither applies). Measured, `}` then a newline: all five ports report
-  `parse.unexpected-token` at `1:1` (Go's message says "expected a value"). They
-  agree today; the spec does not require it.
-- *A lone `CR`* (E-29 does not say which position is reported). Measured, OML
-  `a: 1`, a lone `CR`, `}`: Python, TypeScript and Rust report
-  `parse.unexpected-token` at `1:5`, the `CR`; Go and Java report it at `1:6`,
-  the character after. `CRLF` agrees: line 2 column 1 in all five.
-
-**Not covered by any vector: a codec's failure position**
-([omnist-spec#114](https://github.com/omnist-dev/omnist-spec/issues/114)). E-28
-fixes the unit for OML and OSD only. Which character a codec's own parser blames
-is not fixed, and the ports differ before any multi-byte character is
-involved: for `{"a": "e", "b": x}` (the `x` is column 17) Python, Rust and Go
-report `1:17`; Java reports `1:18` (`java -jar target/omnist-j-0.2.5-alpha-cli.jar
-format FILE --from json --json`); TypeScript's CLI reports no position at all.
-
 **DIV-8. Eleven vectors new in v0.23.0-beta that some ports fail today: array newline cases (OML-28) and codec syntax errors under the path placeholder (E-31, E-32).**
 Seven belong to [omnist-spec#115](https://github.com/omnist-dev/omnist-spec/issues/115)
 (OML-28, `oml-grammar/arrays/`) and four to
 [#114](https://github.com/omnist-dev/omnist-spec/issues/114) (one malformed
 document per codec, `formats-{json,yaml,toml,xml}/syntax/`, whose expected path
 is the placeholder `line:col`). This is a rollout gap, not a divergence any
-implementation intends to keep. **It supersedes the paragraph above headed "Not
-covered by any vector: a codec's failure position"**, which described the state
-before E-31; that paragraph goes when `DIV-7` does.
+implementation intends to keep. It replaces the note on a codec's failure
+position that the retired `DIV-7` carried, which described the state before E-31.
 
 **How it was measured.** At each port's default-branch tip on 2026-09-30, read
 only: Python `e72ba20` (the merged v0.22.0-beta adoption,
@@ -387,6 +325,18 @@ Java accept the document and Go reports `parse.separator-in-array` at `2:1`:
 but `grammars/oml.abnf` gives the first element no trailing `SEP`. These two
 cases are outside OML-28 and it does not specify them; they are open as
 [omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117).
+
+**Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
+no vector pins them, and they are not divergences to fix. They are recorded
+as facts about the ports, measured when `DIV-7` was open and unchanged since.
+- *A document that is only `}`* (§4.6.1: OML-25 and OML-26 both need a complete
+  body, so neither applies). Measured, `}` then a newline: all five ports report
+  `parse.unexpected-token` at `1:1` (Go's message says "expected a value"). They
+  agree today; the spec does not require it.
+- *A lone `CR`* (E-29 does not say which position is reported). Measured, OML
+  `a: 1`, a lone `CR`, `}`: Python, TypeScript and Rust report
+  `parse.unexpected-token` at `1:5`, the `CR`; Go and Java report it at `1:6`,
+  the character after. `CRLF` agrees: line 2 column 1 in all five.
 
 ## 9.5 Adding a sixth implementation
 
