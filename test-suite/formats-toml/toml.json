@@ -256,6 +256,26 @@
         }
       },
       "comment": "The TOML control: the same three characters as the other surfaces' controls, given as bytes. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
+    },
+    {
+      "name": "formats-toml/syntax/key-without-value-is-a-codec-syntax-error",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "a = \n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "E-31/E-32: malformed TOML. A key/value pair requires a value after `=` and the line ends first; no TOML parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col` (E-32): the blamed character is implementation-defined. Port status: DIV-8 (Sec9.4)."
     }
   ]
 }

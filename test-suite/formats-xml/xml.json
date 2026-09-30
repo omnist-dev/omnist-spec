@@ -449,6 +449,26 @@
         }
       },
       "comment": "The XML control: the same three characters as the other surfaces' controls, in element text content, given as bytes. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
+    },
+    {
+      "name": "formats-xml/syntax/mismatched-closing-tag-is-a-codec-syntax-error",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a><b></a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "E-31/E-32: malformed XML. `<b>` is still open when `</a>` closes, so the document is not well-formed; no XML parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col` (E-32): the blamed character is implementation-defined. Port status: DIV-8 (Sec9.4)."
     }
   ]
 }

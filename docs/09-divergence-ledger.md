@@ -129,7 +129,7 @@ beyond what `DIV-7` records.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.0 | 0.4.0-alpha | 0.3.0-alpha | 0.5.0-alpha | 0.2.5-alpha |
+| Version | 0.10.0 | 0.4.1-alpha | 0.3.0-alpha | 0.5.0-alpha | 0.2.6-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 is enforced by no port yet — DIV-3) | all three | all three | all three | all three | all three |
@@ -149,7 +149,8 @@ beyond what `DIV-7` records.
 
 The Track 2 row above is the v0.21.0-beta suite, 273 vectors. v0.22.0-beta adds
 fourteen (287 in all); no port has adopted that release yet, and `DIV-7` records
-how each fares on the nine, measured, not carried forward.
+how each fares on the nine, measured, not carried forward. v0.23.0-beta adds
+nine more (296 in all), and `DIV-8` records how each fares on those.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -317,6 +318,71 @@ is not fixed, and the ports differ before any multi-byte character is
 involved: for `{"a": "e", "b": x}` (the `x` is column 17) Python, Rust and Go
 report `1:17`; Java reports `1:18` (`java -jar target/omnist-j-0.2.5-alpha-cli.jar
 format FILE --from json --json`); TypeScript's CLI reports no position at all.
+
+**DIV-8. Nine vectors new in v0.23.0-beta that some ports fail today: array newline cases (OML-28) and codec syntax errors under the path placeholder (E-31, E-32).**
+Five belong to [omnist-spec#115](https://github.com/omnist-dev/omnist-spec/issues/115)
+(OML-28, `oml-grammar/arrays/`) and four to
+[#114](https://github.com/omnist-dev/omnist-spec/issues/114) (one malformed
+document per codec, `formats-{json,yaml,toml,xml}/syntax/`, whose expected path
+is the placeholder `line:col`). This is a rollout gap, not a divergence any
+implementation intends to keep. **It supersedes the paragraph above headed "Not
+covered by any vector: a codec's failure position"**, which described the state
+before E-31; that paragraph goes when `DIV-7` does.
+
+**How it was measured.** At each port's default-branch tip on 2026-09-30, read
+only: Python `dbd4ec3` (the merged v0.21.0-beta adoption,
+[omnist#349](https://github.com/omnist-dev/omnist/pull/349); its v0.22.0-beta
+adoption, [omnist#351](https://github.com/omnist-dev/omnist/pull/351), is not
+merged), TypeScript `aee2311`
+([omnist-ts#151](https://github.com/omnist-dev/omnist-ts/pull/151)), Rust
+`e07b19b` ([omnist-rs#185](https://github.com/omnist-dev/omnist-rs/pull/185)),
+Go `1de5e84` ([omnist-go#122](https://github.com/omnist-dev/omnist-go/pull/122))
+and Java `ac12dc1` ([omnist-j#117](https://github.com/omnist-dev/omnist-j/pull/117)).
+Python and TypeScript through `format FILE --json` (OML) and `convert FILE --from
+FORMAT --to oml --json`, Java through `format FILE --from FORMAT --json`, Go
+through `omnist parse --from FORMAT FILE`, reading the `path: code` its message
+prints. **Rust through its library** (`omnist::oml::read_oml` and
+`omnist::formats::{json,yaml,toml,xml}::read_*`, reading `ParseError`'s
+`position()` and `code`), because `omnist-cli` prints only message text. No port
+was measured through its conformance runner. A cell is `(path, code)` as the
+port reports it, or `pass`.
+
+| Vectors | Python | TypeScript | Rust | Go | Java |
+|---|---|---|---|---|---|
+| `oml-grammar/arrays/unterminated-array-then-newline-is-unexpected-token`, `one-element-array-then-newline-is-unexpected-token`, `unterminated-array-then-newline-then-closing-brace-is-unexpected-token` (all `2:1`) | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
+| `oml-grammar/arrays/semicolon-inside-array-is-an-error` (`1:7`), `unterminated-array-with-no-trailing-newline-is-unexpected-token` (`1:9`) | pass | pass | pass | pass | pass |
+| `formats-json/syntax/missing-value-is-a-codec-syntax-error` (`{"a": }`) | `1:7` | no diagnostic | `1:7` | `1:7` | `1:7` |
+| `formats-yaml/syntax/nested-mapping-value-is-a-codec-syntax-error` (`a: b: c`, newline) | `1:5` | no diagnostic | `1:5` | `1:1` | `1:5` |
+| `formats-toml/syntax/key-without-value-is-a-codec-syntax-error` (`a = `, newline) | `1:5` | no diagnostic | `1:5` | `1:5` | `1:5` |
+| `formats-xml/syntax/mismatched-closing-tag-is-a-codec-syntax-error` (`<a><b></a>`) | `1:9` | no diagnostic | `1:11` | `0:0` | `1:9` |
+
+Every codec diagnostic that was reported carried `parse.codec-syntax`. The
+placeholder passes a well-formed path, whatever its value, so the disagreement
+in the codec rows is not itself a failure: **TypeScript** fails all four because
+its read raises an error carrying only message text (`errors` is empty in
+`--json`, and the library has no `parse.codec-syntax` code path for a codec
+failure), and **Go** fails the XML vector because `0:0` is not a text position
+(E-31); the other Go codec cells are well-formed. Counting behaviour only, Python
+fails 0 of the nine, TypeScript 4, Rust 0, Go 4 and Java 0.
+
+**What a runner reports today.** A runner that does not yet implement E-32
+compares the string `line:col` to a real path and fails all four codec vectors
+in every port, so until a port implements the placeholder its runner reports
+those four as **E-20 "not yet implemented" skips citing this entry**, never as a
+pass and never as a `fail` its CI has to carry (E-22). The five OML-28 vectors
+need no runner change: a port that passes one is a pass, and a port that fails
+one skips it under E-20 until the same change that fixes it drops the skip.
+**Remove this entry when every port passes all nine**, which needs TypeScript to
+report `parse.codec-syntax` with some `line:col` (E-11, E-31), Go to fix
+OML-28 and the XML position, and every runner to implement E-32.
+
+**Not pinned by any vector.** A JSON candidate, `[1, 2`, was dropped: Go reports
+`document.unlabeled-element` for it, not `parse.codec-syntax`. And `a: [1`,
+newline, `]` and `a: [1`, newline, `,2]`, on which Python, TypeScript, Rust and
+Java accept the document and Go reports `parse.separator-in-array` at `2:1`:
+§4.3.1's last rule says separators are otherwise insignificant inside `[...]`,
+but `grammars/oml.abnf` gives the first element no trailing `SEP`, and OML-28
+deliberately does not say which reading holds.
 
 ## 9.5 Adding a sixth implementation
 
