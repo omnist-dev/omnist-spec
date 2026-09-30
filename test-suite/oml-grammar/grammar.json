@@ -333,6 +333,46 @@
       "comment": "OML-28 (Sec4.6.1): the control that shows the code does not depend on a newline preceding the end of input. `a: [1, 2` has eight characters and no LF, so the end of input is 1:9; the code is the same parse.unexpected-token as arrays/unterminated-array-then-newline-is-unexpected-token, and only the position differs. Port status: DIV-8 (Sec9.4)."
     },
     {
+      "name": "oml-grammar/arrays/colon-after-newline-in-array-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1\n:"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): after the newline a `,` or `]` is owed and the next significant token is `:`, which is not a value-start token, so the code is parse.unexpected-token at the `:`, line 2 column 1 -- not parse.separator-in-array. The text is `a: [1`, one LF, then `:` with no trailing newline. Port status: DIV-8 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/semicolon-at-end-of-input-in-array-is-unexpected-token",
+      "spec": "docs/04-oml-grammar.md#461-top-level-disambiguation",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1;"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:7",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "OML-28 (Sec4.6.1): the `;` form of arrays/one-element-array-then-newline-is-unexpected-token. A `;` stands where a comma was owed and nothing follows it, so the code is parse.unexpected-token at the end of input. `a: [1;` has `a` at column 1, `:` 2, a space 3, `[` 4, `1` 5 and `;` 6, so the end of input is 1:7. Port status: DIV-8 (Sec9.4)."
+    },
+    {
       "name": "oml-grammar/strings/raw-string-performs-no-escape-processing",
       "spec": "docs/04-oml-grammar.md#45-strings",
       "operation": "parse",

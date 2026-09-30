@@ -370,7 +370,10 @@ fact is the enclosing delimiter, not the missing separator**, which is
 absent in all four of these inputs. Nor does OML-26's "with or without a
 separator" reach in here: it is a top-level rule, and inside a delimiter pair a
 token where the grammar does not allow one is `parse.unexpected-token` whether
-or not a separator stands in front of it. Reporting them all one way would either
+or not a separator stands in front of it — **except as
+[OML-28](#461-top-level-disambiguation) provides**: inside `[...]`, a newline or
+`;` followed by a value-start token is `parse.separator-in-array`, not this
+code. Reporting them all one way would either
 send a reader inside a brace looking for a second document, or send a reader
 who has written one document too many looking for a bad token.
 
@@ -394,8 +397,10 @@ turns on the next significant token, in [§4.2.1](#421-separators)'s sense:
   where `,` or `]` was owed, which for an unterminated array is the end of
   input. `a: [1, 2` newline is `2:1`, `a: [1` newline is `2:1`, and
   `x: {a: [1, 2` newline `}` is `2:1`, the `}`.
-- **A `,` or `]`** is the delimiter that was owed, so this rule is not engaged;
-  what a newline or `;` in front of it means is §4.3.1's last rule.
+- **A `,` or `]`** is the delimiter that was owed. This rule does not apply and
+  does not specify these cases: whether a newline or `;` in front of a `,` or
+  `]` after an array's first element is accepted is open
+  ([omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117)).
 
 **The code depends on what follows the run, never on whether a newline happens
 to precede the end of input.** `a: [1, 2` with a trailing newline and without

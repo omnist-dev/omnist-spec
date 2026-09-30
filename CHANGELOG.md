@@ -37,9 +37,9 @@ v0.22.0-beta port sweeps raised and the text left open.
   `parse.unexpected-token` at that token. The code no longer depends on whether a
   newline happens to precede the end of input. Both §8.3.1 rows, E-25's
   neighbourhood, §4.3.1's bullet and §4.8's examples are reconciled.
-- **Nine new vectors**, taking the suite to **296**: five for OML-28
-  (`a: [1, 2` newline, `a: [1` newline, `x: {a: [1, 2` newline `}`, `a: [1;2]`, and
-  `a: [1, 2` with no trailing newline) and one malformed document per codec
+- **Eleven new vectors**, taking the suite to **298**: seven for OML-28
+  (`a: [1, 2` newline, `a: [1` newline, `x: {a: [1, 2` newline `}`, `a: [1;2]`,
+  `a: [1, 2` with no trailing newline, `a: [1` newline `:`, and `a: [1;`) and one malformed document per codec
   under the placeholder (`{"a": }`, `a: b: c`, `a = `, `<a><b></a>`). Positions
   were counted by hand and every input measured against all five ports.
 - **New ledger entry `DIV-8`**

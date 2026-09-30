@@ -405,7 +405,7 @@ it.
 
 **E-9.** A path locates a diagnostic. Paths are normative and MUST be byte-identical
 across implementations, because conformance vectors match on them. The one
-exception is the exact value of a  position, which is
+exception is the exact value of a `parse.codec-syntax` position, which is
 implementation-defined within the bound E-31 states.
 
 **Document paths** start at `$` and descend by label. A repeated label is
@@ -489,7 +489,12 @@ its own choosing, which E-31 settles.
   value ([E-32](#852-diagnostics-matching)). **E-28 still governs a column the
   implementation converts itself** from an offset it holds; a column taken
   straight from a library that counts in another unit is the library's, and the
-  only requirement on it is the bound above. Nothing else changes: D-21's `1:1`
+  only requirement on it is the bound above. **`1:1` is a valid answer for every
+input, and that is intended.** The placeholder checks that a position is
+present and well-formed, not that it is accurate: an implementation that
+reports `1:1` for every codec syntax error satisfies E-31 and E-32. The bound
+"inside the input" is a requirement on implementations that a runner MAY check
+(E-32b); the well-formedness pattern cannot. Nothing else changes: D-21's `1:1`
   stays fixed and stays compared byte for byte, `parse.invalid-encoding` stays
   `1:1` (D-14), and E-11 still requires a text position on every `parse.*`
   diagnostic.

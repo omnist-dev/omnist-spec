@@ -50,6 +50,17 @@ def check_path_placeholder(rel: str, name: str, vec: dict) -> list[str]:
     diags = expect.get("diagnostics") if isinstance(expect, dict) else None
     if not isinstance(diags, list):
         return errors
+    # Typo guard: a path that is the placeholder in all but case or padding
+    # would otherwise pass silently as an ordinary, byte-compared path.
+    for d in diags:
+        path = d.get("path") if isinstance(d, dict) else None
+        if (isinstance(path, str) and path != PATH_PLACEHOLDER
+                and path.strip().lower() == PATH_PLACEHOLDER):
+            errors.append(
+                f"{rel}: {name!r} has path {path!r}, a near-miss of the "
+                f"placeholder {PATH_PLACEHOLDER!r} -- E-32 spells it exactly, "
+                f"lowercase, no surrounding whitespace"
+            )
     marked = [d for d in diags
               if isinstance(d, dict) and d.get("path") == PATH_PLACEHOLDER]
     if not marked:
