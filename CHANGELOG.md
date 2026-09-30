@@ -3,6 +3,30 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.24.0-beta (2026-09-30)
+
+**Normative (minor)** — resolves
+[#117](https://github.com/omnist-dev/omnist-spec/issues/117).
+
+- **A newline or `;` before `,` or `]` inside an array is insignificant**
+  ([grammars/oml.abnf](grammars/oml.abnf),
+  [§4.3.1](docs/04-oml-grammar.md#431-arrays-are-sugar),
+  [§4.6.1](docs/04-oml-grammar.md#461-top-level-disambiguation) OML-28,
+  [§4.8](docs/04-oml-grammar.md); #117). The ABNF gave the first array element
+  no trailing `[SEP]` while later elements had one, contradicting §4.3.1's
+  "otherwise insignificant" rule and four ports. `array` now reads
+  `LBRACKET [SEP] array-element [SEP] *( COMMA [SEP] array-element [SEP] ) [ COMMA [SEP] ] RBRACKET`.
+  `a: [1` newline `]`, `a: [1` newline `, 2]`, `a: [1, 2` newline `]` and
+  `a: [1;]` are valid; `a: [1` newline `2]` stays `parse.separator-in-array`.
+  OML-28's "not engaged" bullet now specifies those cases, and §4.3.1's
+  bullet is reworded to match.
+- **Four new vectors**, taking the suite to **302**, one per case above, each
+  measured against all five ports.
+- **New ledger entry `DIV-9`**
+  ([§9.4](docs/09-divergence-ledger.md#94-known-open-divergences)): Go fails all
+  four; measured results, the E-20 skip route and a removal condition.
+  `DIV-8`'s "not pinned" paragraph is updated.
+
 ## v0.23.0-beta (2026-09-30)
 
 **Normative (minor)** — resolves

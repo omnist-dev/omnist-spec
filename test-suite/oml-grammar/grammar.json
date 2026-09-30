@@ -373,6 +373,132 @@
       "comment": "OML-28 (Sec4.6.1): the `;` form of arrays/one-element-array-then-newline-is-unexpected-token. A `;` stands where a comma was owed and nothing follows it, so the code is parse.unexpected-token at the end of input. `a: [1;` has `a` at column 1, `:` 2, a space 3, `[` 4, `1` 5 and `;` 6, so the end of input is 1:7. Port status: DIV-8 (Sec9.4)."
     },
     {
+      "name": "oml-grammar/arrays/newline-before-closing-bracket-after-first-element-is-insignificant",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1\n]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-28 (Sec4.6.1), Sec4.3.1 and the array rule of grammars/oml.abnf: a newline before `]` is insignificant after the first element, as after every later one. `]` is the delimiter owed, so nothing stands in for a comma. The array expands to the single edge (a, 1). Port status: DIV-9 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/newline-before-comma-after-first-element-is-insignificant",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1\n, 2]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-28 (Sec4.6.1), Sec4.3.1 and the array rule of grammars/oml.abnf: a newline before `,` is insignificant after the first element. `,` is the delimiter owed, so the newline is not a separator. Contrast arrays/newline-inside-array-is-an-error, where an element follows the newline. Port status: DIV-9 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/newline-before-closing-bracket-after-later-element-is-insignificant",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1, 2\n]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-28 (Sec4.6.1), Sec4.3.1 and the array rule of grammars/oml.abnf: a newline before `]` after a later element, which the grammar already allowed before the first-element fix; it is the control for the first-element vectors. Port status: DIV-9 (Sec9.4)."
+    },
+    {
+      "name": "oml-grammar/arrays/semicolon-before-closing-bracket-is-insignificant",
+      "spec": "docs/04-oml-grammar.md#431-arrays-are-sugar",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: [1;]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-28 (Sec4.6.1), Sec4.3.1 and the array rule of grammars/oml.abnf: the `;` form of arrays/newline-before-closing-bracket-after-first-element-is-insignificant. `;` is a SEP like a newline, and `]` is the delimiter owed. Port status: DIV-9 (Sec9.4)."
+    },
+    {
       "name": "oml-grammar/strings/raw-string-performs-no-escape-processing",
       "spec": "docs/04-oml-grammar.md#45-strings",
       "operation": "parse",

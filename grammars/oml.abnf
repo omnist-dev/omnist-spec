@@ -47,7 +47,7 @@ value         = scalar
 ; Elements are never arrays -- there is nothing to nest into.
 ; "[]" is NOT accepted: array requires at least one element.
 
-array         = LBRACKET [SEP] array-element
+array         = LBRACKET [SEP] array-element [SEP]
                 *( COMMA [SEP] array-element [SEP] )
                 [ COMMA [SEP] ] RBRACKET
 
