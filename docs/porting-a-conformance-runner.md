@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 302 vectors as of v0.24.0-beta — dispatched by operation
+JSON-vector suite — 312 vectors as of v0.25.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -236,16 +236,19 @@ allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
 As of **v0.18.0-beta** the newest key is `declared_max_alias_expansion`
-(§2.4.1's D-18). No port recognizes it yet, and no port enforces D-18 yet
-either, so adopting the rule is two steps: **(a)** implement D-18, and
+(§2.4.1's D-18). Every vector in `formats-yaml/alias-expansion.json` carries
+it. No port enforces D-18 yet, so until you do, a runner MUST report each
+vector carrying the key as an E-20 skip citing `DIV-3` (never a pass), and
+adopting the rule is two steps: **(a)** implement D-18, and
 **(b)** add `declared_max_alias_expansion` to your allowlist.
 
 **Doing (a) without (b) buys you a false pass, which is worse than a
-failure.** Of the five vectors in `formats-yaml/alias-expansion`, two
-(`nested-anchor-fan-out-exceeds-expansion-limit`,
-`expansion-one-past-declared-limit-fails`) fail outright until you implement
-the rule — loud, triaged, fixed. The third,
-`expansion-at-declared-limit-succeeds`, reports **green either way**. It is
+failure.** Of the vectors in `formats-yaml/alias-expansion`, every one that
+expects rejection (for example `nested-anchor-fan-out-exceeds-expansion-limit`
+and `expansion-one-past-declared-limit-fails`) fails outright until you
+implement the rule — loud, triaged, fixed. The accepted boundary vectors, such
+as
+`expansion-at-declared-limit-succeeds`, report **green either way**. It is
 green today because nothing enforces the limit at all, and it stays green
 after step (a) because it is run against your implementation's own default
 maximum instead of the **3** the vector declares — an `E` at your default's
@@ -337,7 +340,7 @@ therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "302 pass" and "302 pass,
+note, an issue — say the mode alongside the count. "312 pass" and "312 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure

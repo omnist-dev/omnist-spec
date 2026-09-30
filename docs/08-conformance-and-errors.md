@@ -162,7 +162,7 @@ a syntax error, or the reverse, sends a user looking in the wrong place.
 | `document.limit.depth` | Nesting exceeds the implementation's configured depth limit |
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
-| `document.limit.alias-expansion` | An anchored definition's expansion factor exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
+| `document.limit.alias-expansion` | The expansion factor of an anchored definition, of any other mapping or sequence, or of the document root exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
 **E-4.** These four `document.limit.*` codes correspond exactly to the four

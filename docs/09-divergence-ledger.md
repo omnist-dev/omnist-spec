@@ -153,7 +153,8 @@ extension (§9.6).
 The Track 2 row above is the v0.22.0-beta suite, 287 vectors. v0.23.0-beta added
 11 vectors (298 in all); `DIV-8` records how each port fares on those.
 v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port fares on
-those.
+those. v0.25.0-beta added 10 more (312 in all), all in
+`formats-yaml/alias-expansion.json`; `DIV-3` records how each port fares.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -219,8 +220,20 @@ by [omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
 [omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113). Remove this
 entry when every port enforces D-18.
 
-**What a runner reports today.** All five ports skip the six vectors in
-`test-suite/formats-yaml/alias-expansion.json` as E-20 skips citing this entry.
+**D-18 now also requires the container check (v0.25.0-beta, #121).** Checking
+anchored definitions alone left the limit bypassable by omitting the anchor on
+the amplifying node, so the rule now measures every mapping and sequence and
+the root as well. Go's omnist-go#124 implements the anchored-only version, and
+no port implements the container check yet. On Go PR #124's anchored-only
+check, the six rejection vectors among the ten added with it (unanchored
+merge fan-in, list of aliasing mappings, root-level aliases, unanchored merge
+one past the limit, large-anchor merge over the limit, inline merge source
+one past the limit) are expected to fail, and the four that expect acceptance
+pass. Elsewhere all ten are E-20 skips.
+
+**What a runner reports today.** All five ports skip the sixteen vectors (six before v0.25.0-beta) in
+`test-suite/formats-yaml/alias-expansion.json` as E-20 skips citing this entry;
+every one carries `declared_max_alias_expansion`.
 Java has a partial stop-gap, not an implementation: SnakeYAML's default cap of
 50 collection aliases rejects legitimate merge-key configs with 51 or more
 references (documented in omnist-j#113).
