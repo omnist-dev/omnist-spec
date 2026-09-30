@@ -3,6 +3,33 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.25.0-beta (2026-09-30)
+
+**Normative (minor)** — resolves
+[#121](https://github.com/omnist-dev/omnist-spec/issues/121).
+
+- **D-18 bounds every container, not only anchored definitions**
+  ([§2.4.1](docs/02-document-model.md#241-bounding-alias-expansion), D-18,
+  D-19; #121). The expansion factor was measured on anchored nodes only, so
+  omitting the anchor on the amplifying node defeated it: an unanchored merge
+  fan-in and a list of aliasing mappings were accepted and cost seconds
+  and gigabytes in Go. Every mapping and sequence, the document root, and an
+  inline merge source is now a candidate node, anchored or not. Scalars are
+  never checked. The `W(b) - 1` merge rule is unchanged. The check MUST be one
+  pass with memoized `W` and `S`, before materialization, with saturating
+  arithmetic.
+- **The "E = 1.00 at every size" statement is corrected.** It held for the
+  anchored defaults block; a mapping that merges a large anchor has `E` of
+  about `(keys + 2) / 3`, so `job: {<<: *base, script: x}` is accepted with 60
+  base keys and rejected with 150 at the default 50. Stated as intended.
+- **Eight new vectors**, taking the suite to **310**, all in
+  `formats-yaml/alias-expansion.json`: two unanchored rejections, a root-only
+  rejection, an unanchored boundary pair, a shared-defaults false-positive
+  guard and a large-anchor merge accepted and rejected by declared maximum.
+- **Ledger `DIV-3` updated:** D-18 now also requires the container check;
+  omnist-go#124 implements the anchored-only version and no port implements
+  the new rule.
+
 ## v0.24.0-beta (2026-09-30)
 
 **Normative (minor)** — resolves

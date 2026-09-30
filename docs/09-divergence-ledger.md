@@ -153,7 +153,8 @@ extension (§9.6).
 The Track 2 row above is the v0.22.0-beta suite, 287 vectors. v0.23.0-beta added
 11 vectors (298 in all); `DIV-8` records how each port fares on those.
 v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port fares on
-those.
+those. v0.25.0-beta added 8 more (310 in all), all in
+`formats-yaml/alias-expansion.json`; `DIV-3` records how each port fares.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -219,7 +220,14 @@ by [omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
 [omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113). Remove this
 entry when every port enforces D-18.
 
-**What a runner reports today.** All five ports skip the six vectors in
+**D-18 now also requires the container check (v0.25.0-beta, #121).** Checking
+anchored definitions alone left the limit bypassable by omitting the anchor on
+the amplifying node, so the rule now measures every mapping and sequence and
+the root as well. Go's omnist-go#124 implements the anchored-only version, and
+no port implements the container check yet; the eight vectors added with it
+are expected to fail there (its check is anchored-only) and are E-20 skips elsewhere.
+
+**What a runner reports today.** All five ports skip the fourteen vectors (six before v0.25.0-beta) in
 `test-suite/formats-yaml/alias-expansion.json` as E-20 skips citing this entry.
 Java has a partial stop-gap, not an implementation: SnakeYAML's default cap of
 50 collection aliases rejects legitimate merge-key configs with 51 or more

@@ -105,8 +105,9 @@ definition itself contains references multiplies. YAML's anchor/alias
 mechanism is the only such construct among the five formats this spec covers,
 so YAML is the only format on which
 [D-18](../02-document-model.md#241-bounding-alias-expansion) currently has
-anything to do — and a conformant YAML reader MUST enforce it. Compute each
-anchored definition's expansion factor `E` from the anchor/alias graph
+anything to do — and a conformant YAML reader MUST enforce it. Compute the
+expansion factor `E` of every anchored definition, every other mapping and
+sequence, and the root, from the anchor/alias graph
 *before* expanding, reject the input with `document.limit.alias-expansion`
 when any `E` exceeds the configured maximum (reference default 50), and
 reject a self-referential anchor outright. §2.4.1 defines `E`, gives the

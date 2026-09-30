@@ -601,6 +601,791 @@
         ]
       },
       "comment": "Byte-identical input to the vector above, one past the declared maximum: E(y) = 3.00 against a declared limit of 2. Same skip-not-fail caveat for an implementation with no configuration surface. The pair pins the boundary the way the depth and node-count pairs in document-model/limits.json do -- exceeding your own declared limit produces document.limit.alias-expansion, never a different code (not document.limit.nodes, per E-4a), never truncation, never silent acceptance."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/unanchored-merge-fan-in-exceeds-expansion-limit",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 5,
+        "text": "base: &b {k1: 1, k2: 2, k3: 3, k4: 4, k5: 5, k6: 6, k7: 7, k8: 8, k9: 9, k10: 10}\nt: {<<: [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "The unanchored merge fan-in from omnist-spec#121, scaled to N=10 keys, M=10 merges. W(b)=S(b)=11, E(b)=1.00. t carries no anchor: W(t) = 1 + 10*(W(b)-1) = 101, S(t) = 2 (t's container, and the single << entry whatever the length of its alias sequence), E(t) = 50.50 against a declared maximum of 5. The root also exceeds it: W = 1+11+101 = 113, S = 1+11+2 = 14, E = 8.07. A reader that checks only anchored definitions accepts this input and materializes 101 slots from 14 written. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/sequence-of-aliasing-mappings-exceeds-expansion-limit",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 5,
+        "text": "base: &b [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\nlist:\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n  - {k: *b}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "The list-of-aliasing-mappings shape from omnist-spec#121, scaled to N=10 scalars, M=10 items. The anchored sequence b has W=S=11, E=1.00. Each unanchored item {k: *b} has W = 1+11 = 12 and S = 2 (its container and the alias), E = 6.00 against a declared maximum of 5, so the first item is rejected. The list itself also exceeds it (W = 1+10*12 = 121, S = 1+10*2 = 21, E = 5.76); the root alone would not fire (W = 1+11+121 = 133, S = 1+11+21 = 33, E = 4.03). Neither the list nor its items carry an anchor. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/root-level-aliases-exceed-expansion-limit-at-root",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 5,
+        "text": "base: &b {k1: 1, k2: 2, k3: 3, k4: 4, k5: 5, k6: 6, k7: 7, k8: 8, k9: 9, k10: 10}\nr1: *b\nr2: *b\nr3: *b\nr4: *b\nr5: *b\nr6: *b\nr7: *b\nr8: *b\nr9: *b\nr10: *b\nr11: *b\nr12: *b\nr13: *b\nr14: *b\nr15: *b\nr16: *b\nr17: *b\nr18: *b\nr19: *b\nr20: *b\nr21: *b\nr22: *b\nr23: *b\nr24: *b\nr25: *b\nr26: *b\nr27: *b\nr28: *b\nr29: *b\nr30: *b\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "A rejection that only the root can make. The anchored mapping base has W=S=11, E=1.00, and the thirty root entries are bare aliases, not containers, so no other candidate exists. Root: W = 1 + 11 + 30*11 = 342, S = 1 + 11 + 30 = 42, E = 8.14 against a declared maximum of 5. Checks the rule that the document root is a candidate node. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/unanchored-merge-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "text": "base: &b {k1: 1, k2: 2, k3: 3, k4: 4, k5: 5, k6: 6, k7: 7}\nt: {<<: *b, z: 1}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "k1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "k4",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "k5",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "k6",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 6
+                      }
+                    }
+                  ],
+                  [
+                    "k7",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 7
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "k1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "k4",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "k5",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "k6",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 6
+                      }
+                    }
+                  ],
+                  [
+                    "k7",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 7
+                      }
+                    }
+                  ],
+                  [
+                    "z",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Boundary pair, accepted half. base is an anchor of 7 scalars (W=S=8, E=1.00). The unanchored t merges it and adds z: W(t) = 1 + (8-1) + 1 = 9, S(t) = 3 (container, <<, z), E(t) = 3.00, exactly the declared maximum of 3, which MUST succeed: rejection is for E exceeding the maximum. Root: W = 1+8+9 = 18, S = 1+8+3 = 12, E = 1.50. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/unanchored-merge-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "text": "base: &b {k1: 1, k2: 2, k3: 3, k4: 4, k5: 5, k6: 6, k7: 7, k8: 8}\nt: {<<: *b, z: 1}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Boundary pair, rejected half: the same input with 8 base keys. base: W=S=9. t: W = 1+8+1 = 10, S = 3, E(t) = 3.33 against a declared maximum of 3. Root: W = 1+9+10 = 20, S = 1+9+3 = 13, E = 1.54, so t alone is the trigger. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/unanchored-shared-defaults-config-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 50,
+        "text": "x-base: &b {a: 1, b: 2, c: 3, d: 4, e: 5}\nweb: {<<: *b, image: w}\ndb: {<<: *b, image: d}\ncache: {<<: *b, image: c}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "x-base",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "e",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "web",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "e",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "image",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "w"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "db",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "e",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "image",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "d"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "cache",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "e",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "image",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "c"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "False-positive guard: a compose-style file in which three unanchored services merge one anchored 5-key default block. W(b)=S(b)=6. Each service: W = 1+5+1 = 7, S = 3, E = 2.33. Root: W = 1+6+3*7 = 28, S = 1+6+3*3 = 16, E = 1.75. All far below the default 50; the container rule MUST NOT reject ordinary shared-defaults YAML. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/unanchored-merge-of-large-anchor-under-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 5,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3, k4: 4, k5: 5, k6: 6, k7: 7, k8: 8, k9: 9, k10: 10, k11: 11, k12: 12}\njob: {<<: *base, script: x}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "k1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "k4",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "k5",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "k6",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 6
+                      }
+                    }
+                  ],
+                  [
+                    "k7",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 7
+                      }
+                    }
+                  ],
+                  [
+                    "k8",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 8
+                      }
+                    }
+                  ],
+                  [
+                    "k9",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 9
+                      }
+                    }
+                  ],
+                  [
+                    "k10",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 10
+                      }
+                    }
+                  ],
+                  [
+                    "k11",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 11
+                      }
+                    }
+                  ],
+                  [
+                    "k12",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 12
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "job",
+              {
+                "edges": [
+                  [
+                    "k1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "k4",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "k5",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "k6",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 6
+                      }
+                    }
+                  ],
+                  [
+                    "k7",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 7
+                      }
+                    }
+                  ],
+                  [
+                    "k8",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 8
+                      }
+                    }
+                  ],
+                  [
+                    "k9",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 9
+                      }
+                    }
+                  ],
+                  [
+                    "k10",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 10
+                      }
+                    }
+                  ],
+                  [
+                    "k11",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 11
+                      }
+                    }
+                  ],
+                  [
+                    "k12",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 12
+                      }
+                    }
+                  ],
+                  [
+                    "script",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "x"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Scaled form of the job case in omnist-spec#121: job merges a 12-key base and adds script. W(base)=S(base)=13. W(job) = 1+12+1 = 14, S(job) = 3, E(job) = 4.67 -- about (keys+2)/3, which is intended: a mapping that merges a large anchor and writes little of its own is a high-ratio construct. Accepted at a declared maximum of 5. Root: W = 1+13+14 = 28, S = 1+13+3 = 17, E = 1.65. Same input as the next vector. Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/unanchored-merge-of-large-anchor-over-limit-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 4,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3, k4: 4, k5: 5, k6: 6, k7: 7, k8: 8, k9: 9, k10: 10, k11: 11, k12: 12}\njob: {<<: *base, script: x}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Byte-identical input to the previous vector with the declared maximum lowered to 4: E(job) = 4.67 exceeds it, so the unanchored job mapping is rejected. The real-world analogue is 150 base keys against the default 50 (E = 50.67). Per the container rule in D-18, every mapping and sequence, anchored or not, and the root, is checked; declared_max_alias_expansion is vector-local and an implementation with no configuration surface reports skip, not fail."
     }
   ]
 }

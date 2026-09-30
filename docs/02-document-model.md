@@ -184,7 +184,7 @@ big-data ingestion engine.
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
-| Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, in a format that has an anchor/reference mechanism (D-18) |
+| Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, any other mapping or sequence, and the document root, in a format that has an anchor/reference mechanism (D-18) |
 
 **The fourth row is conditional; the first three are not.** Depth, node count
 and integer digits bound every Document on every route into the model, so
@@ -267,10 +267,15 @@ and be replayed indefinitely at the reader's expense.
 **D-18.** A codec for a format with an anchor/reference mechanism — one in
 which a construct may be defined once and referred to from elsewhere, so that
 a single definition materializes more than once — MUST enforce a finite
-maximum **expansion factor** on every anchored definition in its input, and
+maximum **expansion factor** on every **candidate node** in its input, and
 MUST reject input that exceeds it with `document.limit.alias-expansion`
 ([§8.3.2](08-conformance-and-errors.md#832-document-building-and-limits)).
-For an anchored definition `a`:
+A candidate node is every anchored definition, **and** every mapping and
+sequence in the input whether or not it is anchored, **including the document
+root** when it is a container and including a mapping written inline as a
+merge source. Bounding only anchored nodes leaves the limit one keystroke from
+void: an input that omits the anchor on the amplifying node is never checked.
+For a candidate node `a`:
 
 - `W(a)` is the number of **value slots materialized** when `a` is expanded. A
   container counts as one slot, a scalar leaf counts as one slot, and a
@@ -287,6 +292,27 @@ For an anchored definition `a`:
   make `E` depend on which side the reader chose, and a solitary scalar
   anchor would have a zero denominator.
 - `E(a) = W(a) / S(a)`.
+
+**What is, and is not, a candidate.**
+
+- A **scalar** is never checked: `W = S = 1`, so `E = 1.00` trivially. A
+  scalar anchor is a candidate in name only.
+- The **document root** is a candidate when it is a mapping or a sequence.
+  `S(root)` counts the whole document as written and `W(root)` the whole
+  document as materialized.
+- An **unanchored container that merely contains aliases** is a candidate
+  like any other. `S` counts each alias it holds as one slot and `W` adds what
+  each alias materializes, exactly as for an anchored node; the absence of an
+  anchor changes nothing about its `E`.
+- A **mapping written inline as a merge source** (YAML `<<: {a: 1}`) is a
+  candidate. Its slots are written where it appears, it contributes `W - 1`
+  to the referring mapping like any merge source, and its own `E` is 1.00.
+  The sequence carrying a merge key's aliases is not a candidate: it is a
+  syntactic carrier and holds no slot (below).
+- A container nested inside another candidate is checked on its own **and**
+  counted within the outer one: each candidate is measured over its own
+  subtree, so one amplifying subtree is rejected where it sits, not diluted by
+  the rest of a large document.
 
 **What a reference contributes to `W`.** A reference contributes exactly what
 it materializes — no more, and no less:
@@ -337,8 +363,17 @@ away; `r`'s plain alias of `q` contributes all 3 of `q`'s slots, because
 `q`'s container *is* reproduced under `n`.
 
 D-18 is violated, and the codec MUST reject the input, when `E(a)` exceeds
-the configured maximum for any anchored definition `a` in it. The reference
-default is **50**.
+the configured maximum for any candidate node `a` in it. The reference
+default is **50**. A worked unanchored case, given `b: &b {k1: 1, k2: 2, k3: 3}`
+and `t: {<<: [*b, *b, *b, *b]}`, where `t` has no anchor:
+
+```
+W(b) = 4   S(b) = 4   E(b) = 1.00
+W(t) = 1 + 4*(W(b) - 1) = 13   S(t) = 2   E(t) = 6.50
+```
+
+`t` is a candidate although nothing refers to it, and it is rejected at a
+maximum of 6 for exactly the reason an anchored `t` would be.
 
 - **D-19.** The check MUST be performed **before** the expansion is
   materialized. `W` and `S` are computable in time linear in the size of the
@@ -367,15 +402,25 @@ default is **50**.
   read it as the structural count defined by these rules; the two coincide
   except under key override.
 
+  **The check is one pass.** `W` and `S` for every candidate node MUST be
+  computed in a single traversal of the input with each anchored definition's
+  `W` and `S` memoized, so the work stays linear in the size of the input no
+  matter how many times a definition is referred to: a reference reads the
+  target's stored `W`, it does not re-walk the target. Counting each candidate
+  by re-expanding the aliases inside it is the quadratic or exponential
+  behaviour D-19 forbids.
+
   **D-19's bound holds only if the check is made as it goes.** An
-  implementation SHOULD evaluate `E(a)` per anchored definition as it computes
+  implementation SHOULD evaluate `E(a)` per candidate node as it computes
   it and reject on the first `E(a)` over the maximum, rather than computing
   every `W` in the input and checking afterwards. Checking as it goes keeps
   every `W` it ever holds bounded by `max × S(a)` for the anchor in hand.
   Deferring the check lets the very input D-18 exists to refuse drive a `W` to
   arbitrary magnitude first — on a fixed-width integer that is an overflow,
   and a wrapped `W` can compare *under* the maximum, turning the attack input
-  into an accept. An implementation that does defer the check MUST otherwise
+  into an accept. `W` accumulation MUST be saturating (or arbitrary-precision)
+  regardless of when the check runs, because an unanchored container can carry
+  a `W` as large as an anchored one. An implementation that does defer the check MUST otherwise
   guard against that overflow, with a checked or saturating accumulation or an
   arbitrary-precision `W`.
 - **D-20.** An anchored definition that refers to itself, directly or through
@@ -415,10 +460,22 @@ gap in it, and it is deliberately not restated here: one refusal per hazard.
 **On the reference default of 50.** It is calibrated against `E` as defined
 above, measured on real documents. Legitimate anchored YAML clusters far
 below it: a merge-key configuration of the `<<: *defaults` kind that
-docker-compose and GitLab CI use reads `E = 1.00` at every size tested, up to
-36 KB, because a merge key flattens into the referring mapping rather than
-nesting under it; anchor-to-anchor chains and scalar-constant reuse read at
-most 5.75. The amplifying shape — nested anchors, each level referring to the
+docker-compose and GitLab CI use reads `E = 1.00` for the *anchored
+defaults block* at every size tested, up to 36 KB, because a merge key
+flattens into the referring mapping rather than nesting under it;
+anchor-to-anchor chains and scalar-constant reuse read at most 5.75.
+
+**A mapping that merges a large anchor does not read 1.00, anchored or not.**
+Its `E` is about `(keys + 2) / 3`: `job: {<<: *base, script: x}` writes three
+slots (the container, `<<`, `script`) and materializes `keys + 2`, so with 60
+base keys `E(job) = 20.67` and with 150 it is `50.67` and is rejected at the
+default. That is intended. The candidate rule checks every container, so a
+mapping that writes almost nothing of its own while pulling in a large block
+is exactly the ratio D-18 bounds; the earlier "1.00 at every size" reading
+held only because unanchored referrers were never measured. An input whose
+merging mappings each carry enough local keys of their own stays well under
+the limit, and an implementation MAY raise the maximum under D-10 and D-11
+for a workload that needs it. The amplifying shape — nested anchors, each level referring to the
 previous one several times — crosses into dangerous territory around
 `E = 170` and climbs steeply from there. 50 sits roughly 9× above the worst
 legitimate document measured and roughly 3.4× below the weakest dangerous
