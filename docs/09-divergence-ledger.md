@@ -115,16 +115,16 @@ Rust ([omnist-rs#185](https://github.com/omnist-dev/omnist-rs/pull/185), `e07b19
 Java ([omnist-j#117](https://github.com/omnist-dev/omnist-j/pull/117), `ac12dc1`).
 All five pass all fourteen vectors v0.22.0-beta added.
 
-**Versions.** The Version row is each port's latest **tag**. Three ports'
-default branch carries a newer, untagged version: Python `0.10.1` (latest tag
-and PyPI release `0.10.0`), Go `v0.5.1-alpha` (latest tag `v0.5.0-alpha`) and
-Rust `0.3.1-alpha` (latest tag `v0.3.0-alpha`, published to crates.io).
-TypeScript `v0.4.1-alpha` is tagged and is **not** published to npm. Go is
-distributed by tag only. Java `v0.2.6-alpha` is tagged, but its Maven Central
-release run is waiting for maintainer approval, and the earlier `0.2.5-alpha`
-upload is waiting for a manual Publish in the Central Portal; Maven Central's
-`maven-metadata.xml` for `dev.omnist:omnist-j` lists `0.2.1-alpha` and
-`0.2.2-alpha` only, so the latest public release is `0.2.2-alpha`.
+**Versions.** The Version row is each port's latest **tag**. Python
+`v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust `v0.3.1-alpha` is on
+crates.io (newest version `0.3.1-alpha`). Go `v0.5.1-alpha` is distributed by
+tag only (module proxy; no registry). TypeScript `v0.4.1-alpha` is tagged but
+**not** published to npm: `@omnist-dev/omnist` (the name in `package.json`)
+has only `0.2.0-alpha` and `0.3.0-alpha` (the `latest` and `alpha` tag).
+Java `v0.2.6-alpha` is tagged, but its Maven Central releases await manual
+Portal publishing by the maintainer; Maven Central's `maven-metadata.xml` for
+`dev.omnist:omnist-j` lists `0.2.1-alpha` and `0.2.2-alpha` only, so the
+latest public release is `0.2.2-alpha`.
 
 Two things are deliberately not claimed as done anywhere: no port enforces the
 alias expansion limit D-18 (`DIV-3`), and no port implements the OSD-OML
@@ -132,7 +132,7 @@ extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.0 | 0.4.1-alpha | 0.3.0-alpha | 0.5.0-alpha | 0.2.6-alpha |
+| Version | 0.10.1 | 0.4.1-alpha | 0.3.1-alpha | 0.5.1-alpha | 0.2.6-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 is enforced by no port yet — DIV-3) | all three | all three | all three | all three | all three |
