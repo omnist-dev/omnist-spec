@@ -132,7 +132,7 @@ runtime-configurable safety limit (§2.4).
 ### Declared-limit keys, and the allowlist every runner needs
 
 A vector that pins a safety-limit boundary carries the limit it was written
-against as a `declared_max_*` key inside `input`. These are the four in the
+against as a `declared_max_*` key inside `input`. These are the five in the
 suite today:
 
 ```
@@ -140,6 +140,7 @@ declared_max_depth              §2.4 maximum nesting depth
 declared_max_nodes              §2.4 maximum node count
 declared_max_int_digits         §2.4 maximum integer digits
 declared_max_alias_expansion    §2.4.1 maximum alias expansion factor (D-18)
+declared_max_expanded_slots     §2.4.1 maximum expanded size in value slots (D-22)
 ```
 
 A key is a **vector-local parameter, not the reference default**. A runner
@@ -155,6 +156,15 @@ Runners implement this as an allowlist — Python's is a `_LIMIT_KEYS` set in
 `tools/conformance/vector_runner.py`, and the other ports' runners are
 modelled on it. **A key missing from that set is silently treated as an
 ordinary vector**, which is the failure mode above.
+
+`declared_max_expanded_slots` is new in v0.26.0-beta. It carries `W(root)`'s
+maximum, in value slots, and a vector may declare it together with
+`declared_max_alias_expansion` to pin which code wins when both are crossed
+(D-22: `document.limit.alias-expansion`). No port enforces D-22 yet; until one
+does, its runner reports every vector carrying the key as an E-20 skip. The same
+two steps apply, and so does the same false-pass hazard: a runner that does
+not allowlist the key runs `expanded-size-at-declared-cap-succeeds` against its
+own default and passes without testing the boundary.
 
 `declared_max_alias_expansion` is new in v0.18.0-beta, and no port enforces
 D-18 yet either, so adopting it takes two steps: **(a)** implement the rule,

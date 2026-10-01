@@ -163,26 +163,34 @@ a syntax error, or the reverse, sends a user looking in the wrong place.
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
 | `document.limit.alias-expansion` | The expansion factor of an anchored definition, of any other mapping or sequence, or of the document root exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
+| `document.limit.expanded-size` | The number of value slots an input materializes, `W` of the document root, exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-**E-4.** These four `document.limit.*` codes correspond exactly to the four
-quantities in [§2.4](02-document-model.md#24-safety-limits) — no fifth, no
+**E-4.** These five `document.limit.*` codes correspond exactly to the five
+quantities in [§2.4](02-document-model.md#24-safety-limits) — no sixth, no
 tiers. **The codes are fixed; the threshold that triggers each one is not**
-— an implementation MAY configure any of the four limits to a value other
+— an implementation MAY configure any of the five limits to a value other
 than the reference default, per §2.4, but whatever value it configures,
 crossing it MUST raise exactly this code, never a different one and never
-silently.
+silently. The expanded size has a code of its own, rather than sharing
+`document.limit.alias-expansion`, because this rule gives each quantity
+exactly one code and because the two refusals say different things: an
+`alias-expansion` input amplifies, an `expanded-size` input is large, and a
+caller answers them differently.
 
 **E-4a.** The first three apply to every Document on every route into the
-model. `document.limit.alias-expansion` is different in reach, not in kind:
-per [D-18](02-document-model.md#241-bounding-alias-expansion) it is raised
-only by a codec for a format that has an anchor/reference mechanism — YAML
-alone among the five formats today — and cannot arise from a programmatic
+model. `document.limit.alias-expansion` and `document.limit.expanded-size` are
+different in reach, not in kind: per
+[D-18](02-document-model.md#241-bounding-alias-expansion) and D-22 they are
+raised only by a codec for a format that has an anchor/reference mechanism —
+YAML alone among the five formats today — and cannot arise from a programmatic
 construction, which has no anchors to expand. An implementation whose codecs
-have no such mechanism will never raise it; an implementation whose codecs do
-MUST raise exactly this code when its configured maximum is crossed, and MUST
-NOT report an over-expansion as `document.limit.nodes` on the grounds that a
-large expansion would have hit the node cap eventually. Its `path` is a
+have no such mechanism will never raise them; an implementation whose codecs do
+MUST raise exactly the matching code when its configured maximum is crossed,
+and MUST NOT report an over-expansion as `document.limit.nodes` on the grounds
+that a large expansion would have hit the node cap eventually. When one input
+crosses both, the code is `document.limit.alias-expansion`
+([D-22](02-document-model.md#241-bounding-alias-expansion)). Its `path` is a
 Document path, per E-11, and it is `$` — the violation is a property of the
 input's reference graph as a whole, detected before any Document structure
 exists to descend into.
