@@ -32,6 +32,12 @@ HEX_DIGITS = set("0123456789abcdef")
 
 # Sec8.5.2's E-32: the one placeholder path a vector may use, and the one
 # place it may stand. Everything else in the suite is compared byte for byte.
+PATH_PLACEHOLDER = "line:col"
+PLACEHOLDER_CODE = "parse.codec-syntax"
+PLACEHOLDER_FORMATS = {"json", "yaml", "toml", "xml"}
+DOUBLED_BOM_TEXT = "﻿﻿"
+DOUBLED_BOM_HEX = "efbbbfefbbbf"
+
 # The vector-local safety-limit parameters (test-suite/README.md, "Declared-limit
 # keys"). Each is a positive integer; an unknown `declared_*` key is an error
 # because a runner's allowlist would silently run it against its own default.
@@ -42,12 +48,6 @@ DECLARED_LIMIT_KEYS = {
     "declared_max_alias_expansion",
     "declared_max_expanded_slots",
 }
-
-PATH_PLACEHOLDER = "line:col"
-PLACEHOLDER_CODE = "parse.codec-syntax"
-PLACEHOLDER_FORMATS = {"json", "yaml", "toml", "xml"}
-DOUBLED_BOM_TEXT = "﻿﻿"
-DOUBLED_BOM_HEX = "efbbbfefbbbf"
 
 
 def check_path_placeholder(rel: str, name: str, vec: dict) -> list[str]:
@@ -103,6 +103,12 @@ def check_declared_limits(rel: str, name: str, vec: dict) -> list[str]:
     """Every `declared_*` key is one of the five known limit keys, and its
     value is a positive integer (a bool is not one, though it is an int)."""
     errors: list[str] = []
+    for key in vec:
+        if key.startswith("declared_"):
+            errors.append(
+                f"{rel}: {name!r} has {key!r} outside 'input' -- declared-limit "
+                f"keys live inside 'input'"
+            )
     inp = vec.get("input")
     if not isinstance(inp, dict):
         return errors

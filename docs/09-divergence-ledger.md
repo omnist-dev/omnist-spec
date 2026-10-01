@@ -126,11 +126,12 @@ Portal publishing by the maintainer; Maven Central's `maven-metadata.xml` for
 `dev.omnist:omnist-j` lists `0.2.1-alpha` and `0.2.2-alpha` only, so the
 latest public release is `0.2.2-alpha`.
 
-Two things are deliberately not claimed as done anywhere: only Go enforces the
-alias expansion limit D-18 (`DIV-3`; Go and, since omnist-ts#154 merged,
-TypeScript do; Python and Java do not, and Rust's pull request is open) and no
-port implements the v0.26.0-beta carrier rule or the D-22 expanded-size cap, and no
-port implements the OSD-OML extension (§9.6).
+Two things are deliberately not claimed as done anywhere: the alias expansion
+limit D-18 outside Go (v0.6.0-alpha) and TypeScript (omnist-ts#154,
+v0.5.0-alpha, merged, untagged), which enforce it (`DIV-3`; Rust's
+omnist-rs#186 is open and not claimed; Python and Java do not), and the
+v0.26.0-beta carrier rule and D-22 expanded-size cap, which no port implements.
+No port implements the OSD-OML extension (§9.6) either.
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
@@ -155,15 +156,15 @@ port implements the OSD-OML extension (§9.6).
 The Track 2 row above is the v0.22.0-beta suite, 287 vectors. v0.23.0-beta added
 11 vectors (298 in all); `DIV-8` records how each port fares on those.
 v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port fares on
-those. v0.25.0-beta added 10 more (312 in all), and v0.26.0-beta 11 more (323
-in all); all 21 are in `formats-yaml/alias-expansion.json`, and `DIV-3` records
+those. v0.25.0-beta added 10 more (312 in all), and v0.26.0-beta 19 more (331
+in all); all 29 are in `formats-yaml/alias-expansion.json`, and `DIV-3` records
 how each port fares.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
 alias-expansion (`DIV-3`), 6 `declared_max_depth` / `declared_max_nodes` /
 `declared_max_int_digits` vectors (its limits are module constants). TypeScript:
-28 OSD-OML, 6 alias-expansion (`DIV-3`), 6 compile-time limits, and 20
+28 OSD-OML, 6 compile-time limits, and 20
 `schema.*` vectors
 ([omnist-ts#149](https://github.com/omnist-dev/omnist-ts/issues/149):
 `SchemaError` has no structured code or path). Rust: 28 OSD-OML
@@ -172,7 +173,10 @@ alias-expansion ([omnist-rs#180](https://github.com/omnist-dev/omnist-rs/issues/
 `DIV-3`), 6 `document-model/limits` (compile-time constants,
 [omnist-rs#181](https://github.com/omnist-dev/omnist-rs/issues/181)). Go: 28
 OSD-OML ([omnist-go#111](https://github.com/omnist-dev/omnist-go/issues/111)),
-none for alias-expansion at v0.25.0-beta (`DIV-3`); the seven `declared_max_expanded_slots` vectors of v0.26.0-beta are skips until it implements D-22. Java: 28 OSD-OML ([omnist-j#105](https://github.com/omnist-dev/omnist-j/issues/105)),
+none for alias-expansion at v0.25.0-beta (`DIV-3`); the eight
+`declared_max_expanded_slots` vectors of v0.26.0-beta are skips until it
+implements D-22. Java: 28 OSD-OML
+([omnist-j#105](https://github.com/omnist-dev/omnist-j/issues/105)),
 6 alias-expansion ([omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113),
 `DIV-3`). Skip counts are therefore not comparable across ports beyond those
 shared categories.
@@ -211,17 +215,25 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-**DIV-3. Only Go and TypeScript enforce the alias expansion limit (D-18); Python, Rust and Java do not yet, and no port implements the v0.26.0-beta additions (merge-carrier rule, D-22 expanded-size cap).**
+**DIV-3. Go and TypeScript enforce the alias expansion limit (D-18); Python,
+Rust and Java do not yet, and no port implements the v0.26.0-beta additions
+(merge-carrier rule, D-22 expanded-size cap).**
 D-18, D-19 and D-20 ([§2.4.1](02-document-model.md#241-bounding-alias-expansion))
 are normative content as of **v0.18.0-beta**, and as of v0.21.0-beta no port
-enforced them. Go now does (omnist-go v0.6.0-alpha, [omnist-go#124](https://github.com/omnist-dev/omnist-go/pull/124), `1520c94`), including the v0.25.0-beta container rule below. This is a rollout gap, not a design defect and not a divergence
+enforced them. Go now does (omnist-go v0.6.0-alpha,
+[omnist-go#124](https://github.com/omnist-dev/omnist-go/pull/124), `1520c94`),
+including the v0.25.0-beta container rule below. This is a rollout gap, not a
+design defect and not a divergence
 any implementation intends to keep: it is the expected interval between a spec
 rule landing and the ports adopting it. Tracked by omnist-spec#75, and per port
 by [omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
 [omnist-rs#180](https://github.com/omnist-dev/omnist-rs/issues/180) and
-[omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113). TypeScript's PR
-([omnist-ts#154](https://github.com/omnist-dev/omnist-ts/pull/154)) is open and
-not merged, so it is not claimed. Remove this entry when every port enforces D-18.
+[omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113).
+TypeScript's PR
+([omnist-ts#154](https://github.com/omnist-dev/omnist-ts/pull/154),
+v0.5.0-alpha) has merged and is untagged. Rust's
+[omnist-rs#186](https://github.com/omnist-dev/omnist-rs/pull/186) is open and
+not claimed. Remove this entry when every port enforces D-18.
 
 **D-18 now also requires the container check (v0.25.0-beta, #121).** Checking
 anchored definitions alone left the limit bypassable by omitting the anchor on
@@ -232,8 +244,9 @@ checked against E at most `Limits.MaxAliasExpansion` (default 50), reporting
 `document.limit.alias-expansion`, and Go passes all ten vectors added with
 v0.25.0-beta. Elsewhere all ten are E-20 skips. Go implements v0.25.0-beta.
 TypeScript's [omnist-ts#154](https://github.com/omnist-dev/omnist-ts/pull/154)
-has since merged; its conformance counts and its fit to the v0.25.0-beta
-container rule are not re-measured here. Rust's
+has since merged and is untagged. It is reported at 278 pass / 0 fail / 34 skip
+of 312 vectors at v0.25.0-beta, a figure relayed to this change and not re-run
+here; it passes fewer at v0.26.0-beta until it adopts the new rules. Rust's
 [omnist-rs#186](https://github.com/omnist-dev/omnist-rs/pull/186) is open;
 Python and Java do not implement D-18.
 
@@ -247,10 +260,14 @@ previously listed as unpinned.** No port implements either.
   alias to it contributes the sum of `W(member) - 1`
   ([§2.4.1](02-document-model.md#241-bounding-alias-expansion)). Go's
   v0.6.0-alpha treats an anchored literal carrier as an ordinary merge value
-  (its `S` is inflated and its `E` under-counted) and counts `<<: *s` as `W = 23`
+  (its `S` is inflated and its `E` under-counted) and counts `<<: *s` as `W =
+  23`
   where the rule gives 21 for two 10-key anchors, as measured in the independent
-  review of omnist-go#124. Four new vectors pin it. They were not run against Go
-  for this entry, so Go is expected to fail some of them rather than recorded as
+  review of omnist-go#124. Four new vectors pin it, and eight more pin the
+  edge shapes (a non-mapping merge member is `parse.codec-syntax`, which also
+  wins over a limit code; inline and newly anchored members of a carrier are
+  counted as standalone ones are). They were not run against Go for this
+  entry, so Go is expected to fail some of them rather than recorded as
   failing.
 - **An absolute cap on expanded size, D-22
   ([omnist-spec#125](https://github.com/omnist-dev/omnist-spec/issues/125)).**
@@ -259,16 +276,20 @@ previously listed as unpinned.** No port implements either.
   fail, `document.limit.alias-expansion` is reported. D-18 bounds amplification,
   not size: Go accepted 30 000 containers (`W` about 3.2 million) in 16 to 22
   seconds with 2.5 GB allocated, and the node limit counts mappings only. The
-  cap applies only to an input that contains an alias or merge key. Seven new
+  cap applies only to an input that contains an alias or merge key. Eight new
   vectors carry the new key `declared_max_expanded_slots`. A runner that
   does not implement D-22 MUST report them as E-20 skips citing this entry.
 
-**What a runner reports today.** Python, Rust and Java skip all
-twenty-seven vectors (sixteen, plus the eleven new in v0.26.0-beta) in
+**What a runner reports today.** Python, Rust and Java skip the thirty-one
+vectors that carry a declared key (sixteen, plus fifteen of the nineteen new in
+v0.26.0-beta) in
 `test-suite/formats-yaml/alias-expansion.json` as E-20 skips citing this entry;
 every one carries `declared_max_alias_expansion` or
-`declared_max_expanded_slots`. Go passes the sixteen from v0.25.0-beta. It does not
-implement D-22, so the seven that carry `declared_max_expanded_slots` are E-20
+`declared_max_expanded_slots`. The four malformed-merge vectors carry no
+declared key, so a runner reports them as a pass or as an E-20 skip citing this
+entry. TypeScript is as described above. Go passes the sixteen from
+v0.25.0-beta. It does not implement D-22, so the eight that carry
+`declared_max_expanded_slots` are E-20
 skips for it, and the four carrier vectors are the ones it is expected to fail
 (see above). Neither has been run against Go for this entry.
 Java has a partial stop-gap, not an implementation: SnakeYAML's default cap of

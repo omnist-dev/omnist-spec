@@ -173,7 +173,8 @@ identically.
 
 **What is fixed, and what is not.** The *existence* and *meaning* of the
 limits is normative — the three universal ones, and the expansion factor and
-expanded size wherever D-18 and D-22 apply. The specific *numbers* are not: this is a deliberate
+expanded size wherever D-18 and D-22 apply. The specific *numbers* are not: this
+is a deliberate
 change from an earlier draft of this spec, which wrongly treated one platform's
 numbers as universal constants. A limit exists to bound work against untrusted
 input on the hardware actually running the implementation, and that varies
@@ -186,7 +187,7 @@ big-data ingestion engine.
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
 | Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, any other mapping or sequence, and the document root, in a format that has an anchor/reference mechanism (D-18) |
-| Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, for an input that uses an anchor/reference mechanism (D-22) |
+| Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, for an input that contains an alias or a merge key (D-22) |
 
 **The last two rows are conditional; the first three are not.** Depth, node
 count and integer digits bound every Document on every route into the model, so
@@ -384,7 +385,8 @@ it materializes — no more, and no less:
     as the `<<` slot plus the written slots of any inline or newly anchored
     mapping members (below).
   - A sequence written as an ordinary value and anchored there,
-    `s: &s [*p, *q]`, is an ordinary sequence at that site: a candidate node, with
+    `s: &s [*p, *q]`, is an ordinary sequence at that site: a candidate node,
+    with
     `W(s) = 1 + W(p) + W(q)`. Only a reference to it from merge-value position
     flattens it. A plain alias to an anchored carrier, `t: *s` where `s` was
     written as `<<: &s [*p, *q]`, materializes the list and contributes
@@ -399,8 +401,11 @@ it materializes — no more, and no less:
   `parse.codec-syntax`
   ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
   the code for input that is not well formed in its source format, before D-18
-  or D-22 counts anything. A carrier is therefore one level deep, and what
-  remains to be counted is:
+  or D-22 counts anything. Merge-shape validation is part of reading the
+  document, a syntax error, and it wins over every `document.limit.*` code
+  when both are present, because D-18 and D-22 count a well-formed graph; a
+  malformed document need not be counted at all. A carrier is therefore one
+  level deep, and what remains to be counted is:
 
   - An **inline mapping** inside a carrier, `<<: [{x: 1}, *p]`, counts as a
     standalone inline merge source does: its own written slots, less its
@@ -413,7 +418,8 @@ it materializes — no more, and no less:
   Worked, given nothing else in the document:
 
   ```
-  z: {<<: [{x: 1}, &m {y: 2}, *m], k: 3} gives W(z) = 1 + 1 + 1 + 1 + 1 = 5, S(z) = 1 + 1 + 1 + 1 + 1 = 5, E(z) = 1.00
+  z: {<<: [{x: 1}, &m {y: 2}, *m], k: 3} gives W(z) = 1 + 1 + 1 + 1 + 1 = 5,
+  S(z) = 1 + 1 + 1 + 1 + 1 = 5, E(z) = 1.00
   ```
 
   The five slots of `S(z)` are `z`, the `<<` entry, `x`, `y` and `k`; the three
@@ -423,7 +429,8 @@ it materializes — no more, and no less:
   Worked, given `p: &p {k: 1}` and `q: &q {j: 2}` (`W = S = 2` for each):
 
   ```
-  z: {<<: &s [*p, *q], m: 3} gives W(z) = 1 + 1 + 1 + 1 = 4, S(z) = 3, E(z) = 1.33
+  z: {<<: &s [*p, *q], m: 3} gives W(z) = 1 + 1 + 1 + 1 = 4, S(z) = 3, E(z) =
+  1.33
   s: &s [*p, *q] gives W(s) = 1 + 2 + 2 = 5, S(s) = 3, E(s) = 1.67
   y: {<<: *s, m: 3} gives W(y) = 1 + 1 + 1 + 1 = 4, S(y) = 3, E(y) = 1.33
   ```
@@ -508,6 +515,13 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   a `W` as large as an anchored one. An implementation that does defer the
   check MUST otherwise guard against that overflow, with a checked or
   saturating accumulation or an arbitrary-precision `W`.
+
+  **Merge shapes are validated first.** A merge value that is not a mapping or
+  a sequence of mappings (D-18a) is a syntax error, `parse.codec-syntax`. An
+  implementation validates merge shapes in the same pass as the count or
+  before it, need not count anything for a document that is malformed, and
+  reports the syntax error rather than a limit code if the document has both
+  a bomb and a malformed merge.
 - **D-20.** An anchored definition that refers to itself, directly or through
   a cycle of other definitions, has unbounded `W` and MUST be rejected under
   this limit, with `document.limit.alias-expansion` — the same code as any
@@ -531,7 +545,10 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   that contains at least one alias or merge key.** An input with neither is not
   subject to it: its `W(root)` is its written size, `S(root)`, which D-9's node
   limit and the caller's own input-size bound govern, and a plain YAML file is
-  treated as a JSON or OML file of the same size is. A codec subject to D-22
+  treated as a JSON or OML file of the same size is. A **merge key** here is a
+  `<<` key as [§ YAML](formats/yaml.md) uses the term; that page says nothing
+  of a quoted or explicitly tagged `<<`, and this rule does not decide it. A
+  codec subject to D-22
   MUST reject the input with
   `document.limit.expanded-size`
   ([§8.3.2](08-conformance-and-errors.md#832-document-building-and-limits))
@@ -554,7 +571,9 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   of 30 000 containers (1.5 MB of text, `W` about 3.2 million slots, every `E`
   under 50) was accepted in 16 to 22 seconds with 2.5 GB allocated. The node
   limit does not catch it, because it counts mappings, not the scalars that make
-  up most of that `W`. This is omnist-spec#125.
+  up most of that `W`. This is omnist-spec#125. The cliff is deliberate: a plain
+  file of two million slots passes, and adding one alias makes it subject to
+  the cap. D-22 bounds amplification; input size is the caller's limit.
 
   **The default.** It is chosen from measured `W(root)` of realistic aliased
   documents, which it must never refuse, and from the measured memory cost of

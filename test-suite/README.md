@@ -140,7 +140,8 @@ declared_max_depth              §2.4 maximum nesting depth
 declared_max_nodes              §2.4 maximum node count
 declared_max_int_digits         §2.4 maximum integer digits
 declared_max_alias_expansion    §2.4.1 maximum alias expansion factor (D-18)
-declared_max_expanded_slots     §2.4.1 maximum expanded size in value slots (D-22)
+declared_max_expanded_slots     §2.4.1 maximum expanded size in value slots
+(D-22)
 ```
 
 A key is a **vector-local parameter, not the reference default**. A runner
@@ -160,15 +161,17 @@ ordinary vector**, which is the failure mode above.
 `declared_max_expanded_slots` is new in v0.26.0-beta. It carries `W(root)`'s
 maximum, in value slots. It applies only to an input that contains an alias or
 merge key: an alias-free input is accepted however far over it, and one vector
-pins that. A vector may declare it together with `declared_max_alias_expansion` to pin which code wins when both are crossed
+pins that. A vector may declare it together with `declared_max_alias_expansion`
+to pin which code wins when both are crossed
 (D-22: `document.limit.alias-expansion`). No port enforces D-22 yet; until one
 does, its runner reports every vector carrying the key as an E-20 skip. The same
 two steps apply, and so does the same false-pass hazard: a runner that does
 not allowlist the key runs `expanded-size-at-declared-cap-succeeds` against its
 own default and passes without testing the boundary.
 
-`declared_max_alias_expansion` is new in v0.18.0-beta, and no port enforces
-D-18 yet either, so adopting it takes two steps: **(a)** implement the rule,
+`declared_max_alias_expansion` is new in v0.18.0-beta. Go and TypeScript
+enforce D-18 now, and the others do not yet, so adopting it takes two steps:
+**(a)** implement the rule,
 and **(b)** allowlist the key. Skipping (b) does not produce a failure — it
 produces a **false pass**, which is the more dangerous outcome because nobody
 investigates a green result. `expansion-one-past-declared-limit-fails` and

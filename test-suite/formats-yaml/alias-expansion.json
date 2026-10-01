@@ -2296,6 +2296,225 @@
         ]
       },
       "comment": "The previous vector with k1 anchored and one more entry, k8: *x, an alias of that scalar. The alias is harmless: x is a scalar with W = S = 1, every E is 1.00, and nothing is amplified. The input now contains an alias, so D-22 applies: W = 1 + 8 = 9 (the root and eight entries, the alias materializing as one slot), S = 9, which is greater than the declared cap of 3, so it is rejected with document.limit.expanded-size at `$`. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-value-scalar-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a:\n  <<: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "The merge value is the scalar 1. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-sequence-scalar-member-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a:\n  <<: [1]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "The merge sequence has a scalar member. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-sequence-of-sequences-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a:\n  <<: [[{a: 1}]]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "A sequence nested in a merge sequence: the carrier is one level deep. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-alias-to-scalar-sequence-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "s: &s [1, 2]\nz:\n  <<: *s\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "`<<: *s` where s holds scalars: the alias resolves to a sequence whose members are not mappings. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/malformed-merge-after-a-bomb-reports-codec-syntax",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1, b: 2, c: 3}\nt: {<<: [*p, *p, *p, *p]}\nbad:\n  <<: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "A syntax error wins over a limit. t merges p four times: W(p) = S(p) = 4, W(t) = 1 + 4 * 3 = 13, S(t) = 2, E(t) = 6.50 against a declared maximum of 2, so D-18 alone would reject with document.limit.alias-expansion. But `bad` carries `<<: 1`, a scalar merge value, which is malformed input. Merge-shape validation is part of reading the document (D-18a, D-19): the code is parse.codec-syntax, `line:col`, and no count is needed for a document that is malformed. Reported even though the malformed entry comes after the bomb. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-carrier-with-inline-and-anchored-members-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 1,
+        "text": "z: {<<: [{x: 1}, &m {y: 2}, *m], k: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "z",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The worked example of D-18a. The inline {x: 1}: W = S = 2. The anchored mapping m, first defined inside the carrier, is a candidate: W = S = 2. z: W = 1 + (2 - 1) + (2 - 1) + (2 - 1) + 1 = 5, S = 5 (z, the single << slot, x, y, k; the carrier and the three members hold no container slot), E(z) = 1.00, exactly the declared maximum of 1, which MUST succeed. Root: W = 1 + 5 = 6, S = 1 + 5 = 6, E = 1.00. The repeated *m adds nothing to the result, which has x, y, k, but W is the conservative count (D-19). declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/single-anchored-inline-merge-source-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 1,
+        "text": "z: {<<: &m {y: 2}, k: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "z",
+              {
+                "edges": [
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A single anchored mapping written inline as the merge value, `<<: &m {y: 2}`. By the inline-source rule the `<<` slot is the inline container and the written y adds one: m is a candidate with W = S = 2. z: W = 1 + (2 - 1) + 1 = 3, S = 4 (z, the << slot, y, k), E(z) = 0.75. Root: W = 1 + 3 = 4, S = 1 + 4 = 5, E = 0.80. All under the declared maximum of 1. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-inline-merge-key-without-alias-is-subject-to-cap",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 2,
+        "text": "t: {<<: {a: 1}}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "No alias, but a merge key: an inline `<<` is a merge key, so the input is subject to D-22. The inline {a: 1}: W = S = 2. t: W = 1 + (2 - 1) = 2, S = 3 (t, the << slot, a). Root: W = 1 + 2 = 3, S = 1 + 3 = 4. W(root) = 3 is greater than the declared cap of 2, so it is rejected with document.limit.expanded-size at `$`; at a cap of 3 it would be accepted. E is at most 1.00 throughout. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
     }
   ]
 }

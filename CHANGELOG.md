@@ -45,14 +45,21 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
   are. The `S` contribution of `<<: *s` is the `<<` slot only, and the
   members' written slots are counted where `s` was written. No existing
   number changes.
-- **Eleven new vectors**, taking the suite to **323**, all in
+- **Merge shapes are validated first (D-18a, D-19).** A malformed merge is a
+  syntax error and wins over a limit code. D-22's "merge key" is a `<<` key as
+  yaml.md uses the term, and the exemption's cliff (one added alias subjects a
+  plain file to the cap) is stated as deliberate.
+- **Nineteen new vectors**, taking the suite to **331**, all in
   `formats-yaml/alias-expansion.json`: an anchored-carrier boundary pair, an
   alias-to-sequence boundary pair, five for D-22 (at the cap, one past it,
-  ratio passes and cap fails, cap passes and ratio fails, both fail) and two
-  for the alias-free exemption.
+  ratio passes and cap fails, cap passes and ratio fails, both fail), two for
+  the alias-free exemption, four malformed-merge syntax errors, a bomb followed
+  by a malformed merge, the worked carrier example, a single anchored inline
+  merge source and an alias-free inline merge key under the cap.
 - **`tools/check_vectors.py`** type-checks `declared_max_*` keys (positive
   integers) and rejects an unknown `declared_*` key.
-- **Ledger `DIV-3` updated:** Go implements v0.25.0-beta, omnist-ts#154 has merged,
+- **Ledger `DIV-3` updated:** Go implements v0.25.0-beta, omnist-ts#154 has
+  merged,
   and no port implements either new requirement. The two "Open, unpinned
   behaviours" entries these resolve are removed.
 

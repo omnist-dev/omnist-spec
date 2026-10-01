@@ -116,7 +116,8 @@ the configured maximum expanded size (reference default 1 000 000 slots) with
 `document.limit.expanded-size`
 ([D-22](../02-document-model.md#241-bounding-alias-expansion)); a YAML input
 with neither is outside that limit. A merge value that is not a mapping or a
-sequence of mappings is a syntax error, `parse.codec-syntax`. §2.4.1 defines `E`, gives the
+sequence of mappings is a syntax error, `parse.codec-syntax`. §2.4.1 defines
+`E`, gives the
 reasoning behind the default, and explains why ordinary anchored YAML — merge
 keys, shared constants, anchor chains — sits far below it. Nothing here
 changes the value-fidelity rule above: an alias that is expanded still reads
