@@ -1544,6 +1544,977 @@
         ]
       },
       "comment": "Boundary pair, rejected half: the same shape with 4 base scalars. base: W=S=5. The inline mapping: W = 1 + 5 + 5 = 11, S = 3, E = 3.67 against a declared maximum of 3. t: W = 1 + 10 + 1 = 12, S = 5, E = 2.40. Root: W = 1 + 5 + 12 = 18, S = 1 + 5 + 5 = 11, E = 1.64. Only the inline mapping exceeds the maximum, so it is what pins the rule that an inline merge source is a candidate. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/anchored-merge-carrier-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a1: 1, a2: 2, a3: 3}\nq: &q {b1: 4, b2: 5, b3: 6}\nz: {<<: &s [*p, *q], m1: 7, m2: 8, m3: 9}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "a1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "a2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "a3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "b1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "b2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "b3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 6
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "z",
+              {
+                "edges": [
+                  [
+                    "a1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "a2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "a3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "b1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 4
+                      }
+                    }
+                  ],
+                  [
+                    "b2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ],
+                  [
+                    "b3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 6
+                      }
+                    }
+                  ],
+                  [
+                    "m1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 7
+                      }
+                    }
+                  ],
+                  [
+                    "m2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 8
+                      }
+                    }
+                  ],
+                  [
+                    "m3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 9
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Boundary pair, accepted half, for an anchored merge carrier: the sequence in `<<: &s [*p, *q]` carries its own anchor and is still a carrier, not a node (D-18, \u00a72.4.1). p and q have 3 scalars each: W = S = 4. z: W = 1 + (4 - 1) + (4 - 1) + 3 = 10; S = 5 (z, the single << slot, m1, m2, m3), because the carrier holds no slot in S either; E(z) = 2.00, exactly the declared maximum of 2, which MUST succeed. The anchored carrier is not a candidate. Root: W = 1 + 4 + 4 + 10 = 19, S = 1 + 4 + 4 + 5 = 14, E = 1.36. An implementation that counts the carrier and its two aliases as written slots gets S = 8 and E = 1.25 and cannot tell this vector from the next. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/anchored-merge-carrier-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a1: 1, a2: 2, a3: 3, a4: 4}\nq: &q {b1: 5, b2: 6, b3: 7, b4: 8}\nz: {<<: &s [*p, *q], m1: 9, m2: 10, m3: 11}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Boundary pair, rejected half: the same shape with 4 scalars in p and q. p, q: W = S = 5. z: W = 1 + 4 + 4 + 3 = 12; S = 5; E(z) = 2.40 against a declared maximum of 2. Root: W = 1 + 5 + 5 + 12 = 23, S = 1 + 5 + 5 + 5 = 16, E = 1.44, so only z exceeds it. The anchor on the merge sequence must not change the verdict the unanchored `<<: [*p, *q]` would get. An implementation that treats the anchored sequence as an ordinary merge value counts the sequence and its two aliases in S (S(z) = 8, E = 1.50) and wrongly accepts this input. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-alias-to-sequence-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1}\nq: &q {b: 2}\ns: &s [*p, *q, *p, *q]\nz: {<<: *s, m: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "s",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "s",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "s",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "s",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "z",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "m",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Boundary pair, accepted half, for an alias to a sequence of aliases in merge position (`<<: *s`, D-18, \u00a72.4.1): it contributes as if the four members were written inline. p, q: W = S = 2. The ordinary sequence s: W = 1 + 4 * 2 = 9, S = 1 + 4 = 5, E(s) = 1.80. z: W = 1 + 4 * (2 - 1) + 1 = 6; S = 3 (z, the << slot, m); E(z) = 2.00, exactly the declared maximum of 2, which MUST succeed. Root: W = 1 + 2 + 2 + 9 + 6 = 20, S = 1 + 2 + 2 + 5 + 3 = 13, E = 1.54. Reading `<<: *s` as the merge of a mapping, W(s) - 1 = 8, gives W(z) = 10 and E = 3.33 and wrongly rejects. The result document has one a, one b and m: W is the conservative structural count (D-19) and does not resolve the repeated keys. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-alias-to-sequence-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1}\nq: &q {b: 2}\ns: &s [*p, *q, *p, *q]\nz: {<<: *s}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Boundary pair, rejected half: the same shape with no key of its own in z. z: W = 1 + 4 * (2 - 1) = 5; S = 2 (z and the << slot); E(z) = 2.50 against a declared maximum of 2. s: W = 9, S = 5, E = 1.80; p, q: E = 1.00. Root: W = 1 + 2 + 2 + 9 + 5 = 19, S = 1 + 2 + 2 + 5 + 2 = 12, E = 1.58. Only z exceeds it, so the alias to a merge sequence is what pins the rule: it is measured, not skipped. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-at-declared-cap-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 22,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3}\nt: {a: *base, b: *base, c: *base, d: *base}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "base",
+              {
+                "edges": [
+                  [
+                    "k1",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k2",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k3",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "edges": [
+                        [
+                          "k1",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "k2",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "k3",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "edges": [
+                        [
+                          "k1",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "k2",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "k3",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "c",
+                    {
+                      "edges": [
+                        [
+                          "k1",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "k2",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "k3",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "edges": [
+                        [
+                          "k1",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ],
+                        [
+                          "k2",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 2
+                            }
+                          }
+                        ],
+                        [
+                          "k3",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 3
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Boundary pair, accepted half, for the absolute cap on expanded size (D-22). W(root) = 22, exactly the declared cap of 22, which MUST succeed (equal is accepted). Every E is far under the default ratio maximum of 50. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail. The shared input: base has 3 scalars, W = S = 4. t holds four aliases of it: W = 1 + 4 * 4 = 17, S = 1 + 4 = 5, E(t) = 3.40. Root: W = 1 + 4 + 17 = 22, S = 1 + 4 + 5 = 10, E = 2.20."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-one-past-declared-cap-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 21,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3}\nt: {a: *base, b: *base, c: *base, d: *base}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "Boundary pair, rejected half: byte-identical input with the cap lowered to 21. W(root) = 22 is greater than 21, so the input is rejected with document.limit.expanded-size at `$`, a code of its own and not document.limit.alias-expansion: no E is anywhere near the default maximum of 50. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail. The shared input: base has 3 scalars, W = S = 4. t holds four aliases of it: W = 1 + 4 * 4 = 17, S = 1 + 4 = 5, E(t) = 3.40. Root: W = 1 + 4 + 17 = 22, S = 1 + 4 + 5 = 10, E = 2.20."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-cap-fails-where-ratio-passes",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 4,
+        "declared_max_expanded_slots": 21,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3}\nt: {a: *base, b: *base, c: *base, d: *base}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "The ratio passes and the cap fails. The worst E in the input is E(t) = 3.40, under the declared ratio maximum of 4, so D-18 accepts every candidate; W(root) = 22 exceeds the declared cap of 21, so D-22 rejects. Neither limit implies the other: the document is not amplified much, it is large. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail. The shared input: base has 3 scalars, W = S = 4. t holds four aliases of it: W = 1 + 4 * 4 = 17, S = 1 + 4 = 5, E(t) = 3.40. Root: W = 1 + 4 + 17 = 22, S = 1 + 4 + 5 = 10, E = 2.20."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-cap-passes-where-ratio-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "declared_max_expanded_slots": 22,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3}\nt: {a: *base, b: *base, c: *base, d: *base}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "The cap passes and the ratio fails. W(root) = 22 equals the declared cap of 22 and is accepted by D-22, but E(t) = 3.40 exceeds the declared ratio maximum of 3, so D-18 rejects with document.limit.alias-expansion. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail. The shared input: base has 3 scalars, W = S = 4. t holds four aliases of it: W = 1 + 4 * 4 = 17, S = 1 + 4 = 5, E(t) = 3.40. Root: W = 1 + 4 + 17 = 22, S = 1 + 4 + 5 = 10, E = 2.20."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-both-fail-reports-alias-expansion",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 3,
+        "declared_max_expanded_slots": 21,
+        "text": "base: &base {k1: 1, k2: 2, k3: 3}\nt: {a: *base, b: *base, c: *base, d: *base}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "Both limits are crossed: E(t) = 3.40 exceeds the declared ratio maximum of 3 and W(root) = 22 exceeds the declared cap of 21. D-22 fixes which code is reported: document.limit.alias-expansion, the ratio check winning, so an implementation that checks the cap first fails here. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail. The shared input: base has 3 scalars, W = S = 4. t holds four aliases of it: W = 1 + 4 * 4 = 17, S = 1 + 4 = 5, E(t) = 3.40. Root: W = 1 + 4 + 17 = 22, S = 1 + 4 + 5 = 10, E = 2.20."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-alias-free-document-is-not-subject-to-cap",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 3,
+        "text": "k1: 1\nk2: 2\nk3: 3\nk4: 4\nk5: 5\nk6: 6\nk7: 7\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "k1",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "k2",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "k3",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ],
+            [
+              "k4",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 4
+                }
+              }
+            ],
+            [
+              "k5",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 5
+                }
+              }
+            ],
+            [
+              "k6",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 6
+                }
+              }
+            ],
+            [
+              "k7",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 7
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-22 applies only to an input that contains an alias or a merge key. This one contains neither: seven scalar entries, W = S = 8 (the root and seven scalars), E = 1.00. W(root) is 5 over the declared cap of 3 and the input MUST still be accepted, as a JSON or OML document of the same size is. Its twin, the next vector, adds one anchor and one alias and is rejected. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-one-harmless-alias-subjects-document-to-cap",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 3,
+        "text": "k1: &x 1\nk2: 2\nk3: 3\nk4: 4\nk5: 5\nk6: 6\nk7: 7\nk8: *x\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "The previous vector with k1 anchored and one more entry, k8: *x, an alias of that scalar. The alias is harmless: x is a scalar with W = S = 1, every E is 1.00, and nothing is amplified. The input now contains an alias, so D-22 applies: W = 1 + 8 = 9 (the root and eight entries, the alias materializing as one slot), S = 9, which is greater than the declared cap of 3, so it is rejected with document.limit.expanded-size at `$`. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-value-scalar-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a:\n  <<: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "The merge value is the scalar 1. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-sequence-scalar-member-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a:\n  <<: [1]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "The merge sequence has a scalar member. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-sequence-of-sequences-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a:\n  <<: [[{a: 1}]]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "A sequence nested in a merge sequence: the carrier is one level deep. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-alias-to-scalar-sequence-is-a-codec-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "s: &s [1, 2]\nz:\n  <<: *s\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "`<<: *s` where s holds scalars: the alias resolves to a sequence whose members are not mappings. D-18a: a merge value must be a mapping, or a sequence of mappings, so this is malformed input, parse.codec-syntax (E-31), before any limit counts anything. The path is the placeholder `line:col` (E-32): the blamed position is implementation-defined. PyYAML rejects it too."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/malformed-merge-after-a-bomb-reports-codec-syntax",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1, b: 2, c: 3}\nt: {<<: [*p, *p, *p, *p]}\nbad:\n  <<: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "A syntax error wins over a limit. t merges p four times: W(p) = S(p) = 4, W(t) = 1 + 4 * 3 = 13, S(t) = 2, E(t) = 6.50 against a declared maximum of 2, so D-18 alone would reject with document.limit.alias-expansion. But `bad` carries `<<: 1`, a scalar merge value, which is malformed input. Merge-shape validation is part of reading the document (D-18a, D-19): the code is parse.codec-syntax, `line:col`, and no count is needed for a document that is malformed. Reported even though the malformed entry comes after the bomb. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/merge-carrier-with-inline-and-anchored-members-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 1,
+        "text": "z: {<<: [{x: 1}, &m {y: 2}, *m], k: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "z",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The worked example of D-18a. The inline {x: 1}: W = S = 2. The anchored mapping m, first defined inside the carrier, is a candidate: W = S = 2. z: W = 1 + (2 - 1) + (2 - 1) + (2 - 1) + 1 = 5, S = 5 (z, the single << slot, x, y, k; the carrier and the three members hold no container slot), E(z) = 1.00, exactly the declared maximum of 1, which MUST succeed. Root: W = 1 + 5 = 6, S = 1 + 5 = 6, E = 1.00. The repeated *m adds nothing to the result, which has x, y, k, but W is the conservative count (D-19). declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/single-anchored-inline-merge-source-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 1,
+        "text": "z: {<<: &m {y: 2}, k: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "z",
+              {
+                "edges": [
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "A single anchored mapping written inline as the merge value, `<<: &m {y: 2}`. By the inline-source rule the `<<` slot is the inline container and the written y adds one: m is a candidate with W = S = 2. z: W = 1 + (2 - 1) + 1 = 3, S = 4 (z, the << slot, y, k), E(z) = 0.75. Root: W = 1 + 3 = 4, S = 1 + 4 = 5, E = 0.80. All under the declared maximum of 1. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-inline-merge-key-without-alias-is-subject-to-cap",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 2,
+        "text": "t: {<<: {a: 1}}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "No alias, but a merge key: an inline `<<` is a merge key, so the input is subject to D-22. The inline {a: 1}: W = S = 2. t: W = 1 + (2 - 1) = 2, S = 3 (t, the << slot, a). Root: W = 1 + 2 = 3, S = 1 + 3 = 4. W(root) = 3 is greater than the declared cap of 2, so it is rejected with document.limit.expanded-size at `$`; at a cap of 3 it would be accepted. E is at most 1.00 throughout. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
     }
   ]
 }

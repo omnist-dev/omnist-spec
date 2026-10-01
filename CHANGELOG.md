@@ -3,6 +3,66 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.26.0-beta (2026-10-01)
+
+**Normative (minor)** — resolves
+[#124](https://github.com/omnist-dev/omnist-spec/issues/124) and
+[#125](https://github.com/omnist-dev/omnist-spec/issues/125).
+
+- **A merge sequence is a carrier whether or not it is anchored**
+  ([§2.4.1](docs/02-document-model.md#241-bounding-alias-expansion), D-18;
+  #124). `<<: &s [*p, *q]` is the unanchored carrier with a name: no slot in
+  `W` or `S`, and not a candidate. `<<: *s`, an alias to a sequence of
+  aliases, contributes the sum of `W(member) - 1`, as if the members were
+  written inline. Found by the independent review of omnist-go#124, where Go
+  scored `<<: *s` at `W = 23` against the rule's 21 and let an anchor on a
+  merge sequence change a verdict.
+- **New limit: maximum expanded size, D-22**
+  ([§2.4.1](docs/02-document-model.md#241-bounding-alias-expansion); #125).
+  `W(root)` greater than the maximum is rejected with the new
+  `document.limit.expanded-size` (reference default 1 000 000 value slots;
+  equal is accepted), checked at the root after the D-18 ratio check and before
+  materialization. D-18 bounded amplification but not size: in Go, 30 000
+  containers with every `E` under 50 (`W` about 3.2 million) were accepted in 16
+  to 22 seconds with 2.5 GB allocated. When both limits are crossed, D-18's
+  `document.limit.alias-expansion` is reported. D-9, D-10, D-11 and the §2.4
+  table now name both conditional limits.
+- **A fifth `document.limit.*` code** (§8.3.2, E-4, E-4a): the codes still map
+  one to one onto the quantities of §2.4, so the size cap gets its own rather
+  than sharing `document.limit.alias-expansion`.
+- **New vector key `declared_max_expanded_slots`**
+  ([test-suite/README.md](test-suite/README.md),
+  [porting guide](docs/porting-a-conformance-runner.md)). Same rules as the
+  other `declared_max_*` keys: allowlist it, and skip (E-20) until D-22 is
+  implemented.
+- **D-22 applies only to an input that contains an alias or merge key.** A
+  plain, alias-free YAML file is not subject to it, however large, as a JSON or
+  OML file of the same size is not. The default is justified from measured
+  `W(root)` of realistic documents (at most 62 063, 16 times under it).
+- **D-18a pins the carrier's edge shapes:** a non-mapping merge member, a
+  nested carrier and `<<: *s` over scalars are `parse.codec-syntax`; inline
+  and newly anchored mappings inside a carrier are counted as standalone ones
+  are. The `S` contribution of `<<: *s` is the `<<` slot only, and the
+  members' written slots are counted where `s` was written. No existing
+  number changes.
+- **Merge shapes are validated first (D-18a, D-19).** A malformed merge is a
+  syntax error and wins over a limit code. D-22's "merge key" is a `<<` key as
+  yaml.md uses the term, and the exemption's cliff (one added alias subjects a
+  plain file to the cap) is stated as deliberate.
+- **Nineteen new vectors**, taking the suite to **331**, all in
+  `formats-yaml/alias-expansion.json`: an anchored-carrier boundary pair, an
+  alias-to-sequence boundary pair, five for D-22 (at the cap, one past it,
+  ratio passes and cap fails, cap passes and ratio fails, both fail), two for
+  the alias-free exemption, four malformed-merge syntax errors, a bomb followed
+  by a malformed merge, the worked carrier example, a single anchored inline
+  merge source and an alias-free inline merge key under the cap.
+- **`tools/check_vectors.py`** type-checks `declared_max_*` keys (positive
+  integers) and rejects an unknown `declared_*` key.
+- **Ledger `DIV-3` updated:** Go implements v0.25.0-beta, omnist-ts#154 has
+  merged,
+  and no port implements either new requirement. The two "Open, unpinned
+  behaviours" entries these resolve are removed.
+
 ## v0.25.0-beta (2026-09-30)
 
 **Normative (minor)** — resolves
