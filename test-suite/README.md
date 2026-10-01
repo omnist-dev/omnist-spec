@@ -158,8 +158,9 @@ modelled on it. **A key missing from that set is silently treated as an
 ordinary vector**, which is the failure mode above.
 
 `declared_max_expanded_slots` is new in v0.26.0-beta. It carries `W(root)`'s
-maximum, in value slots, and a vector may declare it together with
-`declared_max_alias_expansion` to pin which code wins when both are crossed
+maximum, in value slots. It applies only to an input that contains an alias or
+merge key: an alias-free input is accepted however far over it, and one vector
+pins that. A vector may declare it together with `declared_max_alias_expansion` to pin which code wins when both are crossed
 (D-22: `document.limit.alias-expansion`). No port enforces D-22 yet; until one
 does, its runner reports every vector carrying the key as an E-20 skip. The same
 two steps apply, and so does the same false-pass hazard: a runner that does

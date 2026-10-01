@@ -2193,6 +2193,109 @@
         ]
       },
       "comment": "Both limits are crossed: E(t) = 3.40 exceeds the declared ratio maximum of 3 and W(root) = 22 exceeds the declared cap of 21. D-22 fixes which code is reported: document.limit.alias-expansion, the ratio check winning, so an implementation that checks the cap first fails here. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail. The shared input: base has 3 scalars, W = S = 4. t holds four aliases of it: W = 1 + 4 * 4 = 17, S = 1 + 4 = 5, E(t) = 3.40. Root: W = 1 + 4 + 17 = 22, S = 1 + 4 + 5 = 10, E = 2.20."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-alias-free-document-is-not-subject-to-cap",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 3,
+        "text": "k1: 1\nk2: 2\nk3: 3\nk4: 4\nk5: 5\nk6: 6\nk7: 7\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "k1",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "k2",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "k3",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ],
+            [
+              "k4",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 4
+                }
+              }
+            ],
+            [
+              "k5",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 5
+                }
+              }
+            ],
+            [
+              "k6",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 6
+                }
+              }
+            ],
+            [
+              "k7",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 7
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-22 applies only to an input that contains an alias or a merge key. This one contains neither: seven scalar entries, W = S = 8 (the root and seven scalars), E = 1.00. W(root) is 5 over the declared cap of 3 and the input MUST still be accepted, as a JSON or OML document of the same size is. Its twin, the next vector, adds one anchor and one alias and is rejected. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/expanded-size-one-harmless-alias-subjects-document-to-cap",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 3,
+        "text": "k1: &x 1\nk2: 2\nk3: 3\nk4: 4\nk5: 5\nk6: 6\nk7: 7\nk8: *x\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "The previous vector with k1 anchored and one more entry, k8: *x, an alias of that scalar. The alias is harmless: x is a scalar with W = S = 1, every E is 1.00, and nothing is amplified. The input now contains an alias, so D-22 applies: W = 1 + 8 = 9 (the root and eight entries, the alias materializing as one slot), S = 9, which is greater than the declared cap of 3, so it is rejected with document.limit.expanded-size at `$`. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
     }
   ]
 }

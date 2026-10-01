@@ -163,7 +163,7 @@ a syntax error, or the reverse, sends a user looking in the wrong place.
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
 | `document.limit.alias-expansion` | The expansion factor of an anchored definition, of any other mapping or sequence, or of the document root exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
-| `document.limit.expanded-size` | The number of value slots an input materializes, `W` of the document root, exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
+| `document.limit.expanded-size` | The number of value slots an input that contains an alias or merge key materializes, `W` of the document root, exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
 **E-4.** These five `document.limit.*` codes correspond exactly to the five
@@ -190,7 +190,9 @@ MUST raise exactly the matching code when its configured maximum is crossed,
 and MUST NOT report an over-expansion as `document.limit.nodes` on the grounds
 that a large expansion would have hit the node cap eventually. When one input
 crosses both, the code is `document.limit.alias-expansion`
-([D-22](02-document-model.md#241-bounding-alias-expansion)). Its `path` is a
+([D-22](02-document-model.md#241-bounding-alias-expansion)).
+`document.limit.expanded-size` is never raised for an input with no alias and
+no merge key, however large. Its `path` is a
 Document path, per E-11, and it is `$` — the violation is a property of the
 input's reference graph as a whole, detected before any Document structure
 exists to descend into.

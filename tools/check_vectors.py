@@ -32,6 +32,17 @@ HEX_DIGITS = set("0123456789abcdef")
 
 # Sec8.5.2's E-32: the one placeholder path a vector may use, and the one
 # place it may stand. Everything else in the suite is compared byte for byte.
+# The vector-local safety-limit parameters (test-suite/README.md, "Declared-limit
+# keys"). Each is a positive integer; an unknown `declared_*` key is an error
+# because a runner's allowlist would silently run it against its own default.
+DECLARED_LIMIT_KEYS = {
+    "declared_max_depth",
+    "declared_max_nodes",
+    "declared_max_int_digits",
+    "declared_max_alias_expansion",
+    "declared_max_expanded_slots",
+}
+
 PATH_PLACEHOLDER = "line:col"
 PLACEHOLDER_CODE = "parse.codec-syntax"
 PLACEHOLDER_FORMATS = {"json", "yaml", "toml", "xml"}
@@ -85,6 +96,29 @@ def check_path_placeholder(rel: str, name: str, vec: dict) -> list[str]:
             or str(inp.get("bytes_hex", "")).startswith(DOUBLED_BOM_HEX)):
         errors.append(f"{where} on a doubled leading mark -- D-21's 1:1 is "
                       f"fixed and stays compared byte for byte")
+    return errors
+
+
+def check_declared_limits(rel: str, name: str, vec: dict) -> list[str]:
+    """Every `declared_*` key is one of the five known limit keys, and its
+    value is a positive integer (a bool is not one, though it is an int)."""
+    errors: list[str] = []
+    inp = vec.get("input")
+    if not isinstance(inp, dict):
+        return errors
+    for key, value in inp.items():
+        if not key.startswith("declared_"):
+            continue
+        if key not in DECLARED_LIMIT_KEYS:
+            errors.append(
+                f"{rel}: {name!r} has unknown key {key!r} -- the known "
+                f"declared-limit keys are {', '.join(sorted(DECLARED_LIMIT_KEYS))}"
+            )
+        elif isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            errors.append(
+                f"{rel}: {name!r} {key!r} is {value!r} -- it must be a "
+                f"positive integer"
+            )
     return errors
 
 
@@ -201,6 +235,7 @@ def main() -> int:
                 if field not in vec:
                     errors.append(f"{rel}: {name!r} has no {field!r}")
 
+            errors.extend(check_declared_limits(str(rel), name, vec))
             errors.extend(check_input_form(str(rel), name, vec))
             errors.extend(check_path_placeholder(str(rel), name, vec))
 

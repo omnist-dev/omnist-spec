@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 321 vectors as of v0.26.0-beta — dispatched by operation
+JSON-vector suite — 323 vectors as of v0.26.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -236,15 +236,17 @@ allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
 As of **v0.26.0-beta** the newest key is `declared_max_expanded_slots`
-(§2.4.1's D-22, the absolute cap on expanded size); five vectors in
+(§2.4.1's D-22, the absolute cap on expanded size); seven vectors in
 `formats-yaml/alias-expansion.json` carry it. It follows the same rule as
 every other key: allowlist it, and report `skip` until the cap is implemented.
 Before it, as of **v0.18.0-beta**, the newest was `declared_max_alias_expansion`
 (§2.4.1's D-18). Every vector in `formats-yaml/alias-expansion.json` carries
-one of the two. No port enforces D-18 yet, so until you do, a runner MUST report each
-vector carrying the key as an E-20 skip citing `DIV-3` (never a pass), and
-adopting the rule is two steps: **(a)** implement D-18, and
-**(b)** add `declared_max_alias_expansion` to your allowlist.
+one of the two. Go and TypeScript enforce D-18 and a Rust pull request is open,
+but no port implements D-22, so until you implement a rule, a runner MUST report
+each vector carrying its key as an E-20 skip citing `DIV-3` (never a pass).
+Adopting is two steps: **(a)** implement D-18 and D-22, and **(b)** add both
+`declared_max_alias_expansion` and `declared_max_expanded_slots` to your
+allowlist.
 
 **Doing (a) without (b) buys you a false pass, which is worse than a
 failure.** Of the vectors in `formats-yaml/alias-expansion`, every one that
@@ -344,7 +346,7 @@ therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "321 pass" and "321 pass,
+note, an issue — say the mode alongside the count. "323 pass" and "323 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure

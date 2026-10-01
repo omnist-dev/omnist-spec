@@ -35,11 +35,24 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
   [porting guide](docs/porting-a-conformance-runner.md)). Same rules as the
   other `declared_max_*` keys: allowlist it, and skip (E-20) until D-22 is
   implemented.
-- **Nine new vectors**, taking the suite to **321**, all in
+- **D-22 applies only to an input that contains an alias or merge key.** A
+  plain, alias-free YAML file is not subject to it, however large, as a JSON or
+  OML file of the same size is not. The default is justified from measured
+  `W(root)` of realistic documents (at most 62 063, 16 times under it).
+- **D-18a pins the carrier's edge shapes:** a non-mapping merge member, a
+  nested carrier and `<<: *s` over scalars are `parse.codec-syntax`; inline
+  and newly anchored mappings inside a carrier are counted as standalone ones
+  are. The `S` contribution of `<<: *s` is the `<<` slot only, and the
+  members' written slots are counted where `s` was written. No existing
+  number changes.
+- **Eleven new vectors**, taking the suite to **323**, all in
   `formats-yaml/alias-expansion.json`: an anchored-carrier boundary pair, an
-  alias-to-sequence boundary pair, and five for D-22 (at the cap, one past it,
-  ratio passes and cap fails, cap passes and ratio fails, both fail).
-- **Ledger `DIV-3` updated:** Go implements v0.25.0-beta, omnist-ts#154 is open,
+  alias-to-sequence boundary pair, five for D-22 (at the cap, one past it,
+  ratio passes and cap fails, cap passes and ratio fails, both fail) and two
+  for the alias-free exemption.
+- **`tools/check_vectors.py`** type-checks `declared_max_*` keys (positive
+  integers) and rejects an unknown `declared_*` key.
+- **Ledger `DIV-3` updated:** Go implements v0.25.0-beta, omnist-ts#154 has merged,
   and no port implements either new requirement. The two "Open, unpinned
   behaviours" entries these resolve are removed.
 

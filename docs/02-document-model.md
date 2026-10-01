@@ -186,7 +186,7 @@ big-data ingestion engine.
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
 | Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, any other mapping or sequence, and the document root, in a format that has an anchor/reference mechanism (D-18) |
-| Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, in a format that has an anchor/reference mechanism (D-22) |
+| Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, for an input that uses an anchor/reference mechanism (D-22) |
 
 **The last two rows are conditional; the first three are not.** Depth, node
 count and integer digits bound every Document on every route into the model, so
@@ -377,15 +377,48 @@ it materializes — no more, and no less:
     exactly what the same members written inline would: the sum over the
     sequence's members of `W(member) - 1`, and no slot for the sequence
     itself. It does **not** contribute `W(s) - 1`, which would count each
-    member's container slot that the merge flattens away. In `S` it is one
-    slot, the `<<` entry, like any other reference; the members are not
-    counted again, because they were counted where `s` was written.
+    member's container slot that the merge flattens away. In `S` it adds one
+    slot, the `<<` entry, and nothing for the members. Their written slots are
+    counted once, where `s` was written: for an ordinary sequence value, as
+    part of `S` of the container that holds it; for a merge-position carrier,
+    as the `<<` slot plus the written slots of any inline or newly anchored
+    mapping members (below).
   - A sequence written as an ordinary value and anchored there,
     `s: &s [*p, *q]`, is an ordinary sequence at that site: a candidate node, with
     `W(s) = 1 + W(p) + W(q)`. Only a reference to it from merge-value position
     flattens it. A plain alias to an anchored carrier, `t: *s` where `s` was
     written as `<<: &s [*p, *q]`, materializes the list and contributes
     `1 + W(p) + W(q)`.
+
+  **Members of a merge MUST be mappings.** YAML 1.1's merge type takes a
+  mapping or a sequence of mappings, and nothing in this specification
+  admitted anything else; it is pinned here. A merge value that is a scalar, a
+  merge sequence with a scalar member, a sequence inside a merge sequence
+  (`<<: [*s]` where `s` is a sequence, or `<<: [[{a: 1}]]`), and `<<: *s` where
+  `s` holds scalars are malformed input: the codec MUST reject them with
+  `parse.codec-syntax`
+  ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
+  the code for input that is not well formed in its source format, before D-18
+  or D-22 counts anything. A carrier is therefore one level deep, and what
+  remains to be counted is:
+
+  - An **inline mapping** inside a carrier, `<<: [{x: 1}, *p]`, counts as a
+    standalone inline merge source does: its own written slots, less its
+    container, add to `S` of the referrer, and it contributes `W - 1`.
+  - An **anchored mapping first defined inside a carrier**,
+    `<<: [&m {y: 2}, *m]`, is a candidate node, with `W` and `S` counted where
+    it is defined. A later alias to it, in a merge or anywhere else, uses its
+    `W`; in a merge that is `W(m) - 1`.
+
+  Worked, given nothing else in the document:
+
+  ```
+  z: {<<: [{x: 1}, &m {y: 2}, *m], k: 3} gives W(z) = 1 + 1 + 1 + 1 + 1 = 5, S(z) = 1 + 1 + 1 + 1 + 1 = 5, E(z) = 1.00
+  ```
+
+  The five slots of `S(z)` are `z`, the `<<` entry, `x`, `y` and `k`; the three
+  merge members contribute `W - 1 = 1` each to `W(z)` and nothing but their
+  written entries to `S(z)`.
 
   Worked, given `p: &p {k: 1}` and `q: &q {j: 2}` (`W = S = 2` for each):
 
@@ -494,7 +527,12 @@ maximum of 6 for exactly the reason an anchored `t` would be.
 - **D-22.** A codec for a format with an anchor/reference mechanism MUST also
   enforce a finite maximum **expanded size** on the input as a whole: the
   number of value slots it materializes, which is `W(root)` as defined above,
-  computed by the same single memoized pass. It MUST reject the input with
+  computed by the same single memoized pass. **D-22 applies only to an input
+  that contains at least one alias or merge key.** An input with neither is not
+  subject to it: its `W(root)` is its written size, `S(root)`, which D-9's node
+  limit and the caller's own input-size bound govern, and a plain YAML file is
+  treated as a JSON or OML file of the same size is. A codec subject to D-22
+  MUST reject the input with
   `document.limit.expanded-size`
   ([§8.3.2](08-conformance-and-errors.md#832-document-building-and-limits))
   when `W(root)` is **greater than** the maximum, and MUST accept it when
@@ -518,11 +556,14 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   limit does not catch it, because it counts mappings, not the scalars that make
   up most of that `W`. This is omnist-spec#125.
 
-  **The default.** 1 000 000 is the node-count default, so a deployment tuning
-  one has a number to start from for the other, and it is under a third of the
-  measured 3.2 million-slot case. It is two orders of magnitude above the
-  configuration shapes measured under D-18: 100 services each merging a 60-key
-  block materialize on the order of ten thousand slots. An implementation MAY
+  **The default.** It is chosen from measured `W(root)` of realistic aliased
+  documents, which it must never refuse, and from the measured memory cost of
+  the documents it must refuse. Compose files of 100 services merging a 20-key
+  block and of 100 merging a 60-key block measure 2 223 and 6 263 slots; 1 000
+  services merging a 60-key block, 62 063; a GitLab file of 200 jobs, 5 828; a
+  Kubernetes file of 500 objects, 15 009. The largest of these is 16 times under
+  the default. The measured memory bomb, 3.2 million slots at 2.5 GB in Go, is
+  over three times above it. An implementation MAY
   configure another finite value (D-10) and MUST document it (D-11). It
   SHOULD NOT configure one above **10 000 000** without measuring its own
   memory per slot: the Go measurement above is about 780 bytes per slot, so
@@ -542,7 +583,9 @@ vacuous for them and they need not compute anything. It binds any future
 format or extension that adds one. Nothing in D-18 refers to input byte
 length, so there is no ratio-to-bytes to be undefined on a programmatic
 construction route, and no denominator to disagree about. D-22 is likewise a
-count of materialized slots, not of input bytes.
+count of materialized slots, not of input bytes. It is also not a cap on plain
+document size: a YAML input with no alias and no merge key is outside it, as a
+JSON or OML input of the same size is.
 
 **XML's entity expansion is the same class of problem and is already
 handled.** A DTD's internal entities have exactly this shape — the "billion
