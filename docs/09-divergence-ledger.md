@@ -117,7 +117,7 @@ All five pass all fourteen vectors v0.22.0-beta added.
 
 **Versions.** The Version row is each port's latest **tag**. Python
 `v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust `v0.3.1-alpha` is on
-crates.io (newest version `0.3.1-alpha`). Go `v0.5.1-alpha` is distributed by
+crates.io (newest version `0.3.1-alpha`). Go `v0.6.0-alpha` is distributed by
 tag only (module proxy; no registry). TypeScript `v0.4.1-alpha` is tagged but
 **not** published to npm: `@omnist-dev/omnist` (the name in `package.json`)
 has only `0.2.0-alpha` and `0.3.0-alpha` (the `latest` and `alpha` tag).
@@ -126,16 +126,16 @@ Portal publishing by the maintainer; Maven Central's `maven-metadata.xml` for
 `dev.omnist:omnist-j` lists `0.2.1-alpha` and `0.2.2-alpha` only, so the
 latest public release is `0.2.2-alpha`.
 
-Two things are deliberately not claimed as done anywhere: no port enforces the
-alias expansion limit D-18 (`DIV-3`), and no port implements the OSD-OML
+Two things are deliberately not claimed as done anywhere: only Go enforces the
+alias expansion limit D-18 (`DIV-3`; the other four ports do not), and no port implements the OSD-OML
 extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.1 | 0.4.1-alpha | 0.3.1-alpha | 0.5.1-alpha | 0.2.6-alpha |
+| Version | 0.10.1 | 0.4.1-alpha | 0.3.1-alpha | 0.6.0-alpha | 0.2.6-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
-| Resource caps (§2.4's three universal limits; D-18 is enforced by no port yet — DIV-3) | all three | all three | all three | all three | all three |
+| Resource caps (§2.4's three universal limits; D-18 is enforced by Go only — DIV-3) | all three | all three | all three | all three | all three |
 | OML read/write | complete | complete | complete | complete | complete |
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14) | both done | both done (OSD-15 fixed in #150) | both done (`to_osd` returns `Result`) | both done (`osd.Write` returns an error) | both done |
@@ -145,8 +145,8 @@ extension (§9.6).
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI | yes, via the CLI | yes, via `omnist-cli` | yes, at the front of all six readers | yes, on stdin |
-| Conformance (Track 2 JSON vectors, 287 at v0.22.0-beta, all compared as `(path, code)` sets) | 247 pass / 0 fail / 40 skip | 227 pass / 0 fail / 60 skip | 247 pass / 0 fail / 40 skip | 253 pass / 0 fail / 34 skip | 253 pass / 0 fail / 34 skip |
-| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 19/19 (Java's Track 1 headline is 29/0/0: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110); its whole-harness headline including Track 2 is 282/0/34) |
+| Conformance (Track 2 JSON vectors, 287 at v0.22.0-beta, all compared as `(path, code)` sets) | 247 pass / 0 fail / 40 skip | 227 pass / 0 fail / 60 skip | 247 pass / 0 fail / 40 skip | 284 pass / 0 fail / 28 skip (measured at v0.25.0-beta, 312 vectors; the 28 skips are all OSD-OML) | 253 pass / 0 fail / 34 skip |
+| Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 (at v0.25.0-beta) | 19/19 (Java's Track 1 headline is 29/0/0: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110); its whole-harness headline including Track 2 is 282/0/34) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.66% line / 99.19% branch measured, gated at 99.6% / 99.1% (about 1 line and 2 branches of headroom, `docs/limitations.md`) |
 
@@ -169,8 +169,7 @@ alias-expansion ([omnist-rs#180](https://github.com/omnist-dev/omnist-rs/issues/
 `DIV-3`), 6 `document-model/limits` (compile-time constants,
 [omnist-rs#181](https://github.com/omnist-dev/omnist-rs/issues/181)). Go: 28
 OSD-OML ([omnist-go#111](https://github.com/omnist-dev/omnist-go/issues/111)),
-6 alias-expansion ([omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
-`DIV-3`). Java: 28 OSD-OML ([omnist-j#105](https://github.com/omnist-dev/omnist-j/issues/105)),
+none for alias-expansion since omnist-go v0.6.0-alpha (`DIV-3`). Java: 28 OSD-OML ([omnist-j#105](https://github.com/omnist-dev/omnist-j/issues/105)),
 6 alias-expansion ([omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113),
 `DIV-3`). Skip counts are therefore not comparable across ports beyond those
 shared categories.
@@ -209,31 +208,31 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-**DIV-3. No implementation enforces the alias expansion limit (D-18) yet.**
+**DIV-3. Only Go enforces the alias expansion limit (D-18); the other four ports do not yet.**
 D-18, D-19 and D-20 ([§2.4.1](02-document-model.md#241-bounding-alias-expansion))
 are normative content as of **v0.18.0-beta**, and as of v0.21.0-beta no port
-enforces them. This is a rollout gap, not a design defect and not a divergence
+enforced them. Go now does (omnist-go v0.6.0-alpha, [omnist-go#124](https://github.com/omnist-dev/omnist-go/pull/124), `1520c94`), including the v0.25.0-beta container rule below. This is a rollout gap, not a design defect and not a divergence
 any implementation intends to keep: it is the expected interval between a spec
 rule landing and the ports adopting it. Tracked by omnist-spec#75, and per port
 by [omnist-go#117](https://github.com/omnist-dev/omnist-go/issues/117),
 [omnist-rs#180](https://github.com/omnist-dev/omnist-rs/issues/180) and
-[omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113). Remove this
-entry when every port enforces D-18.
+[omnist-j#113](https://github.com/omnist-dev/omnist-j/issues/113). TypeScript's PR
+([omnist-ts#154](https://github.com/omnist-dev/omnist-ts/pull/154)) is open and
+not merged, so it is not claimed. Remove this entry when every port enforces D-18.
 
 **D-18 now also requires the container check (v0.25.0-beta, #121).** Checking
 anchored definitions alone left the limit bypassable by omitting the anchor on
 the amplifying node, so the rule now measures every mapping and sequence and
-the root as well. Go's omnist-go#124 implements the anchored-only version, and
-no port implements the container check yet. On Go PR #124's anchored-only
-check, the six rejection vectors among the ten added with it (unanchored
-merge fan-in, list of aliasing mappings, root-level aliases, unanchored merge
-one past the limit, large-anchor merge over the limit, inline merge source
-one past the limit) are expected to fail, and the four that expect acceptance
-pass. Elsewhere all ten are E-20 skips.
+the root as well. Go's omnist-go#124 (v0.6.0-alpha) implements the container
+check: every mapping and sequence, the root and inline merge sources are
+checked against E at most `Limits.MaxAliasExpansion` (default 50), reporting
+`document.limit.alias-expansion`, and Go passes all ten vectors added with
+v0.25.0-beta. Elsewhere all ten are E-20 skips.
 
-**What a runner reports today.** All five ports skip the sixteen vectors (six before v0.25.0-beta) in
+**What a runner reports today.** Python, TypeScript, Rust and Java skip the sixteen vectors (six before v0.25.0-beta) in
 `test-suite/formats-yaml/alias-expansion.json` as E-20 skips citing this entry;
 every one carries `declared_max_alias_expansion`.
+Go passes all sixteen.
 Java has a partial stop-gap, not an implementation: SnakeYAML's default cap of
 50 collection aliases rejects legitimate merge-key configs with 51 or more
 references (documented in omnist-j#113).
@@ -384,6 +383,15 @@ as facts about the ports, measured when `DIV-7` was open and unchanged since.
   `a: 1`, a lone `CR`, `}`: Python, TypeScript and Rust report
   `parse.unexpected-token` at `1:5`, the `CR`; Go and Java report it at `1:6`,
   the character after. `CRLF` agrees: line 2 column 1 in all five.
+- *An anchored literal merge sequence* (`<<: &s [*p, ...]`, the sequence carrying
+  its own anchor). Go treats it as an ordinary merge value, so the expansion
+  size S is inflated relative to an unanchored literal. No rule fixes it and no
+  vector pins it; pending spec clarification, to be filed on omnist-spec.
+- *Memory for scalar-heavy documents just under the limit.* Go's `MaxNodes`
+  counts mappings only, so a huge document with up to E=50 per container is not
+  bounded in memory by it (omnist-go `docs/limitations.md`). Whether D-18 or
+  section 2.4 should bound this is pending spec clarification, to be filed on
+  omnist-spec.
 
 ## 9.5 Adding a sixth implementation
 
