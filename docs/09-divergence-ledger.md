@@ -127,26 +127,26 @@ Python is still at v0.22.0-beta and implements none of the alias rules
 (`DIV-3`).
 
 **Versions.** The Version row is each port's latest **tag**. Python
-`v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust `v0.3.1-alpha` is on
-crates.io (newest version `0.3.1-alpha`). Go `v0.6.0-alpha` is distributed by
-tag only (module proxy; no registry). TypeScript `v0.4.1-alpha` is tagged but
-**not** published to npm: `@omnist-dev/omnist` (the name in `package.json`)
-has only `0.2.0-alpha` and `0.3.0-alpha` (the `latest` and `alpha` tag).
-Java `v0.3.0-alpha` is tagged, but its Release workflow run is waiting for
+`v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust `v0.5.0-alpha` is
+tagged and its Publish run is in progress; crates.io's newest version is
+still `0.3.1-alpha`. Go `v0.7.0-alpha` is distributed by tag only (module
+proxy; no registry). TypeScript `v0.6.0-alpha` is tagged but **not**
+published to npm: `@omnist-dev/omnist` (the name in `package.json`) has only
+`0.2.0-alpha` and `0.3.0-alpha` (the `latest` and `alpha` tag). Java
+`v0.3.0-alpha` is tagged, but its Release workflow run is waiting for
 manual approval and nothing newer than `0.2.5-alpha` is on Maven Central:
 `maven-metadata.xml` for `dev.omnist:omnist-j` lists `0.2.1-alpha`,
 `0.2.2-alpha` and `0.2.5-alpha`, with `0.2.5-alpha` as latest and release.
 
 The v0.26.0-beta adoptions of Go, Rust and TypeScript are merged on each
-default branch and **not yet tagged**, so the Version row still shows the
-earlier tags; the code is ahead of the tag in all three. Java's adoption is in
-its `v0.3.0-alpha` tag. Of the v0.26.0-beta rule set, only that Java tag
-carries it in a tagged release, and none of it is published anywhere.
+default branch and tagged (`v0.7.0-alpha`, `v0.5.0-alpha`, `v0.6.0-alpha`).
+Java's adoption is in its `v0.3.0-alpha` tag. None of the v0.26.0-beta rule
+set is published to a registry yet; Python has not adopted it.
 No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.1 | 0.4.1-alpha | 0.3.1-alpha | 0.6.0-alpha | 0.3.0-alpha |
+| Version | 0.10.1 | 0.6.0-alpha | 0.5.0-alpha | 0.7.0-alpha | 0.3.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by TypeScript, Rust, Go and Java, not Python — DIV-3) | all three | all three | all three | all three | all three |
