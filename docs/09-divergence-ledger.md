@@ -105,10 +105,10 @@ port's own issue tracker and commit history, not here.*
 
 **Last updated: 2026-10-02**, from each port's own merged and
 independently reviewed PR and its own conformance run, not carried forward
-from an earlier edit. Last source-audited 2026-09-30; the v0.26.0-beta numbers
+from an earlier edit. Last source-audited 2026-09-30; the v0.27.0-beta numbers
 below are each port's own PR figures and were not re-run for this edit. All
-five ports had adopted spec **v0.22.0-beta** (287 Track 2 vectors) and compare diagnostics as
-`(path, code)` sets with strict runners:
+five ports had adopted spec **v0.22.0-beta** (287 Track 2 vectors) and compare
+diagnostics as `(path, code)` sets with strict runners:
 Python ([omnist#351](https://github.com/omnist-dev/omnist/pull/351), `e72ba20`),
 TypeScript ([omnist-ts#151](https://github.com/omnist-dev/omnist-ts/pull/151), `aee2311`),
 Go ([omnist-go#122](https://github.com/omnist-dev/omnist-go/pull/122), `1de5e84`),
@@ -116,39 +116,42 @@ Rust ([omnist-rs#185](https://github.com/omnist-dev/omnist-rs/pull/185), `e07b19
 Java ([omnist-j#117](https://github.com/omnist-dev/omnist-j/pull/117), `ac12dc1`).
 All five pass all fourteen vectors v0.22.0-beta added.
 
-Four ports have since adopted **v0.26.0-beta** (331 Track 2 vectors), with the
+All five ports now implement **v0.27.0-beta** (338 Track 2 vectors), with the
 whole YAML alias rule set (D-18, D-18a, D-19, D-20 and D-22, malformed-merge
-errors winning over limit codes):
-TypeScript ([omnist-ts#156](https://github.com/omnist-dev/omnist-ts/pull/156), `5238410`),
-Rust ([omnist-rs#187](https://github.com/omnist-dev/omnist-rs/pull/187), `3b0f080`),
-Go ([omnist-go#125](https://github.com/omnist-dev/omnist-go/pull/125), `3e970e8`) and
-Java ([omnist-j#118](https://github.com/omnist-dev/omnist-j/pull/118), `43b205a`).
-Python is still at v0.22.0-beta and implements none of the alias rules
-(`DIV-3`).
+errors winning over limit codes, and `<<: []` accepted as a carrier that merges
+nothing):
+TypeScript ([omnist-ts#156](https://github.com/omnist-dev/omnist-ts/pull/156) and #158),
+Rust ([omnist-rs#187](https://github.com/omnist-dev/omnist-rs/pull/187) and #188),
+Go ([omnist-go#125](https://github.com/omnist-dev/omnist-go/pull/125), #126 and #127),
+Java ([omnist-j#118](https://github.com/omnist-dev/omnist-j/pull/118) and #120) and
+Python ([omnist#352](https://github.com/omnist-dev/omnist/pull/352), merged as
+`0133f89`, pinned to v0.27.0-beta).
 
-**Versions.** The Version row is each port's latest **tag**.
-Python `v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust
-`v0.5.1-alpha` is tagged and its Publish run is in progress; crates.io's
-newest version is `0.5.0-alpha`. Go `v0.8.0-alpha` is distributed by tag
-only (module proxy; no registry). TypeScript `v0.6.1-alpha` is tagged and
-`0.6.0-alpha` is published to npm (`@omnist-dev/omnist`, both the `latest`
-and `alpha` dist-tag); `0.6.1-alpha` is not published. Java
-`v0.3.0-alpha` is tagged and `0.3.0-alpha` is the latest version on Maven
-Central.
+**Versions.** The Version row is each port's latest **tag**, checked
+2026-10-02 with `git ls-remote --tags`. Python `v0.11.0` is tagged and its
+Publish to PyPI run is queued, not finished; the PyPI Simple index serves up
+to `omnist-0.10.1` and does not yet serve `0.11.0`. Rust `v0.5.1-alpha` is
+tagged and published (crates.io's newest version is `0.5.1-alpha`). Go
+`v0.8.0-alpha` is distributed by tag only (module proxy; no registry, and the
+proxy serves it). TypeScript `v0.6.1-alpha` is tagged; npm
+(`@omnist-dev/omnist`) serves `0.6.0-alpha` as both the `latest` and `alpha`
+dist-tag, so `0.6.1-alpha` is not published. Java `v0.3.1-alpha` is tagged and
+its Release run is waiting for manual approval; the latest version on Maven
+Central is still `0.3.0-alpha`.
 
 The v0.26.0-beta alias rules are in Go `v0.7.0-alpha`, Rust `v0.5.0-alpha`,
 TypeScript `v0.6.0-alpha` and Java `v0.3.0-alpha`; the v0.27.0-beta
-adoption is in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha` and
-TypeScript `v0.6.1-alpha`, and its Java PR (omnist-j#120) is open. Python
-has not adopted the alias rules in a release: omnist#352 is open.
-No port implements the OSD-OML extension (§9.6).
+adoption is in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha`, TypeScript
+`v0.6.1-alpha`, Java `v0.3.1-alpha` and Python `v0.11.0`. Of those, only Rust
+`0.5.1-alpha` is served by its registry today. No port implements the
+OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.1 | 0.6.1-alpha | 0.5.1-alpha | 0.8.0-alpha | 0.3.0-alpha |
+| Version | 0.11.0 | 0.6.1-alpha | 0.5.1-alpha | 0.8.0-alpha | 0.3.1-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
-| Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by TypeScript, Rust, Go and Java, not Python — DIV-3) | all three | all three | all three | all three | all three |
+| Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five) | all three | all three | all three | all three | all three |
 | OML read/write | complete | complete | complete | complete | complete |
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14) | both done | both done (OSD-15 fixed in #150) | both done (`to_osd` returns `Result`) | both done (`osd.Write` returns an error) | both done |
@@ -158,25 +161,23 @@ No port implements the OSD-OML extension (§9.6).
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI | yes, via the CLI | yes, via `omnist-cli` | yes, at the front of all six readers | yes, on stdin |
-| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 331 at v0.26.0-beta) | 247 pass / 0 fail / 40 skip (measured at v0.22.0-beta, 287 vectors; not re-run) | 297 pass / 0 fail / 34 skip (measured at v0.26.0-beta (omnist-ts#156); the 34 are 28 OSD-OML and 6 `limits`) | 297 pass / 0 fail / 34 skip (measured at v0.26.0-beta (omnist-rs#187); the 34 are 28 OSD-OML and 6 `limits`) | 310 pass / 0 fail / 28 skip of 338 (measured at v0.27.0-beta (omnist-go#126); the 28 are all OSD-OML) | 303 pass / 0 fail / 28 skip (measured at v0.26.0-beta (omnist-j#118); the 28 are all OSD-OML) |
-| Conformance (fixtures) | 19/19 (not re-run) | 19/19 (at v0.26.0-beta) | 19/19 (at v0.26.0-beta) | 19/19 (at v0.26.0-beta) | 29/0/0 at v0.26.0-beta (Java's Track 1 headline: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
+| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 338 at v0.27.0-beta) | 304 pass / 0 fail / 34 skip (measured at v0.27.0-beta, per-port PR omnist#352; the 34 are 28 OSD-OML and 6 `limits`) | 304 pass / 0 fail / 34 skip (measured at v0.27.0-beta, per-port PR omnist-ts#158; the 34 are 28 OSD-OML and 6 `limits`) | 304 pass / 0 fail / 34 skip (measured at v0.27.0-beta, per-port PR omnist-rs#188; the 34 are 28 OSD-OML and 6 `limits`) | 310 pass / 0 fail / 28 skip (measured at v0.27.0-beta, per-port PR omnist-go#126; the 28 are all OSD-OML) | 310 pass / 0 fail / 28 skip (measured at v0.27.0-beta, per-port PR omnist-j#120; the 28 are all OSD-OML) |
+| Conformance (fixtures) | 19/19 (at v0.27.0-beta, per-port PR) | 19/19 (at v0.27.0-beta, per-port PR) | 19/19 (at v0.27.0-beta, per-port PR) | 19/19 (at v0.27.0-beta, per-port PR) | 29/0/0 at v0.27.0-beta (Java's Track 1 headline: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.66% line / 99.19% branch measured, gated at 99.6% / 99.1% (about 1 line and 2 branches of headroom, `docs/limitations.md`) |
 
-The Track 2 row mixes two suites: Python's cell is the v0.22.0-beta suite, 287
-vectors, and the other four are at v0.26.0-beta, 331 vectors. v0.23.0-beta added
-11 vectors (298 in all); `DIV-8` records how each port fares on those.
-v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port fares on
-those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more (331
-in all) and v0.27.0-beta 7 more (338 in all, none yet adopted by a port); all
-36 are in `formats-yaml/alias-expansion.json`, which `DIV-3` covers for Python.
+The Track 2 row is one suite, v0.27.0-beta, 338 vectors, for all five ports.
+v0.23.0-beta added 11 vectors (298 in all); `DIV-8` records how each port fares
+on those. v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port
+fares on those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more
+(331 in all) and v0.27.0-beta 7 more (338 in all); all 36 are in
+`formats-yaml/alias-expansion.json`, which every port now passes with none
+skipped.
 
 **What each port skips.** Python: 28
-OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
-alias-expansion (`DIV-3`), 6 `declared_max_depth` / `declared_max_nodes` /
-`declared_max_int_digits` vectors (its limits are module constants), all at
-v0.22.0-beta; at v0.26.0-beta it will also skip every vector carrying a
-declared alias key (`DIV-3`). TypeScript: 28
+OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)) and 6
+`declared_max_depth` / `declared_max_nodes` / `declared_max_int_digits`
+vectors (its limits are module constants). TypeScript: 28
 OSD-OML and 6 compile-time limits. Rust: 28 OSD-OML
 ([omnist-rs#175](https://github.com/omnist-dev/omnist-rs/issues/175)) and 6
 `document-model/limits` (compile-time constants,
@@ -184,8 +185,8 @@ OSD-OML and 6 compile-time limits. Rust: 28 OSD-OML
 OSD-OML ([omnist-go#111](https://github.com/omnist-dev/omnist-go/issues/111)).
 Java: 28 OSD-OML
 ([omnist-j#105](https://github.com/omnist-dev/omnist-j/issues/105)). No port
-other than Python skips an alias-expansion vector. Skip counts are therefore not
-comparable across ports beyond those shared categories.
+skips an alias-expansion vector. Skip counts are therefore not comparable
+across ports beyond those shared categories.
 
 **Note on the D-14 row.** D-14 has vectors (E-27's `bytes_hex`) and all five
 ports pass them. OSD-14 has none: its "done" cells rest on the unit tests each
@@ -204,15 +205,22 @@ two were previously indistinguishable, so a bare `D-3` could mean either an
 edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
-**`DIV-1`, `DIV-2`, `DIV-4`, `DIV-6`, `DIV-7` and `DIV-10` are retired numbers
-and MUST NOT be reused.** All six entries closed and were deleted; the numbers stay spent so a
-citation to any of them in an older document, issue, vector comment, or port
-changelog cannot silently come to mean something else. `DIV-4` (the rules
+**`DIV-1`, `DIV-2`, `DIV-3`, `DIV-4`, `DIV-6`, `DIV-7` and `DIV-10` are
+retired numbers and MUST NOT be reused.** All seven entries closed and were
+deleted; the numbers stay spent so a citation to any of them in an older
+document, issue, vector comment, or port changelog cannot silently come to mean
+something else. `DIV-3` (the YAML alias rules D-18, D-18a, D-19, D-20 and D-22)
+closed when the last port, Python, implemented them in omnist#352, so all five
+ports enforce them. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
 when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
 fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
-fourteen. `DIV-3`, `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11` and `DIV-12`
-are live. This note
+fourteen. `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11` and `DIV-12` are live. One
+caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
+`test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
+an earlier entry that held the number before the alias-limit entry opened in
+v0.18.0-beta (CHANGELOG); it is not the alias entry, and the number was reused
+once already, which is why it is now retired. This note
 lives here, in the preamble, rather than inside any single entry — an entry is
 deleted when it closes, and a retirement note that rides along inside one
 disappears with it.
@@ -221,46 +229,6 @@ Because a closed entry is deleted rather than archived, a citation to one
 can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
-
-**DIV-3. Python does not enforce the alias expansion limit (D-18, D-18a, D-19, D-20) or the expanded-size cap (D-22); TypeScript, Rust, Go and Java do.**
-D-18, D-19 and D-20 ([§2.4.1](02-document-model.md#241-bounding-alias-expansion))
-are normative content as of **v0.18.0-beta**, D-18a (the merge carrier rule)
-and D-22 as of **v0.26.0-beta**. Four ports now implement the whole set and
-pass every vector in `test-suite/formats-yaml/alias-expansion.json` with none
-skipped: Go ([omnist-go#125](https://github.com/omnist-dev/omnist-go/pull/125)),
-Rust ([omnist-rs#187](https://github.com/omnist-dev/omnist-rs/pull/187)),
-TypeScript ([omnist-ts#156](https://github.com/omnist-dev/omnist-ts/pull/156))
-and Java ([omnist-j#118](https://github.com/omnist-dev/omnist-j/pull/118)).
-Python's reference port does not: its source at the default-branch tip
-(`e72ba20`, v0.22.0-beta) has no alias-expansion limit, no
-`document.limit.alias-expansion` or `document.limit.expanded-size` code, and
-its runner skips the alias vectors citing this entry. Its materialization walk
-has a node budget that bounds an amplified alias chain only indirectly, and the
-reference still silently accepts the self-merging form `a: &a {<<: *a, k: 1}`
-(see [§2.4.1](02-document-model.md#241-bounding-alias-expansion); not re-tested
-here). This is a rollout gap, not a design defect and not a divergence Python
-intends to keep.
-Tracked by omnist-spec#75. Remove this entry when Python enforces D-18, D-18a
-and D-22.
-
-**What Python's runner reports today.** At v0.22.0-beta it skips the six
-`declared_max_alias_expansion` vectors as E-20 skips citing this entry. When
-its submodule reaches v0.26.0-beta it skips every vector in
-`formats-yaml/alias-expansion.json` that carries `declared_max_alias_expansion`
-or `declared_max_expanded_slots` the same way. The four malformed-merge vectors
-carry no declared key, so a runner reports them as a pass or as an E-20 skip
-citing this entry. None of this was re-run for this entry.
-
-**Adopting D-18 is two steps, not one:** **(a)** implement the rule, and
-**(b)** add `declared_max_alias_expansion` to the runner's limit-key allowlist.
-Adopting D-22 is the same two steps with `declared_max_expanded_slots`.
-A port that does (a) and forgets (b) gets no loud failure to tell it so —
-`expansion-at-declared-limit-succeeds` would report green while being run
-against that port's own default maximum instead of the 3 the vector declares,
-so it exercises the wrong boundary and can mask a real threshold bug
-indefinitely. A failure gets triaged. A pass gets believed. Until a port
-completes both steps, its runner MUST NOT report that vector as a pass on the
-strength of step (a) alone.
 
 **DIV-5. OSD-14 has no vector, so its adoption rests on each port's unit tests.**
 [OSD-14](05-osd-grammar.md#59-canonical-output), new in **v0.20.0-beta**: a
@@ -412,8 +380,11 @@ D-18 and D-22 cannot help. And the alias pass treats the items of `!!pairs` and
 `!!omap` as scalars, so an alias tower inside them is invisible to the ratio and
 size checks (an 801-byte, 7-level tower was accepted by both and stopped later
 by the node limit after about 10 s and 360 MB). This is a TypeScript
-implementation defect against D-9, D-18 and D-22, not a spec gap. **Remove this
-entry when #157 is fixed.**
+implementation defect against D-9, D-18 and D-22, not a spec gap. Slow parsing
+is not unique to TypeScript, but the quadratic shape is only measured there:
+the omnist#352 description reports PyYAML parsing a 1.1 MB, 50,000-key
+mapping in about 4 s (one point, no scaling series; not re-run here).
+**Remove this entry when #157 is fixed.**
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded
