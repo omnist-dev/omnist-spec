@@ -1,0 +1,1943 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Language-agnostic specification for Omnist's Document model, Schema model, OML/OSD, and Schema Algebra.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.omnist.dev/09-divergence-ledger/">
+      
+      
+        <link rel="prev" href="../porting-a-conformance-runner/">
+      
+      
+        <link rel="next" href="../10-governance-and-versioning/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>9. Divergence Ledger - Omnist Spec</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#9-divergence-ledger" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Omnist Spec" class="md-header__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Omnist Spec
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              9. Divergence Ledger
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Omnist Spec" class="md-nav__button md-logo" aria-label="Omnist Spec" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Omnist Spec
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/omnist-dev/omnist-spec" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    omnist-dev/omnist-spec
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations-and-models-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Models Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-document-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Document Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-schema-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Schema Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-oml-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. OML Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-osd-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. OSD Grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-schema-algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Schema Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-codecs-and-deserialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Codecs & Deserialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Format Codecs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Format Codecs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/yaml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/toml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TOML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../formats/oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-conformance-and-errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. Conformance & Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OML/OSD Conformance Harness
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting-a-conformance-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting a Conformance Runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Divergence Ledger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#91-permitted-variation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Permitted variation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#92-forbidden-variation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Forbidden variation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#93-current-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Current status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#94-known-open-divergences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.4 Known open divergences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#95-adding-a-sixth-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.5 Adding a sixth implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#96-extension-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.6 Extension support
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-governance-and-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Governance & Versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extensions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Extensions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extensions/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extensions/osd-oml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSD-OML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#91-permitted-variation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Permitted variation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#92-forbidden-variation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Forbidden variation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#93-current-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Current status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#94-known-open-divergences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.4 Known open divergences
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#95-adding-a-sixth-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.5 Adding a sixth implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#96-extension-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.6 Extension support
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="9-divergence-ledger">9. Divergence ledger<a class="headerlink" href="#9-divergence-ledger" title="Permanent link">&para;</a></h1>
+<p>Five implementations exist. They will not be identical. This chapter draws the
+line between variation that is fine and variation that is a bug, and records
+where each implementation currently stands.</p>
+<h2 id="91-permitted-variation">9.1 Permitted variation<a class="headerlink" href="#91-permitted-variation" title="Permanent link">&para;</a></h2>
+<p>An implementation MAY differ freely on all of the following. None of it is
+observable in a conformance result.</p>
+<p><strong>Language surface.</strong> Method names, module layout, whether operations are free
+functions or methods, naming conventions, builder patterns, iterator protocols.
+Python's <code>schema.compatible_with(other)</code> and Rust's
+<code>compatible_with(&amp;a, &amp;b)</code> are the same operation.</p>
+<p><strong>Error representation.</strong> Exception classes, <code>Result</code> types, error enums, unions
+of tagged objects. What matters is that the same inputs fail, at the same paths,
+with the same codes once §8.3 is adopted.</p>
+<p><strong>Message text.</strong> Wording, punctuation, capitalization, suggested fixes, and
+localization. Conformance never compares messages.</p>
+<p><strong>Performance and internal representation.</strong> Memoization strategy, whether
+records are interned, arena versus reference counting, parallelism, laziness.
+The observable results must match; the route to them need not.</p>
+<p><strong>Extra operations.</strong> An implementation MAY offer conveniences the spec does not
+define — a diff view, a pretty-printer variant, a streaming reader — provided
+they cannot produce a Document or Schema the spec forbids.</p>
+<p><strong>Optional surfaces.</strong> A command-line interface, a language-server integration,
+a formatter. Nothing in this spec requires them.</p>
+<p><strong>The exact value of a safety limit</strong> (§2.4). An implementation MAY set its
+depth, node-count, and integer-digit limits to values other than the reference
+defaults (200 / 1,000,000 / 4,300), to fit its deployment target. What is not
+permitted to vary is covered in §9.2.</p>
+<h2 id="92-forbidden-variation">9.2 Forbidden variation<a class="headerlink" href="#92-forbidden-variation" title="Permanent link">&para;</a></h2>
+<p>An implementation MUST NOT differ on any of the following. Each is a
+conformance failure, not a design choice.</p>
+<p><strong>The Document model.</strong> Edge ordering, repeated-label handling, the seven scalar
+kinds, the value/node dichotomy. Adding a scalar kind is the single most
+damaging possible divergence: it changes the subtyping lattice and therefore
+silently changes compatibility answers. The one narrow, explicitly documented
+exception is <a href="../02-document-model/#23-structural-invariants">§2.3</a>'s
+scalar-kind-identity invariant: an implementation whose target language
+genuinely cannot represent a specific kind distinction independent of a
+schema MAY skip <strong>only the specific vectors whose outcome actually depends
+on that distinction</strong>, provided it documents the gap as a ledger entry in
+<a href="#94-known-open-divergences">§9.4</a> and its harness cites that entry per
+§8.5.5. Every other Document-model vector MUST still pass in full — a
+limited, precisely-scoped, thoroughly tested and clearly reported divergence
+is what this exception permits, not a blanket exemption for the surrounding
+area. <strong>This exception covers a missing distinction being skipped, never an
+incorrect output being produced.</strong></p>
+<p><strong>Whether a safety limit exists, and what it is called.</strong> All three universal
+limits in §2.4 (depth, node count, integer digits) MUST be enforced by every
+implementation, at some finite value it documents. An implementation MUST NOT
+be unbounded on any of them, and exceeding whichever value it configures
+MUST raise the matching <code>document.limit.*</code> code (§8.3.2) — never a different
+code, and never silently. The threshold number is permitted variation (§9.1);
+having no threshold at all, or reporting the wrong code when one is crossed, is
+not.</p>
+<p>§2.4's fourth limit, the alias expansion factor (D-18), is scoped rather than
+universal: it binds an implementation's codec for any format that has an
+anchor/reference mechanism, which today means YAML and nothing else. Where it
+applies it is as non-negotiable as the other three — a finite documented
+maximum, and <code>document.limit.alias-expansion</code> when it is crossed. Where no
+such mechanism exists there is nothing to enforce, and an implementation
+shipping no YAML codec is not diverging by not enforcing it.</p>
+<p><strong>Validation results.</strong> Which documents a schema accepts, and where a rejection
+is located.</p>
+<p><strong>Algebra results.</strong> Every boolean from <code>compatible_with</code>, <code>equivalent</code>, and
+<code>is_empty</code>. Every schema from <code>prune</code>, <code>normalize</code>, and <code>extract</code>, compared as
+canonical OSD text byte for byte — including record naming, which
+<code>normalize</code>'s minimum-of-block rule fixes deterministically.</p>
+<p><strong>Grammar acceptance.</strong> Which texts parse and which do not, for both OML and
+OSD. Accepting a superset is as much a failure as accepting a subset: it lets
+documents circulate that other implementations reject.</p>
+<p><strong>Canonical output.</strong> The exact bytes a canonical OML or OSD writer emits for a
+given Document or Schema.</p>
+<p><strong>Determinism.</strong> Any observable ordering — environment key order, canonical
+output, <code>lint</code> finding order — MUST be a deterministic function of the input
+alone. Never of hash seeding, iteration order of an unordered collection,
+filesystem order, or wall-clock time.</p>
+<h2 id="93-current-status">9.3 Current status<a class="headerlink" href="#93-current-status" title="Permanent link">&para;</a></h2>
+<p><em>This table is a summary, current as of the date below. It is not the source
+of truth — each implementation's own conformance harness run is. Numbers are
+kept terse deliberately: this table records </em><em>what</em><em>, not </em><em>how it got that
+way</em><em> — the reasoning, history, and audit trail for any cell live in that
+port's own issue tracker and commit history, not here.</em></p>
+<p><strong>Last updated: 2026-10-02</strong>, from each port's own merged and
+independently reviewed PR and its own conformance run, not carried forward
+from an earlier edit. Last source-audited 2026-09-30; the v0.27.0-beta numbers
+below are each port's own PR figures and were not re-run for this edit. All
+five ports had adopted spec <strong>v0.22.0-beta</strong> (287 Track 2 vectors) and compare
+diagnostics as <code>(path, code)</code> sets with strict runners:
+Python (<a href="https://github.com/omnist-dev/omnist/pull/351">omnist#351</a>, <code>e72ba20</code>),
+TypeScript (<a href="https://github.com/omnist-dev/omnist-ts/pull/151">omnist-ts#151</a>, <code>aee2311</code>),
+Go (<a href="https://github.com/omnist-dev/omnist-go/pull/122">omnist-go#122</a>, <code>1de5e84</code>),
+Rust (<a href="https://github.com/omnist-dev/omnist-rs/pull/185">omnist-rs#185</a>, <code>e07b19b</code>) and
+Java (<a href="https://github.com/omnist-dev/omnist-j/pull/117">omnist-j#117</a>, <code>ac12dc1</code>).
+All five pass all fourteen vectors v0.22.0-beta added.</p>
+<p>All five ports now implement <strong>v0.27.0-beta</strong> (338 Track 2 vectors), with the
+whole YAML alias rule set (D-18, D-18a, D-19, D-20 and D-22, malformed-merge
+errors winning over limit codes, and <code>&lt;&lt;: []</code> accepted as a carrier that merges
+nothing):
+TypeScript (<a href="https://github.com/omnist-dev/omnist-ts/pull/156">omnist-ts#156</a> and #158),
+Rust (<a href="https://github.com/omnist-dev/omnist-rs/pull/187">omnist-rs#187</a> and #188),
+Go (<a href="https://github.com/omnist-dev/omnist-go/pull/125">omnist-go#125</a>, #126 and #127),
+Java (<a href="https://github.com/omnist-dev/omnist-j/pull/118">omnist-j#118</a> and #120) and
+Python (<a href="https://github.com/omnist-dev/omnist/pull/352">omnist#352</a>, merged as
+<code>0133f89</code>, pinned to v0.27.0-beta).</p>
+<p><strong>Versions.</strong> The Version row is each port's latest <strong>tag</strong>, checked
+2026-10-02 with <code>git ls-remote --tags</code>. Python <code>v0.11.0</code> is tagged and its
+Publish to PyPI run is queued, not finished; the PyPI Simple index serves up
+to <code>omnist-0.10.1</code> and does not yet serve <code>0.11.0</code>. Rust <code>v0.5.1-alpha</code> is
+tagged and published (crates.io's newest version is <code>0.5.1-alpha</code>). Go
+<code>v0.8.0-alpha</code> is distributed by tag only (module proxy; no registry, and the
+proxy serves it). TypeScript <code>v0.6.1-alpha</code> is tagged; npm
+(<code>@omnist-dev/omnist</code>) serves <code>0.6.0-alpha</code> as both the <code>latest</code> and <code>alpha</code>
+dist-tag, so <code>0.6.1-alpha</code> is not published. Java <code>v0.3.1-alpha</code> is tagged and
+its Release run is waiting for manual approval; the latest version on Maven
+Central is still <code>0.3.0-alpha</code>.</p>
+<p>The v0.26.0-beta alias rules are in Go <code>v0.7.0-alpha</code>, Rust <code>v0.5.0-alpha</code>,
+TypeScript <code>v0.6.0-alpha</code> and Java <code>v0.3.0-alpha</code>; the v0.27.0-beta
+adoption is in Go <code>v0.7.1-alpha</code> and later, Rust <code>v0.5.1-alpha</code>, TypeScript
+<code>v0.6.1-alpha</code>, Java <code>v0.3.1-alpha</code> and Python <code>v0.11.0</code>. Of those, only Rust
+<code>0.5.1-alpha</code> is served by its registry today. No port implements the
+OSD-OML extension (§9.6).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Python</th>
+<th>TypeScript</th>
+<th>Rust</th>
+<th>Go</th>
+<th>Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Version</td>
+<td>0.11.0</td>
+<td>0.6.1-alpha</td>
+<td>0.5.1-alpha</td>
+<td>0.8.0-alpha</td>
+<td>0.3.1-alpha</td>
+</tr>
+<tr>
+<td>Maturity</td>
+<td>beta, reference</td>
+<td>alpha</td>
+<td>alpha</td>
+<td>alpha</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>Document model</td>
+<td>complete</td>
+<td>complete (<code>bigint</code> for <code>integer</code>)</td>
+<td>complete (all 7 kinds natively distinguished)</td>
+<td>complete (all 7 kinds natively distinguished)</td>
+<td>complete (all 7 kinds natively distinguished)</td>
+</tr>
+<tr>
+<td>Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five)</td>
+<td>all three</td>
+<td>all three</td>
+<td>all three</td>
+<td>all three</td>
+<td>all three</td>
+</tr>
+<tr>
+<td>OML read/write</td>
+<td>complete</td>
+<td>complete</td>
+<td>complete</td>
+<td>complete</td>
+<td>complete</td>
+</tr>
+<tr>
+<td>OSD read/write</td>
+<td>complete (duplicate root rejected)</td>
+<td>complete (duplicate root rejected)</td>
+<td>complete (duplicate root rejected)</td>
+<td>complete (duplicate root rejected)</td>
+<td>complete (duplicate root rejected)</td>
+</tr>
+<tr>
+<td>OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14)</td>
+<td>both done</td>
+<td>both done (OSD-15 fixed in #150)</td>
+<td>both done (<code>to_osd</code> returns <code>Result</code>)</td>
+<td>both done (<code>osd.Write</code> returns an error)</td>
+<td>both done</td>
+</tr>
+<tr>
+<td><code>any</code> type</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>validate</code> / <code>materialize</code></td>
+<td>complete</td>
+<td>complete</td>
+<td>complete</td>
+<td>complete</td>
+<td>complete</td>
+</tr>
+<tr>
+<td>Schema algebra (all 6 ops)</td>
+<td>complete, codepoint-safe alphabetical fallback</td>
+<td>complete, codepoint-safe alphabetical fallback (PR #137)</td>
+<td>complete, codepoint-safe alphabetical fallback</td>
+<td>complete, codepoint-safe alphabetical fallback</td>
+<td>complete, codepoint-safe alphabetical fallback (PR #103)</td>
+</tr>
+<tr>
+<td>Codecs (JSON/YAML/TOML/XML)</td>
+<td>all four, attribute/namespace/interleaving drops reported</td>
+<td>all four, attribute/namespace/interleaving drops reported</td>
+<td>all four, attribute/namespace/interleaving drops reported</td>
+<td>all four, attribute/namespace/interleaving drops reported</td>
+<td>all four, attribute/namespace/interleaving drops reported</td>
+</tr>
+<tr>
+<td>§8.3 error codes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>D-14, invalid UTF-8 rejected with <code>parse.invalid-encoding</code> at <code>1:1</code> (§2.5)</td>
+<td>yes, via the CLI</td>
+<td>yes, via the CLI</td>
+<td>yes, via <code>omnist-cli</code></td>
+<td>yes, at the front of all six readers</td>
+<td>yes, on stdin</td>
+</tr>
+<tr>
+<td>Conformance (Track 2 JSON vectors, all compared as <code>(path, code)</code> sets; 338 at v0.27.0-beta)</td>
+<td>304 pass / 0 fail / 34 skip (measured at v0.27.0-beta, per-port PR omnist#352; the 34 are 28 OSD-OML and 6 <code>limits</code>)</td>
+<td>304 pass / 0 fail / 34 skip (measured at v0.27.0-beta, per-port PR omnist-ts#158; the 34 are 28 OSD-OML and 6 <code>limits</code>)</td>
+<td>304 pass / 0 fail / 34 skip (measured at v0.27.0-beta, per-port PR omnist-rs#188; the 34 are 28 OSD-OML and 6 <code>limits</code>)</td>
+<td>310 pass / 0 fail / 28 skip (measured at v0.27.0-beta, per-port PR omnist-go#126; the 28 are all OSD-OML)</td>
+<td>310 pass / 0 fail / 28 skip (measured at v0.27.0-beta, per-port PR omnist-j#120; the 28 are all OSD-OML)</td>
+</tr>
+<tr>
+<td>Conformance (fixtures)</td>
+<td>19/19 (at v0.27.0-beta, per-port PR)</td>
+<td>19/19 (at v0.27.0-beta, per-port PR)</td>
+<td>19/19 (at v0.27.0-beta, per-port PR)</td>
+<td>19/19 (at v0.27.0-beta, per-port PR)</td>
+<td>29/0/0 at v0.27.0-beta (Java's Track 1 headline: the 10 <code>_referee-self-test/*</code> fixtures are folded into it, <a href="https://github.com/omnist-dev/omnist-j/issues/110">omnist-j#110</a>)</td>
+</tr>
+<tr>
+<td>Fuzz testing</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Test coverage</td>
+<td>100% lines, gated (<code>coverage report --fail-under=100</code>)</td>
+<td>100% lines, branches, functions and statements, gated (vitest thresholds)</td>
+<td>100% lines, gated (<code>cargo llvm-cov --fail-under-lines 100</code>); region coverage is not gated</td>
+<td>100% per function, gated; excludes <code>main</code>, <code>cmdMaterialize</code> and the <code>tools/</code> harness and doc-example checker</td>
+<td>99.66% line / 99.19% branch measured, gated at 99.6% / 99.1% (about 1 line and 2 branches of headroom, <code>docs/limitations.md</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The Track 2 row is one suite, v0.27.0-beta, 338 vectors, for all five ports.
+v0.23.0-beta added 11 vectors (298 in all); <code>DIV-8</code> records how each port fares
+on those. v0.24.0-beta added 4 more (302 in all); <code>DIV-9</code> records how each port
+fares on those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more
+(331 in all) and v0.27.0-beta 7 more (338 in all); all 36 are in
+<code>formats-yaml/alias-expansion.json</code>, which every port now passes with none
+skipped.</p>
+<p><strong>What each port skips.</strong> Python: 28
+OSD-OML (<a href="https://github.com/omnist-dev/omnist/issues/341">omnist#341</a>) and 6
+<code>declared_max_depth</code> / <code>declared_max_nodes</code> / <code>declared_max_int_digits</code>
+vectors (its limits are module constants). TypeScript: 28
+OSD-OML and 6 compile-time limits. Rust: 28 OSD-OML
+(<a href="https://github.com/omnist-dev/omnist-rs/issues/175">omnist-rs#175</a>) and 6
+<code>document-model/limits</code> (compile-time constants,
+<a href="https://github.com/omnist-dev/omnist-rs/issues/181">omnist-rs#181</a>). Go: 28
+OSD-OML (<a href="https://github.com/omnist-dev/omnist-go/issues/111">omnist-go#111</a>).
+Java: 28 OSD-OML
+(<a href="https://github.com/omnist-dev/omnist-j/issues/105">omnist-j#105</a>). No port
+skips an alias-expansion vector. Skip counts are therefore not comparable
+across ports beyond those shared categories.</p>
+<p><strong>Note on the D-14 row.</strong> D-14 has vectors (E-27's <code>bytes_hex</code>) and all five
+ports pass them. OSD-14 has none: its "done" cells rest on the unit tests each
+port's PR reports (<code>DIV-5</code>).</p>
+<h2 id="94-known-open-divergences">9.4 Known open divergences<a class="headerlink" href="#94-known-open-divergences" title="Permanent link">&para;</a></h2>
+<p>Only genuinely unresolved items belong here. A closed item is removed
+entirely once fixed — its resolution lives in the fixing repo's own issue,
+not as a growing paragraph in this file.</p>
+<p><strong>Entries are numbered <code>DIV-1</code>, <code>DIV-2</code>, …</strong> — deliberately <em>not</em> <code>D-N</code>,
+which is chapter 2's Document-model rule namespace
+(<a href="../02-document-model/#23-structural-invariants">§2.3</a>'s <code>D-1</code>..<code>D-5</code>). The
+two were previously indistinguishable, so a bare <code>D-3</code> could mean either an
+edge-ordering invariant or a retired XML divergence, and both readings
+appeared in the same chapter.</p>
+<p><strong><code>DIV-1</code>, <code>DIV-2</code>, <code>DIV-3</code>, <code>DIV-4</code>, <code>DIV-6</code>, <code>DIV-7</code> and <code>DIV-10</code> are
+retired numbers and MUST NOT be reused.</strong> All seven entries closed and were
+deleted; the numbers stay spent so a citation to any of them in an older
+document, issue, vector comment, or port changelog cannot silently come to mean
+something else. <code>DIV-3</code> (the YAML alias rules D-18, D-18a, D-19, D-20 and D-22)
+closed when the last port, Python, implemented them in omnist#352, so all five
+ports enforce them. <code>DIV-4</code> (the rules
+v0.19.0-beta and v0.20.0-beta settled) and <code>DIV-6</code> (<code>bytes_hex</code> and D-14) closed
+when the v0.21.0-beta sweep left every port satisfying every row. <code>DIV-7</code> (the
+fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
+fourteen. <code>DIV-5</code>, <code>DIV-8</code>, <code>DIV-9</code>, <code>DIV-11</code> and <code>DIV-12</code> are live. One
+caution on <code>DIV-3</code>: comments in <code>test-suite/formats-xml/xml.json</code> and
+<code>test-suite/formats-json/json.json</code> cite a <code>DIV-3</code> closed 2026-08-23. That is
+an earlier entry that held the number before the alias-limit entry opened in
+v0.18.0-beta (CHANGELOG); it is not the alias entry, and the number was reused
+once already, which is why it is now retired. This note
+lives here, in the preamble, rather than inside any single entry — an entry is
+deleted when it closes, and a retirement note that rides along inside one
+disappears with it.</p>
+<p>Because a closed entry is deleted rather than archived, a citation to one
+can outlive it. <strong>Before removing an entry, search the docs for inbound
+citations</strong> — that is how the previous <code>D-3</code> and <code>D-7</code> references ended up
+pointing at nothing.</p>
+<p><strong>DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23 and S-24 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.</strong>
+<a href="../05-osd-grammar/#59-canonical-output">OSD-14</a>, new in <strong>v0.20.0-beta</strong>: a
+field label carrying a C0 control character has no OSD spelling, so an OSD
+writer handed such a schema MUST fail with <code>write.unsupported-value</code> rather than
+emit text no conformant reader accepts. As of v0.21.0-beta all five ports
+implement it and report it done, verified by the unit tests in each port's PR
+and by nothing else — the suite cannot check it. The companion rule, OSD-15
+(canonical label escaping), is adopted by all five ports and is pinned by the
+four <code>osd-grammar/canonical-output/label-*</code> vectors, which pass everywhere; it
+needs no entry.</p>
+<p><strong>Widened at v0.28.0-beta.</strong> <a href="../05-osd-grammar/#59-canonical-output">OSD-16</a>
+(a writer fails on <code>max = 0</code>), S-22 (<code>schema.invalid-label</code>), S-23
+(<code>schema.unknown-record</code>), S-24, and the <code>$</code> path of a programmatic
+<code>schema.invalid-name</code> (S-8) share OSD-14's blocker: each takes a Schema built
+programmatically, which no vector can supply. What is known, from the
+coordinator's probes and not re-run here: Python constructs <code>Schema</code> with a
+<code>[0,0]</code> field, a lone-surrogate label and the name <code>"bad name"</code> today, and
+<code>Schema([0,0]).to_osd()</code> returns <code>"a" [0]: string</code>; Go has
+<code>schema.invalid-name</code> only in <code>schema_validate.go</code>; a search of TypeScript,
+Rust and Java found neither <code>invalid-label</code> nor <code>unknown-record</code>. Whether those
+three, or Go, fail on <code>max = 0</code> in a writer is unverified. Treat all five ports
+as not implementing the new rules until a port reports otherwise.</p>
+<p><strong>Why this is still listed.</strong> A vector gives a schema as OSD text (§8.5.3), so a
+schema whose label has no OSD text cannot be written as a vector input at all,
+and §8.5.3 has no driver taking a schema in any other form — <code>write_schema</code> is a
+documented operation (<a href="../extensions/osd-oml/#e11-api-cli-surface">§E.11</a>) that
+the driver table and the
+<a href="../operations-and-models-reference/">Operations &amp; Models Reference</a> both omit.
+E-27's <code>bytes_hex</code> fixed the same untestable-MUST shape for D-14 on the read
+side and does nothing here: OSD-14 is a <strong>write</strong>-side rule whose input is a
+Schema, and it still needs a driver that accepts a schema in some form other
+than OSD text — a canonical Schema encoding, or a <code>write_schema</code> driver fed by
+<code>schema_from_document</code>. Until that exists, adoption is verified by hand and this
+entry says so rather than letting a green suite imply coverage. Remove this
+entry when vectors pin OSD-14, OSD-16, S-22, S-23, S-24 and the programmatic
+S-8 path, supplied by such a driver, and every port passes them.</p>
+<p><strong>DIV-8. Eleven vectors new in v0.23.0-beta that some ports fail today: array newline cases (OML-28) and codec syntax errors under the path placeholder (E-31, E-32).</strong>
+Seven belong to <a href="https://github.com/omnist-dev/omnist-spec/issues/115">omnist-spec#115</a>
+(OML-28, <code>oml-grammar/arrays/</code>) and four to
+<a href="https://github.com/omnist-dev/omnist-spec/issues/114">#114</a> (one malformed
+document per codec, <code>formats-{json,yaml,toml,xml}/syntax/</code>, whose expected path
+is the placeholder <code>line:col</code>). This is a rollout gap, not a divergence any
+implementation intends to keep. It replaces the note on a codec's failure
+position that the retired <code>DIV-7</code> carried, which described the state before E-31.</p>
+<p><strong>How it was measured.</strong> At each port's default-branch tip on 2026-09-30, read
+only: Python <code>e72ba20</code> (the merged v0.22.0-beta adoption,
+<a href="https://github.com/omnist-dev/omnist/pull/351">omnist#351</a>; the nine first
+vectors were also measured at its predecessor <code>dbd4ec3</code>, with identical
+results), TypeScript <code>aee2311</code>
+(<a href="https://github.com/omnist-dev/omnist-ts/pull/151">omnist-ts#151</a>), Rust
+<code>e07b19b</code> (<a href="https://github.com/omnist-dev/omnist-rs/pull/185">omnist-rs#185</a>),
+Go <code>1de5e84</code> (<a href="https://github.com/omnist-dev/omnist-go/pull/122">omnist-go#122</a>)
+and Java <code>ac12dc1</code> (<a href="https://github.com/omnist-dev/omnist-j/pull/117">omnist-j#117</a>).
+Python and TypeScript through <code>format FILE --json</code> (OML) and <code>convert FILE --from
+FORMAT --to oml --json</code>, Java through <code>format FILE --from FORMAT --json</code>, Go
+through <code>omnist parse --from FORMAT FILE</code>, reading the <code>path: code</code> its message
+prints. <strong>Rust through its library</strong> (<code>omnist::oml::read_oml</code> and
+<code>omnist::formats::{json,yaml,toml,xml}::read_*</code>, reading <code>ParseError</code>'s
+<code>position()</code> and <code>code</code>), because <code>omnist-cli</code> prints only message text. No port
+was measured through its conformance runner. A cell is <code>(path, code)</code> as the
+port reports it, or <code>pass</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Vectors</th>
+<th>Python</th>
+<th>TypeScript</th>
+<th>Rust</th>
+<th>Go</th>
+<th>Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>oml-grammar/arrays/unterminated-array-then-newline-is-unexpected-token</code>, <code>one-element-array-then-newline-is-unexpected-token</code>, <code>unterminated-array-then-newline-then-closing-brace-is-unexpected-token</code> (all <code>2:1</code>)</td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td><code>2:1</code> <code>parse.separator-in-array</code></td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>oml-grammar/arrays/semicolon-inside-array-is-an-error</code> (<code>1:7</code>), <code>unterminated-array-with-no-trailing-newline-is-unexpected-token</code> (<code>1:9</code>)</td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>oml-grammar/arrays/colon-after-newline-in-array-is-unexpected-token</code> (<code>2:1</code>), <code>semicolon-at-end-of-input-in-array-is-unexpected-token</code> (<code>1:7</code>)</td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td><code>parse.separator-in-array</code> at the same position</td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>formats-json/syntax/missing-value-is-a-codec-syntax-error</code> (<code>{"a": }</code>)</td>
+<td><code>1:7</code></td>
+<td>no diagnostic</td>
+<td><code>1:7</code></td>
+<td><code>1:7</code></td>
+<td><code>1:7</code></td>
+</tr>
+<tr>
+<td><code>formats-yaml/syntax/nested-mapping-value-is-a-codec-syntax-error</code> (<code>a: b: c</code>, newline)</td>
+<td><code>1:5</code></td>
+<td>no diagnostic</td>
+<td><code>1:5</code></td>
+<td><code>1:1</code></td>
+<td><code>1:5</code></td>
+</tr>
+<tr>
+<td><code>formats-toml/syntax/key-without-value-is-a-codec-syntax-error</code> (<code>a =</code>, newline)</td>
+<td><code>1:5</code></td>
+<td>no diagnostic</td>
+<td><code>1:5</code></td>
+<td><code>1:5</code></td>
+<td><code>1:5</code></td>
+</tr>
+<tr>
+<td><code>formats-xml/syntax/mismatched-closing-tag-is-a-codec-syntax-error</code> (<code>&lt;a&gt;&lt;b&gt;&lt;/a&gt;</code>)</td>
+<td><code>1:9</code></td>
+<td>no diagnostic</td>
+<td><code>1:11</code></td>
+<td><code>0:0</code></td>
+<td><code>1:9</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <code>colon-after-newline…</code> and <code>semicolon-at-end-of-input…</code> row is a Go divergence OML-28 settles: for <code>a: [1</code>, newline, <code>:</code> and for <code>a: [1;</code> at end of input Go reports <code>parse.separator-in-array</code> where OML-28 gives <code>:</code> and the end of input <code>parse.unexpected-token</code>.</p>
+<p>Every codec diagnostic that was reported carried <code>parse.codec-syntax</code>. The
+placeholder passes a well-formed path, whatever its value, so the disagreement
+in the codec rows is not itself a failure: <strong>TypeScript</strong> fails all four because
+its read raises an error carrying only message text (<code>errors</code> is empty in
+<code>--json</code>, and the library has no <code>parse.codec-syntax</code> code path for a codec
+failure), and <strong>Go</strong> fails the XML vector because <code>0:0</code> is not a text position
+(E-31); the other Go codec cells are well-formed. Counting behaviour only, Python
+fails 0 of the eleven, TypeScript 4, Rust 0, Go 6 (five OML-28 cases and XML) and Java 0.</p>
+<p><strong>What a runner reports today.</strong> A runner that does not yet implement E-32
+compares the string <code>line:col</code> to a real path and fails all four codec vectors
+in every port, so until a port implements the placeholder its runner reports
+those four as <strong>E-20 "not yet implemented" skips citing this entry</strong>, never as a
+pass and never as a <code>fail</code> its CI has to carry (E-22). The seven OML-28 vectors
+need no runner change: a port that passes one is a pass, and a port that fails
+one skips it under E-20 until the same change that fixes it drops the skip.
+<strong>Remove this entry when every port passes all eleven</strong>, which needs TypeScript to
+report <code>parse.codec-syntax</code> with some <code>line:col</code> (E-11, E-31), Go to fix
+OML-28 and the XML position, and every runner to implement E-32.</p>
+<p><strong>Not pinned by any vector.</strong> A JSON candidate, <code>[1, 2</code>, was dropped: Go
+reports <code>document.unlabeled-element</code> for it, not <code>parse.codec-syntax</code>. The
+other case recorded here, a newline or <code>;</code> before <code>,</code> or <code>]</code>, is now specified
+(OML-28, <code>grammars/oml.abnf</code>) and pinned by four vectors; <code>DIV-9</code> records the
+rollout.</p>
+<p><strong>DIV-9. Four vectors new in v0.24.0-beta that Go fails today: a newline or <code>;</code> before <code>,</code> or <code>]</code> inside an array (OML-28, <a href="https://github.com/omnist-dev/omnist-spec/issues/117">omnist-spec#117</a>).</strong>
+The four are <code>oml-grammar/arrays/newline-before-closing-bracket-after-first-element-is-insignificant</code>
+(<code>a: [1</code>, newline, <code>]</code>), <code>newline-before-comma-after-first-element-is-insignificant</code>
+(<code>a: [1</code>, newline, <code>, 2]</code>), <code>newline-before-closing-bracket-after-later-element-is-insignificant</code>
+(<code>a: [1, 2</code>, newline, <code>]</code>) and <code>semicolon-before-closing-bracket-is-insignificant</code>
+(<code>a: [1;]</code>). This is a rollout gap, not a divergence any implementation intends
+to keep.</p>
+<p><strong>How it was measured.</strong> At each port's default-branch tip on 2026-09-30, read
+only, from a scratch detached worktree: Python <code>e72ba20</code>, TypeScript <code>aee2311</code>,
+Rust <code>e07b19b</code>, Go <code>1de5e84</code> and Java <code>ac12dc1</code> (the same commits as <code>DIV-8</code>).
+Python and TypeScript through <code>format FILE --json</code>, Java through <code>format FILE
+--json</code>, Go through <code>omnist parse --from oml FILE</code>, Rust through its library
+(<code>omnist::oml::read_oml</code>). No port was measured through its conformance runner.</p>
+<table>
+<thead>
+<tr>
+<th>Vector input</th>
+<th>Python</th>
+<th>TypeScript</th>
+<th>Rust</th>
+<th>Go</th>
+<th>Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a: [1</code> newline <code>]</code></td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td><code>2:1</code> <code>parse.separator-in-array</code></td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>a: [1</code> newline <code>, 2]</code></td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td><code>2:1</code> <code>parse.separator-in-array</code></td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>a: [1, 2</code> newline <code>]</code></td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td><code>2:1</code> <code>parse.separator-in-array</code></td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>a: [1;]</code></td>
+<td>pass</td>
+<td>pass</td>
+<td>pass</td>
+<td><code>1:7</code> <code>parse.separator-in-array</code></td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>a: [1</code> newline <code>2]</code> (existing negative vector, control)</td>
+<td><code>2:1</code> <code>parse.separator-in-array</code></td>
+<td>same</td>
+<td>same</td>
+<td>same</td>
+<td>same</td>
+</tr>
+</tbody>
+</table>
+<p>Go fails all four, two more than the two cases #117 recorded: the third,
+<code>a: [1, 2</code> newline <code>]</code>, was valid under the previous ABNF as well, so Go
+diverged from the grammar there already, and <code>a: [1;]</code> fails at the <code>;</code>.
+Counting behaviour only, Python, TypeScript, Rust and Java fail 0 of the four
+and Go 4.</p>
+<p><strong>What a runner reports today.</strong> A port that passes a vector is a pass; a port
+that fails one skips it under E-20 "not yet implemented", citing this entry, and
+the same change that fixes it drops the skip (E-22). No runner change is needed.
+<strong>Remove this entry when every port passes all four</strong>, which needs Go to treat a
+<code>SEP</code> before <code>,</code> or <code>]</code> as insignificant.</p>
+<p><strong>DIV-11. Rust's materialization node cap is 100,000 and counts keys as well as values, so a document the spec's own D-22 example accepts is refused with <code>document.limit.nodes</code>.</strong>
+Rust's YAML materialization cap is 100,000 nodes, reported as
+<code>document.limit.nodes</code>, and it counts keys and values
+(omnist-rs <code>docs/limitations.md</code> and <code>docs/formats/yaml.md</code>; read, not run
+here). D-9 and the §2.4 table define the limit as the nodes materialized while
+building one Document, and in the Document model a node is an edge list, a
+container, so neither a key nor a scalar value is a node; the reference default
+is 1,000,000. The number alone is permitted variation (§9.1), but the unit is
+what makes this a gap: D-22's own measured example of 1,000 services merging a
+60-key block has <code>W(root)</code> = 62,063 value slots, far under D-22's default, and
+Rust refuses it because its count of keys plus values exceeds 100,000. Rust
+documents this and says it is pre-existing and unchanged by omnist-rs#187.
+No tracking issue was found. <strong>Remove this entry when Rust counts nodes as D-9
+defines them, or raises the cap, so that no input under D-22's maximum is
+refused by the node cap.</strong></p>
+<p>Tracked as <a href="https://github.com/omnist-dev/omnist-rs/issues/189">omnist-rs#189</a>,
+which recommends counting containers only and raising the cap to the
+spec default.</p>
+<p><strong>DIV-12. TypeScript's <code>yaml</code> library parses a block mapping in quadratic time, and aliases inside <code>!!pairs</code> and <code>!!omap</code> are not counted (<a href="https://github.com/omnist-dev/omnist-ts/issues/157">omnist-ts#157</a>).</strong>
+Two denial-of-service shapes that predate v0.26.0-beta and are specific to this
+port, measured in omnist-ts#157 (not re-run here). The <code>yaml</code> library's parse
+cost is quadratic in the keys of one block mapping: 20,000 keys took 22.4 s and
+a 1.19 MB, 50,000-key mapping took 194.8 s, before any omnist check runs, so
+D-18 and D-22 cannot help. And the alias pass treats the items of <code>!!pairs</code> and
+<code>!!omap</code> as scalars, so an alias tower inside them is invisible to the ratio and
+size checks (an 801-byte, 7-level tower was accepted by both and stopped later
+by the node limit after about 10 s and 360 MB). This is a TypeScript
+implementation defect against D-9, D-18 and D-22, not a spec gap. Slow parsing
+is not unique to TypeScript, but the quadratic shape is only measured there:
+the omnist#352 description reports PyYAML parsing a 1.1 MB, 50,000-key
+mapping in about 4 s (one point, no scaling series; not re-run here).
+<strong>Remove this entry when #157 is fixed.</strong></p>
+<p><strong>Open, unpinned behaviours.</strong> These are spec-unspecified: no rule fixes them,
+no vector pins them, and they are not divergences to fix. They are recorded
+as facts about the ports, measured when <code>DIV-7</code> was open and unchanged since.
+- <em>A document that is only <code>}</code></em> (§4.6.1: OML-25 and OML-26 both need a complete
+  body, so neither applies). Measured, <code>}</code> then a newline: all five ports report
+  <code>parse.unexpected-token</code> at <code>1:1</code> (Go's message says "expected a value"). They
+  agree today; the spec does not require it.
+- <em>A lone <code>CR</code></em> (E-29 does not say which position is reported). Measured, OML
+  <code>a: 1</code>, a lone <code>CR</code>, <code>}</code>: Python, TypeScript and Rust report
+  <code>parse.unexpected-token</code> at <code>1:5</code>, the <code>CR</code>; Go and Java report it at <code>1:6</code>,
+  the character after. <code>CRLF</code> agrees: line 2 column 1 in all five.</p>
+<h2 id="95-adding-a-sixth-implementation">9.5 Adding a sixth implementation<a class="headerlink" href="#95-adding-a-sixth-implementation" title="Permanent link">&para;</a></h2>
+<p>A new implementation is conformant when it passes the vectors in <code>test-suite/</code>
+with zero failures. Skips are permitted and MUST be reported; they are how
+partial implementations are tracked honestly rather than by claim.</p>
+<p>Recommended build order, since the dependencies are real:</p>
+<ol>
+<li>Document model and resource caps</li>
+<li>OML reader, then canonical OML writer</li>
+<li>OSD reader, then canonical OSD writer</li>
+<li><code>validate</code></li>
+<li><code>satisfiable_set</code>, <code>is_empty</code>, <code>prune</code></li>
+<li><code>compatible_with</code>, then <code>equivalent</code></li>
+<li><code>normalize</code> — needs <code>prune</code></li>
+<li><code>extract</code> — needs <code>prune</code> and <code>normalize</code></li>
+<li><code>lint</code> — needs <code>satisfiable_set</code> and <code>equivalence_classes</code></li>
+<li><code>infer</code></li>
+<li>Codecs beyond OML</li>
+<li><code>materialize</code></li>
+</ol>
+<p>Steps 1 through 6 are the useful core. An implementation that stops there is
+still worth having.</p>
+<h2 id="96-extension-support">9.6 Extension support<a class="headerlink" href="#96-extension-support" title="Permanent link">&para;</a></h2>
+<p>Extension support is tracked separately from Core status (§9.3), since an
+implementation is fully conformant with zero extensions — this table
+records adoption, not conformance gaps.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Python</th>
+<th>TypeScript</th>
+<th>Rust</th>
+<th>Go</th>
+<th>Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OSD-OML</td>
+<td>not yet implemented</td>
+<td>not yet implemented</td>
+<td>not yet implemented</td>
+<td>not yet implemented</td>
+<td>not yet implemented</td>
+</tr>
+</tbody>
+</table>
+<p>A new extension gets a new row here once its spec chapter merges; a port's
+cell updates once it actually implements and passes that extension's
+conformance vectors — same "verified against real state, not carried
+forward" discipline as §9.3.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
