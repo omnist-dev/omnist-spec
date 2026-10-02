@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 331 vectors as of v0.26.0-beta — dispatched by operation
+JSON-vector suite — 338 vectors as of v0.27.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -347,7 +347,7 @@ therefore been failing a vector's stated expectation for as long as the
 vector existed while its own suite reported clean. §8.5.5 already requires a run to state which mode
 produced it; treat that as load-bearing rather than as a header field, and
 when you report conformance numbers anywhere else — a README badge, a release
-note, an issue — say the mode alongside the count. "331 pass" and "331 pass,
+note, an issue — say the mode alongside the count. "338 pass" and "338 pass,
 code-agnostic" are different claims.
 
 ## When you find a real failure

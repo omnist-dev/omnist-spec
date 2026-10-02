@@ -21,7 +21,8 @@ the fully expanded edge list.
 `<<: *x` in a mapping flattens the referenced mapping's *own* entries into the
 referring mapping — one level up — rather than nesting a copy of it under the
 key `<<`. YAML 1.1 also permits a sequence of aliases, `<<: [*x, *y]`, merging
-each in turn. `<<` itself never survives as a label; it is a merge
+each in turn; an empty sequence, `<<: []`, merges nothing and is not an
+error. `<<` itself never survives as a label; it is a merge
 instruction, not an edge. So `d: &d {a: 1}` / `e: {<<: *d, b: 2}` reads as
 `e` carrying the two edges `a` and `b`, not an edge named `<<`. This is the
 mechanism [D-18](../02-document-model.md#241-bounding-alias-expansion) means by
@@ -116,7 +117,8 @@ the configured maximum expanded size (reference default 1 000 000 slots) with
 `document.limit.expanded-size`
 ([D-22](../02-document-model.md#241-bounding-alias-expansion)); a YAML input
 with neither is outside that limit. A merge value that is not a mapping or a
-sequence of mappings is a syntax error, `parse.codec-syntax`. §2.4.1 defines
+sequence of mappings is a syntax error, `parse.codec-syntax`; a sequence with
+no members is a sequence of mappings and merges nothing. §2.4.1 defines
 `E`, gives the
 reasoning behind the default, and explains why ordinary anchored YAML — merge
 keys, shared constants, anchor chains — sits far below it. Nothing here
