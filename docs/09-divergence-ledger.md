@@ -129,7 +129,7 @@ Python is still at v0.22.0-beta and implements none of the alias rules
 **Versions.** The Version row is each port's latest **tag**. Python
 `v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust `v0.5.0-alpha` is
 tagged and its Publish run is in progress; crates.io's newest version is
-still `0.3.1-alpha`. Go `v0.7.0-alpha` is distributed by tag only (module
+still `0.3.1-alpha`. Go `v0.7.1-alpha` is distributed by tag only (module
 proxy; no registry). TypeScript `v0.6.0-alpha` is tagged but **not**
 published to npm: `@omnist-dev/omnist` (the name in `package.json`) has only
 `0.2.0-alpha` and `0.3.0-alpha` (the `latest` and `alpha` tag). Java
@@ -139,14 +139,15 @@ manual approval and nothing newer than `0.2.5-alpha` is on Maven Central:
 `0.2.2-alpha` and `0.2.5-alpha`, with `0.2.5-alpha` as latest and release.
 
 The v0.26.0-beta adoptions of Go, Rust and TypeScript are merged on each
-default branch and tagged (`v0.7.0-alpha`, `v0.5.0-alpha`, `v0.6.0-alpha`).
+default branch and tagged (`v0.7.0-alpha`, `v0.5.0-alpha`, `v0.6.0-alpha`); Go's v0.27.0-beta
+adoption is `v0.7.1-alpha`.
 Java's adoption is in its `v0.3.0-alpha` tag. None of the v0.26.0-beta rule
 set is published to a registry yet; Python has not adopted it.
 No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.1 | 0.6.0-alpha | 0.5.0-alpha | 0.7.0-alpha | 0.3.0-alpha |
+| Version | 0.10.1 | 0.6.0-alpha | 0.5.0-alpha | 0.7.1-alpha | 0.3.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by TypeScript, Rust, Go and Java, not Python — DIV-3) | all three | all three | all three | all three | all three |
@@ -159,7 +160,7 @@ No port implements the OSD-OML extension (§9.6).
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI | yes, via the CLI | yes, via `omnist-cli` | yes, at the front of all six readers | yes, on stdin |
-| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 331 at v0.26.0-beta) | 247 pass / 0 fail / 40 skip (measured at v0.22.0-beta, 287 vectors; not re-run) | 297 pass / 0 fail / 34 skip (measured at v0.26.0-beta (omnist-ts#156); the 34 are 28 OSD-OML and 6 `limits`) | 297 pass / 0 fail / 34 skip (measured at v0.26.0-beta (omnist-rs#187); the 34 are 28 OSD-OML and 6 `limits`) | 303 pass / 0 fail / 28 skip (measured at v0.26.0-beta (omnist-go#125); the 28 are all OSD-OML) | 303 pass / 0 fail / 28 skip (measured at v0.26.0-beta (omnist-j#118); the 28 are all OSD-OML) |
+| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 331 at v0.26.0-beta) | 247 pass / 0 fail / 40 skip (measured at v0.22.0-beta, 287 vectors; not re-run) | 297 pass / 0 fail / 34 skip (measured at v0.26.0-beta (omnist-ts#156); the 34 are 28 OSD-OML and 6 `limits`) | 297 pass / 0 fail / 34 skip (measured at v0.26.0-beta (omnist-rs#187); the 34 are 28 OSD-OML and 6 `limits`) | 310 pass / 0 fail / 28 skip of 338 (measured at v0.27.0-beta (omnist-go#126); the 28 are all OSD-OML) | 303 pass / 0 fail / 28 skip (measured at v0.26.0-beta (omnist-j#118); the 28 are all OSD-OML) |
 | Conformance (fixtures) | 19/19 (not re-run) | 19/19 (at v0.26.0-beta) | 19/19 (at v0.26.0-beta) | 19/19 (at v0.26.0-beta) | 29/0/0 at v0.26.0-beta (Java's Track 1 headline: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.66% line / 99.19% branch measured, gated at 99.6% / 99.1% (about 1 line and 2 branches of headroom, `docs/limitations.md`) |
@@ -205,14 +206,14 @@ two were previously indistinguishable, so a bare `D-3` could mean either an
 edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
-**`DIV-1`, `DIV-2`, `DIV-4`, `DIV-6` and `DIV-7` are retired numbers and MUST
-NOT be reused.** All five entries closed and were deleted; the numbers stay spent so a
+**`DIV-1`, `DIV-2`, `DIV-4`, `DIV-6`, `DIV-7` and `DIV-10` are retired numbers
+and MUST NOT be reused.** All six entries closed and were deleted; the numbers stay spent so a
 citation to any of them in an older document, issue, vector comment, or port
 changelog cannot silently come to mean something else. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
 when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
 fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
-fourteen. `DIV-3`, `DIV-5`, `DIV-8`, `DIV-9`, `DIV-10`, `DIV-11` and `DIV-12`
+fourteen. `DIV-3`, `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11` and `DIV-12`
 are live. This note
 lives here, in the preamble, rather than inside any single entry — an entry is
 deleted when it closes, and a retirement note that rides along inside one
@@ -387,17 +388,6 @@ that fails one skips it under E-20 "not yet implemented", citing this entry, and
 the same change that fixes it drops the skip (E-22). No runner change is needed.
 **Remove this entry when every port passes all four**, which needs Go to treat a
 `SEP` before `,` or `]` as insignificant.
-
-**DIV-10. Go rejects an empty merge sequence (`<<: []`) as `parse.codec-syntax`; the spec accepts it as of v0.27.0-beta ([omnist-spec#127](https://github.com/omnist-dev/omnist-spec/issues/127)).**
-D-18a, as amended in **v0.27.0-beta**, makes an empty merge sequence a
-well-formed carrier that merges nothing: `<<: []` and `s: &s []` followed by
-`<<: *s` are accepted. Python, TypeScript, Rust and Java accept both; Go
-reports `parse.codec-syntax` for both, as its reader did before D-18a and as
-omnist-go#125 keeps. Go changes, one check. The seven vectors v0.27.0-beta added
-to `formats-yaml/alias-expansion.json` all fail on Go until it follows; the
-other four ports pass them, as run against the spec's own probe inputs, not yet
-by their runners.
-**Remove this entry when Go accepts an empty merge sequence.**
 
 **DIV-11. Rust's materialization node cap is 100,000 and counts keys as well as values, so a document the spec's own D-22 example accepts is refused with `document.limit.nodes`.**
 Rust's YAML materialization cap is 100,000 nodes, reported as
