@@ -170,7 +170,28 @@ Constraints on a well-formed schema:
   so every syntax surface inherits it uniformly. Field labels are
   unaffected — they were never identifiers in this sense and remain
   arbitrary non-empty strings (S-5, and the bracket/empty-string rules in
-  [§5.4](05-osd-grammar.md#54-records-and-fields)).
+  [§5.4](05-osd-grammar.md#54-records-and-fields)). A violation reached by
+  **direct programmatic construction** is `schema.invalid-name` at `$`, the
+  offending name in the message only: it may be malformed, and the field path
+  of a `Ref` would carry a label that S-22 may also reject
+  ([§8.4.1](08-conformance-and-errors.md#841-which-kind-each-schema-code-uses)).
+  [OSD-OML](extensions/osd-oml.md) keeps its Document path (E-12).
+- **S-22.** A field label MUST be a sequence of Unicode scalar values: it MUST
+  encode to valid UTF-8. A programmatic string that does not (a malformed byte
+  sequence, a UTF-16 lone surrogate, a surrogate-escape artefact such as
+  `U+DC80`..`U+DCFF`) is a `schema.invalid-label` at the **record path** `R`
+  of the record holding the field, or at `$` when `R` is not itself a valid
+  name (S-8). The label is not put in the path, for the reason
+  [OSD-14](05-osd-grammar.md#59-canonical-output) gives. In a language whose
+  string type cannot hold invalid UTF-8 (Rust's `String`), S-22 cannot be
+  violated and needs no check. This is the
+  schema-side counterpart of [D-14](02-document-model.md#25-encoding), which
+  governs input bytes and reports `parse.invalid-encoding`; S-22 governs a
+  string that never was input.
+- **S-23.** A caller-supplied ordering of records (S-12) MUST name only records
+  present in `env`. An entry naming no record is a `schema.unknown-record` at
+  `$`: the name is not a record, so there is no record path to build, the
+  same reasoning as a dangling root.
 
 A schema MAY be recursive. `env` is finite, so every operation in
 [chapter 6](06-schema-algebra.md) terminates.
@@ -181,15 +202,16 @@ OSD-OML ([extensions](extensions/osd-oml.md)), by an algebra operation
 ([chapter 6](06-schema-algebra.md)), or **by direct programmatic
 construction** through an implementation's own API — the same way
 [§2.4](02-document-model.md#24-safety-limits) treats a Document builder as
-a peer of the OML parser rather than an afterthought. S-1 through S-8 are
-properties of the model, not of any one route into it.
+a peer of the OML parser rather than an afterthought. S-1 through S-8, S-22 and
+S-23 are properties of the model, not of any one route into it.
 
 This matters because the routes are not equally constrained. A text grammar
 can make a violation unwritable, and where it does, the corresponding check
 has historically gone unstated — S-8 existed only inside OSD's tokenizer
 until OSD-OML needed it, and `max = 0` ([§3.4](#34-cardinality)) is
 representable programmatically while both text surfaces reject it. An
-implementation MUST enforce S-1 through S-8 at construction, not rely on its
+implementation MUST enforce S-1 through S-8, S-22 and S-23 at construction,
+not rely on its
 parsers to have made violations unreachable.
 
 **Canonical serialization order.** `env` is a set — S-4 guarantees unique
@@ -319,6 +341,15 @@ S-2 to forbid it and deleting the handling from
 [§6.6](06-schema-algebra.md#66-compatible_witha-b) alike — is
 [omnist-spec#83](https://github.com/omnist-dev/omnist-spec/issues/83), and is
 deliberately left open here rather than settled in passing.
+
+- **S-24.** Because `max = 0` is representable but has no text spelling, a
+  schema writer for OSD or for OSD-OML MUST fail on a schema containing a field
+  with `max = 0`, per [OSD-16](05-osd-grammar.md#59-canonical-output). Model
+  validation (S-2) accepts it; the failure is the writer's, never silent
+  approximation. This holds whichever way #83 is settled. `prune` removes
+  `max = 0` fields from every record it rebuilds, but keeps an unsatisfiable
+  root record intact ([§6.5](06-schema-algebra.md#65-prunes)), so a caller
+  prunes before writing and cannot rely on that alone.
 
 ---
 

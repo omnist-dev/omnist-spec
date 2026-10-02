@@ -230,7 +230,7 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-**DIV-5. OSD-14 has no vector, so its adoption rests on each port's unit tests.**
+**DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23 and S-24 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
 [OSD-14](05-osd-grammar.md#59-canonical-output), new in **v0.20.0-beta**: a
 field label carrying a C0 control character has no OSD spelling, so an OSD
 writer handed such a schema MUST fail with `write.unsupported-value` rather than
@@ -240,6 +240,19 @@ and by nothing else — the suite cannot check it. The companion rule, OSD-15
 (canonical label escaping), is adopted by all five ports and is pinned by the
 four `osd-grammar/canonical-output/label-*` vectors, which pass everywhere; it
 needs no entry.
+
+**Widened at v0.28.0-beta.** [OSD-16](05-osd-grammar.md#59-canonical-output)
+(a writer fails on `max = 0`), S-22 (`schema.invalid-label`), S-23
+(`schema.unknown-record`), S-24, and the `$` path of a programmatic
+`schema.invalid-name` (S-8) share OSD-14's blocker: each takes a Schema built
+programmatically, which no vector can supply. What is known, from the
+coordinator's probes and not re-run here: Python constructs `Schema` with a
+`[0,0]` field, a lone-surrogate label and the name `"bad name"` today, and
+`Schema([0,0]).to_osd()` returns `"a" [0]: string`; Go has
+`schema.invalid-name` only in `schema_validate.go`; a search of TypeScript,
+Rust and Java found neither `invalid-label` nor `unknown-record`. Whether those
+three, or Go, fail on `max = 0` in a writer is unverified. Treat all five ports
+as not implementing the new rules until a port reports otherwise.
 
 **Why this is still listed.** A vector gives a schema as OSD text (§8.5.3), so a
 schema whose label has no OSD text cannot be written as a vector input at all,
@@ -253,7 +266,8 @@ Schema, and it still needs a driver that accepts a schema in some form other
 than OSD text — a canonical Schema encoding, or a `write_schema` driver fed by
 `schema_from_document`. Until that exists, adoption is verified by hand and this
 entry says so rather than letting a green suite imply coverage. Remove this
-entry when a vector pins OSD-14 and every port passes it.
+entry when vectors pin OSD-14, OSD-16, S-22, S-23, S-24 and the programmatic
+S-8 path, supplied by such a driver, and every port passes them.
 
 **DIV-8. Eleven vectors new in v0.23.0-beta that some ports fail today: array newline cases (OML-28) and codec syntax errors under the path placeholder (E-31, E-32).**
 Seven belong to [omnist-spec#115](https://github.com/omnist-dev/omnist-spec/issues/115)

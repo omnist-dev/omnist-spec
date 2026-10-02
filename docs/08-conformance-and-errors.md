@@ -218,7 +218,20 @@ exists to descend into.
 | `schema.nullable-any` | `any?` |
 | `schema.missing-key` | A required key of the schema-construction input (a field's label or type, a record's name, a type's kind) is absent entirely |
 | `schema.invalid-type` | A value that must be a specific kind (a label, a name) is present but of the wrong kind |
+| `schema.invalid-name` | A record name, or a `Ref`'s target name, does not match `[A-Za-z_][A-Za-z0-9_]*` (S-8) |
+| `schema.invalid-label` | A field label is not valid UTF-8, in a schema built programmatically (S-22) |
+| `schema.unknown-record` | A caller-supplied record ordering names a record absent from `env` (S-23) |
 | `schema.unknown-key` | An unrecognized key appears anywhere in the schema-construction input |
+
+A schema with several well-formedness violations is rejected with at least one
+of them; which are reported is implementation-defined. Every existing
+`parse_schema` and `parse_schema_oml` vector carries exactly one.
+
+`schema.invalid-label` and `schema.unknown-record` have no text or Document
+analog either: OSD text and OSD-OML both arrive as valid UTF-8 (D-14) and fix
+record order by declaration, so only direct programmatic construction reaches
+them, which is why the suite has no vector for either
+([§8.5](#85-conformance-harness-protocol)).
 
 `schema.unquoted-label` and `schema.quoted-type` are the two directions of
 [§5.2](05-osd-grammar.md#52-the-quoting-rule)'s quoting rule — a bare name
@@ -405,6 +418,8 @@ OSD spelling, so there is nothing to emit that any conformant OSD reader
 would accept. The second clause of the row above already covers it ("a label
 … cannot be represented at all in the target format's own syntax"); what was
 missing was anyone saying OSD is one of the formats that clause ranges over.
+[OSD-16](05-osd-grammar.md#59-canonical-output) applies the same rule, at the
+same path, to a field of `max = 0`.
 The `path` is the Schema path of the **record** holding the unwritable field
 — `R`, not `R.<label>` — because §8.4 gives no way to quote a label inside a
 path and the label here is precisely the thing with no spelling; putting the
@@ -436,9 +451,10 @@ MUST be absent when it occurs exactly once.
 
 **The whole-schema fallback is `$`.** Some diagnostics have no specific
 record or field to name: `schema.no-root`, `schema.duplicate-root`, a
-dangling root reference, and `algebra.infer-no-samples`/
-`algebra.infer-scalar-root` (these fail before any schema exists). All five
-use `$` — the same sentinel Document paths use for the whole node — as the
+dangling root reference, `schema.unknown-record`, and
+`algebra.infer-no-samples`/`algebra.infer-scalar-root` (these fail before any
+schema exists). All six use `$` — the same sentinel Document paths use for the
+whole node — as the
 schema-side/pre-schema equivalent of "the whole thing, not a part of it."
 
 **Text-position paths** are for `parse.*` diagnostics (§8.3.1) — stage 1
@@ -531,7 +547,8 @@ by code: a Document writer's diagnostic takes a Document path (the existing
 `write.unsupported-value` vectors in `test-suite/formats-*` all do), and a
 schema writer's takes a Schema path. Which Schema path is settled per case,
 the way §8.4.1 settles it for `schema.*`; [OSD-14](05-osd-grammar.md#59-canonical-output)
-is the only case today and uses the record's.
+and [OSD-16](05-osd-grammar.md#59-canonical-output) are the cases today and
+both use the record's.
 
 **E-23. A string-body error reports the string's opening quote.**
 `parse.control-character`, `parse.invalid-escape`,
@@ -565,13 +582,18 @@ which to build a Schema path at all.
 - **E-12.** **`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key`, and
   `schema.invalid-name` MUST use a Document path**, rooted at the node the
   violation occurs on — `$.record[0]` for a record node missing its `name`,
-  `$.record[1].field[2].type.kind` for an invalid `kind` value.
+  `$.record[1].field[2].type.kind` for an invalid `kind` value. The one
+  exception is `schema.invalid-name` reached by direct programmatic
+  construction, where no Document exists: it takes `$`, with the offending name
+  in the message only (S-8). A Document-shaped surface such as OSD-OML keeps
+  the Document path.
 - **E-13.** **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
   text: these checks never run until the enclosing record or field has a valid
   name or label to build one from.
 - **The whole-schema cases above keep `$`** and take precedence over both
-  rules. Three of §8.4's five fall under this section: `schema.no-root`,
-  `schema.duplicate-root`, and a dangling root reference. The other two are
+  rules. Four of §8.4's six fall under this section: `schema.no-root`,
+  `schema.duplicate-root`, a dangling root reference, and
+  `schema.unknown-record`. The other two are
   `algebra.*` codes, outside this section's scope and unaffected by it.
 
 - **E-30.** **Which Schema path a code takes is fixed per code, by what the
@@ -609,10 +631,9 @@ which to build a Schema path at all.
 | `schema.missing-key` | Document path (E-12) | schema-construction input: the node lacking the key |
 | `schema.invalid-type` | Document path (E-12) | schema-construction input: the wrong-kind value |
 | `schema.unknown-key` | Document path (E-12) | schema-construction input: the unrecognized key |
-| `schema.invalid-name` | Document path (E-12) | schema-construction input: the record's `name` |
-
-`schema.invalid-name` is defined by E-12 and OSD-OML R-3a and has no row in
-§8.3.3's table; it is listed here so the table is complete.
+| `schema.invalid-name` | Document path (E-12); `$` when built programmatically | schema-construction input: the record's `name`; programmatically the name may be malformed, so it stays out of the path |
+| `schema.invalid-label` | record `R`; `$` when `R` is not a valid name | about the label, which cannot be put in a path |
+| `schema.unknown-record` | `$` | the name is not a record, so no record exists to name |
 
 This applies to any surface, present or future, that can construct a Schema
 without a grammar fixing identity first — it is a property of the codes, not

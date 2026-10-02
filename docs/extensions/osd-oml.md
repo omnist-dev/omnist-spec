@@ -171,7 +171,9 @@ in full (see "Error path assignment" below).
   control character is constructible through this rule and has no OSD text at
   all, so an OSD *writer* refuses it per
   [OSD-14](../05-osd-grammar.md#59-canonical-output) while `write_schema_oml`
-  writes it normally — this surface is the one that can carry it.
+  writes it normally — this surface is the one that can carry it. A field with
+  `max = 0` is the opposite case: R-19 rejects it, so `write_schema_oml` fails
+  on it too ([OSD-16](../05-osd-grammar.md#59-canonical-output)).
 - **R-8.** `label` MUST be unique within its enclosing `record-node` →
   `schema.duplicate-field`.
 - **R-9.** `type` MUST be `[1,1]` → `schema.missing-key` if absent.
