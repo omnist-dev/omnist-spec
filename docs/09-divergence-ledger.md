@@ -126,28 +126,26 @@ Java ([omnist-j#118](https://github.com/omnist-dev/omnist-j/pull/118), `43b205a`
 Python is still at v0.22.0-beta and implements none of the alias rules
 (`DIV-3`).
 
-**Versions.** The Version row is each port's latest **tag**. Python
-`v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust `v0.5.0-alpha` is
-tagged and its Publish run is in progress; crates.io's newest version is
-still `0.3.1-alpha`. Go `v0.7.1-alpha` is distributed by tag only (module
-proxy; no registry). TypeScript `v0.6.0-alpha` is tagged but **not**
-published to npm: `@omnist-dev/omnist` (the name in `package.json`) has only
-`0.2.0-alpha` and `0.3.0-alpha` (the `latest` and `alpha` tag). Java
-`v0.3.0-alpha` is tagged, but its Release workflow run is waiting for
-manual approval and nothing newer than `0.2.5-alpha` is on Maven Central:
-`maven-metadata.xml` for `dev.omnist:omnist-j` lists `0.2.1-alpha`,
-`0.2.2-alpha` and `0.2.5-alpha`, with `0.2.5-alpha` as latest and release.
+**Versions.** The Version row is each port's latest **tag**.
+Python `v0.10.1` is on PyPI (`omnist-0.10.1` is served). Rust
+`v0.5.1-alpha` is tagged and its Publish run is in progress; crates.io's
+newest version is `0.5.0-alpha`. Go `v0.8.0-alpha` is distributed by tag
+only (module proxy; no registry). TypeScript `v0.6.1-alpha` is tagged and
+`0.6.0-alpha` is published to npm (`@omnist-dev/omnist`, both the `latest`
+and `alpha` dist-tag); `0.6.1-alpha` is not published. Java
+`v0.3.0-alpha` is tagged and `0.3.0-alpha` is the latest version on Maven
+Central.
 
-The v0.26.0-beta adoptions of Go, Rust and TypeScript are merged on each
-default branch and tagged (`v0.7.0-alpha`, `v0.5.0-alpha`, `v0.6.0-alpha`); Go's v0.27.0-beta
-adoption is `v0.7.1-alpha`.
-Java's adoption is in its `v0.3.0-alpha` tag. None of the v0.26.0-beta rule
-set is published to a registry yet; Python has not adopted it.
+The v0.26.0-beta alias rules are in Go `v0.7.0-alpha`, Rust `v0.5.0-alpha`,
+TypeScript `v0.6.0-alpha` and Java `v0.3.0-alpha`; the v0.27.0-beta
+adoption is in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha` and
+TypeScript `v0.6.1-alpha`, and its Java PR (omnist-j#120) is open. Python
+has not adopted the alias rules in a release: omnist#352 is open.
 No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.10.1 | 0.6.0-alpha | 0.5.0-alpha | 0.7.1-alpha | 0.3.0-alpha |
+| Version | 0.10.1 | 0.6.1-alpha | 0.5.1-alpha | 0.8.0-alpha | 0.3.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by TypeScript, Rust, Go and Java, not Python — DIV-3) | all three | all three | all three | all three | all three |
