@@ -304,7 +304,21 @@ problem restated rather than reported. The record form is unambiguous, needs
 no new path syntax, and names a unit the reader can act on: the message,
 which §8.5.2 never compares, is where the label belongs.
 
-**The class is exactly that, once OSD-15 is in force: a C0 control character
+**OSD-16. A schema with a field of `max = 0` MUST fail the write.** `[0,0]` is
+a legal model value that only direct programmatic construction can reach
+([S-15](03-schema-model.md#34-cardinality)), and both text surfaces reject it
+on read ([§5.5](#55-cardinality); OSD-OML's R-19), so no text an OSD writer or
+`write_schema_oml` could emit would read back. Such a writer MUST fail with
+`write.unsupported-value`, unconditionally, on the same E-6 rule as OSD-14,
+and with the same path: the Schema path of the **record** holding the field,
+`R`. Emitting the text and leaving the reader to reject it, or dropping the
+field, is exactly the approximation OSD-14 refuses; `prune`
+([§6.5](06-schema-algebra.md#65-prunes)) is how a caller removes the field
+first. This is not a ruling on whether `max = 0` should stay representable
+(omnist-spec#83); it covers the schema while it is.
+
+**The class OSD-14 covers is exactly that, once OSD-15 is in force: a C0
+control character
 in a field label — and such a schema still travels, as
 [OSD-OML](extensions/osd-oml.md).** Backslash and double quote look like the
 same problem and are not: OSD-15 above gives both a spelling, and after it
