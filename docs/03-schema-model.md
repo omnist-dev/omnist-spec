@@ -171,22 +171,20 @@ Constraints on a well-formed schema:
   unaffected — they were never identifiers in this sense and remain
   arbitrary non-empty strings (S-5, and the bracket/empty-string rules in
   [§5.4](05-osd-grammar.md#54-records-and-fields)). A violation reached by
-  **direct programmatic construction**, where there is no Document to name a
-  node in, is `schema.invalid-name` at the **record path** `R` for a record
-  name (the name as given, verbatim) and at the **field path** `R.a` for a
-  `Ref`'s target name
+  **direct programmatic construction** is `schema.invalid-name` at `$`, the
+  offending name in the message only: it may be malformed, and the field path
+  of a `Ref` would carry a label that S-22 may also reject
   ([§8.4.1](08-conformance-and-errors.md#841-which-kind-each-schema-code-uses)).
   [OSD-OML](extensions/osd-oml.md) keeps its Document path (E-12).
-  The name goes in the path verbatim, unlike OSD-14's label, because a record
-  whose name is invalid has no other identity to report, and the reader is
-  told which record to fix; a name containing `.` can make the path
-  ambiguous, which the message resolves.
 - **S-22.** A field label MUST be a sequence of Unicode scalar values: it MUST
   encode to valid UTF-8. A programmatic string that does not (a malformed byte
   sequence, a UTF-16 lone surrogate, a surrogate-escape artefact such as
   `U+DC80`..`U+DCFF`) is a `schema.invalid-label` at the **record path** `R`
-  of the record holding the field. The label itself is not put in the path, for
-  the reason [OSD-14](05-osd-grammar.md#59-canonical-output) gives. This is the
+  of the record holding the field, or at `$` when `R` is not itself a valid
+  name (S-8). The label is not put in the path, for the reason
+  [OSD-14](05-osd-grammar.md#59-canonical-output) gives. In a language whose
+  string type cannot hold invalid UTF-8 (Rust's `String`), S-22 cannot be
+  violated and needs no check. This is the
   schema-side counterpart of [D-14](02-document-model.md#25-encoding), which
   governs input bytes and reports `parse.invalid-encoding`; S-22 governs a
   string that never was input.
@@ -348,7 +346,10 @@ deliberately left open here rather than settled in passing.
   schema writer for OSD or for OSD-OML MUST fail on a schema containing a field
   with `max = 0`, per [OSD-16](05-osd-grammar.md#59-canonical-output). Model
   validation (S-2) accepts it; the failure is the writer's, never silent
-  approximation. This holds whichever way #83 is settled.
+  approximation. This holds whichever way #83 is settled. `prune` removes
+  `max = 0` fields from every record it rebuilds, but keeps an unsatisfiable
+  root record intact ([§6.5](06-schema-algebra.md#65-prunes)), so a caller
+  prunes before writing and cannot rely on that alone.
 
 ---
 

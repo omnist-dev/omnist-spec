@@ -10,13 +10,13 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
 programmatically built Schema can take, which the spec gave no diagnostic.
 
 - **S-22, `schema.invalid-label`**: a field label that is not valid UTF-8 (a
-  programmatic string) is `schema.invalid-label` at the record path `R`
+  programmatic string) is `schema.invalid-label` at the record path `R` (`$` if `R` is invalid)
   ([§3.3](docs/03-schema-model.md#33-formal-definition),
   [§8.3.3](docs/08-conformance-and-errors.md#833-schema-schema-well-formedness)).
   D-14's `parse.invalid-encoding` governs input bytes only.
-- **S-8 path for programmatic schemas**: `schema.invalid-name` takes the record
-  path `R` (the name verbatim) for a record name and the field path `R.a` for
-  a `Ref` target. OSD-OML keeps its Document path (E-12 amended,
+- **S-8 path for programmatic schemas**: `schema.invalid-name` takes
+  `$`, the offending name in the message only (it may be malformed). OSD-OML
+  keeps its Document path (E-12 amended,
   [§8.4.1](docs/08-conformance-and-errors.md#841-which-kind-each-schema-code-uses)).
   `schema.invalid-name` also gains its row in §8.3.3.
 - **OSD-16 / S-24, `[0,0]`**: S-15's representability is kept (omnist-spec#83
@@ -27,8 +27,11 @@ programmatically built Schema can take, which the spec gave no diagnostic.
   names a record absent from `env` is `schema.unknown-record` at `$`.
 - No vectors: none of the four is reachable from a vector input (OSD text and
   OSD-OML arrive as valid UTF-8 and declaration order, and no text carries
-  `max = 0`). Count stays 338. Ports' adoption rests on their own unit tests,
-  as for OSD-14 (DIV-5).
+  `max = 0`). Count stays 338. DIV-5 is widened to cover these rules as well as
+  OSD-14: pinned by no vector, adoption unverified.
+- Also: `prune` leaves a kept unsatisfiable root intact, so callers prune
+  before writing; several violations may be reported in any number provided at
+  least one is; S-22 is vacuous where strings cannot hold invalid UTF-8.
 
 ## v0.27.0-beta (2026-10-02)
 

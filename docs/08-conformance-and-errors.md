@@ -223,6 +223,10 @@ exists to descend into.
 | `schema.unknown-record` | A caller-supplied record ordering names a record absent from `env` (S-23) |
 | `schema.unknown-key` | An unrecognized key appears anywhere in the schema-construction input |
 
+A schema with several well-formedness violations is rejected with at least one
+of them; which are reported is implementation-defined. Every existing
+`parse_schema` and `parse_schema_oml` vector carries exactly one.
+
 `schema.invalid-label` and `schema.unknown-record` have no text or Document
 analog either: OSD text and OSD-OML both arrive as valid UTF-8 (D-14) and fix
 record order by declaration, so only direct programmatic construction reaches
@@ -580,16 +584,16 @@ which to build a Schema path at all.
   violation occurs on — `$.record[0]` for a record node missing its `name`,
   `$.record[1].field[2].type.kind` for an invalid `kind` value. The one
   exception is `schema.invalid-name` reached by direct programmatic
-  construction, where no Document exists: it takes a Schema path, the record
-  path `R` for a record name (verbatim) and the field path `R.a` for a `Ref`'s
-  target name (S-8). A Document-shaped surface such as OSD-OML keeps the
-  Document path.
+  construction, where no Document exists: it takes `$`, with the offending name
+  in the message only (S-8). A Document-shaped surface such as OSD-OML keeps
+  the Document path.
 - **E-13.** **Every other `schema.*` code MUST use a Schema path**, unchanged from OSD
   text: these checks never run until the enclosing record or field has a valid
   name or label to build one from.
 - **The whole-schema cases above keep `$`** and take precedence over both
-  rules. Three of §8.4's five fall under this section: `schema.no-root`,
-  `schema.duplicate-root`, and a dangling root reference. The other two are
+  rules. Four of §8.4's six fall under this section: `schema.no-root`,
+  `schema.duplicate-root`, a dangling root reference, and
+  `schema.unknown-record`. The other two are
   `algebra.*` codes, outside this section's scope and unaffected by it.
 
 - **E-30.** **Which Schema path a code takes is fixed per code, by what the
@@ -627,8 +631,8 @@ which to build a Schema path at all.
 | `schema.missing-key` | Document path (E-12) | schema-construction input: the node lacking the key |
 | `schema.invalid-type` | Document path (E-12) | schema-construction input: the wrong-kind value |
 | `schema.unknown-key` | Document path (E-12) | schema-construction input: the unrecognized key |
-| `schema.invalid-name` | Document path (E-12); programmatic: record `R` for a record name, field `R.a` for a `Ref` target | schema-construction input: the record's `name`; programmatically, a record as a whole or a well-formed field's type |
-| `schema.invalid-label` | record `R` | about the label, which cannot be put in a path |
+| `schema.invalid-name` | Document path (E-12); `$` when built programmatically | schema-construction input: the record's `name`; programmatically the name may be malformed, so it stays out of the path |
+| `schema.invalid-label` | record `R`; `$` when `R` is not a valid name | about the label, which cannot be put in a path |
 | `schema.unknown-record` | `$` | the name is not a record, so no record exists to name |
 
 This applies to any surface, present or future, that can construct a Schema
