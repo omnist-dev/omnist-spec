@@ -2515,6 +2515,204 @@
         ]
       },
       "comment": "No alias, but a merge key: an inline `<<` is a merge key, so the input is subject to D-22. The inline {a: 1}: W = S = 2. t: W = 1 + (2 - 1) = 2, S = 3 (t, the << slot, a). Root: W = 1 + 2 = 3, S = 1 + 3 = 4. W(root) = 3 is greater than the declared cap of 2, so it is rejected with document.limit.expanded-size at `$`; at a cap of 3 it would be accepted. E is at most 1.00 throughout. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/empty-merge-sequence-is-an-empty-mapping-and-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "text": "config: {<<: []}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "config",
+              {
+                "edges": []
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-18a, omnist-spec#127: a merge sequence with no members is a well-formed carrier that merges nothing, never an error, so `config` is an empty mapping. W(config) = 1 (its container; the carrier has no members and holds no slot), S(config) = 2 (config, the << entry), E = 0.50. Root: W = 1 + 1 = 2, S = 1 + 2 = 3, E = 0.67. The `<<` label does not survive. Go rejected this input with parse.codec-syntax before D-18a was amended; the other ports accept it."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/empty-merge-sequence-with-a-local-key-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: {<<: [], c: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "An empty merge carrier beside a local key (D-18a, omnist-spec#127). W(t) = 1 + 0 + 1 = 2: the container, no members, and c. S(t) = 3: t, the single << slot, and c. E(t) = 0.67. Root: W = 1 + 2 = 3, S = 1 + 3 = 4, E = 0.75. The result is `t: {c: 3}`; the empty carrier adds nothing and the << slot appears only in S."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/empty-sequence-alias-in-merge-position-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 1,
+        "text": "s: &s []\nt: {<<: *s, c: 3}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "An alias to an empty sequence in merge position is a well-formed carrier contributing nothing (D-18a, omnist-spec#127). `s` is an ordinary sequence at its site: W(s) = S(s) = 1, E(s) = 1.00. t: W = 1 + 0 + 1 = 2 (the alias contributes the sum over its zero members of W(member) - 1), S = 3 (t, the << slot, c), E(t) = 0.67. Root: W = 1 + 1 + 2 = 4, S = 1 + 1 + 3 = 5, E = 0.80. All at or under the declared maximum of 1. Merged-sequence arrays are sugar (\u00a74.3.1): an empty ordinary sequence materializes no edge, so `s` and `k` below do not appear in the Document although each is a W = S = 1 node when counted. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/anchored-empty-merge-carrier-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 1,
+        "text": "t: {<<: &s [], c: 3}\nu: *s\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "An anchored empty carrier, `<<: &s []`, is the unanchored one with a name (D-18a, omnist-spec#127): no slot in W or S and not a candidate. t: W = 1 + 0 + 1 = 2, S = 3 (t, the << slot, c), E(t) = 0.67. A plain alias to the anchored carrier, `u: *s`, materializes the empty list: W(u) = 1 + 0 = 1, one slot in S. Root: W = 1 + 2 + 1 = 4, S = 1 + 3 + 1 = 5, E = 0.80. All under the declared maximum of 1; the empty list is an absent label, so only t appears in the Document. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/empty-sequence-outside-merge-position-is-an-ordinary-node",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: {<<: [], k: []}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "t",
+              {
+                "edges": []
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "An empty sequence that is not in merge position is an ordinary sequence node, W = S = 1 (D-18a, omnist-spec#127). Here the `<<` carrier is empty and `k` is an ordinary empty sequence. W(t) = 1 + 0 + 1 = 2 (container, no members, k), S(t) = 1 + 1 + 1 = 3 (t, the << slot, k), E(t) = 0.67. Root: W = 1 + 2 = 3, S = 1 + 3 = 4. An empty array and an absent label are the same Document, so t is an empty mapping."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/empty-merge-sequence-at-declared-expanded-size-succeeds",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 2,
+        "text": "t: {<<: []}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "t",
+              {
+                "edges": []
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Boundary pair, accepted half. An empty merge sequence is still a merge key, so the input is subject to D-22 (omnist-spec#127). t: W = 1, S = 2. Root: W = 1 + 1 = 2, S = 1 + 2 = 3. W(root) = 2 equals the declared cap of 2, which MUST succeed: rejection is for W greater than the cap. E is 0.67 or less throughout. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
+    },
+    {
+      "name": "formats-yaml/alias-expansion/empty-merge-sequence-one-past-declared-expanded-size-fails",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_expanded_slots": 1,
+        "text": "t: {<<: []}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.expanded-size"
+          }
+        ]
+      },
+      "comment": "Boundary pair, rejected half: the same input at a cap of 1. W(root) = 2 is greater than 1, so it is rejected with document.limit.expanded-size at `$`. This pins that an empty `<<: []` is a merge key for D-22's purpose (an input with no alias and no merge key is outside the limit) and that its carrier is neither skipped nor an error. declared_max_expanded_slots is vector-local (D-22, \u00a72.4.1); an implementation with no configuration surface for it reports skip, not fail."
     }
   ]
 }

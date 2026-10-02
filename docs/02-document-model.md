@@ -392,6 +392,25 @@ it materializes — no more, and no less:
     written as `<<: &s [*p, *q]`, materializes the list and contributes
     `1 + W(p) + W(q)`.
 
+  - An **empty** merge sequence, `<<: []`, is a well-formed carrier with no
+    members, never an error. Its `W` contribution is 0, because a carrier
+    holds no slot and there is no member to flatten, and in `S` the `<<` entry
+    is still one slot. An **alias to an empty sequence** in merge position,
+    `s: &s []` followed by `<<: *s`, is likewise a well-formed carrier
+    contributing 0 (the sum over zero members). It merges nothing, so
+    `config: {<<: []}` is an empty mapping. An empty sequence **not** in
+    merge position, `k: []`, is an ordinary sequence node with `W = S = 1`.
+    The input still contains a merge key, so it is subject to D-22. Worked,
+    for `t: {<<: [], c: 3}`:
+
+    ```
+    W(t) = 1 + 0 + 1 = 2     S(t) = 3  (t, the << slot, c)     E(t) = 0.67
+    ```
+
+    and for `config: {<<: []}`, `W = 1`, `S = 2`, `E = 0.50`. An empty
+    sequence satisfies "a sequence of mappings" vacuously, which is why it is
+    not among the malformed shapes below.
+
   **Members of a merge MUST be mappings.** YAML 1.1's merge type takes a
   mapping or a sequence of mappings, and nothing in this specification
   admitted anything else; it is pinned here. A merge value that is a scalar, a

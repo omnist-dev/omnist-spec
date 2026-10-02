@@ -168,9 +168,9 @@ The Track 2 row mixes two suites: Python's cell is the v0.22.0-beta suite, 287
 vectors, and the other four are at v0.26.0-beta, 331 vectors. v0.23.0-beta added
 11 vectors (298 in all); `DIV-8` records how each port fares on those.
 v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port fares on
-those. v0.25.0-beta added 10 more (312 in all), and v0.26.0-beta 19 more (331
-in all); all 29 are in `formats-yaml/alias-expansion.json`, which `DIV-3`
-covers for Python.
+those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more (331
+in all) and v0.27.0-beta 7 more (338 in all, none yet adopted by a port); all
+36 are in `formats-yaml/alias-expansion.json`, which `DIV-3` covers for Python.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)), 6
@@ -388,16 +388,16 @@ the same change that fixes it drops the skip (E-22). No runner change is needed.
 **Remove this entry when every port passes all four**, which needs Go to treat a
 `SEP` before `,` or `]` as insignificant.
 
-**DIV-10. Go rejects an empty merge sequence (`<<: []`) as `parse.codec-syntax`; the other four ports accept it ([omnist-spec#127](https://github.com/omnist-dev/omnist-spec/issues/127)).**
-D-18a lists the malformed merge shapes but is silent on a sequence with no
-members, and no vector covers it, so the spec has not decided it. As measured in
-omnist-spec#127 (not re-run here): Python, TypeScript, Rust and Java accept both
-`<<: []` and `s: &s []` followed by `<<: *s` and merge nothing; Go reports
-`parse.codec-syntax` for both, as its reader did before D-18a and as
-omnist-go#125 keeps. The issue recommends accepting it as a well-formed carrier
-with no members, which would change Go only. Until the issue is decided this is
-a spec-undecided, port-specific behaviour, not a conformance failure.
-**Remove this entry when #127 is decided and every port agrees.**
+**DIV-10. Go rejects an empty merge sequence (`<<: []`) as `parse.codec-syntax`; the spec accepts it as of v0.27.0-beta ([omnist-spec#127](https://github.com/omnist-dev/omnist-spec/issues/127)).**
+D-18a, as amended in **v0.27.0-beta**, makes an empty merge sequence a
+well-formed carrier that merges nothing: `<<: []` and `s: &s []` followed by
+`<<: *s` are accepted. Python, TypeScript, Rust and Java accept both; Go
+reports `parse.codec-syntax` for both, as its reader did before D-18a and as
+omnist-go#125 keeps. Go changes, one check. The seven vectors v0.27.0-beta added
+to `formats-yaml/alias-expansion.json` all fail on Go until it follows; the
+other four ports pass them, as run against the spec's own probe inputs, not yet
+by their runners.
+**Remove this entry when Go accepts an empty merge sequence.**
 
 **DIV-11. Rust's materialization node cap is 100,000 and counts keys as well as values, so a document the spec's own D-22 example accepts is refused with `document.limit.nodes`.**
 Rust's YAML materialization cap is 100,000 nodes, reported as

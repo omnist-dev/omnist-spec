@@ -3,6 +3,28 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.27.0-beta (2026-10-02)
+
+**Normative (minor)** — resolves
+[#127](https://github.com/omnist-dev/omnist-spec/issues/127).
+
+- **An empty merge sequence is accepted and merges nothing**
+  ([§2.4.1](docs/02-document-model.md#241-bounding-alias-expansion), D-18a;
+  [YAML](docs/formats/yaml.md)). `<<: []` is a well-formed carrier with no
+  members: `W` contribution 0, `S` one slot for the `<<` entry, never an
+  error. An alias to an empty sequence in merge position (`s: &s []` then
+  `<<: *s`) is likewise a well-formed carrier contributing 0, and
+  `config: {<<: []}` is an empty mapping. An empty sequence not in merge
+  position is an ordinary sequence node, `W = S = 1`. D-18a was silent, and
+  the ports disagreed: Python, TypeScript, Rust and Java accepted it; Go
+  rejected it with `parse.codec-syntax`. Go changes.
+- Seven vectors in `formats-yaml/alias-expansion.json` (338 in all): the
+  empty carrier alone, beside a local key, as an alias, anchored, an empty
+  sequence outside merge position, and a D-22 boundary pair showing that
+  `<<: []` is a merge key for the expanded-size limit. Hand-derived `W` and `S`
+  are in each comment. Go, which has configuration surfaces for both declared
+  keys, fails all seven until it follows.
+
 ## v0.26.0-beta (2026-10-01)
 
 **Normative (minor)** — resolves
