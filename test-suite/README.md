@@ -181,9 +181,7 @@ done. But `expansion-at-declared-limit-succeeds` reports green whether or not
 step (b) is done: without the allowlist entry it runs against the port's own
 default maximum rather than the **3** it declares, so it pins no boundary at
 all and will happily mask a wrong threshold. See
-[`docs/porting-a-conformance-runner.md`](../docs/porting-a-conformance-runner.md)
-and [§9.4](../docs/09-divergence-ledger.md#94-known-open-divergences)'s
-`DIV-3`.
+[`docs/porting-a-conformance-runner.md`](../docs/porting-a-conformance-runner.md).
 
 ## Matching
 

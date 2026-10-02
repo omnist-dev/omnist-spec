@@ -547,15 +547,10 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   other D-18 rejection. A codec MUST NOT attempt to compute a finite `E` for
   it, and MUST NOT materialize a cyclic or infinite structure instead.
 
-  The reference does not satisfy this yet, and the gap is a real one rather
-  than a wording artifact. It rejects a directly self-referential mapping
-  anchor today, but with an uncoded `DocumentError` reading `cycle detected` —
-  which is how it reports every §2.4 limit, its Python API surfacing no code
-  on any of them — and it silently *accepts* the self-merging form
-  `a: &a {<<: *a, k: 1}`, materializing `{k: 1}` rather than refusing it.
-  Closing both is part of the D-18 rollout tracked by
-  [`DIV-3`](09-divergence-ledger.md#94-known-open-divergences), not a separate
-  allowance.
+  All five implementations satisfy this as of the Python adoption in
+  omnist#352; before it, the reference rejected a directly self-referential
+  mapping anchor with an uncoded `DocumentError` and accepted the self-merging
+  form `a: &a {<<: *a, k: 1}`, materializing `{k: 1}`.
 
 - **D-22.** A codec for a format with an anchor/reference mechanism MUST also
   enforce a finite maximum **expanded size** on the input as a whole: the
