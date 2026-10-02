@@ -241,10 +241,10 @@ As of **v0.26.0-beta** the newest key is `declared_max_expanded_slots`
 every other key: allowlist it, and report `skip` until the cap is implemented.
 Before it, as of **v0.18.0-beta**, the newest was `declared_max_alias_expansion`
 (§2.4.1's D-18). Every vector in `formats-yaml/alias-expansion.json` carries
-one of the two. Four ports now implement both rules and Python does not, so
-until you implement a rule, a runner MUST report each vector carrying its key as
-an E-20 skip, citing the ledger entry that records your port's gap (`DIV-3` is
-that entry for Python) and never as a pass.
+one of the two. All five existing ports now implement both rules, so this
+applies to a new port: until you implement a rule, a runner MUST report each
+vector carrying its key as an E-20 skip, citing the tracking issue for your
+port's gap, and never as a pass.
 Adopting is two steps: **(a)** implement D-18 and D-22, and **(b)** add both
 `declared_max_alias_expansion` and `declared_max_expanded_slots` to your
 allowlist.
@@ -263,9 +263,6 @@ boundary is not the boundary the vector was written to pin, so the vector
 exercises nothing and a real off-by-one in your threshold sails through it. A
 failure gets looked at. A pass does not. Treat step (b) as part of step (a),
 never as follow-up work.
-
-See [§9.4](09-divergence-ledger.md#94-known-open-divergences)'s `DIV-3` for
-what Python's runner reports today.
 
 ## Byte inputs: `bytes_hex` and the one wrong way to run it
 
