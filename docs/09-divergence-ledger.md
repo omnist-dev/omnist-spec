@@ -385,6 +385,10 @@ No tracking issue was found. **Remove this entry when Rust counts nodes as D-9
 defines them, or raises the cap, so that no input under D-22's maximum is
 refused by the node cap.**
 
+Tracked as [omnist-rs#189](https://github.com/omnist-dev/omnist-rs/issues/189),
+which recommends counting containers only and raising the cap to the
+spec default.
+
 **DIV-12. TypeScript's `yaml` library parses a block mapping in quadratic time, and aliases inside `!!pairs` and `!!omap` are not counted ([omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
 Two denial-of-service shapes that predate v0.26.0-beta and are specific to this
 port, measured in omnist-ts#157 (not re-run here). The `yaml` library's parse
