@@ -177,6 +177,10 @@ Constraints on a well-formed schema:
   `Ref`'s target name
   ([§8.4.1](08-conformance-and-errors.md#841-which-kind-each-schema-code-uses)).
   [OSD-OML](extensions/osd-oml.md) keeps its Document path (E-12).
+  The name goes in the path verbatim, unlike OSD-14's label, because a record
+  whose name is invalid has no other identity to report, and the reader is
+  told which record to fix; a name containing `.` can make the path
+  ambiguous, which the message resolves.
 - **S-22.** A field label MUST be a sequence of Unicode scalar values: it MUST
   encode to valid UTF-8. A programmatic string that does not (a malformed byte
   sequence, a UTF-16 lone surrogate, a surrogate-escape artefact such as
