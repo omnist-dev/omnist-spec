@@ -14,8 +14,9 @@ their own runners, so a sixth doesn't have to rediscover it from scratch.
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
 JSON-vector suite (`python3 tools/check_vectors.py` prints the current count)
-— dispatched by operation name rather than fixture directory shape. They're complementary, not
-redundant: track 1 proves your CLI wrapper (if you have one) actually works
+— dispatched by operation name rather than fixture directory shape. They're
+complementary, not redundant: track 1 proves your CLI wrapper (if you have one)
+actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
 all five existing ports did.
 
@@ -121,8 +122,9 @@ value. Every other path in the suite stays byte for byte. A runner that skips
 this step
 fails every vector that uses the placeholder (the four `formats-*/syntax/`
 vectors and five in `formats-yaml/alias-expansion.json`: nine at v0.29.0-beta;
-`python3 tools/check_vectors.py` prints the current count). Rule 4's code-agnostic
-mode is the one permitted relaxation of the code, and the run MUST say it was
+`python3 tools/check_vectors.py` prints the current count). Rule 4's
+code-agnostic mode is the one permitted relaxation of the code, and the run
+MUST say it was
 used.
 
 | `operation` | `expect` fields on success | What a runner MUST compare, and how |

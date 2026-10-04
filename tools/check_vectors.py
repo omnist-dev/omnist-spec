@@ -323,7 +323,8 @@ def main() -> int:
 
             inp = vec.get("input")
             if isinstance(inp, dict):
-                declared_keys.update(k for k in inp if k.startswith("declared_"))
+                declared_keys.update(
+                    k for k in inp if k.startswith("declared_"))
             exp = vec.get("expect")
             if isinstance(exp, dict) and any(
                     isinstance(d, dict) and d.get("path") == PATH_PLACEHOLDER

@@ -214,8 +214,9 @@ edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
 **`DIV-1`, `DIV-2`, `DIV-3`, `DIV-4`, `DIV-6`, `DIV-7`, `DIV-8`, `DIV-9` and
-`DIV-10` are retired numbers and MUST NOT be reused.** All nine entries closed and were
-deleted; the numbers stay spent so a citation to any of them in an older
+`DIV-10` are retired numbers and MUST NOT be reused.** All nine entries closed
+and were deleted; the numbers stay spent so a
+citation to any of them in an older
 document, issue, vector comment, or port changelog cannot silently come to mean
 something else. `DIV-3` (the YAML alias rules D-18, D-18a, D-19, D-20 and D-22)
 closed when the last port, Python, implemented them in omnist#352, so all five
