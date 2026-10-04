@@ -7,6 +7,18 @@ literal U+0001 byte inside a JSON string -- forbidden by RFC 8259 -- which
 would have broken every port's vector reader while the spec's own CI stayed
 green. These are the cheap, mechanical invariants that would have caught it.
 
+One check reaches into OML text: ``check_oml_brace_commas`` scans the OSD-OML
+vectors' OML-valued texts (``parse_schema_oml`` input, ``write_schema_oml``
+expected output) and rejects a comma directly inside ``{...}``. OML separates
+edges with a newline or ``;`` (OML-26/27); a comma is legal only between the
+elements of a ``[...]`` array, so ``{ a: 1, b: 2 }`` is a
+``parse.unexpected-token`` in every reader. The scanner honours double- and
+single-quoted strings, triple-quoted strings and ``#`` comments, and tracks
+the innermost open delimiter. Its scope is deliberately narrow: it is a
+heuristic for this one mistake (audit F1, which found comma-separated braces
+in 27 of 28 vectors), not an OML parser, and checks nothing else about the
+text. It has no dependency on any port.
+
 Deliberately not a conformance runner: it never executes a vector, only
 checks that the files are well-formed and internally consistent. Semantic
 correctness is the ports' job.
@@ -187,6 +199,68 @@ def check_input_form(rel: str, name: str, vec: dict) -> list[str]:
     return errors
 
 
+OSD_OML_TEXT_OPERATIONS = {"parse_schema_oml", "write_schema_oml"}
+
+
+def brace_commas(text: str) -> list[int]:
+    """Offsets of every comma whose innermost open delimiter is `{`."""
+    found: list[int] = []
+    stack: list[str] = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == "#":
+            while i < n and text[i] != "\n":
+                i += 1
+            continue
+        if text.startswith('"""', i):
+            end = text.find('"""', i + 3)
+            i = n if end < 0 else end + 3
+            continue
+        if c == '"':
+            i += 1
+            while i < n and text[i] != '"':
+                i += 2 if text[i] == "\\" else 1
+            i += 1
+            continue
+        if c == "'":
+            end = text.find("'", i + 1)
+            i = n if end < 0 else end + 1
+            continue
+        if c in "{[":
+            stack.append(c)
+        elif c in "}]":
+            if stack:
+                stack.pop()
+        elif c == "," and stack and stack[-1] == "{":
+            found.append(i)
+        i += 1
+    return found
+
+
+def check_oml_brace_commas(rel: str, name: str, vec: dict) -> list[str]:
+    """OSD-OML vectors: no comma directly inside braces (see module docs)."""
+    if vec.get("operation") not in OSD_OML_TEXT_OPERATIONS:
+        return []
+    texts = []
+    inp = vec.get("input")
+    if isinstance(inp, dict) and isinstance(inp.get("text"), str):
+        texts.append(("input.text", inp["text"]))
+    exp = vec.get("expect")
+    if isinstance(exp, dict) and isinstance(exp.get("text"), str):
+        texts.append(("expect.text", exp["text"]))
+    errors = []
+    for where, text in texts:
+        for off in brace_commas(text):
+            line = text.count("\n", 0, off) + 1
+            errors.append(
+                f"{rel}: {name!r} {where} line {line} has a comma between "
+                f"edges inside braces -- OML separates edges with a newline "
+                f"or ';' (OML-26/27)"
+            )
+    return errors
+
+
 def main() -> int:
     files = sorted(SUITE.glob("*/*.json"))
     if not files:
@@ -244,6 +318,7 @@ def main() -> int:
             errors.extend(check_declared_limits(str(rel), name, vec))
             errors.extend(check_input_form(str(rel), name, vec))
             errors.extend(check_path_placeholder(str(rel), name, vec))
+            errors.extend(check_oml_brace_commas(str(rel), name, vec))
 
     if errors:
         for err in errors:
@@ -258,7 +333,7 @@ def main() -> int:
         f"{total} vectors across {len(files)} files: valid JSON, no raw control "
         f"characters, unique names, required fields present, "
         f"'bytes_hex' inputs well-formed (E-27), path placeholder only where "
-        f"E-32 allows it."
+        f"E-32 allows it, no comma between braced edges in OSD-OML texts."
     )
     return 0
 

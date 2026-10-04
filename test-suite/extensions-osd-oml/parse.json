@@ -6,7 +6,7 @@
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
-        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"city\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"Person\"\n  field: { label: \"name\", type: { kind: \"scalar\", name: \"string\" } }\n  field: {\n    label: \"nickname\"\n    cardinality: { min: 0 }\n    type: { kind: \"scalar\", name: \"string\", nullable: true }\n  }\n  field: { label: \"address\", type: { kind: \"ref\", name: \"Address\" } }\n}\nroot: \"Person\"\n"
+        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\"; type: { kind: \"scalar\"; name: \"string\" } }\n  field: { label: \"city\"; type: { kind: \"scalar\"; name: \"string\" } }\n}\nrecord: {\n  name: \"Person\"\n  field: { label: \"name\"; type: { kind: \"scalar\"; name: \"string\" } }\n  field: {\n    label: \"nickname\"\n    cardinality: { min: 0 }\n    type: { kind: \"scalar\"; name: \"string\"; nullable: true }\n  }\n  field: { label: \"address\"; type: { kind: \"ref\"; name: \"Address\" } }\n}\nroot: \"Person\"\n"
       },
       "expect": {
         "ok": true,
@@ -20,7 +20,7 @@
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"any\" } }\n  field: { label: \"b\", cardinality: {}, type: { kind: \"any\" } }\n  field: { label: \"c\", cardinality: { min: 3, max: 3 }, type: { kind: \"any\" } }\n  field: { label: \"d\", cardinality: { min: 1, max: 5 }, type: { kind: \"any\" } }\n  field: { label: \"e\", cardinality: { min: 5 }, type: { kind: \"any\" } }\n  field: { label: \"f\", cardinality: { max: 5 }, type: { kind: \"any\" } }\n  field: { label: \"g\", cardinality: { min: 0 }, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"any\" } }\n  field: { label: \"b\"; cardinality: {}; type: { kind: \"any\" } }\n  field: { label: \"c\"; cardinality: { min: 3; max: 3 }; type: { kind: \"any\" } }\n  field: { label: \"d\"; cardinality: { min: 1; max: 5 }; type: { kind: \"any\" } }\n  field: { label: \"e\"; cardinality: { min: 5 }; type: { kind: \"any\" } }\n  field: { label: \"f\"; cardinality: { max: 5 }; type: { kind: \"any\" } }\n  field: { label: \"g\"; cardinality: { min: 0 }; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": true,
@@ -34,7 +34,7 @@
       "operation": "parse_schema_oml",
       "purpose": "happy-path",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"b\", type: { kind: \"scalar\", name: \"string\", nullable: true } }\n  field: { label: \"c\", type: { kind: \"ref\", name: \"R\" } }\n  field: { label: \"d\", type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"scalar\"; name: \"string\" } }\n  field: { label: \"b\"; type: { kind: \"scalar\"; name: \"string\"; nullable: true } }\n  field: { label: \"c\"; type: { kind: \"ref\"; name: \"R\" } }\n  field: { label: \"d\"; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": true,
@@ -48,7 +48,7 @@
       "operation": "parse_schema_oml",
       "purpose": "edge-case",
       "input": {
-        "text": "record: { name: \"Empty\" }\nrecord: {\n  name: \"R\"\n  field: { label: \"e\", type: { kind: \"ref\", name: \"Empty\" } }\n}\nroot: \"R\"\n"
+        "text": "record: { name: \"Empty\" }\nrecord: {\n  name: \"R\"\n  field: { label: \"e\"; type: { kind: \"ref\"; name: \"Empty\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": true,
@@ -62,7 +62,7 @@
       "operation": "parse_schema_oml",
       "purpose": "edge-case",
       "input": {
-        "text": "record: {\n  name: \"B\"\n  field: { label: \"y\", type: { kind: \"scalar\", name: \"string\" } }\n  field: { label: \"x\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"A\"\n  field: { label: \"b\", type: { kind: \"ref\", name: \"B\" } }\n}\nroot: \"A\"\n"
+        "text": "record: {\n  name: \"B\"\n  field: { label: \"y\"; type: { kind: \"scalar\"; name: \"string\" } }\n  field: { label: \"x\"; type: { kind: \"scalar\"; name: \"string\" } }\n}\nrecord: {\n  name: \"A\"\n  field: { label: \"b\"; type: { kind: \"ref\"; name: \"B\" } }\n}\nroot: \"A\"\n"
       },
       "expect": {
         "ok": true
