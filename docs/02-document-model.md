@@ -806,6 +806,15 @@ harmless: a surface's own grammar may reject a value on its own terms, and
 OML's rule against an unpaired `\uXXXX` escape is about escape syntax in
 source text and is a different rule from this one.
 
+**What a writer does with such a string is not out of scope.** Accepting a
+lone surrogate is conformant for a reader; emitting one is not for a writer.
+A Document built from such a string, by a string-typed reader or
+programmatically, MUST NOT be written: every writer fails with
+`write.unsupported-value`, per
+[C-9](07-codecs-and-deserialization.md#73-writing). The two rules do not
+conflict, because they bind different steps: D-14 binds the bytes a reader
+sees, C-9 binds the bytes a writer would emit.
+
 **The one string type that is itself bytes, and what D-14 asks of it.** Go's
 `string` is a byte sequence rather than decoded text — `utf8.ValidString` can return `false`
 for one — so a Go reader taking a `string` is a byte-oriented entry point in
