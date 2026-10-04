@@ -461,10 +461,13 @@ function conform_record(node, S, rec, path, result):
         result.add(path, "shape-mismatch", "expected an object, got a value")
         return
     counts = {}
+    for (label, child) in node.edges:
+        counts[label] = counts.get(label, 0) + 1
+    seen = {}
     for (label, child) in node.edges:            # in edge order; order not otherwise used
-        i = counts.get(label, 0)
-        counts[label] = i + 1
-        child_path = path + "." + label + (("[" + i + "]") if i > 0 else "")
+        i = seen.get(label, 0)
+        seen[label] = i + 1
+        child_path = path + "." + label + (("[" + i + "]") if counts[label] > 1 else "")
         f = rec.field(label)
         if f is none:
             result.add(child_path, "unexpected-field", "field not declared on this record")
@@ -484,6 +487,13 @@ Two details that are easy to miss and change the result if skipped:
 - **An undeclared field's target is never descended into.** It is reported and
   left alone; conformance of its subtree is meaningless once the field itself is
   invalid.
+- **A repeated label's path always carries its index, the first occurrence
+  included.** `counts` is taken over the whole node before any child is
+  visited, so `$.item[0]`, `$.item[1]` and `$.item[2]` for a label that occurs
+  three times, and `$.item` for one that occurs once. The index follows how
+  often the label occurs in this node, not what the schema declares for it, so a
+  field declared `[1,]` that occurs once paths without an index
+  ([§8.4](08-conformance-and-errors.md#84-paths), E-10).
 - **The cardinality error's path is the parent node, not the field's edges.**
   "This record is missing a required field" has no single edge to point at when
   the count is zero, so the path is always the record's own path, even when the

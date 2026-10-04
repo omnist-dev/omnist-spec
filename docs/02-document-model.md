@@ -169,7 +169,9 @@ factor (D-18) and the expanded size (D-22), both in §2.4.1, bound a format
 mechanism rather than the Document itself, so they bind only the codecs that
 have such a mechanism; where they apply, each is a safety limit in this
 section's sense like the other three, and D-10 and D-11 below govern them
-identically.
+identically. A sixth quantity, the size of the input in bytes, bounds what is
+read rather than what is built; it is a SHOULD with no reference default, and
+is stated in [§2.4.2](#242-resource-bounds-beyond-the-document).
 
 **What is fixed, and what is not.** The *existence* and *meaning* of the
 limits is normative — the three universal ones, and the expansion factor and
@@ -188,14 +190,17 @@ big-data ingestion engine.
 | Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
 | Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, any other mapping or sequence, and the document root, in a format that has an anchor/reference mechanism (D-18) |
 | Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, for an input that contains an alias or a merge key (D-22) |
+| Maximum input size | none; see D-23 and D-24 | The bytes of one input, in any format (D-23, a SHOULD) |
 
-**The last two rows are conditional; the first three are not.** Depth, node
+**The fourth and fifth rows are conditional; the first three are not.** Depth, node
 count and integer digits bound every Document on every route into the model, so
 every implementation enforces all three. The expansion factor and the expanded
 size bound one specific mechanism — a format construct that is written once and
 materializes many times — and are therefore requirements on the codecs that have
 such a mechanism, not on implementations generally (D-18 and D-22 below, and
-[§9.2](09-divergence-ledger.md#92-forbidden-variation)). A Document built
+[§9.2](09-divergence-ledger.md#92-forbidden-variation)). The input size row
+is the only one that bounds bytes, and the only one that is a SHOULD. A
+Document built
 programmatically from native objects has no anchors and is unaffected.
 
 The reference defaults are what the Python implementation uses today, and what
@@ -559,7 +564,8 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   that contains at least one alias or merge key.** An input with neither is not
   subject to it: its `W(root)` is its written size, `S(root)`, which D-9's node
   limit and the caller's own input-size bound govern, and a plain YAML file is
-  treated as a JSON or OML file of the same size is. A **merge key** here is a
+  treated as a JSON or OML file of the same size is, and D-23's input size
+applies to it as to any input. A **merge key** here is a
   `<<` key as [§ YAML](formats/yaml.md) uses the term; that page says nothing
   of a quoted or explicitly tagged `<<`, and this rule does not decide it. A
   codec subject to D-22
@@ -587,7 +593,8 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   limit does not catch it, because it counts mappings, not the scalars that make
   up most of that `W`. This is omnist-spec#125. The cliff is deliberate: a plain
   file of two million slots passes, and adding one alias makes it subject to
-  the cap. D-22 bounds amplification; input size is the caller's limit.
+  the cap. D-22 bounds amplification; input size is bounded by D-23, which an
+implementation enforces or leaves to its caller.
 
   **The default.** It is chosen from measured `W(root)` of realistic aliased
   documents, which it must never refuse, and from the measured memory cost of
@@ -618,7 +625,7 @@ length, so there is no ratio-to-bytes to be undefined on a programmatic
 construction route, and no denominator to disagree about. D-22 is likewise a
 count of materialized slots, not of input bytes. It is also not a cap on plain
 document size: a YAML input with no alias and no merge key is outside it, as a
-JSON or OML input of the same size is.
+JSON or OML input of the same size is. Bytes are bounded by D-23, not here.
 
 **XML's entity expansion is the same class of problem and is already
 handled.** A DTD's internal entities have exactly this shape — the "billion
@@ -662,6 +669,71 @@ shape measured, and it fires well before the input grows large enough to
 reach the node cap. An implementation MAY configure a different value,
 subject to D-10 and D-11 like any other limit in §2.4: finite, and
 documented.
+
+### 2.4.2 Resource bounds beyond the Document
+
+Every limit above bounds the Document an input builds, or the amplification of
+one format mechanism. None bounds how many bytes an implementation will read,
+and none bounds what a codec's parsing library spends on them. The 2026-10-04
+audit measured the cost of that gap, so this section states what an
+implementation does about it.
+
+- **D-23. An implementation SHOULD enforce a finite maximum input size, in
+  bytes, on every read of a Document from text or bytes, in every format, and
+  SHOULD document it (D-11).** An implementation that enforces one MUST refuse
+  an input larger than the maximum with `document.limit.input-size`
+  ([§8.3.2](08-conformance-and-errors.md#832-document-building-and-limits)),
+  at path `$`, and MUST accept an input equal to the maximum. An implementation
+  that enforces none SHOULD say so where it documents its other limits. The
+  size is **bytes, not characters**: it is the length of the input as
+  received, before a leading mark is stripped (D-15) and before it is decoded,
+  so `é` counts as two. The check comes first. It runs before decoding and
+  before any parsing, so an oversized input is refused with this code even if
+  it is also invalid UTF-8 (D-14) or malformed, and an implementation reading
+  from a stream SHOULD stop reading once the maximum is crossed rather than
+  buffer the rest. It applies to OML, JSON, YAML, TOML and XML alike, a YAML
+  input with no alias included, which D-22 does not reach. It cannot arise from
+  a programmatic construction, which has no input bytes.
+- **D-24. The maximum is configurable and has no reference default.** An
+  implementation MAY set it to any finite value (D-10), and MUST document the
+  value it chooses (D-11), as for every limit in §2.4. This specification gives
+  no default because the safe number depends on the codec library and the
+  hardware, and the audit's measurements show that it can differ by two orders
+  of magnitude between libraries at one size: TypeScript's `yaml` library took
+  194.8 s on a 1.19 MB single block mapping of 50 000 keys
+  ([DIV-12](09-divergence-ledger.md#94-known-open-divergences)); PyYAML took
+  about 4 s on 1.1 MB; Rust took 0.10 s to 0.6 s on inputs of megabyte scale.
+  Parse cost can therefore be superlinear in a library, and a byte cap bounds
+  it: no input above the cap is parsed at all. **A cap does not make any parse
+  fast.** A cap of 1.19 MB would still admit the 194.8 s input. An
+  implementation SHOULD therefore choose its maximum by measuring its slowest
+  codec on a worst-case input of that size, a single wide block mapping being
+  the worst case found, and SHOULD NOT configure one above **10 MiB** (10 485
+  760 bytes) without having done so. The audit measured only to about a
+  megabyte; if the quadratic shape held, ten times the size would cost a
+  hundred times the time, which is an extrapolation, not a measurement.
+- **D-25. An implementation SHOULD also bound the length of a string
+  scalar, the length of a label, and the size of a schema, and SHOULD document
+  each bound (D-11).** Schema size means the bytes of OSD text it reads and the
+  number of records and fields it will hold. This specification gives these no
+  code and no vector: a refusal for one is implementation-defined and is not
+  pinned by the conformance suite. They matter where D-23 does not reach: a
+  Document or Schema built programmatically has no input bytes, and a
+  deployment may want a per-string or per-schema bound tighter than its
+  whole-input maximum. Where D-23 is enforced it already bounds every string,
+  label and OSD text read from an input, so these three add nothing for that
+  route.
+- **D-26. What the existing limits do not bound.** D-9's node count counts
+  nodes, not the scalars beneath them or the bytes they were written in: a flat
+  document of a million scalars is within it. D-9's integer-digit limit bounds
+  one literal. D-18 and D-22 bound only the amplification and expanded size of
+  input that has an alias or a merge key, and **a plain alias-free input is
+  exempt from D-22 by design** (D-22: "input size is the caller's limit"); D-23
+  is where that limit is now stated. None of them bounds the cost of a codec's
+  parsing library, and
+  [§6.12](06-schema-algebra.md#612-termination) guarantees that the algebra
+  terminates, not that it is cheap. D-23 and D-24 are the only rules in this
+  specification that bound parse cost, and only through the size of the input.
 
 ---
 

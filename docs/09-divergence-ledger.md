@@ -173,7 +173,9 @@ on those. v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port
 fares on those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more
 (331 in all) and v0.27.0-beta 7 more (338 in all); all 36 are in
 `formats-yaml/alias-expansion.json`, which every port now passes with none
-skipped.
+skipped. v0.29.0-beta added 13 more (351 in all): 7 repeated-label path
+vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 6 input-size vectors (`DIV-17`),
+none of them in the cells above, which stay at the v0.27.0-beta figures.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)) and 6
@@ -216,7 +218,8 @@ ports enforce them. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
 when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
 fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
-fourteen. `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11`, `DIV-12` and `DIV-13` are live.
+fourteen. `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11`, `DIV-12`, `DIV-13`, `DIV-14`,
+`DIV-15`, `DIV-16` and `DIV-17` are live.
 One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
@@ -413,7 +416,9 @@ implementation defect against D-9, D-18 and D-22, not a spec gap. Slow parsing
 is not unique to TypeScript, but the quadratic shape is only measured there:
 the omnist#352 description reports PyYAML parsing a 1.1 MB, 50,000-key
 mapping in about 4 s (one point, no scaling series; not re-run here).
-**Remove this entry when #157 is fixed.**
+**Remove this entry when #157 is fixed.** [D-23](02-document-model.md#242-resource-bounds-beyond-the-document) lets an
+implementation refuse such an input by size; it does not make the parse fast
+(D-24).
 
 **DIV-13. TypeScript's `field(label, type, 0, 0)` rejects cardinality `[0,0]` with `schema.invalid-cardinality`, although S-15 keeps `[0,0]` representable and S-24 makes the writer, not construction, refuse it.**
 In TypeScript `0.7.0-alpha` the `field()` builder throws for `min = 0` and
@@ -425,6 +430,50 @@ rebuild fields through `field()`. The port documents this as a known divergence
 in its `docs/schema.md` and `CHANGELOG.md`. Read from the merged source
 (`src/schema.ts`); not run here.
 **Remove this entry when TypeScript's `field()` accepts `[0,0]` (S-15).**
+
+**DIV-14. Python omits the index on the first occurrence of a repeated label in `validate` and `materialize` paths.**
+E-10 and the §3.6.1 and §7.2.1 pseudocode now agree: every occurrence of a label
+that occurs more than once in a node is indexed, the first included. Python
+`0.12.0` indexes only from the second occurrence. Measured 2026-10-04 with the
+repo's own vector runner against the v0.29.0-beta suite: 5 of the 7
+`*/repeated-label-paths/*` vectors fail, for example `$.item.sku` where
+`$.item[0].sku` is expected and `$.extra` for `$.extra[0]`; the two
+single-occurrence vectors pass. Until v0.29.0-beta the spec's own pseudocode
+had `i > 0`, so this is a divergence from the corrected rule and from E-10, not
+an old defect that went unseen.
+**Remove this entry when Python passes all 7 `repeated-label-paths` vectors.**
+
+**DIV-15. TypeScript omits the index on the first occurrence of a repeated label in `validate` and `materialize` paths.**
+The same shape as `DIV-14`. Measured 2026-10-04 on TypeScript `0.7.0-alpha`
+(`89bc1bd`) with its vector runner: 5 of the 7 `*/repeated-label-paths/*`
+vectors fail, the first occurrence paths without `[0]`, and the two
+single-occurrence vectors pass.
+**Remove this entry when TypeScript passes all 7 `repeated-label-paths` vectors.**
+
+**DIV-16. Rust omits the index on the first occurrence of a repeated label in `validate` and `materialize` paths.**
+The same shape as `DIV-14`. Measured 2026-10-04 on Rust at `7e297ba`, two
+commits after `0.6.0-alpha`, with its vector runner: 5 of the 7
+`*/repeated-label-paths/*` vectors fail in the same way, and the two
+single-occurrence vectors pass.
+**Remove this entry when Rust passes all 7 `repeated-label-paths` vectors.**
+
+Go (`0.9.0-alpha`, `d43b83f`) and Java (`0.4.0-alpha`, `362b88b`) were measured
+the same way and pass all 7: they already index the first occurrence.
+
+**DIV-17. No port enforces a maximum input size, so the six `document-model/input-size` vectors are not yet satisfied ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document); related [omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
+D-23 is a SHOULD and the six vectors carry `declared_max_input_bytes`, a key no
+runner knew at v0.29.0-beta. Measured 2026-10-04 at each port's latest tag (Rust
+two commits past it): Python's runner fails all six as an unknown
+declared-limit key; the TypeScript, Rust and Go runners do not allowlist the
+key, so the three one-byte-over vectors fail ("expected failure, parse
+succeeded") and the three at-the-maximum vectors pass against the port's own
+default, which is a false pass; Java's runner skips all six as an unrecognised
+limit key. All five reach E-20 "not yet implemented" skips once the key is
+allowlisted. Python's reader was also called directly on each input: it accepts
+all six, as it enforces no maximum, so the three one-byte-over cases would fail
+even with the key taught.
+**Remove this entry when every port enforces a configurable maximum input size,
+allowlists `declared_max_input_bytes` and passes all six vectors with no skip.**
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded

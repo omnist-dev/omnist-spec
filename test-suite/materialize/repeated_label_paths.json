@@ -1,0 +1,209 @@
+{
+  "vectors": [
+    {
+      "name": "materialize/repeated-label-paths/first-middle-last-occurrence-indexed",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "materialize",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\" [1,]: integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "1"
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "3"
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 4
+                }
+              }
+            ],
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "5"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n[0]",
+            "code": "materialize.inexact-conversion"
+          },
+          {
+            "path": "$.n[2]",
+            "code": "materialize.inexact-conversion"
+          },
+          {
+            "path": "$.n[4]",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      },
+      "comment": "E-10 on the materialize driver: `n` occurs five times, so every occurrence is indexed. A quoted numeral does not upgrade to integer (value-exact rule), so occurrences 0, 2 and 4 fail and 1 and 3 pass: first `$.n[0]`, middle `$.n[2]`, last `$.n[4]`."
+    },
+    {
+      "name": "materialize/repeated-label-paths/single-occurrence-label-has-no-index",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "materialize",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"n\" [1,]: integer,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "n",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "1"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.n",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      },
+      "comment": "E-10: `n` occurs exactly once, so the path has no index even though the field is declared repeatable. Expected `$.n`, not `$.n[0]`."
+    },
+    {
+      "name": "materialize/repeated-label-paths/nested-repeated-labels-indexed-per-node",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "materialize",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Item {\n    \"n\" [1,]: integer,\n}\nrecord Order {\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "x"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "7"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "8"
+                      }
+                    }
+                  ],
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 9
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.item[0].n[1]",
+            "code": "materialize.inexact-conversion"
+          },
+          {
+            "path": "$.item[1].n",
+            "code": "materialize.inexact-conversion"
+          },
+          {
+            "path": "$.item[2].n[0]",
+            "code": "materialize.inexact-conversion"
+          }
+        ]
+      },
+      "comment": "E-10 per node, materialize driver. Root: three `item` edges, all indexed. `item[0]` has two `n`; the second, a string, fails: `$.item[0].n[1]`. `item[1]` has one `n`, unindexed: `$.item[1].n`. `item[2]` has two `n`; the first, a string, fails: `$.item[2].n[0]`."
+    }
+  ]
+}

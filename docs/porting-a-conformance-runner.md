@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 338 vectors as of v0.28.0-beta — dispatched by operation
+JSON-vector suite — 351 vectors as of v0.29.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -235,7 +235,15 @@ your own default**, which is the one outcome the mechanism exists to prevent.
 allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
-As of **v0.26.0-beta** the newest key is `declared_max_expanded_slots`
+As of **v0.29.0-beta** the newest key is `declared_max_input_bytes`
+(§2.4.2's D-23, the maximum input size in bytes); six vectors in
+`document-model/input-size.json` carry it. It follows the same rule: allowlist
+it, and report an E-20 skip until D-23 is implemented. No port implements it
+yet, and three of the five runners that did not allowlist it run the accepted
+boundary vectors against their own default and report green, which is the
+false pass this section warns about.
+
+Before it, as of **v0.26.0-beta**, the newest key was `declared_max_expanded_slots`
 (§2.4.1's D-22, the absolute cap on expanded size); eight vectors in
 `formats-yaml/alias-expansion.json` carry it. It follows the same rule as
 every other key: allowlist it, and report `skip` until the cap is implemented.

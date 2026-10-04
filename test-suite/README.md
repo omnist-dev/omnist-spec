@@ -15,7 +15,7 @@ disagree, chapter 8 wins.
 test-suite/
   validate/                  document-against-schema vectors
   algebra-compatibility/     compatible_with / equivalent vectors
-  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits)
+  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, input size)
   oml-grammar/               OML text-to-Document parse vectors (ch.4)
   osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)
@@ -132,7 +132,7 @@ runtime-configurable safety limit (§2.4).
 ### Declared-limit keys, and the allowlist every runner needs
 
 A vector that pins a safety-limit boundary carries the limit it was written
-against as a `declared_max_*` key inside `input`. These are the five in the
+against as a `declared_max_*` key inside `input`. These are the six in the
 suite today:
 
 ```
@@ -142,6 +142,7 @@ declared_max_int_digits         §2.4 maximum integer digits
 declared_max_alias_expansion    §2.4.1 maximum alias expansion factor (D-18)
 declared_max_expanded_slots     §2.4.1 maximum expanded size in value slots
 (D-22)
+declared_max_input_bytes        §2.4.2 maximum input size in bytes (D-23)
 ```
 
 A key is a **vector-local parameter, not the reference default**. A runner
@@ -157,6 +158,17 @@ Runners implement this as an allowlist — Python's is a `_LIMIT_KEYS` set in
 `tools/conformance/vector_runner.py`, and the other ports' runners are
 modelled on it. **A key missing from that set is silently treated as an
 ordinary vector**, which is the failure mode above.
+
+`declared_max_input_bytes` is new in v0.29.0-beta. It carries the maximum
+input size in **bytes** (D-23). Six vectors in
+`document-model/input-size.json` carry it: an input of exactly the maximum is
+accepted and one byte over is refused with `document.limit.input-size` at `$`,
+for JSON and YAML, and a multi-byte pair pins that the unit is bytes, not
+characters. No port enforces D-23 yet (`DIV-17`), so a runner reports every
+vector carrying the key as an E-20 skip. The same two steps apply, and so does
+the false-pass hazard: a runner that does not allowlist the key runs the three
+accepted boundary vectors against its own default and passes without testing
+the boundary.
 
 `declared_max_expanded_slots` is new in v0.26.0-beta. It carries `W(root)`'s
 maximum, in value slots. It applies only to an input that contains an alias or

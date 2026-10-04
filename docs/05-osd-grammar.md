@@ -104,9 +104,10 @@ that produced one represents a data-quality problem, not an intentional
 schema. `"": string` is rejected with `schema.empty-label`.
 
 **OSD-3. A field label MUST NOT contain `[` or `]`.** [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
-diagnostic-path convention appends `[i]` to a repeated label's second and
-later occurrences (the first occurrence of `"a"` paths as `$.a`, the second
-as `$.a[1]`). A label that itself contains a literal bracket — `"a[1]": string`
+diagnostic-path convention appends `[i]` to every occurrence of a label that
+occurs more than once in its node, the first included (two `"a"` edges path
+as `$.a[0]` and `$.a[1]`; a lone one as `$.a`, E-10).
+A label that itself contains a literal bracket — `"a[1]": string`
 declared as its own field, alongside a repeatable `"a"` — can produce that
 exact same path for a genuinely different field, making the two
 indistinguishable in a diagnostic. This is rejected outright with
