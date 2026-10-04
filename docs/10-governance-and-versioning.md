@@ -97,7 +97,7 @@ on which implementation already does it. The three questions, in order:
 2. Does it keep the model closed, or does it open something without saying so?
 3. Which behavior is easier to explain to someone who has read only the spec?
 
-Prior implementation is a tiebreaker, not an argument. A behavior three
+Prior implementation is a tiebreaker, not an argument. A behavior several
 implementations share can still be wrong; that just means it is expensive to
 fix, which is a scheduling fact, not a correctness one.
 
@@ -106,8 +106,8 @@ in full. The implementation that was already right does nothing. The one that
 was wrong files a bug against itself.
 
 **Cross-implementation bug filing.** A bug found in one implementation MUST be
-checked against the other two. A parser bug is usually a spec ambiguity wearing
-a disguise, and a spec ambiguity is a bug in all three whether or not they
+checked against the other four. A parser bug is usually a spec ambiguity wearing
+a disguise, and a spec ambiguity is a bug in all five whether or not they
 happen to have tripped over it yet.
 
 ## 10.5 Changing a refusal

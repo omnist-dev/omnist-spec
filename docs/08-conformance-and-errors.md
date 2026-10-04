@@ -939,7 +939,7 @@ decide where "fits exactly" stops either.
 ### 8.5.5 Reporting
 
 *Building your own runner? [Porting a Conformance Runner](porting-a-conformance-runner.md)
-collects what all three existing ports learned, including this section's
+collects what the five existing ports learned, including this section's
 skip/CI discipline in practice.*
 
 A harness run reports, per vector: pass, fail, or skip. **Skip is a first-class

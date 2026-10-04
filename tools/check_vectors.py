@@ -26,6 +26,7 @@ correctness is the ports' job.
 
 from __future__ import annotations
 
+import collections
 import json
 import pathlib
 import sys
@@ -270,6 +271,11 @@ def main() -> int:
     errors: list[str] = []
     seen: dict[str, str] = {}
     total = 0
+    # Counts the prose in docs/ and test-suite/README.md used to hardcode
+    # (and let go stale): they are printed here, so the docs can point at
+    # this output instead of repeating a number that drifts.
+    declared_keys: collections.Counter[str] = collections.Counter()
+    placeholder_vectors = 0
 
     for path in files:
         rel = path.relative_to(ROOT)
@@ -315,6 +321,15 @@ def main() -> int:
                 if field not in vec:
                     errors.append(f"{rel}: {name!r} has no {field!r}")
 
+            inp = vec.get("input")
+            if isinstance(inp, dict):
+                declared_keys.update(k for k in inp if k.startswith("declared_"))
+            exp = vec.get("expect")
+            if isinstance(exp, dict) and any(
+                    isinstance(d, dict) and d.get("path") == PATH_PLACEHOLDER
+                    for d in exp.get("diagnostics") or []):
+                placeholder_vectors += 1
+
             errors.extend(check_declared_limits(str(rel), name, vec))
             errors.extend(check_input_form(str(rel), name, vec))
             errors.extend(check_path_placeholder(str(rel), name, vec))
@@ -335,6 +350,9 @@ def main() -> int:
         f"'bytes_hex' inputs well-formed (E-27), path placeholder only where "
         f"E-32 allows it, no comma between braced edges in OSD-OML texts."
     )
+    keys = ", ".join(f"{k}: {n}" for k, n in sorted(declared_keys.items()))
+    print(f"vectors per declared-limit key: {keys}; vectors using the "
+          f"{PATH_PLACEHOLDER!r} placeholder: {placeholder_vectors}.")
     return 0
 
 

@@ -119,8 +119,9 @@ a number.
 
 **Some vectors cannot be honestly run by every implementation, and that's
 expected.** A `document` whose `kind` is `"integer"` or
-`"number"` can't be faithfully constructed by an implementation with no
-native distinction between the two (e.g. TypeScript). Such an
+`"number"` can't be faithfully constructed by an implementation whose language
+has no distinction between the two it can use (none of the five ports is in
+that position today: TypeScript builds `integer` as a `bigint`). Such an
 implementation's runner MUST report `skip` for the affected vectors, not
 `fail` and not a forced `pass`, and MUST record the gap as a numbered
 `DIV-N` entry in
@@ -163,15 +164,15 @@ maximum, in value slots. It applies only to an input that contains an alias or
 merge key: an alias-free input is accepted however far over it, and one vector
 pins that. A vector may declare it together with `declared_max_alias_expansion`
 to pin which code wins when both are crossed
-(D-22: `document.limit.alias-expansion`). Four ports enforce D-22 now; a runner
-for a port that does not reports every vector carrying the key as an E-20
-skip. The same
+(D-22: `document.limit.alias-expansion`). All five ports enforce D-22; a runner
+for a new port that does not yet reports every vector carrying the key as an
+E-20 skip. The same
 two steps apply, and so does the same false-pass hazard: a runner that does
 not allowlist the key runs `expanded-size-at-declared-cap-succeeds` against its
 own default and passes without testing the boundary.
 
-`declared_max_alias_expansion` is new in v0.18.0-beta. Every port but Python
-enforces D-18 now, so adopting it takes two steps:
+`declared_max_alias_expansion` is new in v0.18.0-beta. All five ports enforce
+D-18 now, so a new port adopts it in two steps:
 **(a)** implement the rule,
 and **(b)** allowlist the key. Skipping (b) does not produce a failure — it
 produces a **false pass**, which is the more dangerous outcome because nobody
