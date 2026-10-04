@@ -137,8 +137,12 @@ dquote-string = DQUOTE *( unescaped / escape ) DQUOTE
 unescaped     = %x20-21 / %x23-5B / %x5D-10FFFF
                 ; any char >= U+0020 except '"' and '\'; control characters
                 ; below U+0020 are an error.
-escape        = "\" ( %x22 / "\" / "/" / "b" / "f" / "n" / "r" / "t"
-                      / "u" 4HEXDIG [ "\" "u" 4HEXDIG ] )
+escape        = "\" ( %x22 / "\" / "/" / %s"b" / %s"f" / %s"n" / %s"r"
+                      / %s"t" / %s"u" 4HEXDIG [ "\" %s"u" 4HEXDIG ] )
+                ; the escape letters are case-sensitive (%s): `\N` and `\U0041`
+                ; are errors (OML-14). Plain ABNF literals would match both
+                ; cases. Deliberately case-insensitive: `exponent`'s e/E and
+                ; HEXDIG's a-f, which the prose accepts in either case.
                 ; a \uXXXX in D800-DBFF MUST be followed by a second \uXXXX
                 ; in DC00-DFFF; an unpaired surrogate escape is an error.
                 ; That range condition is not expressible in ABNF.

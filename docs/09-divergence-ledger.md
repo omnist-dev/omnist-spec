@@ -245,7 +245,7 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-**DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23 and S-24 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
+**DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23, S-24, S-25 and S-26 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
 [OSD-14](05-osd-grammar.md#59-canonical-output), new in **v0.20.0-beta**: a
 field label carrying a C0 control character has no OSD spelling, so an OSD
 writer handed such a schema MUST fail with `write.unsupported-value` rather than
@@ -258,7 +258,9 @@ needs no entry.
 
 **Widened at v0.28.0-beta.** [OSD-16](05-osd-grammar.md#59-canonical-output)
 (a writer fails on `max = 0`), S-22 (`schema.invalid-label`), S-23
-(`schema.unknown-record`), S-24, and the `$` path of a programmatic
+(`schema.unknown-record`), S-24, S-25 and S-26 (`schema.empty-label` and
+`schema.bracket-in-label` from a programmatically built label; their OSD-text
+forms are pinned), and the `$` path of a programmatic
 `schema.invalid-name` (S-8) share OSD-14's blocker: each takes a Schema built
 programmatically, which no vector can supply. All five ports have adopted what
 applies to them; status read from each port's merged source on 2026-10-04 (a

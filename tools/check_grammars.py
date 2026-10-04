@@ -144,9 +144,27 @@ def collect():
                 yield "osd", name, vector_text(vec, "text"), expects_accept(vec)
 
 
+# Texts the grammars must REJECT, independent of any vector: ABNF literals are
+# case-insensitive unless written %s, and a letter-valued terminal that is
+# case-sensitive in the prose must not match the other case (OML-14 escape
+# letters, the T of DATETIME, null/true/false/nan/inf, OSD keywords).
+MUST_REJECT = {
+    "oml": ['a: "\\N"', 'a: "\\B"', 'a: "\\U0041"', 'a: "\\T"',
+            "a: 2024-01-01t10:30", "a: NULL", "a: True", "a: FALSE",
+            "a: NAN", "a: INF"],
+    "osd": ["Record R {}\nroot R", "record R {}\nRoot R"],
+}
+
+
 def main() -> int:
     rules = {"oml": load("oml.abnf", "document"),
              "osd": load("osd.abnf", "schema")}
+    errors: list[str] = []
+    for grammar, texts in MUST_REJECT.items():
+        for text in texts:
+            if accepts(rules[grammar], text):
+                errors.append(f"{grammar}.abnf accepts {text!r}, which must "
+                              f"be rejected (a case-insensitive literal?)")
     checked = {"oml": 0, "osd": 0}
     skipped = 0
     mismatches: list[tuple[str, str, bool]] = []
@@ -158,7 +176,6 @@ def main() -> int:
         if accepts(rules[grammar], text) != want:
             mismatches.append((grammar, name, want))
 
-    errors: list[str] = []
     seen = {name for _, name, _ in mismatches}
     for grammar, name, want in mismatches:
         if name not in CONTEXT_EXCEPTIONS:

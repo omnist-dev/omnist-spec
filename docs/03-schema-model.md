@@ -152,7 +152,9 @@ Constraints on a well-formed schema:
   rather than changing anything).
 - **S-4.** A record name MUST be unique within `env`.
 - **S-5.** A field's label MUST be unique within its record. Two fields naming
-  the same label is an error, not an implicit merge.
+  the same label is an error, not an implicit merge. The other label rules are
+  S-22 (valid UTF-8) and, numbered after S-24 in
+  [§3.4](#34-cardinality), S-25 (not empty) and S-26 (no `[` or `]`).
 - **S-6.** A `Ref` MUST resolve to a name present in `env`. Forward references
   and mutual recursion are legal; a dangling reference is an error.
 - **S-7.** `nullable` MAY be set only on a `Scalar`. A nullable `Ref` and a

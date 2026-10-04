@@ -16,7 +16,7 @@ In practice that means:
   disagrees with the spec, Python is wrong until the spec is changed.
 
 This inversion is the point of having a spec at all. Without it, "what Omnist
-does" is whatever the oldest implementation happens to do, and the other two
+does" is whatever the oldest implementation happens to do, and the other four
 inherit its accidents as requirements.
 
 ## 10.2 Spec-TDD: the vector comes first

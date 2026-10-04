@@ -21,7 +21,9 @@ changes what it accepts, so this is a minor bump. No vector is added or renamed
   vector text.
 - **[#140](https://github.com/omnist-dev/omnist-spec/issues/140) and
   [#155](https://github.com/omnist-dev/omnist-spec/issues/155): the grammars are
-  executable.** `grammars/oml.abnf` now separates skipped whitespace (`skip`),
+  executable.** The escape letters in `oml.abnf` are case-sensitive
+  (`%s`), and `tools/check_grammars.py` asserts a list of must-reject
+  snippets (`a: "\N"`, `a: "\U0041"`, ...). `grammars/oml.abnf` now separates skipped whitespace (`skip`),
   the required edge separator (`SEP`: a run containing a newline or `;`) and an
   insignificant run (`gap`), so `a: 1 b: 2` and `a: {b: 1 c: 2}` are rejected
   and `a : 1` is accepted, as OML-26/27 and the reference do. The dead
@@ -40,14 +42,19 @@ changes what it accepts, so this is a minor bump. No vector is added or renamed
   parse and the writer fails). The empty-label and `[`/`]`-label rules are now
   numbered **S-25** (`schema.empty-label`) and **S-26**
   (`schema.bracket-in-label`), in the construction-time MUST list; codes and
-  paths are unchanged.
+  paths are unchanged. For programmatic construction they are new MUSTs
+  pinned by no vector, tracked under `DIV-5` (extended by this release).
 - **[#146](https://github.com/omnist-dev/omnist-spec/issues/146): ledger.**
   `DIV-8` and `DIV-9` are retired (their removal condition is met: the Go and
   TypeScript runners were re-run and pass all 15 vectors; the numbers stay
   spent), their "Port status" sentences leave 15 vector comments, §9.1/§9.2
   list the D-18 and D-22 maxima, E-21's example skip reason is
   `skip: DIV-N`, and
-  §9.3's dates are unified.
+  §9.3's dates are unified. An independent review run executed all five
+  runners (Python 0.12.0, TypeScript 0.7.0-alpha, Rust 0.6.0-alpha, Go
+  0.9.0-alpha, Java 0.4.0-alpha) against this suite: Python, TypeScript and
+  Rust 304 pass / 0 fail / 34 skip, Go and Java 310 / 0 / 28, and all 15
+  vectors of `DIV-8`/`DIV-9` pass in every port.
 - **[#147](https://github.com/omnist-dev/omnist-spec/issues/147): stale
   statements.** Port counts, vector counts, D-18/D-22 enforcement, the
   README's status and structure and the `docs/index.md` policy pointer
