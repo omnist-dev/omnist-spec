@@ -262,6 +262,57 @@ consistent with `validate` (§3.6.1), `materialize` (§7.2.1), and the schema
 algebra (chapter 6) — there is no ambiguity being resolved here, only a
 presentational gap being closed.
 
+**C-9. A writer MUST fail on a string that does not encode to valid UTF-8, a
+value or a label, in every format.** The JSON, YAML, TOML, XML and OML writers
+MUST each fail with `write.unsupported-value`
+([§8.3.9](08-conformance-and-errors.md#839-write)) when the Document holds a
+string, as a leaf's value or as an edge's label, that has no UTF-8 encoding.
+That is a **UTF-16 lone surrogate** in a language whose strings are sequences
+of UTF-16 code units (Python, TypeScript, Java), a **surrogate-escape
+artefact** (`U+DC80`..`U+DCFF` from Python's `errors="surrogateescape"`), and a
+byte sequence that is not well-formed UTF-8 in a language whose string is
+bytes (Go). The failure is unconditional, regardless of `strict`, on the rule
+[E-6](08-conformance-and-errors.md#838-format-codec-adjustments) states for
+every writer case of this shape: a writer that cannot represent a value fails
+rather than emit something else. That is the "fail, don't invent" principle
+the spec already applies to labels a format cannot spell
+([E-6](08-conformance-and-errors.md#838-format-codec-adjustments),
+[OSD-14](05-osd-grammar.md#59-canonical-output)) and to a schema label with no
+UTF-8 encoding ([S-22](03-schema-model.md#33-formal-definition)). Here the
+alternatives to failing are text no UTF-8 sink accepts, or a repair (`U+FFFD`,
+`?`, dropping the edge) that reads back as a different Document, which is the
+silent repair [D-14](02-document-model.md#25-encoding) forbids on the read
+side. A language whose string type cannot hold such a string (Rust's `String`)
+meets the rule vacuously.
+
+Three points keep the rule narrow:
+
+- **Spelling it is not complying.** A writer that emits a lone surrogate as an
+  escape (`"\ud800"` in JSON, YAML or TOML) has still represented the value,
+  and C-9 forbids it all the same: TOML and YAML do not permit a surrogate
+  escape, and a JSON reader in a language whose strings are scalar values
+  replaces or rejects it, so the text does not read back as the Document it
+  came from. Only a failure complies.
+- **The path is the Document path of the node holding the string.** For a
+  value that is the leaf (`$.a`, `$.item[1]`, indexed per
+  [E-10](08-conformance-and-errors.md#84-paths)). For a label it is the node
+  that holds the *edge*, not the edge: §8.4 has no way to quote a label, and
+  the label is precisely what has no encoding, so the field form would put the
+  unwritable string into a byte-compared path, the same reasoning as
+  OSD-14's record path. A string beneath an edge whose own label has no
+  encoding is reported at the holder of that edge too, for the same reason.
+  A writer MAY stop at the first such string it finds.
+- **Readers are untouched.** [D-14](02-document-model.md#25-encoding) still
+  says a string-typed entry point may accept such a string. C-9 is about
+  emitting it: the Document may hold the string, no writer may write it.
+
+No vector pins C-9. A vector's input is UTF-8 text or `bytes_hex`
+([E-27](08-conformance-and-errors.md#853-operation-drivers)), and a Document
+carrying a lone surrogate arrives from neither: text containing one is not
+valid UTF-8, and bytes that decode to one are a D-14 `parse.invalid-encoding`.
+Adoption is tracked under `DIV-5`
+([§9.4](09-divergence-ledger.md#94-known-open-divergences)).
+
 ## 7.4 Format reports
 
 A reader or writer SHOULD be able to report the adjustments a given conversion
@@ -275,7 +326,8 @@ which is new material and which no implementation currently emits. Note that
 not every `format.*`-adjacent behavior belongs in this report: a value that
 `format.*` now rejects outright as `write.unsupported-value` (§8.3.9) —
 an illegal-character label, an unrepresentable null, a special float, an
-empty internal node — is a write **failure**, not a lossy-but-successful
+empty internal node, a string with no UTF-8 encoding (C-9) — is a write
+**failure**, not a lossy-but-successful
 adjustment, so it has nothing to preview here.
 
 ## 7.5 Per-format pages

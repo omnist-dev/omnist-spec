@@ -344,7 +344,11 @@ check; there the CLI is the entry point that matters. And note what D-14 does
 **not** reach: a lone UTF-16 surrogate in a JavaScript or Java string, or a
 surrogate-escape artefact in a Python `str`, is a property of an
 already-decoded string, not of bytes you read, and §2.5 puts both out of
-scope.
+scope. Your **writers** are a different matter: C-9 (§7.3) makes every writer
+refuse such a string, in a value or a label, with `write.unsupported-value`.
+No vector can carry one (an input is UTF-8 text or `bytes_hex`), so nothing in
+your runner will tell you whether you do; it is a unit-test obligation
+(`DIV-5`).
 
 ## Say which comparison mode produced your numbers
 

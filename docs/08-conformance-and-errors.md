@@ -418,7 +418,7 @@ diagnostic code is needed for this case at all.
 
 | Code | Raised when |
 |---|---|
-| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf/special-float/empty-node cannot be represented at all in the target format's own syntax without colliding with some other, distinct, valid input (unconditional, regardless of `strict`) |
+| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf/special-float/empty-node cannot be represented at all in the target format's own syntax without colliding with some other, distinct, valid input (unconditional, regardless of `strict`), **or** a string value or label has no UTF-8 encoding ([C-9](07-codecs-and-deserialization.md#73-writing), unconditional) |
 
 **E-26. "Target format" includes OSD, not only the four codecs.** The
 schema-writing surfaces are writers like any other and this is the code they

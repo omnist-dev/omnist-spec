@@ -253,7 +253,10 @@ content. Tab and newline are legal inside; other control characters are not.
 **OML-15.** The canonical writer MUST emit only `\"`, `\\`, `\n`, `\r`, `\t`, and `\u00XX`
 for other control characters. It MUST NOT emit `\/`, `\b`, `\f`, surrogate
 pairs, raw strings, or multiline strings. Non-ASCII characters are emitted
-literally.
+literally. A string with no UTF-8 encoding, a lone surrogate for one, has no
+OML spelling at all (the reader rejects an unpaired `\uXXXX` escape): the
+writer MUST fail with `write.unsupported-value`, per
+[C-9](07-codecs-and-deserialization.md#73-writing).
 
 ## 4.6 Document shapes
 

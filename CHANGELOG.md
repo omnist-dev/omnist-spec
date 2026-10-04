@@ -3,6 +3,37 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.32.0-beta (2026-10-04)
+
+**Normative (minor)** - resolves
+[#161](https://github.com/omnist-dev/omnist-spec/issues/161): every writer
+refuses a string that does not encode to valid UTF-8.
+
+- **New rule [C-9](docs/07-codecs-and-deserialization.md#73-writing).** The
+  JSON, YAML, TOML, XML and OML writers MUST fail with
+  `write.unsupported-value`, unconditionally, when a Document holds a string
+  value or an edge label with no UTF-8 encoding: a UTF-16 lone surrogate, a
+  surrogate-escape artefact, or in Go a byte sequence that is not well-formed
+  UTF-8. D-14 left a string-typed *reader* free to accept one, and S-22 and
+  OSD-14 cover schema labels only, so nothing stopped a writer emitting text
+  that no UTF-8 sink accepts (Python: `write_json(read_json('{"a":"\ud800"}'))`,
+  [omnist#350](https://github.com/omnist-dev/omnist/issues/350)). Spelling the
+  string as an escape does not comply. The path is the Document path of the
+  node holding the string; for a label, the node holding the edge, since a
+  path cannot quote the label. D-14's out-of-scope paragraph now says the
+  writer half is not out of scope; OML-15, the format overview, the porting
+  guide, the `write.unsupported-value` row and chapter 7's format-report note
+  cite C-9.
+- **No vector.** An input is UTF-8 text or `bytes_hex`, neither of which can
+  carry a lone surrogate into a Document. `DIV-5` is widened and retitled, and
+  records a measurement of each port's latest tag: Python, TypeScript and Java
+  emit the surrogate raw or as an escape in several formats, Go replaces
+  invalid bytes with `U+FFFD`, Rust is vacuous. A new ledger row says so. The
+  suite stays at **362** vectors.
+- **Ledger Version row.** Python is `0.13.0`, tagged and served by the PyPI
+  Simple index (checked 2026-10-04); it pins v0.28.0-beta and adopts nothing
+  new.
+
 ## v0.31.0-beta (2026-10-04)
 
 **Normative (minor)** — resolves

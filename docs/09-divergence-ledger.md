@@ -141,8 +141,9 @@ Python ([omnist#352](https://github.com/omnist-dev/omnist/pull/352), merged as
 `0133f89`, pinned to v0.27.0-beta).
 
 **Versions.** The Version row is each port's latest **tag**, checked
-2026-10-04 with `git ls-remote --tags`. Python `v0.12.0` is tagged and the
-PyPI Simple index serves `omnist-0.12.0`. Rust `v0.6.1-alpha` is tagged and
+2026-10-04 with `git ls-remote --tags`. Python `v0.13.0` is tagged and the
+PyPI Simple index serves `omnist-0.13.0` (checked 2026-10-04, after its
+Publish run succeeded; `0.12.0` is also served). Rust `v0.6.1-alpha` is tagged and
 crates.io's newest version is `0.6.1-alpha` (`0.6.0-alpha` is also published). Go `v0.9.0-alpha` is distributed by tag only (module proxy; no
 registry). TypeScript `v0.7.0-alpha` is tagged; npm (`@omnist-dev/omnist`)
 serves `0.6.0-alpha` as both the `latest` and `alpha` dist-tag, so
@@ -156,18 +157,20 @@ in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha`, TypeScript `v0.6.1-alpha`,
 Java `v0.3.1-alpha` and Python `v0.11.0`. The v0.28.0-beta schema diagnostics
 (S-8, S-22, S-23 and S-24; see `DIV-5`) are in Python `v0.12.0`, TypeScript
 `v0.7.0-alpha`, Rust `v0.6.0-alpha` and later, Go `v0.9.0-alpha` and Java
-`v0.4.0-alpha`. Of the v0.28.0-beta releases only Python `0.12.0` and Rust
+`v0.4.0-alpha`. Python `v0.13.0` pins v0.28.0-beta and adopts no later rule.
+Of the v0.28.0-beta releases only Python `0.12.0` and `0.13.0` and Rust
 `0.6.0-alpha` and `0.6.1-alpha` are served by their registries today. No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.12.0 | 0.7.0-alpha | 0.6.1-alpha | 0.9.0-alpha | 0.4.0-alpha |
+| Version | 0.13.0 | 0.7.0-alpha | 0.6.1-alpha | 0.9.0-alpha | 0.4.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five) | all three | all three | all three | all three | all three |
 | OML read/write | complete | complete | complete | complete | complete |
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14) | both done | both done (OSD-15 fixed in #150) | both done (`to_osd` returns `Result`) | both done (`osd.Write` returns an error) | both done |
+| Writers refuse a string with no UTF-8 encoding (C-9) | no (measured 2026-10-04, `DIV-5`) | no (measured, `DIV-5`) | not applicable (`String`) | no (measured, `DIV-5`) | no (measured, `DIV-5`) |
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
@@ -255,7 +258,7 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-**DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23, S-24, S-25 and S-26 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
+**DIV-5. OSD-14, OSD-16, C-9 and the S-8, S-22, S-23, S-24, S-25 and S-26 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
 [OSD-14](05-osd-grammar.md#59-canonical-output), new in **v0.20.0-beta**: a
 field label carrying a C0 control character has no OSD spelling, so an OSD
 writer handed such a schema MUST fail with `write.unsupported-value` rather than
@@ -291,6 +294,38 @@ re-run):
 
 Every cell rests on that port's unit tests; the suite checks none of it.
 
+**Widened again at v0.32.0-beta: C-9.**
+[C-9](07-codecs-and-deserialization.md#73-writing) (every writer refuses a
+string value or label with no UTF-8 encoding,
+[omnist-spec#161](https://github.com/omnist-dev/omnist-spec/issues/161)) takes
+a Document holding a lone surrogate or, in Go, invalid UTF-8 bytes, which no
+vector can supply: an input is UTF-8 text or `bytes_hex`, and neither yields
+one without a D-14 `parse.invalid-encoding`. No port implements it. Measured
+2026-10-04 at each port's latest tag, with the value `\ud800` (or the byte
+`0xff`) as a leaf and as a label, written by all five writers:
+- *Python (`0.13.0`)*: JSON, TOML and OML emit the raw surrogate, and the text
+  raises `UnicodeEncodeError` on `.encode("utf-8")`
+  ([omnist#350](https://github.com/omnist-dev/omnist/issues/350)); YAML emits
+  the escape `\uD800`. XML refuses, with `write.unsupported-value`, but at a
+  path that contains the label for a label case, where C-9 says the holder.
+- *TypeScript (`0.7.0-alpha`)*: JSON, YAML and TOML emit the escape `\ud800`;
+  OML emits the raw surrogate, which does not survive UTF-8 encoding. XML
+  refuses, with the label inside the path for a label case.
+- *Java (`0.4.0-alpha`)*: JSON, TOML and OML emit the raw surrogate (not
+  encodable as UTF-8); YAML emits the escape. XML refuses, with a `?` standing
+  for the label in the path.
+- *Go (`v0.9.0-alpha`)*: JSON, TOML, XML (value) and OML emit `U+FFFD` for the
+  invalid byte, a silent repair. YAML fails with the library's own error, not
+  a coded one. XML refuses a label with `write.unsupported-value`, with the
+  label inside the path.
+- *Rust (`0.6.1-alpha`)*: vacuous (`String` is always valid UTF-8), not
+  measured.
+
+All of this was run read-only on throwaway checkouts of those tags, which have
+since been deleted. C-9 shares the blocker above: a Document carrying such a
+string has no vector form, so it is closed by the same kind of driver, one
+that can supply a Document that no text yields.
+
 **Why this is still listed.** A vector gives a schema as OSD text (§8.5.3), so a
 schema whose label has no OSD text cannot be written as a vector input at all,
 and §8.5.3 has no driver taking a schema in any other form — `write_schema` is a
@@ -303,8 +338,8 @@ Schema, and it still needs a driver that accepts a schema in some form other
 than OSD text — a canonical Schema encoding, or a `write_schema` driver fed by
 `schema_from_document`. Until that exists, adoption is verified by hand and this
 entry says so rather than letting a green suite imply coverage. Remove this
-entry when vectors pin OSD-14, OSD-16, S-22, S-23, S-24 and the programmatic
-S-8 path, supplied by such a driver, and every port passes them.
+entry when vectors pin OSD-14, OSD-16, C-9, S-22, S-23, S-24 and the
+programmatic S-8 path, supplied by such a driver, and every port passes them.
 
 **DIV-11. Rust's Document arena cap of 1,000,000 still counts scalar values as well as containers, so a large input under D-22's maximum can be refused with `document.limit.nodes` ([omnist-rs#192](https://github.com/omnist-dev/omnist-rs/issues/192)).**
 Rust `0.6.1-alpha` (omnist-rs#191, the fix for omnist-rs#189) made the YAML
