@@ -443,7 +443,7 @@
           }
         ]
       },
-      "comment": "E-31/E-32: malformed JSON. A value is required after the colon and the next character is `}`; no JSON parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col`: which character a codec blames is implementation-defined (E-31), so a runner compares the code and only that the path is a well-formed text position. Every other path in the suite is still compared byte for byte. Port status: DIV-8 (Sec9.4)."
+      "comment": "E-31/E-32: malformed JSON. A value is required after the colon and the next character is `}`; no JSON parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col`: which character a codec blames is implementation-defined (E-31), so a runner compares the code and only that the path is a well-formed text position. Every other path in the suite is still compared byte for byte."
     }
   ]
 }
