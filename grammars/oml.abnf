@@ -18,10 +18,18 @@
 ;        01-12, day valid for month/year, hour 00-23, minute/second 00-59
 ;        (no leap seconds) are normative and enforced at parse time.
 ; Limits (sec 4.7): INTEGER digit count <= 4300; brace nesting depth <= 200.
+;
+; The RFC 5234 core rules ALPHA, DIGIT, DQUOTE and HEXDIG are used below but
+; deliberately NOT redefined: appendix B.1 of RFC 5234 defines them, and an
+; ABNF library that predefines the core rules rejects a file that restates
+; them. Whitespace: `gap` (any run, possibly empty) stands wherever the
+; tokenizer skips or collapses separators; `SEP` is the one place a newline or
+; ";" is REQUIRED (between two edges). Horizontal space and comments alone
+; never make a SEP (sec 4.2.1, OML-26/27).
 
 ; ---------------------------------------------------------------- document
 
-document      = [BOM] [SEP] ( node-edges / scalar ) [SEP]
+document      = [BOM] gap ( node-edges / scalar ) gap
                 ; see (T3) for the disambiguation; node-edges may be empty,
                 ; so the empty document is legal.
                 ; BOM: a leading U+FEFF is consumed and contributes
@@ -33,13 +41,16 @@ BOM           = %xFEFF
 
 node-edges    = [ edge *( SEP edge ) ]
 
-edge          = label COLON [SEP] value
+edge          = label skip COLON gap value
+                ; hspace and comments are allowed before the colon
+                ; (`a : 1`), but not a newline or ";": there a SEP token
+                ; would stand where the colon is owed.
 
 label         = STRING / bare-label
 bare-label    = IDENT                          ; subject to (T2)
 
 value         = scalar
-              / LBRACE [SEP] node-edges [SEP] RBRACE
+              / LBRACE gap node-edges gap RBRACE
               / array
 
 ; ------------------------------------------------------------------ arrays
@@ -47,12 +58,12 @@ value         = scalar
 ; Elements are never arrays -- there is nothing to nest into.
 ; "[]" is NOT accepted: array requires at least one element.
 
-array         = LBRACKET [SEP] array-element [SEP]
-                *( COMMA [SEP] array-element [SEP] )
-                [ COMMA [SEP] ] RBRACKET
+array         = LBRACKET gap array-element gap
+                *( COMMA gap array-element gap )
+                [ COMMA gap ] RBRACKET
 
 array-element = scalar
-              / LBRACE [SEP] node-edges [SEP] RBRACE
+              / LBRACE gap node-edges gap RBRACE
 
 ; ----------------------------------------------------------------- scalars
 
@@ -67,9 +78,18 @@ hspace        = %x20 / %x09                    ; space, tab; intra-line only
 newline       = %x0D.0A / %x0A                 ; CRLF or LF
 comment       = "#" *( %x00-09 / %x0B-10FFFF ) ; to end of line, NL excluded
 
-SEP           = 1*( hspace / comment / newline / ";" )
-                ; A run with no newline and no ";" is skipped and emits no
-                ; token; a run containing either is one SEP.
+skip          = *( hspace / comment )
+                ; skipped whitespace: emits no token. Never contains a
+                ; newline or ";".
+
+gap           = *( hspace / comment / newline / ";" )
+                ; any run, possibly empty, with or without a newline or ";":
+                ; the places where a separator is insignificant.
+
+SEP           = skip ( newline / ";" ) gap
+                ; a run containing at least one newline or ";" -- the
+                ; separator REQUIRED between two edges. A run without one
+                ; is skipped whitespace (`skip`), not a SEP.
 
 ; -------------------------------------------------------------- punctuation
 
@@ -83,9 +103,7 @@ COMMA         = ","
 ; ------------------------------------------------------------- identifiers
 
 IDENT         = ( ALPHA / "_" ) *( ALPHA / DIGIT / "_" / "-" )
-ALPHA         = %x41-5A / %x61-7A
-DIGIT         = %x30-39
-HEXDIG        = DIGIT / %x41-46 / %x61-66
+                ; ALPHA, DIGIT, HEXDIG, DQUOTE: RFC 5234 core rules.
 
 ; ------------------------------------------------- numeric / temporal atoms
 
@@ -103,7 +121,7 @@ DATE          = 4DIGIT "-" 2DIGIT "-" 2DIGIT   ; subject to (T1) lookahead
                                                 ; and (T4) calendar validity
 TIME          = 2DIGIT ":" 2DIGIT [ ":" 2DIGIT [ "." 1*6DIGIT ] ] [ tz-offset ]
                                                 ; subject to (T4) clock validity
-DATETIME      = DATE "T" 2DIGIT ":" 2DIGIT
+DATETIME      = DATE %s"T" 2DIGIT ":" 2DIGIT
                 [ ":" 2DIGIT [ "." 1*6DIGIT ] ] [ tz-offset ]
 tz-offset     = ( "+" / "-" ) 2DIGIT ":" 2DIGIT
                                                 ; subject to (T4), same ranges
@@ -114,8 +132,6 @@ tz-offset     = ( "+" / "-" ) 2DIGIT ":" 2DIGIT
 STRING        = dquote-string                  ; [Core]
               / raw-string                     ; [Extended]
               / multiline-string               ; [Extended]
-
-DQUOTE        = %x22
 
 dquote-string = DQUOTE *( unescaped / escape ) DQUOTE
 unescaped     = %x20-21 / %x23-5B / %x5D-10FFFF
@@ -131,12 +147,15 @@ raw-string    = "'" *( %x00-26 / %x28-10FFFF ) "'"     ; [Extended]
                 ; no escape processing at all.
 
 multiline-string = 3DQUOTE [ newline ]                 ; [Extended]
-                   *( ( DQUOTE DQUOTE not-3-dquote ) / mlchar )
+                   *( ml-nonquote / DQUOTE ml-nonquote
+                      / DQUOTE DQUOTE ml-nonquote )
                    3DQUOTE
                 ; closes at the FIRST run of 3 or more '"'; only the first 3
-                ; are consumed. Runs of 1-2 quotes are literal content.
-not-3-dquote  = mlchar                                 ; any mlchar that is
-                ; not itself a third consecutive DQUOTE; the "first run of 3"
-                ; rule is stated normatively in docs/04-oml-grammar.md sec 4.5.
-mlchar        = %x09 / %x0A / %x20-10FFFF
-                ; tab, LF, or >= U+0020; other control characters are an error.
+                ; are consumed. Runs of 1-2 quotes are literal content, which
+                ; is why every body alternative ends in a non-quote: no body
+                ; contains three consecutive '"'. (The rule `not-3-dquote` of
+                ; earlier drafts accepted `"""a""" b """` as one string; this
+                ; shape does not.)
+ml-nonquote   = %x09 / %x0A / %x20-21 / %x23-10FFFF
+                ; tab, LF, or >= U+0020 other than '"'; other control
+                ; characters are an error.
