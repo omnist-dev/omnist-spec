@@ -101,7 +101,9 @@ edges.
 OML/OSD string generally, but a label is an identifier, not a value — an
 empty label names nothing a caller could ever reference, and any real input
 that produced one represents a data-quality problem, not an intentional
-schema. `"": string` is rejected with `schema.empty-label`.
+schema. `"": string` is rejected with `schema.empty-label`. The model states
+this as [S-25](03-schema-model.md#34-cardinality), so a programmatically
+built label is held to it too.
 
 **OSD-3. A field label MUST NOT contain `[` or `]`.** [§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)'s
 diagnostic-path convention appends `[i]` to every occurrence of a label that
@@ -111,7 +113,8 @@ A label that itself contains a literal bracket — `"a[1]": string`
 declared as its own field, alongside a repeatable `"a"` — can produce that
 exact same path for a genuinely different field, making the two
 indistinguishable in a diagnostic. This is rejected outright with
-`schema.bracket-in-label`, the same "don't allow two different things to
+`schema.bracket-in-label` (the model's [S-26](03-schema-model.md#34-cardinality)
+for programmatic construction), the same "don't allow two different things to
 collide into one spelling" principle as `schema.empty-label` above and the
 `format.*` write-side fixes in [§8.3.8](08-conformance-and-errors.md#838-format-codec-adjustments) —
 here applied to the label vocabulary itself rather than to a written value.
@@ -168,9 +171,12 @@ forms. It rejects `[]`, which is the "empty cardinality" error.
   `validate.unexpected-field`). `[0,0]` would be a second spelling for that
   same thing, which this spec does not permit anywhere else (an empty array
   and an absent label are likewise never two different things — [§4.3.1](04-oml-grammar.md#431-arrays-are-sugar)).
-  `[0,0]` tokenizes fine and is rejected at field construction, the same
-  `schema.invalid-cardinality` error as a negative bound or an inverted
-  range.
+  OSD text rejects `[0,0]` at parse, with the same `schema.invalid-cardinality`
+  error as a negative bound or an inverted range. The model keeps it
+  representable ([S-15](03-schema-model.md#34-cardinality), because S-2
+  requires only `max >= min`), and the schema writer is what fails on it
+  ([S-24](03-schema-model.md#34-cardinality), [OSD-16](#59-canonical-output)),
+  so it is never silently approximated.
 
 ## 5.6 Types
 

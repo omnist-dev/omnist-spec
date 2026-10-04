@@ -1,4 +1,4 @@
-# Omnist Specification, v0.29
+# Omnist Specification, v0.30
 
 Project home: [omnist.dev](https://omnist.dev)
 
@@ -110,8 +110,8 @@ ports: each is built from this document alone, consulting sibling ports'
 source only as a narrow, after-the-fact tie-breaker once a spec gap is
 already filed, never as a primary source. Every gap one of them hits by
 that process is treated as a defect in this spec to fix, not a
-port-specific note — see [§9.5](09-divergence-ledger.md) for the full
-policy.
+port-specific note — see [§10.4](10-governance-and-versioning.md#104-discrepancy-resolution)
+for the full policy.
 
 ## Reading order
 

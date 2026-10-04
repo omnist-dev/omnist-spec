@@ -275,7 +275,7 @@
           }
         ]
       },
-      "comment": "E-31/E-32: malformed TOML. A key/value pair requires a value after `=` and the line ends first; no TOML parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col` (E-32): the blamed character is implementation-defined. Port status: DIV-8 (Sec9.4)."
+      "comment": "E-31/E-32: malformed TOML. A key/value pair requires a value after `=` and the line ends first; no TOML parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col` (E-32): the blamed character is implementation-defined."
     }
   ]
 }

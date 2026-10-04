@@ -222,8 +222,8 @@ exists to descend into.
 | `schema.non-integer-cardinality` | A cardinality bound is not a whole number |
 | `schema.empty-cardinality` | `[]` written as a cardinality |
 | `schema.unquoted-label` | A bare name in field-label position |
-| `schema.empty-label` | A field label is the empty string |
-| `schema.bracket-in-label` | A field label contains `[` or `]`, which could collide with the repeated-label diagnostic-path convention (§3.6.1) |
+| `schema.empty-label` | A field label is the empty string (S-25) |
+| `schema.bracket-in-label` | A field label contains `[` or `]`, which could collide with the repeated-label diagnostic-path convention (§3.6.1) (S-26) |
 | `schema.quoted-type` | A quoted string in type position |
 | `schema.nullable-ref` | `?` applied to a reference |
 | `schema.nullable-any` | `any?` |
@@ -963,7 +963,7 @@ decide where "fits exactly" stops either.
 ### 8.5.5 Reporting
 
 *Building your own runner? [Porting a Conformance Runner](porting-a-conformance-runner.md)
-collects what all three existing ports learned, including this section's
+collects what the five existing ports learned, including this section's
 skip/CI discipline in practice.*
 
 A harness run reports, per vector: pass, fail, or skip. **Skip is a first-class
@@ -986,7 +986,7 @@ required:**
   corresponding entry in [chapter 9](09-divergence-ledger.md)'s divergence
   ledger (see [§9.4](09-divergence-ledger.md#94-known-open-divergences) for
   the current open entries), and the skip reason a harness reports for the
-  affected vectors MUST cite that entry by number (e.g. `"skip: D-N"`) — a
+  affected vectors MUST cite that entry by number (e.g. `"skip: DIV-N"`) — a
   skip with no citable reason, or a reason invented ad hoc instead of
   pointing at a ledger entry, is not acceptable reporting under this
   section. A divergence this narrow is closed, and its entry removed from

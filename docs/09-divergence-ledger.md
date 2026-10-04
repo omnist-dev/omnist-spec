@@ -34,8 +34,11 @@ a formatter. Nothing in this spec requires them.
 
 **The exact value of a safety limit** (§2.4). An implementation MAY set its
 depth, node-count, and integer-digit limits to values other than the reference
-defaults (200 / 1,000,000 / 4,300), to fit its deployment target. What is not
-permitted to vary is covered in §9.2.
+defaults (200 / 1,000,000 / 4,300), to fit its deployment target, and, in a
+codec for a format with an anchor/reference mechanism, its alias expansion
+factor (D-18) and expanded size (D-22) maxima to values other than the
+reference defaults (50 / 1,000,000). What is not permitted to vary is covered
+in §9.2.
 
 ## 9.2 Forbidden variation
 
@@ -67,13 +70,15 @@ code, and never silently. The threshold number is permitted variation (§9.1);
 having no threshold at all, or reporting the wrong code when one is crossed, is
 not.
 
-§2.4's fourth limit, the alias expansion factor (D-18), is scoped rather than
-universal: it binds an implementation's codec for any format that has an
-anchor/reference mechanism, which today means YAML and nothing else. Where it
-applies it is as non-negotiable as the other three — a finite documented
-maximum, and `document.limit.alias-expansion` when it is crossed. Where no
-such mechanism exists there is nothing to enforce, and an implementation
-shipping no YAML codec is not diverging by not enforcing it.
+§2.4's two further limits, the alias expansion factor (D-18) and the expanded
+size (D-22), are scoped rather than universal: they bind an implementation's
+codec for any format that has an anchor/reference mechanism, which today means
+YAML and nothing else. Where they apply each is as non-negotiable as the other
+three — a finite documented maximum, and `document.limit.alias-expansion` or
+`document.limit.expanded-size` respectively when it is crossed. Where no such
+mechanism exists there is nothing to enforce, and an implementation shipping no
+YAML codec is not diverging by not enforcing them. Together with the three
+universal limits these are the five quantities D-9 lists.
 
 §2.4.2's maximum input size (D-23) is a SHOULD, so an implementation that
 enforces none is not diverging by that. One that enforces a maximum MUST
@@ -108,10 +113,13 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last updated: 2026-10-02**, from each port's own merged and
+**Last updated: 2026-10-04**, from each port's own merged and
 independently reviewed PR and its own conformance run, not carried forward
-from an earlier edit. Last source-audited 2026-09-30; the v0.27.0-beta numbers
-below are each port's own PR figures and were not re-run for this edit. All
+from an earlier edit. The Go (`v0.9.0-alpha`) and TypeScript (`v0.7.0-alpha`)
+conformance runners were re-run read-only on this date at those tags against
+spec v0.28.0-beta (Go 310 pass, 0 fail, 28 skip; TypeScript 304 pass, 0 fail,
+34 skip); the other ports' numbers below are each port's own PR figures and
+were not re-run for this edit. All
 five ports had adopted spec **v0.22.0-beta** (287 Track 2 vectors) and compare
 diagnostics as `(path, code)` sets with strict runners:
 Python ([omnist#351](https://github.com/omnist-dev/omnist/pull/351), `e72ba20`),
@@ -173,14 +181,14 @@ today. No port implements the OSD-OML extension (§9.6).
 | Test coverage | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.66% line / 99.19% branch measured, gated at 99.6% / 99.1% (about 1 line and 2 branches of headroom, `docs/limitations.md`) |
 
 The Track 2 row is one suite, v0.27.0-beta, 338 vectors, for all five ports.
-v0.23.0-beta added 11 vectors (298 in all); `DIV-8` records how each port fares
-on those. v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port
-fares on those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more
-(331 in all) and v0.27.0-beta 7 more (338 in all); all 36 are in
-`formats-yaml/alias-expansion.json`, which every port now passes with none
-skipped. v0.29.0-beta added 17 more (355 in all): 7 repeated-label path
-vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 10 input-size vectors (`DIV-17`),
-none of them in the cells above, which stay at the v0.27.0-beta figures.
+v0.23.0-beta added 11 vectors (298 in all) and v0.24.0-beta 4 more (302 in
+all); every port passes all 15 with none skipped. v0.25.0-beta added 10 more
+(312 in all), v0.26.0-beta 19 more (331 in all) and v0.27.0-beta 7 more (338
+in all); all 36 are in `formats-yaml/alias-expansion.json`, which every port
+now passes with none skipped. v0.30.0-beta added 17 more (355 in all): 7
+repeated-label path vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 10 input-size
+vectors (`DIV-17`), none of them in the cells above, which stay at the
+v0.27.0-beta figures.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)) and 6
@@ -213,9 +221,10 @@ two were previously indistinguishable, so a bare `D-3` could mean either an
 edge-ordering invariant or a retired XML divergence, and both readings
 appeared in the same chapter.
 
-**`DIV-1`, `DIV-2`, `DIV-3`, `DIV-4`, `DIV-6`, `DIV-7` and `DIV-10` are
-retired numbers and MUST NOT be reused.** All seven entries closed and were
-deleted; the numbers stay spent so a citation to any of them in an older
+**`DIV-1`, `DIV-2`, `DIV-3`, `DIV-4`, `DIV-6`, `DIV-7`, `DIV-8`, `DIV-9` and
+`DIV-10` are retired numbers and MUST NOT be reused.** All nine entries closed
+and were deleted; the numbers stay spent so a
+citation to any of them in an older
 document, issue, vector comment, or port changelog cannot silently come to mean
 something else. `DIV-3` (the YAML alias rules D-18, D-18a, D-19, D-20 and D-22)
 closed when the last port, Python, implemented them in omnist#352, so all five
@@ -223,8 +232,14 @@ ports enforce them. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
 when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
 fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
-fourteen. `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11`, `DIV-12`, `DIV-13`, `DIV-14`,
-`DIV-15`, `DIV-16` and `DIV-17` are live.
+fourteen. `DIV-8` (eleven vectors new in v0.23.0-beta: the OML-28 array
+newline cases and the codec syntax errors under the `line:col` placeholder)
+and `DIV-9` (four OML-28 vectors new in v0.24.0-beta) closed on 2026-10-04,
+when their own removal condition, every port passing every one of the fifteen,
+was found met: the Go and TypeScript runners were re-run that day and pass them,
+and the other three ports' own PR figures (§9.3) report 0 failures on the full
+suite. `DIV-5`, `DIV-11`, `DIV-12`, `DIV-13`, `DIV-14`, `DIV-15`, `DIV-16` and
+`DIV-17` are live.
 One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
@@ -239,7 +254,7 @@ can outlive it. **Before removing an entry, search the docs for inbound
 citations** — that is how the previous `D-3` and `D-7` references ended up
 pointing at nothing.
 
-**DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23 and S-24 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
+**DIV-5. OSD-14, OSD-16 and the S-8, S-22, S-23, S-24, S-25 and S-26 programmatic rules have no vector, so adoption rests on each port's unit tests, where it exists at all.**
 [OSD-14](05-osd-grammar.md#59-canonical-output), new in **v0.20.0-beta**: a
 field label carrying a C0 control character has no OSD spelling, so an OSD
 writer handed such a schema MUST fail with `write.unsupported-value` rather than
@@ -252,7 +267,9 @@ needs no entry.
 
 **Widened at v0.28.0-beta.** [OSD-16](05-osd-grammar.md#59-canonical-output)
 (a writer fails on `max = 0`), S-22 (`schema.invalid-label`), S-23
-(`schema.unknown-record`), S-24, and the `$` path of a programmatic
+(`schema.unknown-record`), S-24, S-25 and S-26 (`schema.empty-label` and
+`schema.bracket-in-label` from a programmatically built label; their OSD-text
+forms are pinned), and the `$` path of a programmatic
 `schema.invalid-name` (S-8) share OSD-14's blocker: each takes a Schema built
 programmatically, which no vector can supply. All five ports have adopted what
 applies to them; status read from each port's merged source on 2026-10-04 (a
@@ -287,106 +304,6 @@ than OSD text — a canonical Schema encoding, or a `write_schema` driver fed by
 entry says so rather than letting a green suite imply coverage. Remove this
 entry when vectors pin OSD-14, OSD-16, S-22, S-23, S-24 and the programmatic
 S-8 path, supplied by such a driver, and every port passes them.
-
-**DIV-8. Eleven vectors new in v0.23.0-beta that some ports fail today: array newline cases (OML-28) and codec syntax errors under the path placeholder (E-31, E-32).**
-Seven belong to [omnist-spec#115](https://github.com/omnist-dev/omnist-spec/issues/115)
-(OML-28, `oml-grammar/arrays/`) and four to
-[#114](https://github.com/omnist-dev/omnist-spec/issues/114) (one malformed
-document per codec, `formats-{json,yaml,toml,xml}/syntax/`, whose expected path
-is the placeholder `line:col`). This is a rollout gap, not a divergence any
-implementation intends to keep. It replaces the note on a codec's failure
-position that the retired `DIV-7` carried, which described the state before E-31.
-
-**How it was measured.** At each port's default-branch tip on 2026-09-30, read
-only: Python `e72ba20` (the merged v0.22.0-beta adoption,
-[omnist#351](https://github.com/omnist-dev/omnist/pull/351); the nine first
-vectors were also measured at its predecessor `dbd4ec3`, with identical
-results), TypeScript `aee2311`
-([omnist-ts#151](https://github.com/omnist-dev/omnist-ts/pull/151)), Rust
-`e07b19b` ([omnist-rs#185](https://github.com/omnist-dev/omnist-rs/pull/185)),
-Go `1de5e84` ([omnist-go#122](https://github.com/omnist-dev/omnist-go/pull/122))
-and Java `ac12dc1` ([omnist-j#117](https://github.com/omnist-dev/omnist-j/pull/117)).
-Python and TypeScript through `format FILE --json` (OML) and `convert FILE --from
-FORMAT --to oml --json`, Java through `format FILE --from FORMAT --json`, Go
-through `omnist parse --from FORMAT FILE`, reading the `path: code` its message
-prints. **Rust through its library** (`omnist::oml::read_oml` and
-`omnist::formats::{json,yaml,toml,xml}::read_*`, reading `ParseError`'s
-`position()` and `code`), because `omnist-cli` prints only message text. No port
-was measured through its conformance runner. A cell is `(path, code)` as the
-port reports it, or `pass`.
-
-| Vectors | Python | TypeScript | Rust | Go | Java |
-|---|---|---|---|---|---|
-| `oml-grammar/arrays/unterminated-array-then-newline-is-unexpected-token`, `one-element-array-then-newline-is-unexpected-token`, `unterminated-array-then-newline-then-closing-brace-is-unexpected-token` (all `2:1`) | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
-| `oml-grammar/arrays/semicolon-inside-array-is-an-error` (`1:7`), `unterminated-array-with-no-trailing-newline-is-unexpected-token` (`1:9`) | pass | pass | pass | pass | pass |
-| `oml-grammar/arrays/colon-after-newline-in-array-is-unexpected-token` (`2:1`), `semicolon-at-end-of-input-in-array-is-unexpected-token` (`1:7`) | pass | pass | pass | `parse.separator-in-array` at the same position | pass |
-| `formats-json/syntax/missing-value-is-a-codec-syntax-error` (`{"a": }`) | `1:7` | no diagnostic | `1:7` | `1:7` | `1:7` |
-| `formats-yaml/syntax/nested-mapping-value-is-a-codec-syntax-error` (`a: b: c`, newline) | `1:5` | no diagnostic | `1:5` | `1:1` | `1:5` |
-| `formats-toml/syntax/key-without-value-is-a-codec-syntax-error` (`a = `, newline) | `1:5` | no diagnostic | `1:5` | `1:5` | `1:5` |
-| `formats-xml/syntax/mismatched-closing-tag-is-a-codec-syntax-error` (`<a><b></a>`) | `1:9` | no diagnostic | `1:11` | `0:0` | `1:9` |
-
-The `colon-after-newline…` and `semicolon-at-end-of-input…` row is a Go divergence OML-28 settles: for `a: [1`, newline, `:` and for `a: [1;` at end of input Go reports `parse.separator-in-array` where OML-28 gives `:` and the end of input `parse.unexpected-token`.
-
-Every codec diagnostic that was reported carried `parse.codec-syntax`. The
-placeholder passes a well-formed path, whatever its value, so the disagreement
-in the codec rows is not itself a failure: **TypeScript** fails all four because
-its read raises an error carrying only message text (`errors` is empty in
-`--json`, and the library has no `parse.codec-syntax` code path for a codec
-failure), and **Go** fails the XML vector because `0:0` is not a text position
-(E-31); the other Go codec cells are well-formed. Counting behaviour only, Python
-fails 0 of the eleven, TypeScript 4, Rust 0, Go 6 (five OML-28 cases and XML) and Java 0.
-
-**What a runner reports today.** A runner that does not yet implement E-32
-compares the string `line:col` to a real path and fails all four codec vectors
-in every port, so until a port implements the placeholder its runner reports
-those four as **E-20 "not yet implemented" skips citing this entry**, never as a
-pass and never as a `fail` its CI has to carry (E-22). The seven OML-28 vectors
-need no runner change: a port that passes one is a pass, and a port that fails
-one skips it under E-20 until the same change that fixes it drops the skip.
-**Remove this entry when every port passes all eleven**, which needs TypeScript to
-report `parse.codec-syntax` with some `line:col` (E-11, E-31), Go to fix
-OML-28 and the XML position, and every runner to implement E-32.
-
-**Not pinned by any vector.** A JSON candidate, `[1, 2`, was dropped: Go
-reports `document.unlabeled-element` for it, not `parse.codec-syntax`. The
-other case recorded here, a newline or `;` before `,` or `]`, is now specified
-(OML-28, `grammars/oml.abnf`) and pinned by four vectors; `DIV-9` records the
-rollout.
-
-**DIV-9. Four vectors new in v0.24.0-beta that Go fails today: a newline or `;` before `,` or `]` inside an array (OML-28, [omnist-spec#117](https://github.com/omnist-dev/omnist-spec/issues/117)).**
-The four are `oml-grammar/arrays/newline-before-closing-bracket-after-first-element-is-insignificant`
-(`a: [1`, newline, `]`), `newline-before-comma-after-first-element-is-insignificant`
-(`a: [1`, newline, `, 2]`), `newline-before-closing-bracket-after-later-element-is-insignificant`
-(`a: [1, 2`, newline, `]`) and `semicolon-before-closing-bracket-is-insignificant`
-(`a: [1;]`). This is a rollout gap, not a divergence any implementation intends
-to keep.
-
-**How it was measured.** At each port's default-branch tip on 2026-09-30, read
-only, from a scratch detached worktree: Python `e72ba20`, TypeScript `aee2311`,
-Rust `e07b19b`, Go `1de5e84` and Java `ac12dc1` (the same commits as `DIV-8`).
-Python and TypeScript through `format FILE --json`, Java through `format FILE
---json`, Go through `omnist parse --from oml FILE`, Rust through its library
-(`omnist::oml::read_oml`). No port was measured through its conformance runner.
-
-| Vector input | Python | TypeScript | Rust | Go | Java |
-|---|---|---|---|---|---|
-| `a: [1` newline `]` | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
-| `a: [1` newline `, 2]` | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
-| `a: [1, 2` newline `]` | pass | pass | pass | `2:1` `parse.separator-in-array` | pass |
-| `a: [1;]` | pass | pass | pass | `1:7` `parse.separator-in-array` | pass |
-| `a: [1` newline `2]` (existing negative vector, control) | `2:1` `parse.separator-in-array` | same | same | same | same |
-
-Go fails all four, two more than the two cases #117 recorded: the third,
-`a: [1, 2` newline `]`, was valid under the previous ABNF as well, so Go
-diverged from the grammar there already, and `a: [1;]` fails at the `;`.
-Counting behaviour only, Python, TypeScript, Rust and Java fail 0 of the four
-and Go 4.
-
-**What a runner reports today.** A port that passes a vector is a pass; a port
-that fails one skips it under E-20 "not yet implemented", citing this entry, and
-the same change that fixes it drops the skip (E-22). No runner change is needed.
-**Remove this entry when every port passes all four**, which needs Go to treat a
-`SEP` before `,` or `]` as insignificant.
 
 **DIV-11. Rust's materialization node cap is 100,000 and counts keys as well as values, so a document the spec's own D-22 example accepts is refused with `document.limit.nodes`.**
 Rust's YAML materialization cap is 100,000 nodes, reported as
@@ -440,10 +357,10 @@ in its `docs/schema.md` and `CHANGELOG.md`. Read from the merged source
 E-10 and the §3.6.1 and §7.2.1 pseudocode now agree: every occurrence of a label
 that occurs more than once in a node is indexed, the first included. Python
 `0.12.0` indexes only from the second occurrence. Measured 2026-10-04 with the
-repo's own vector runner against the v0.29.0-beta suite: 5 of the 7
+repo's own vector runner against the v0.30.0-beta suite: 5 of the 7
 `*/repeated-label-paths/*` vectors fail, for example `$.item.sku` where
 `$.item[0].sku` is expected and `$.extra` for `$.extra[0]`; the two
-single-occurrence vectors pass. Until v0.29.0-beta the spec's own pseudocode
+single-occurrence vectors pass. Until v0.30.0-beta the spec's own pseudocode
 had `i > 0`, so this is a divergence from the corrected rule and from E-10, not
 an old defect that went unseen.
 **Remove this entry when Python passes all 7 `repeated-label-paths` vectors.**
@@ -467,7 +384,7 @@ the same way and pass all 7: they already index the first occurrence.
 
 **DIV-17. No port enforces a maximum input size, so the ten `document-model/input-size` vectors are not yet satisfied ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document); related [omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
 D-23 is a SHOULD and the ten vectors carry `declared_max_input_bytes`, a key no
-runner knew at v0.29.0-beta. Measured 2026-10-04 at each port's latest tag
+runner knew at v0.30.0-beta. Measured 2026-10-04 at each port's latest tag
 (Rust two commits past it), on the first six vectors written: Python's runner
 fails all six as an unknown
 declared-limit key; the TypeScript, Rust and Go runners do not allowlist the

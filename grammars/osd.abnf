@@ -13,9 +13,19 @@
 
 ; ---------------------------------------------------------------- top level
 ; Whitespace and comments are discarded by the tokenizer and may appear
-; between any two tokens. They are omitted from the syntactic rules below.
+; between any two tokens. This file spells them out so the grammar can be run
+; as written: `skip` (zero or more) stands between tokens, `skip1` (one or
+; more) where two name-like tokens would otherwise fuse -- after `record` and
+; `root`. The only context condition this adds is maximal munch: `recordR`
+; and `rootR` are single names, never a keyword plus a name, and a `root`
+; name is never followed directly by the keyword `record` or `root` (the
+; tokenizer reads the longest name). ABNF cannot express longest-match.
+;
+; The RFC 5234 core rules ALPHA, DIGIT and DQUOTE are used below and
+; deliberately NOT redefined; an ABNF library that predefines them rejects a
+; file that restates them.
 
-schema        = [BOM] *( record-def / root-def )
+schema        = [BOM] skip *( ( record-def / root-def ) skip )
                 ; declarations may interleave in any order; `root` need not
                 ; come last, though canonical output places it last.
                 ; BOM: a leading U+FEFF is consumed and contributes
@@ -36,13 +46,14 @@ BOM           = %xFEFF
                 ; separator out as `[BOM] [SEP] ...`, so BOM is
                 ; positionally first in the grammar itself.
 
-record-def    = %s"record" name "{" [ field *( "," field ) [ "," ] ] "}"
+record-def    = %s"record" skip1 name skip "{" skip
+                [ field skip *( "," skip field skip ) [ "," skip ] ] "}"
                 ; a trailing comma after the last field is legal and is what
                 ; canonical output emits.
 
-root-def      = %s"root" name
+root-def      = %s"root" skip1 name
 
-field         = string [ cardinality ] ":" type
+field         = string skip [ cardinality skip ] ":" skip type
                 ; the label MUST be a quoted `string`. An unquoted `name` in
                 ; label position is an error.
 
@@ -56,7 +67,8 @@ field         = string [ cardinality ] ":" type
 ; Note there is NO mandatory minimum bound before the comma: "[,5]" and
 ; "[,]" are both accepted by the second alternative.
 
-cardinality   = "[" ( int [ "," [ int ] ] / "," [ int ] ) "]"
+cardinality   = "[" skip ( int [ skip "," [ skip int ] ] / "," [ skip int ] )
+                skip "]"
 
 int           = 1*DIGIT
                 ; this production accepts only unsigned digits; a conformant
@@ -73,7 +85,7 @@ int           = 1*DIGIT
 
 type          = scalar-type / any-type / ref-type
 
-scalar-type   = scalar-name [ "?" ]
+scalar-type   = scalar-name [ skip "?" ]
 scalar-name   = %s"string" / %s"integer" / %s"number" / %s"boolean"
               / %s"date" / %s"time" / %s"datetime"
 
@@ -105,11 +117,10 @@ string        = DQUOTE *( "\" %x20-10FFFF / %x20-21 / %x23-5B / %x5D-10FFFF )
                 ; from this grammar and one written from the prose disagreed
                 ; on the same bytes.
 
-DQUOTE        = %x22
-ALPHA         = %x41-5A / %x61-7A
-DIGIT         = %x30-39
-
 ; ------------------------------------------------ whitespace and comments
 
-ws            = 1*( %x20 / %x09 / %x0D / %x0A )
+ws            = %x20 / %x09 / %x0D / %x0A             ; one whitespace char
 comment       = "#" *( %x00-09 / %x0B-10FFFF )        ; to end of line
+
+skip          = *( ws / comment )
+skip1         = 1*( ws / comment )

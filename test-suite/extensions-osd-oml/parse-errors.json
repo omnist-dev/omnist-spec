@@ -6,7 +6,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", cardinality: { min: -1 }, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; cardinality: { min: -1 }; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -25,7 +25,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", cardinality: { min: 5, max: 2 }, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; cardinality: { min: 5; max: 2 }; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -44,7 +44,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", cardinality: { min: 0, max: 0 }, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; cardinality: { min: 0; max: 0 }; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -63,7 +63,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", cardinality: { min: \"many\" }, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; cardinality: { min: \"many\" }; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -82,18 +82,18 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: 1, type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: 1; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[0].field[0].label",
+            "path": "$.record.field.label",
             "code": "schema.invalid-type"
           }
         ]
       },
-      "comment": "E.10: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a general Schema-construction code defined in chapter 8, not owned by this extension. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; Port status for OSD-OML is tracked in Sec9.6 of the ledger. The wrong-kind value is `label` on the first `field` of the first `record`, so `$.record[0].field[0].label`, the same shape as the sibling `$.record[0].field[0].type.kind` vector."
+      "comment": "E.10: `field.label` must be string-kind. Also has no OSD-text analog -- OSD's grammar only ever produces a quoted-string label. `schema.invalid-type` is a general Schema-construction code defined in chapter 8, not owned by this extension. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; Port status for OSD-OML is tracked in Sec9.6 of the ledger. The wrong-kind value is `label` on the first `field` of the first `record`, so `$.record.field.label`, the same shape as the sibling `$.record.field.type.kind` vector."
     },
     {
       "name": "extensions-osd-oml/parse-errors/empty-field-label-is-invalid",
@@ -101,7 +101,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"\", type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"\"; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -120,7 +120,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a[0]\", type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a[0]\"; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -139,7 +139,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: { name: \"R\", field: { label: \"a\", type: { kind: \"any\" } } }\nrecord: { name: \"R\", field: { label: \"b\", type: { kind: \"any\" } } }\nroot: \"R\"\n"
+        "text": "record: { name: \"R\"; field: { label: \"a\"; type: { kind: \"any\" } } }\nrecord: { name: \"R\"; field: { label: \"b\"; type: { kind: \"any\" } } }\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -158,7 +158,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"any\" } }\n  field: { label: \"a\", type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"any\" } }\n  field: { label: \"a\"; type: { kind: \"any\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -177,7 +177,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: { name: \"string\", field: { label: \"a\", type: { kind: \"any\" } } }\nroot: \"string\"\n"
+        "text": "record: { name: \"string\"; field: { label: \"a\"; type: { kind: \"any\" } } }\nroot: \"string\"\n"
       },
       "expect": {
         "ok": false,
@@ -196,7 +196,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: { name: \"R\", field: { label: \"a\", type: { kind: \"any\" } } }\n"
+        "text": "record: { name: \"R\"; field: { label: \"a\"; type: { kind: \"any\" } } }\n"
       },
       "expect": {
         "ok": false,
@@ -215,7 +215,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: { name: \"R\", field: { label: \"a\", type: { kind: \"any\" } } }\nroot: \"R\"\nroot: \"R\"\n"
+        "text": "record: { name: \"R\"; field: { label: \"a\"; type: { kind: \"any\" } } }\nroot: \"R\"\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -234,7 +234,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"ref\", name: \"Ghost\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"ref\"; name: \"Ghost\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -253,18 +253,18 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"any\" }, bogus: true }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"any\" }; bogus: true }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[0].field[0].bogus",
+            "path": "$.record.field.bogus",
             "code": "schema.unknown-key"
           }
         ]
       },
-      "comment": "8.3.3: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. `schema.unknown-key` is defined in chapter 8 as a general Schema-construction rule, with no OSD-text analog since its grammar has no way to write a stray key at all. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; Port status for OSD-OML is tracked in Sec9.6 of the ledger. The unrecognized key is `bogus` on the first `field` of the first `record`, so `$.record[0].field[0].bogus`, the same shape as the sibling `$.record[1].field[0].type.nullable` unknown-key vector."
+      "comment": "8.3.3: an unrecognized key anywhere in the Document shape is rejected -- `bogus` is not one of `label`/`type`/`cardinality` on a `field` node. `schema.unknown-key` is defined in chapter 8 as a general Schema-construction rule, with no OSD-text analog since its grammar has no way to write a stray key at all. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; Port status for OSD-OML is tracked in Sec9.6 of the ledger. The unrecognized key is `bogus` on the first `field` of the first `record`, so `$.record.field.bogus`, the same shape as the sibling `$.record[1].field.type.nullable` unknown-key vector."
     },
     {
       "name": "extensions-osd-oml/parse-errors/missing-required-key-is-invalid",
@@ -278,12 +278,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[0].field[0]",
+            "path": "$.record.field",
             "code": "schema.missing-key"
           }
         ]
       },
-      "comment": "8.3.3: `field.type` is [1,1] (E.8) but absent here entirely. `schema.missing-key` is a general Schema-construction rule with no OSD-text analog -- OSD's grammar has no production for a field with no type, so this case cannot be written in OSD text at all. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; Port status for OSD-OML is tracked in Sec9.6 of the ledger. The absent key is `type`, and E-12 roots the path at the node the violation occurs on, not at the missing key -- its own example is `$.record[0]` for a record node missing its `name`, not `$.record[0].name` -- so the path is the field node that lacks `type`: `$.record[0].field[0]`."
+      "comment": "8.3.3: `field.type` is [1,1] (E.8) but absent here entirely. `schema.missing-key` is a general Schema-construction rule with no OSD-text analog -- OSD's grammar has no production for a field with no type, so this case cannot be written in OSD text at all. Path per E-12 (Sec8.4.1): \"MUST use a Document path, rooted at the node the violation occurs on\". Before v0.22.0-beta this vector pinned a Schema path, which contradicted E-12 and osd-oml.md E.9; Port status for OSD-OML is tracked in Sec9.6 of the ledger. The absent key is `type`, and E-12 roots the path at the node the violation occurs on, not at the missing key -- its own example is `$.record[0]` for a record node missing its `name`, not `$.record[0].name` -- so the path is the field node that lacks `type`: `$.record.field`."
     },
     {
       "name": "extensions-osd-oml/parse-errors/invalid-scalar-name-is-invalid",
@@ -291,7 +291,7 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"bogus\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"scalar\"; name: \"bogus\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
@@ -310,13 +310,13 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"My Record!\"\n  field: { label: \"a\", type: { kind: \"any\" } }\n}\nroot: \"My Record!\"\n"
+        "text": "record: {\n  name: \"My Record!\"\n  field: { label: \"a\"; type: { kind: \"any\" } }\n}\nroot: \"My Record!\"\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[0].name",
+            "path": "$.record.name",
             "code": "schema.invalid-name"
           }
         ]
@@ -329,13 +329,13 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"text\", name: \"string\" } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"text\"; name: \"string\" } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[0].field[0].type.kind",
+            "path": "$.record.field.type.kind",
             "code": "schema.invalid-type"
           }
         ]
@@ -348,13 +348,13 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"scalar\", name: \"string\", nullable: false } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"scalar\"; name: \"string\"; nullable: false } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[0].field[0].type.nullable",
+            "path": "$.record.field.type.nullable",
             "code": "schema.invalid-type"
           }
         ]
@@ -367,13 +367,13 @@
       "operation": "parse_schema_oml",
       "purpose": "error-case",
       "input": {
-        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\", type: { kind: \"scalar\", name: \"string\" } }\n}\nrecord: {\n  name: \"R\"\n  field: { label: \"a\", type: { kind: \"ref\", name: \"Address\", nullable: true } }\n}\nroot: \"R\"\n"
+        "text": "record: {\n  name: \"Address\"\n  field: { label: \"street\"; type: { kind: \"scalar\"; name: \"string\" } }\n}\nrecord: {\n  name: \"R\"\n  field: { label: \"a\"; type: { kind: \"ref\"; name: \"Address\"; nullable: true } }\n}\nroot: \"R\"\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
-            "path": "$.record[1].field[0].type.nullable",
+            "path": "$.record[1].field.type.nullable",
             "code": "schema.unknown-key"
           }
         ]
