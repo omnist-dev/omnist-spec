@@ -142,9 +142,8 @@ Python ([omnist#352](https://github.com/omnist-dev/omnist/pull/352), merged as
 
 **Versions.** The Version row is each port's latest **tag**, checked
 2026-10-04 with `git ls-remote --tags`. Python `v0.12.0` is tagged and the
-PyPI Simple index serves `omnist-0.12.0`. Rust `v0.6.0-alpha` is tagged and
-crates.io's newest version is still `0.5.1-alpha`, so `0.6.0-alpha` is tagged,
-not published. Go `v0.9.0-alpha` is distributed by tag only (module proxy; no
+PyPI Simple index serves `omnist-0.12.0`. Rust `v0.6.1-alpha` is tagged and
+crates.io's newest version is `0.6.1-alpha` (`0.6.0-alpha` is also published). Go `v0.9.0-alpha` is distributed by tag only (module proxy; no
 registry). TypeScript `v0.7.0-alpha` is tagged; npm (`@omnist-dev/omnist`)
 serves `0.6.0-alpha` as both the `latest` and `alpha` dist-tag, so
 `0.7.0-alpha` is tagged, not published. Java `v0.4.0-alpha` is tagged and its
@@ -156,13 +155,13 @@ TypeScript `v0.6.0-alpha` and Java `v0.3.0-alpha`; the v0.27.0-beta adoption is
 in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha`, TypeScript `v0.6.1-alpha`,
 Java `v0.3.1-alpha` and Python `v0.11.0`. The v0.28.0-beta schema diagnostics
 (S-8, S-22, S-23 and S-24; see `DIV-5`) are in Python `v0.12.0`, TypeScript
-`v0.7.0-alpha`, Rust `v0.6.0-alpha`, Go `v0.9.0-alpha` and Java `v0.4.0-alpha`.
-Of the v0.28.0-beta releases only Python `0.12.0` is served by its registry
-today. No port implements the OSD-OML extension (§9.6).
+`v0.7.0-alpha`, Rust `v0.6.0-alpha` and later, Go `v0.9.0-alpha` and Java
+`v0.4.0-alpha`. Of the v0.28.0-beta releases only Python `0.12.0` and Rust
+`0.6.0-alpha` and `0.6.1-alpha` are served by their registries today. No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.12.0 | 0.7.0-alpha | 0.6.0-alpha | 0.9.0-alpha | 0.4.0-alpha |
+| Version | 0.12.0 | 0.7.0-alpha | 0.6.1-alpha | 0.9.0-alpha | 0.4.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five) | all three | all three | all three | all three | all three |
@@ -305,25 +304,20 @@ entry says so rather than letting a green suite imply coverage. Remove this
 entry when vectors pin OSD-14, OSD-16, S-22, S-23, S-24 and the programmatic
 S-8 path, supplied by such a driver, and every port passes them.
 
-**DIV-11. Rust's materialization node cap is 100,000 and counts keys as well as values, so a document the spec's own D-22 example accepts is refused with `document.limit.nodes`.**
-Rust's YAML materialization cap is 100,000 nodes, reported as
-`document.limit.nodes`, and it counts keys and values
-(omnist-rs `docs/limitations.md` and `docs/formats/yaml.md`; read, not run
-here). D-9 and the §2.4 table define the limit as the nodes materialized while
-building one Document, and in the Document model a node is an edge list, a
-container, so neither a key nor a scalar value is a node; the reference default
-is 1,000,000. The number alone is permitted variation (§9.1), but the unit is
-what makes this a gap: D-22's own measured example of 1,000 services merging a
-60-key block has `W(root)` = 62,063 value slots, far under D-22's default, and
-Rust refuses it because its count of keys plus values exceeds 100,000. Rust
-documents this and says it is pre-existing and unchanged by omnist-rs#187.
-No tracking issue was found. **Remove this entry when Rust counts nodes as D-9
-defines them, or raises the cap, so that no input under D-22's maximum is
-refused by the node cap.**
-
-Tracked as [omnist-rs#189](https://github.com/omnist-dev/omnist-rs/issues/189),
-which recommends counting containers only and raising the cap to the
-spec default.
+**DIV-11. Rust's Document arena cap of 1,000,000 still counts scalar values as well as containers, so a large input under D-22's maximum can be refused with `document.limit.nodes` ([omnist-rs#192](https://github.com/omnist-dev/omnist-rs/issues/192)).**
+Rust `0.6.1-alpha` (omnist-rs#191, the fix for omnist-rs#189) made the YAML
+materialization cap count containers only, at the spec's 1,000,000 default, so
+the 100,000 keys-and-values count this entry first recorded is gone and D-22's
+own 1,000-service example (`W(root)` = 62,063) is accepted. What remains was
+read on omnist-rs `main` (`omnist/src/document.rs`, not run here): the Document
+arena's `push` counts every entry it stores, scalar leaves included, against
+`MAX_NODES = 1_000_000` and reports `document.limit.nodes`. D-9 and the §2.4
+table define a node as an edge list, a container, so a document of more than
+1,000,000 scalars in few containers is refused by Rust and not by an
+implementation that counts as D-9 does. The number is permitted variation
+(§9.1); the unit is the gap.
+**Remove this entry when the arena cap counts containers only
+(omnist-rs#192).**
 
 **DIV-12. TypeScript's `yaml` library parses a block mapping in quadratic time, and aliases inside `!!pairs` and `!!omap` are not counted ([omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
 Two denial-of-service shapes that predate v0.26.0-beta and are specific to this
