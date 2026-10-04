@@ -160,14 +160,15 @@ modelled on it. **A key missing from that set is silently treated as an
 ordinary vector**, which is the failure mode above.
 
 `declared_max_input_bytes` is new in v0.29.0-beta. It carries the maximum
-input size in **bytes** (D-23). Six vectors in
+input size in **bytes** (D-23). Ten vectors in
 `document-model/input-size.json` carry it: an input of exactly the maximum is
 accepted and one byte over is refused with `document.limit.input-size` at `$`,
-for JSON and YAML, and a multi-byte pair pins that the unit is bytes, not
-characters. No port enforces D-23 yet (`DIV-17`), so a runner reports every
+for JSON, YAML and OML, a multi-byte pair that pins that the unit is bytes,
+not characters, and a pair that pins that a leading BOM is counted. No port
+enforces D-23 yet (`DIV-17`), so a runner reports every
 vector carrying the key as an E-20 skip. The same two steps apply, and so does
-the false-pass hazard: a runner that does not allowlist the key runs the three
-accepted boundary vectors against its own default and passes without testing
+the false-pass hazard: a runner that does not allowlist the key runs the accepted
+boundary vectors against its own default and passes without testing
 the boundary.
 
 `declared_max_expanded_slots` is new in v0.26.0-beta. It carries `W(root)`'s

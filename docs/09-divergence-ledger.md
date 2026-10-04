@@ -75,6 +75,11 @@ maximum, and `document.limit.alias-expansion` when it is crossed. Where no
 such mechanism exists there is nothing to enforce, and an implementation
 shipping no YAML codec is not diverging by not enforcing it.
 
+§2.4.2's maximum input size (D-23) is a SHOULD, so an implementation that
+enforces none is not diverging by that. One that enforces a maximum MUST
+raise `document.limit.input-size` when it is crossed, never another code and
+never silently.
+
 **Validation results.** Which documents a schema accepts, and where a rejection
 is located.
 
@@ -173,8 +178,8 @@ on those. v0.24.0-beta added 4 more (302 in all); `DIV-9` records how each port
 fares on those. v0.25.0-beta added 10 more (312 in all), v0.26.0-beta 19 more
 (331 in all) and v0.27.0-beta 7 more (338 in all); all 36 are in
 `formats-yaml/alias-expansion.json`, which every port now passes with none
-skipped. v0.29.0-beta added 13 more (351 in all): 7 repeated-label path
-vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 6 input-size vectors (`DIV-17`),
+skipped. v0.29.0-beta added 17 more (355 in all): 7 repeated-label path
+vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 10 input-size vectors (`DIV-17`),
 none of them in the cells above, which stay at the v0.27.0-beta figures.
 
 **What each port skips.** Python: 28
@@ -460,10 +465,11 @@ single-occurrence vectors pass.
 Go (`0.9.0-alpha`, `d43b83f`) and Java (`0.4.0-alpha`, `362b88b`) were measured
 the same way and pass all 7: they already index the first occurrence.
 
-**DIV-17. No port enforces a maximum input size, so the six `document-model/input-size` vectors are not yet satisfied ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document); related [omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
-D-23 is a SHOULD and the six vectors carry `declared_max_input_bytes`, a key no
-runner knew at v0.29.0-beta. Measured 2026-10-04 at each port's latest tag (Rust
-two commits past it): Python's runner fails all six as an unknown
+**DIV-17. No port enforces a maximum input size, so the ten `document-model/input-size` vectors are not yet satisfied ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document); related [omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
+D-23 is a SHOULD and the ten vectors carry `declared_max_input_bytes`, a key no
+runner knew at v0.29.0-beta. Measured 2026-10-04 at each port's latest tag
+(Rust two commits past it), on the first six vectors written: Python's runner
+fails all six as an unknown
 declared-limit key; the TypeScript, Rust and Go runners do not allowlist the
 key, so the three one-byte-over vectors fail ("expected failure, parse
 succeeded") and the three at-the-maximum vectors pass against the port's own
@@ -472,8 +478,12 @@ limit key. All five reach E-20 "not yet implemented" skips once the key is
 allowlisted. Python's reader was also called directly on each input: it accepts
 all six, as it enforces no maximum, so the three one-byte-over cases would fail
 even with the key taught.
-**Remove this entry when every port enforces a configurable maximum input size,
-allowlists `declared_max_input_bytes` and passes all six vectors with no skip.**
+These runner results are a harness defect as well as a gap: E-20a requires a
+runner to fail or skip a vector with a `declared_*` key it does not know, and
+the TypeScript, Rust and Go runners do neither.
+**Remove this entry when every port either enforces a configurable maximum
+input size and passes all ten vectors, or allowlists
+`declared_max_input_bytes` and records an E-20 skip for them.**
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded

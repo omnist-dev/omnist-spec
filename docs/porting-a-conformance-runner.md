@@ -13,7 +13,7 @@ fourth doesn't have to rediscover it from scratch.
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 351 vectors as of v0.29.0-beta — dispatched by operation
+JSON-vector suite — 355 vectors as of v0.29.0-beta — dispatched by operation
 name rather than fixture directory shape. They're complementary, not
 redundant: track 1 proves your CLI wrapper (if you have one) actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
@@ -231,12 +231,16 @@ runner has an equivalent.
 
 **A key your allowlist doesn't know about is not skipped — it is run against
 your own default**, which is the one outcome the mechanism exists to prevent.
+[E-20a](08-conformance-and-errors.md#855-reporting) makes this a
+MUST: a runner reports a vector carrying a `declared_*` key it does not
+understand as a `fail` or an E-20 skip, never as a run against its own
+default.
 `test-suite/README.md` lists the current keys. Check that list against your
 allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
 As of **v0.29.0-beta** the newest key is `declared_max_input_bytes`
-(§2.4.2's D-23, the maximum input size in bytes); six vectors in
+(§2.4.2's D-23, the maximum input size in bytes); ten vectors in
 `document-model/input-size.json` carry it. It follows the same rule: allowlist
 it, and report an E-20 skip until D-23 is implemented. No port implements it
 yet, and three of the five runners that did not allowlist it run the accepted

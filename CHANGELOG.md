@@ -42,11 +42,12 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
   codes.
 - **New vector key `declared_max_input_bytes`** (E-20-skippable, added to
   `tools/check_vectors.py`, the test-suite README and the porting guide) and
-  **six vectors** in `test-suite/document-model/input-size.json`: JSON and
-  YAML each at the maximum (accepted) and one byte over (refused), and a
-  multi-byte pair showing the unit is bytes. No port enforces D-23 yet
+  **ten vectors** in `test-suite/document-model/input-size.json`: JSON, YAML
+  and OML each at the maximum (accepted) and one byte over (refused), a
+  multi-byte pair showing the unit is bytes, and a BOM pair showing the BOM is
+  counted. No port enforces D-23 yet
   (`DIV-17`).
-- The suite is **351** vectors (338 plus 13).
+- The suite is **355** vectors (338 plus 17).
 
 ## v0.28.0-beta (2026-10-02)
 
