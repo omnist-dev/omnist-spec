@@ -121,9 +121,12 @@ function materialize_record(node, S, rec, path, result):
     out = []
     counts = {}
     for (label, child) in node.edges:
-        i = counts.get(label, 0)
-        counts[label] = i + 1
-        child_path = path + "." + label + (("[" + i + "]") if i > 0 else "")
+        counts[label] = counts.get(label, 0) + 1
+    seen = {}
+    for (label, child) in node.edges:
+        i = seen.get(label, 0)
+        seen[label] = i + 1
+        child_path = path + "." + label + (("[" + i + "]") if counts[label] > 1 else "")
         f = rec.field(label)
         if f is none:
             result.add(child_path, "unexpected-field", "field not declared on this record")
@@ -175,6 +178,13 @@ function try_upgrade(value, kind):
         return undefined
     return undefined
 ```
+
+`counts` is taken over the whole node before any child is visited, so a
+label that occurs more than once is indexed on **every** occurrence, the
+first included (`$.n[0]`, `$.n[1]`), and a label that occurs once carries no
+index (`$.n`), whatever the schema declares for it
+([§8.4](08-conformance-and-errors.md#84-paths), E-10). The same rule builds
+the paths of `validate` ([§3.6.1](03-schema-model.md#361-validatedocument-schema-pseudocode)).
 
 **Materialization never invents and never loses.** `1.0 -> integer 1` is
 value-exact; `1.5 -> integer` is not, and is an error, not a truncation.

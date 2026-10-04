@@ -164,19 +164,24 @@ a syntax error, or the reverse, sends a user looking in the wrong place.
 | `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
 | `document.limit.alias-expansion` | The expansion factor of an anchored definition, of any other mapping or sequence, or of the document root exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.limit.expanded-size` | The number of value slots an input that contains an alias or merge key materializes, `W` of the document root, exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
+| `document.limit.input-size` | The input is larger, in bytes, than the implementation's configured maximum input size, in any format ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document)) |
 | `document.unlabeled-element` | An input construct has no label to become an edge |
 
-**E-4.** These five `document.limit.*` codes correspond exactly to the five
-quantities in [§2.4](02-document-model.md#24-safety-limits) — no sixth, no
-tiers. **The codes are fixed; the threshold that triggers each one is not**
-— an implementation MAY configure any of the five limits to a value other
+**E-4.** These six `document.limit.*` codes correspond exactly to the six
+quantities in [§2.4](02-document-model.md#24-safety-limits) and
+[§2.4.2](02-document-model.md#242-resource-bounds-beyond-the-document) — no
+seventh, no tiers. **The codes are fixed; the threshold that triggers each one is not**
+— an implementation MAY configure any of the six limits to a value other
 than the reference default, per §2.4, but whatever value it configures,
 crossing it MUST raise exactly this code, never a different one and never
 silently. The expanded size has a code of its own, rather than sharing
 `document.limit.alias-expansion`, because this rule gives each quantity
 exactly one code and because the two refusals say different things: an
 `alias-expansion` input amplifies, an `expanded-size` input is large, and a
-caller answers them differently.
+caller answers them differently. The input size is the one quantity whose
+enforcement is a SHOULD ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document));
+the code is fixed all the same, so an implementation that enforces a maximum
+raises exactly `document.limit.input-size` when it is crossed.
 
 **E-4a.** The first three apply to every Document on every route into the
 model. `document.limit.alias-expansion` and `document.limit.expanded-size` are
@@ -192,7 +197,13 @@ that a large expansion would have hit the node cap eventually. When one input
 crosses both, the code is `document.limit.alias-expansion`
 ([D-22](02-document-model.md#241-bounding-alias-expansion)).
 `document.limit.expanded-size` is never raised for an input with no alias and
-no merge key, however large. Its `path` is a
+no merge key, however large. `document.limit.input-size` differs from all
+five: it applies to every read of a Document from text or bytes, in every
+format, and is raised before decoding or parsing, so it is reported ahead of
+`parse.invalid-encoding` and every other diagnostic. Its `path` is `$`: the
+violation is a property of the input as a whole, its length, found before any
+Document structure exists to descend into. It cannot arise from a
+programmatic construction. Its `path` is a
 Document path, per E-11, and it is `$` — the violation is a property of the
 input's reference graph as a whole, detected before any Document structure
 exists to descend into.
@@ -443,8 +454,16 @@ $.item[0]                the first edge labeled `item`
 $.item[2].sku            `sku` inside the third `item`
 ```
 
-**E-10.** The index MUST be present when the label occurs more than once in that node, and
-MUST be absent when it occurs exactly once.
+**E-10.** The index MUST be present on **every** edge of a label that occurs more than
+once in that node, the first included, and MUST be absent when the label
+occurs exactly once. The count is of the edges that node holds, not of the
+cardinality a schema declares: a field declared `[1,]` whose label occurs once
+paths as `$.item`, and the same label occurring twice paths as `$.item[0]` and
+`$.item[1]`. The rule is applied per node, so `$.item[1].tag` and
+`$.item[0].tag[1]` can both appear in one result. It governs every Document
+path, an undeclared field's `unexpected-field` included. A cardinality
+diagnostic is at the parent node's path (§3.6), so it carries no index of its
+own.
 
 **Schema paths** are `RecordName` for a record-level diagnostic and
 `RecordName.label` for a field-level one.
@@ -548,7 +567,9 @@ by code: a Document writer's diagnostic takes a Document path (the existing
 schema writer's takes a Schema path. Which Schema path is settled per case,
 the way §8.4.1 settles it for `schema.*`; [OSD-14](05-osd-grammar.md#59-canonical-output)
 and [OSD-16](05-osd-grammar.md#59-canonical-output) are the cases today and
-both use the record's.
+both use the record's. `document.limit.input-size` and
+`document.limit.expanded-size` are found before any Document exists and take
+the path `$` (E-4a).
 
 **E-23. A string-body error reports the string's opening quote.**
 `parse.control-character`, `parse.invalid-escape`,
@@ -582,7 +603,10 @@ which to build a Schema path at all.
 - **E-12.** **`schema.missing-key`, `schema.invalid-type`, `schema.unknown-key`, and
   `schema.invalid-name` MUST use a Document path**, rooted at the node the
   violation occurs on — `$.record[0]` for a record node missing its `name`,
-  `$.record[1].field[2].type.kind` for an invalid `kind` value. The one
+  `$.record[1].field[2].type.kind` for an invalid `kind` value. The indexes
+  in these two examples assume a document with several `record` edges and
+  several `field` edges; E-10 decides the index in every case, so a lone
+  `record` edge is `$.record`. The one
   exception is `schema.invalid-name` reached by direct programmatic
   construction, where no Document exists: it takes `$`, with the offending name
   in the message only (S-8). A Document-shaped surface such as OSD-OML keeps
@@ -968,6 +992,14 @@ required:**
   section. A divergence this narrow is closed, and its entry removed from
   the ledger, once the implementation adds real support — it doesn't stay
   listed once resolved.
+
+**E-20a.** **A runner MUST NOT run a vector that carries a `declared_*`
+key it does not understand against the implementation's own default.** It
+MUST report such a vector as a `fail`, or as an E-20 "not yet implemented"
+skip. A run that ignores the key can pass a boundary vector without testing
+the boundary, which is the false pass
+[`test-suite/README.md`](https://github.com/omnist-dev/omnist-spec/blob/master/test-suite/README.md)
+describes.
 
 **E-22. CI gating.** A conformant CI run MUST fail the build when the fail count
 is nonzero. A conformant CI run MUST NOT fail the build merely because the

@@ -1,0 +1,249 @@
+{
+  "vectors": [
+    {
+      "name": "document-model/input-size/json-at-declared-maximum-succeeds",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_input_bytes": 20,
+        "text": "{\"a\":\"xxxxxxxxxxxx\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "xxxxxxxxxxxx"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-23 boundary pair, accepted half. The input is `{\"a\":\"` (6 bytes), 12 `x` and `\"}` (2 bytes): 20 bytes, exactly the declared maximum of 20, which MUST be accepted (equal is accepted). declared_max_input_bytes is vector-local; an implementation with no configuration surface for it reports skip."
+    },
+    {
+      "name": "document-model/input-size/json-one-byte-over-declared-maximum-fails",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_input_bytes": 20,
+        "text": "{\"a\":\"xxxxxxxxxxxxx\"}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.input-size"
+          }
+        ]
+      },
+      "comment": "D-23 boundary pair, rejected half: the same input with 13 `x`, 21 bytes against a declared maximum of 20. The path is `$` (E-11), and the size is checked before any parsing, so the input's validity is not a factor."
+    },
+    {
+      "name": "document-model/input-size/yaml-at-declared-maximum-succeeds",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_input_bytes": 20,
+        "text": "a: xxxxxxxxxxxxxxxx\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "xxxxxxxxxxxxxxxx"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-23 boundary pair, accepted half, YAML. `a: ` (3 bytes), 16 `x` and a newline: 20 bytes, exactly the declared maximum of 20, accepted. D-23 applies to every format, plain alias-free YAML included (D-22 does not)."
+    },
+    {
+      "name": "document-model/input-size/yaml-one-byte-over-declared-maximum-fails",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_input_bytes": 20,
+        "text": "a: xxxxxxxxxxxxxxxxx\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.input-size"
+          }
+        ]
+      },
+      "comment": "D-23 boundary pair, rejected half, YAML: 17 `x`, 21 bytes against 20. Rejected with `document.limit.input-size` at `$`, although the input contains no alias and so is exempt from D-22."
+    },
+    {
+      "name": "document-model/input-size/multibyte-at-declared-maximum-succeeds",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_input_bytes": 20,
+        "text": "{\"a\":\"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-23 counts bytes. `\u00e9` is two bytes in UTF-8. `{\"a\":\"` (6), six of them (12) and `\"}` (2) is 20 bytes and 14 characters; the declared maximum is 20, so it is accepted."
+    },
+    {
+      "name": "document-model/input-size/multibyte-counts-bytes-not-characters-fails",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_input_bytes": 20,
+        "text": "{\"a\":\"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\"}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.input-size"
+          }
+        ]
+      },
+      "comment": "D-23 counts bytes, not characters. Seven `\u00e9` give 22 bytes but only 15 characters. Against a declared maximum of 20 the input is rejected, which a character count (15 <= 20) would not do. This vector separates the two."
+    },
+    {
+      "name": "document-model/input-size/json-bom-counted-at-declared-maximum-succeeds",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_input_bytes": 20,
+        "text": "\ufeff{\"a\":\"xxxxxxxxx\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "xxxxxxxxx"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-23 counts a leading BOM. U+FEFF is three bytes in UTF-8: 3, plus `{\"a\":\"` (6), nine `x` (9) and `\"}` (2) is 20 bytes, exactly the declared maximum of 20, accepted. The BOM is then stripped (D-15) and the document is {a: \"xxxxxxxxx\"}."
+    },
+    {
+      "name": "document-model/input-size/json-bom-counted-one-over-declared-maximum-fails",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_input_bytes": 20,
+        "text": "\ufeff{\"a\":\"xxxxxxxxxx\"}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.input-size"
+          }
+        ]
+      },
+      "comment": "D-23 counts a leading BOM: 3 + 6 + 10 + 2 is 21 bytes against 20, refused. Without the BOM the input is 18 bytes, so only a count taken before the mark is stripped refuses it."
+    },
+    {
+      "name": "document-model/input-size/oml-at-declared-maximum-succeeds",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_input_bytes": 20,
+        "text": "a: \"xxxxxxxxxxxxxxx\""
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "xxxxxxxxxxxxxxx"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-23 boundary pair for OML, accepted half: `a: \"` (4 bytes), 15 `x` and `\"` (1 byte) is 20 bytes, equal to the declared maximum."
+    },
+    {
+      "name": "document-model/input-size/oml-one-byte-over-declared-maximum-fails",
+      "spec": "docs/02-document-model.md#242-resource-bounds-beyond-the-document",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "declared_max_input_bytes": 20,
+        "text": "a: \"xxxxxxxxxxxxxxxx\""
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.input-size"
+          }
+        ]
+      },
+      "comment": "D-23 boundary pair for OML, refused half: 16 `x` makes 21 bytes against 20."
+    }
+  ]
+}

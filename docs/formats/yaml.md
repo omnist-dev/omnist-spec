@@ -116,7 +116,9 @@ containing an alias or merge key whose total expansion `W` of the root exceeds
 the configured maximum expanded size (reference default 1 000 000 slots) with
 `document.limit.expanded-size`
 ([D-22](../02-document-model.md#241-bounding-alias-expansion)); a YAML input
-with neither is outside that limit. A merge value that is not a mapping or a
+with neither is outside that limit, though
+[D-23](../02-document-model.md#242-resource-bounds-beyond-the-document)'s input
+size applies to it. A merge value that is not a mapping or a
 sequence of mappings is a syntax error, `parse.codec-syntax`; a sequence with
 no members is a sequence of mappings and merges nothing. §2.4.1 defines
 `E`, gives the

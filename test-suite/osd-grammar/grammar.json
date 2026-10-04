@@ -436,7 +436,7 @@
           }
         ]
       },
-      "comment": "A label containing a literal bracket could collide with Sec3.6.1's diagnostic-path convention, which appends [i] to a repeated label's second and later occurrences -- a repeatable field \"a\" and a separately-declared field literally named \"a[1]\" would both stringify to the path $.a[1] for genuinely different problems. Path is R (the label-itself-is-the-problem case), same convention as the empty-label vector."
+      "comment": "A label containing a literal bracket could collide with Sec3.6.1's diagnostic-path convention, which appends [i] to every occurrence of a repeated label (E-10: $.a[0], $.a[1]) -- a repeatable field \"a\" and a separately-declared field literally named \"a[1]\" would both stringify to the path $.a[1] for genuinely different problems. Path is R (the label-itself-is-the-problem case), same convention as the empty-label vector."
     },
     {
       "name": "osd-grammar/labels/closing-bracket-alone-in-label-is-rejected",

@@ -3,6 +3,52 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.30.0-beta (2026-10-04)
+
+**Normative (minor)** — resolves
+[#139](https://github.com/omnist-dev/omnist-spec/issues/139) and
+[#141](https://github.com/omnist-dev/omnist-spec/issues/141), batch 2 of the
+2026-10-04 audit.
+
+- **The first of a repeated label is indexed** ([§8.4](docs/08-conformance-and-errors.md#84-paths)
+  E-10, [§3.6.1](docs/03-schema-model.md#361-validatedocument-schema-pseudocode),
+  [§7.2.1](docs/07-codecs-and-deserialization.md#72-materialization-rules); #139).
+  E-10 said the index MUST be present when a label occurs more than once; the
+  normative pseudocode appended `[i]` only when `i > 0`. E-10 wins. Both
+  pseudocode blocks now count the label's occurrences in the node first and
+  append `[i]` to every occurrence when the count exceeds one: `$.item[0]`,
+  `$.item[1]`, and `$.item` for a label that occurs once. The count is of the
+  node's edges, not the declared cardinality, and is taken per node. E-10 is
+  reworded to say so, and OSD-3's example is corrected.
+- **Seven vectors** pin it: first, middle and last occurrence, a single
+  occurrence with no index, an undeclared repeated field, and a nested repeated
+  label, on `validate` and `materialize`
+  (`test-suite/validate/repeated_label_paths.json`,
+  `test-suite/materialize/repeated_label_paths.json`). Measured: Go and Java
+  pass; Python, TypeScript and Rust fail five each (`DIV-14`, `DIV-15`,
+  `DIV-16`).
+- **Input size is bounded** ([§2.4.2](docs/02-document-model.md#242-resource-bounds-beyond-the-document)
+  D-23 to D-26, [§8.3.2](docs/08-conformance-and-errors.md#832-document-building-and-limits)
+  E-4; #141, related omnist-ts#157). An implementation SHOULD enforce and
+  document a finite maximum input size in bytes and refuse a larger input with
+  the new code **`document.limit.input-size`** at `$`, before decoding or
+  parsing. Bytes, not characters. No reference default: the audit measured
+  194.8 s (TypeScript `yaml`, 1.19 MB single block mapping), about 4 s
+  (PyYAML, 1.1 MB) and 0.1 to 0.6 s (Rust) at megabyte scale, so a cap bounds
+  parse cost without making any parse fast. SHOULD NOT exceed 10 MiB without
+  measuring. String, label and schema-size bounds are guidance only, with no
+  code. D-26 states what D-9, D-18 and D-22 do not bound, and that alias-free
+  input is exempt from D-22 by design. E-4 now counts six `document.limit.*`
+  codes.
+- **New vector key `declared_max_input_bytes`** (E-20-skippable, added to
+  `tools/check_vectors.py`, the test-suite README and the porting guide) and
+  **ten vectors** in `test-suite/document-model/input-size.json`: JSON, YAML
+  and OML each at the maximum (accepted) and one byte over (refused), a
+  multi-byte pair showing the unit is bytes, and a BOM pair showing the BOM is
+  counted. No port enforces D-23 yet
+  (`DIV-17`).
+- The suite is **355** vectors (338 plus 17).
+
 ## v0.29.0-beta (2026-10-04)
 
 **Normative (minor)** — the 2026-10-04 audit's first batch. The OML ABNF

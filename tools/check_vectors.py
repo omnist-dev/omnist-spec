@@ -60,6 +60,7 @@ DECLARED_LIMIT_KEYS = {
     "declared_max_int_digits",
     "declared_max_alias_expansion",
     "declared_max_expanded_slots",
+    "declared_max_input_bytes",
 }
 
 
@@ -113,7 +114,7 @@ def check_path_placeholder(rel: str, name: str, vec: dict) -> list[str]:
 
 
 def check_declared_limits(rel: str, name: str, vec: dict) -> list[str]:
-    """Every `declared_*` key is one of the five known limit keys, and its
+    """Every `declared_*` key is one of the six known limit keys, and its
     value is a positive integer (a bool is not one, though it is an int)."""
     errors: list[str] = []
     for key in vec:

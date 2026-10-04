@@ -1,0 +1,323 @@
+{
+  "vectors": [
+    {
+      "name": "validate/repeated-label-paths/first-middle-last-occurrence-indexed",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n}\nrecord Order {\n    \"id\": string,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            [
+              "id",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "A-1"
+                }
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "sku",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "sku",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "ok"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "sku",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "sku",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "ok"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "sku",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.item[0].sku",
+            "code": "validate.type-mismatch"
+          },
+          {
+            "path": "$.item[2].sku",
+            "code": "validate.type-mismatch"
+          },
+          {
+            "path": "$.item[4].sku",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      },
+      "comment": "E-10: `item` occurs five times in the root node, so every occurrence is indexed, the first included. Occurrences 0, 2 and 4 carry an integer `sku` where the schema declares string; 1 and 3 are valid. Expected paths: the first `$.item[0].sku` (the case the pseudocode used to leave unindexed), the middle `$.item[2].sku`, the last `$.item[4].sku`. `id` occurs once and is never indexed."
+    },
+    {
+      "name": "validate/repeated-label-paths/single-occurrence-label-has-no-index",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Item {\n    \"sku\": string,\n}\nrecord Order {\n    \"id\": string,\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            [
+              "id",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "A-1"
+                }
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "sku",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.item.sku",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      },
+      "comment": "E-10: `item` occurs exactly once in the root node, so its path carries no index even though the schema declares it repeatable ([1,]). The index depends on how many times the label occurs in the document node, not on the declared cardinality. Expected `$.item.sku`, not `$.item[0].sku`."
+    },
+    {
+      "name": "validate/repeated-label-paths/repeated-undeclared-field-indexed",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"a\": string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ],
+            [
+              "extra",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "extra",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.extra[0]",
+            "code": "validate.unexpected-field"
+          },
+          {
+            "path": "$.extra[1]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-10 applies to an edge the schema does not declare as it does to a declared one: `extra` occurs twice, so each unexpected-field diagnostic is indexed, `$.extra[0]` and `$.extra[1]`."
+    },
+    {
+      "name": "validate/repeated-label-paths/nested-repeated-labels-indexed-per-node",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Item {\n    \"tag\" [1,]: string,\n}\nrecord Order {\n    \"item\" [1,]: Item,\n}\nroot Order\n",
+        "document": {
+          "edges": [
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "tag",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "t"
+                      }
+                    }
+                  ],
+                  [
+                    "tag",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "tag",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 7
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "item",
+              {
+                "edges": [
+                  [
+                    "tag",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 8
+                      }
+                    }
+                  ],
+                  [
+                    "tag",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "z"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.item[0].tag[1]",
+            "code": "validate.type-mismatch"
+          },
+          {
+            "path": "$.item[1].tag",
+            "code": "validate.type-mismatch"
+          },
+          {
+            "path": "$.item[2].tag[0]",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      },
+      "comment": "E-10 is evaluated per node. The root has three `item` edges, all indexed. Within `item[0]`, `tag` occurs twice and the second (integer) is wrong: `$.item[0].tag[1]`. Within `item[1]`, `tag` occurs once, so it carries no index although its parent does: `$.item[1].tag`. Within `item[2]`, `tag` occurs twice and the first (integer) is wrong: `$.item[2].tag[0]`."
+    }
+  ]
+}

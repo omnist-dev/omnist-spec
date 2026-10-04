@@ -236,11 +236,23 @@ runner has an equivalent.
 
 **A key your allowlist doesn't know about is not skipped — it is run against
 your own default**, which is the one outcome the mechanism exists to prevent.
+[E-20a](08-conformance-and-errors.md#855-reporting) makes this a
+MUST: a runner reports a vector carrying a `declared_*` key it does not
+understand as a `fail` or an E-20 skip, never as a run against its own
+default.
 `test-suite/README.md` lists the current keys. Check that list against your
 allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
-As of **v0.26.0-beta** the newest key is `declared_max_expanded_slots`
+As of **v0.30.0-beta** the newest key is `declared_max_input_bytes`
+(§2.4.2's D-23, the maximum input size in bytes); ten vectors in
+`document-model/input-size.json` carry it. It follows the same rule: allowlist
+it, and report an E-20 skip until D-23 is implemented. No port implements it
+yet, and three of the five runners that did not allowlist it run the accepted
+boundary vectors against their own default and report green, which is the
+false pass this section warns about.
+
+Before it, as of **v0.26.0-beta** the newest key was `declared_max_expanded_slots`
 (§2.4.1's D-22, the absolute cap on expanded size); ten vectors in
 `formats-yaml/alias-expansion.json` carry it (`python3 tools/check_vectors.py`
 prints the current per-key counts). It follows the same rule as
