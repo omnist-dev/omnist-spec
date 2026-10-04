@@ -88,6 +88,29 @@ Horizontal space and comments are skipped and emit no token. A run containing at
 least one newline or `;` collapses into a single separator token. A separator is
 required between adjacent edges and is otherwise insignificant.
 
+**OML-29. After the colon of an edge, any run of horizontal space, comments,
+newlines and `;` is skipped, and the value MAY start on a later line.** No edge
+ends at a colon, so a newline or `;` there is not a separator token: it is the
+`gap` of `edge = label skip COLON gap value` in `grammars/oml.abnf`, and a
+reader MUST NOT report it as a separator where a value was owed. Each of these
+is the edge `(a, 1)`, the one `a: 1` gives:
+
+- `a:` newline `1`
+- `a: ;1`
+- `a: # c` newline `1`
+- `a:` newline newline `1`
+
+and `a:` newline `{b: 1}` is `a` with the one child edge `(b, 1)`. The same
+holds inside `{...}`. This skips a gap after a colon and nothing else. A
+separator is still required between edges
+([OML-26](#461-top-level-disambiguation),
+[OML-27](#461-top-level-disambiguation)): `a: 1 b: 2` and `a:` newline `1 b: 2`
+are still errors. The gap does not reach back before the colon, and the next
+token is the value, so `a:` newline `b: 1` is not two edges: `b` is read as the
+value of `a` and the `:` after it is leftover. The canonical writer
+([OML-19](#49-canonical-output) to OML-24) is unchanged: it never emits a
+newline or `;` after a colon.
+
 ### 4.2.2 Reserved words
 
 `null`, `true`, and `false` tokenize as ordinary `IDENT`. They are excluded from
@@ -464,6 +487,11 @@ express; that script lists each one by name.
 | `a: [1` newline `]` | valid; the newline is insignificant before `]`, so the one edge `(a,1)` (OML-28) |
 | `a: [1` newline `, 2]` | valid; insignificant before `,`, so `[(a,1), (a,2)]` (OML-28) |
 | `a: [1;]` | valid; `;` is insignificant before `]`, so `[(a,1)]` (OML-28) |
+| `a:` newline `1` | valid; the newline after the colon is skipped, so `[(a,1)]` (OML-29) |
+| `a: ;1` | valid; the `;` after the colon is skipped, so `[(a,1)]` (OML-29) |
+| `a: # c` newline `1` | valid; the comment and its newline are skipped, so `[(a,1)]` (OML-29) |
+| `a:` newline `{b: 1}` | valid; the value starts on the next line, so `a` has the one child `(b,1)` (OML-29) |
+| `a:` newline `1 b: 2` | error; the gap after the colon does not license a missing separator, `parse.trailing-content` at `2:3` (OML-26, OML-29) |
 | `a: [1, 2` newline | error; an unterminated array, nothing follows the newline — `parse.unexpected-token` at `2:1`, the end of input (OML-28) |
 | `[]` in value position | error, empty array |
 | `a: {}` | `[(a, [])]` |

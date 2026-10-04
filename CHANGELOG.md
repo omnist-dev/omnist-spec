@@ -3,6 +3,32 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.31.0-beta (2026-10-04)
+
+**Normative (minor)** — resolves
+[#160](https://github.com/omnist-dev/omnist-spec/issues/160): a separator after
+the colon of an OML edge is insignificant.
+
+- **New rule [OML-29](docs/04-oml-grammar.md#421-separators).** After the colon
+  of an edge, any run of horizontal space, comments, newlines and `;` is
+  skipped and the value may start on a later line, so `a:` newline `1`,
+  `a: ;1`, `a: # c` newline `1` and `a:` newline `{b: 1}` are all valid. The
+  ABNF already said so (`edge = label skip COLON gap value`) and §4.2.1 already
+  called a separator "otherwise insignificant"; no numbered rule stated it, and
+  Python, TypeScript and Rust rejected it with "expected a value, got SEP"
+  while Go and Java accepted it. A separator is still required between edges
+  (OML-26, OML-27), and the canonical writer is unchanged. `a:` newline
+  `b: 1` is not two edges: `b` is the value of `a` and the `:` is leftover; no
+  vector pins that.
+- **Seven vectors** in `test-suite/oml-grammar/grammar.json`: the four accepted
+  shapes above, blank lines after the colon, a newline after a colon inside
+  `{...}`, and one still-rejected neighbour (`a:` newline `1 b: 2`,
+  `parse.trailing-content` at `2:3`). Measured at each port's latest tag: Go
+  and Java pass all seven; Python, TypeScript and Rust fail all seven
+  (`DIV-18`, `DIV-19`, `DIV-20`). The ABNF checker accepts or rejects each as
+  expected.
+- The suite is **362** vectors (355 plus 7).
+
 ## v0.30.0-beta (2026-10-04)
 
 **Normative (minor)** — resolves

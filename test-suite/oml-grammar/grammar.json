@@ -1548,6 +1548,202 @@
         }
       },
       "comment": "The OML control: the same three characters as the JSON one (U+00E9, U+20AC, U+1F600), given as bytes, must read back as exactly those characters. Measured against the Python reference (v0.9.5) 2026-09-21: accepted, this exact Document."
+    },
+    {
+      "name": "oml-grammar/shape/newline-after-colon-before-the-value-is-skipped",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a:\n1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-29 (omnist-spec#160). The newline after the colon is not a separator token: no edge ends there, so the `gap` in `edge = label skip COLON gap value` skips it and the value `1` is read from the next line. The Document is the one `a: 1` gives. Python, TypeScript and Rust rejected this with 'expected a value, got SEP' before v0.31.0-beta; Go and Java accepted it."
+    },
+    {
+      "name": "oml-grammar/shape/semicolon-after-colon-before-the-value-is-skipped",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: ;1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-29. `;` is a separator only where an edge can end; after a colon it is skipped like a newline, so `a: ;1` is the Document `a: 1` gives."
+    },
+    {
+      "name": "oml-grammar/shape/comment-after-colon-before-the-value-is-skipped",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: # c\n1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-29. A comment runs to the end of the line and the newline that ends it is skipped with it; the value is the `1` on line 2. The Document is the one `a: 1` gives."
+    },
+    {
+      "name": "oml-grammar/shape/newline-after-colon-before-a-node-is-skipped",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a:\n{b: 1}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-29 holds for every value, not only a scalar: the node starting on line 2 is the value of `a`. The Document is `a` with one child edge `(b, 1)`, the one `a: {b: 1}` gives."
+    },
+    {
+      "name": "oml-grammar/shape/blank-lines-after-colon-before-the-value-are-skipped",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a:\n\n1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-29. A run of newlines is one skipped gap after a colon, however many blank lines it holds; the Document is the one `a: 1` gives."
+    },
+    {
+      "name": "oml-grammar/shape/newline-after-colon-inside-braces-is-skipped",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: { b:\n1 }\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-29 inside `{...}`: the same gap follows the colon of an edge in a nested node, so `b:` newline `1` is the edge `(b, 1)` and the Document is `a` with that one child, as for `a: {b: 1}`."
+    },
+    {
+      "name": "oml-grammar/shape/skipped-gap-after-colon-does-not-license-a-missing-separator-between-edges",
+      "spec": "docs/04-oml-grammar.md#421-separators",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a:\n1 b: 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:3",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "The negative control for OML-29, which skips a gap AFTER a colon and nothing else: a separator is still required between edges (OML-26). `a:` newline `1` is the complete edge `(a, 1)`, and the `b` after `1 ` with no separator is content after the document ended, exactly as in `a: 1 b: 2` -- parse.trailing-content at the first leftover token. Counting: `1` is column 1 of line 2, a space is column 2, `b` is column 3, so 2:3."
     }
   ]
 }

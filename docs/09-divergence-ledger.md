@@ -187,7 +187,9 @@ in all); all 36 are in `formats-yaml/alias-expansion.json`, which every port
 now passes with none skipped. v0.30.0-beta added 17 more (355 in all): 7
 repeated-label path vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 10 input-size
 vectors (`DIV-17`), none of them in the cells above, which stay at the
-v0.27.0-beta figures.
+v0.27.0-beta figures. v0.31.0-beta added 7 more (362 in all), the OML-29
+vectors in `oml-grammar/grammar.json` (`DIV-18`, `DIV-19`, `DIV-20`), likewise
+not in the cells above.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)) and 6
@@ -237,8 +239,8 @@ and `DIV-9` (four OML-28 vectors new in v0.24.0-beta) closed on 2026-10-04,
 when their own removal condition, every port passing every one of the fifteen,
 was found met: the Go and TypeScript runners were re-run that day and pass them,
 and the other three ports' own PR figures (§9.3) report 0 failures on the full
-suite. `DIV-5`, `DIV-11`, `DIV-12`, `DIV-13`, `DIV-14`, `DIV-15`, `DIV-16` and
-`DIV-17` are live.
+suite. `DIV-5`, `DIV-11`, `DIV-12`, `DIV-13`, `DIV-14`, `DIV-15`, `DIV-16`,
+`DIV-17`, `DIV-18`, `DIV-19` and `DIV-20` are live.
 One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
@@ -395,6 +397,33 @@ the TypeScript, Rust and Go runners do neither.
 **Remove this entry when every port either enforces a configurable maximum
 input size and passes all ten vectors, or allowlists
 `declared_max_input_bytes` and records an E-20 skip for them.**
+
+**DIV-18. Python rejects a newline, `;` or comment after the colon of an OML edge ([OML-29](04-oml-grammar.md#421-separators); [omnist-spec#160](https://github.com/omnist-dev/omnist-spec/issues/160)).**
+Python `0.12.0` reports `parse.unexpected-token` at the position after the
+colon ("expected a value, got SEP") for `a:` newline `1`, where OML-29 and the
+ABNF's `edge = label skip COLON gap value` accept it. Measured 2026-10-04 on
+tag `v0.12.0` (`597864b`) with its vector runner, the `oml-grammar` suite
+replaced by v0.31.0-beta's: all 7 of the OML-29 vectors fail, the six
+accepted ones with the error above and the still-rejected `a:` newline
+`1 b: 2` with `parse.unexpected-token` at `1:3` where `parse.trailing-content`
+at `2:3` is expected.
+**Remove this entry when Python passes all 7 OML-29 vectors.**
+
+**DIV-19. TypeScript rejects a newline, `;` or comment after the colon of an OML edge (OML-29).**
+The same shape as `DIV-18`. Measured 2026-10-04 on TypeScript `0.7.0-alpha`
+(`89bc1bd`), `npm run conformance:vectors`: all 7 vectors fail, 304 pass and 34
+skip otherwise, with "expected a value, got SEP".
+**Remove this entry when TypeScript passes all 7 OML-29 vectors.**
+
+**DIV-20. Rust rejects a newline, `;` or comment after the colon of an OML edge (OML-29).**
+The same shape as `DIV-18`. Measured 2026-10-04 on Rust at `7e297ba`
+(`vector_runner`): all 7 vectors fail, 304 pass and 34 skip otherwise, with
+"expected a value" at the separator.
+**Remove this entry when Rust passes all 7 OML-29 vectors.**
+
+Go (`0.9.0-alpha`, `d43b83f`) and Java (`0.4.0-alpha`, `362b88b`) were measured
+the same way and pass all 7 (Go 317 pass, 0 fail, 28 skip; Java's Track 2 run
+passes 317): they already skip a gap after the colon.
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded
