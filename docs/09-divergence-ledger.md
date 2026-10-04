@@ -128,27 +128,28 @@ Python ([omnist#352](https://github.com/omnist-dev/omnist/pull/352), merged as
 `0133f89`, pinned to v0.27.0-beta).
 
 **Versions.** The Version row is each port's latest **tag**, checked
-2026-10-02 with `git ls-remote --tags`. Python `v0.11.0` is tagged and its
-Publish to PyPI run is queued, not finished; the PyPI Simple index serves up
-to `omnist-0.10.1` and does not yet serve `0.11.0`. Rust `v0.5.1-alpha` is
-tagged and published (crates.io's newest version is `0.5.1-alpha`). Go
-`v0.8.0-alpha` is distributed by tag only (module proxy; no registry, and the
-proxy serves it). TypeScript `v0.6.1-alpha` is tagged; npm
-(`@omnist-dev/omnist`) serves `0.6.0-alpha` as both the `latest` and `alpha`
-dist-tag, so `0.6.1-alpha` is not published. Java `v0.3.1-alpha` is tagged and
-its Release run is waiting for manual approval; the latest version on Maven
-Central is still `0.3.0-alpha`.
+2026-10-04 with `git ls-remote --tags`. Python `v0.12.0` is tagged and the
+PyPI Simple index serves `omnist-0.12.0`. Rust `v0.6.0-alpha` is tagged and
+crates.io's newest version is still `0.5.1-alpha`, so `0.6.0-alpha` is tagged,
+not published. Go `v0.9.0-alpha` is distributed by tag only (module proxy; no
+registry). TypeScript `v0.7.0-alpha` is tagged; npm (`@omnist-dev/omnist`)
+serves `0.6.0-alpha` as both the `latest` and `alpha` dist-tag, so
+`0.7.0-alpha` is tagged, not published. Java `v0.4.0-alpha` is tagged and its
+Release run is waiting for manual approval; the latest version on Maven Central
+is `0.3.1-alpha`.
 
 The v0.26.0-beta alias rules are in Go `v0.7.0-alpha`, Rust `v0.5.0-alpha`,
-TypeScript `v0.6.0-alpha` and Java `v0.3.0-alpha`; the v0.27.0-beta
-adoption is in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha`, TypeScript
-`v0.6.1-alpha`, Java `v0.3.1-alpha` and Python `v0.11.0`. Of those, only Rust
-`0.5.1-alpha` is served by its registry today. No port implements the
-OSD-OML extension (§9.6).
+TypeScript `v0.6.0-alpha` and Java `v0.3.0-alpha`; the v0.27.0-beta adoption is
+in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha`, TypeScript `v0.6.1-alpha`,
+Java `v0.3.1-alpha` and Python `v0.11.0`. The v0.28.0-beta schema diagnostics
+(S-8, S-22, S-23 and S-24; see `DIV-5`) are in Python `v0.12.0`, TypeScript
+`v0.7.0-alpha`, Rust `v0.6.0-alpha`, Go `v0.9.0-alpha` and Java `v0.4.0-alpha`.
+Of the v0.28.0-beta releases only Python `0.12.0` is served by its registry
+today. No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.11.0 | 0.6.1-alpha | 0.5.1-alpha | 0.8.0-alpha | 0.3.1-alpha |
+| Version | 0.12.0 | 0.7.0-alpha | 0.6.0-alpha | 0.9.0-alpha | 0.4.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five) | all three | all three | all three | all three | all three |
@@ -215,8 +216,8 @@ ports enforce them. `DIV-4` (the rules
 v0.19.0-beta and v0.20.0-beta settled) and `DIV-6` (`bytes_hex` and D-14) closed
 when the v0.21.0-beta sweep left every port satisfying every row. `DIV-7` (the
 fourteen vectors new in v0.22.0-beta) closed when all five ports passed all
-fourteen. `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11` and `DIV-12` are live. One
-caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
+fourteen. `DIV-5`, `DIV-8`, `DIV-9`, `DIV-11`, `DIV-12` and `DIV-13` are live.
+One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
 v0.18.0-beta (CHANGELOG); it is not the alias entry, and the number was reused
@@ -245,14 +246,24 @@ needs no entry.
 (a writer fails on `max = 0`), S-22 (`schema.invalid-label`), S-23
 (`schema.unknown-record`), S-24, and the `$` path of a programmatic
 `schema.invalid-name` (S-8) share OSD-14's blocker: each takes a Schema built
-programmatically, which no vector can supply. What is known, from the
-coordinator's probes and not re-run here: Python constructs `Schema` with a
-`[0,0]` field, a lone-surrogate label and the name `"bad name"` today, and
-`Schema([0,0]).to_osd()` returns `"a" [0]: string`; Go has
-`schema.invalid-name` only in `schema_validate.go`; a search of TypeScript,
-Rust and Java found neither `invalid-label` nor `unknown-record`. Whether those
-three, or Go, fail on `max = 0` in a writer is unverified. Treat all five ports
-as not implementing the new rules until a port reports otherwise.
+programmatically, which no vector can supply. All five ports have adopted what
+applies to them; status read from each port's merged source on 2026-10-04 (a
+search for the codes and the writer's `max = 0` check; the behaviour was not
+re-run):
+- *Go (`v0.9.0-alpha`)*: S-8 `schema.invalid-name` at `$`, S-22
+  `schema.invalid-label` at the record path, S-23 `schema.unknown-record` at
+  `$` for an `EnvOrder` entry naming no record, and the OSD writer refuses
+  `[0,0]` with `write.unsupported-value`.
+- *TypeScript (`0.7.0-alpha`)*: S-8, S-22 (a lone surrogate) and the writer
+  refusal. S-23 has no surface. See `DIV-13` for a construction difference.
+- *Java (`0.4.0-alpha`)*: S-8 and S-22 through the new `SchemaException`, and
+  the writer refusal. S-23 has no surface, and there is no OSD-OML writer.
+- *Rust (`0.6.0-alpha`)*: S-8 and the writer refusal. S-22 cannot occur
+  (labels are `String`). S-23 has no surface.
+- *Python (`0.12.0`)*: S-8, S-22 (including a re-check in `to_osd`) and the
+  writer refusal. S-23 has no surface.
+
+Every cell rests on that port's unit tests; the suite checks none of it.
 
 **Why this is still listed.** A vector gives a schema as OSD text (§8.5.3), so a
 schema whose label has no OSD text cannot be written as a vector input at all,
@@ -403,6 +414,17 @@ is not unique to TypeScript, but the quadratic shape is only measured there:
 the omnist#352 description reports PyYAML parsing a 1.1 MB, 50,000-key
 mapping in about 4 s (one point, no scaling series; not re-run here).
 **Remove this entry when #157 is fixed.**
+
+**DIV-13. TypeScript's `field(label, type, 0, 0)` rejects cardinality `[0,0]` with `schema.invalid-cardinality`, although S-15 keeps `[0,0]` representable and S-24 makes the writer, not construction, refuse it.**
+In TypeScript `0.7.0-alpha` the `field()` builder throws for `min = 0` and
+`max = 0`, a rule left over from before S-15 and S-24. `record()` and
+`new Schema` accept a hand-built `[0,0]` literal, so the model can hold one.
+Go, Java, Rust and Python accept `[0,0]` at construction. `normalize` and
+`extract` on a hand-built `[0,0]` field also throw in TypeScript, because they
+rebuild fields through `field()`. The port documents this as a known divergence
+in its `docs/schema.md` and `CHANGELOG.md`. Read from the merged source
+(`src/schema.ts`); not run here.
+**Remove this entry when TypeScript's `field()` accepts `[0,0]` (S-15).**
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded
