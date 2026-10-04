@@ -10,9 +10,9 @@ here.
 
 ## Why a separate spec
 
-Omnist has three implementations (Python, TypeScript, Rust). Without a written
-contract, "what Omnist does" is whatever the oldest implementation happens to
-do, and the other two drift. The spec exists so that:
+Omnist has five implementations (Python, TypeScript, Rust, Go, Java). Without
+a written contract, "what Omnist does" is whatever the oldest implementation
+happens to do, and the others drift. The spec exists so that:
 
 - a new implementation can be written from the documents in `docs/` alone,
 - a disagreement between implementations has an authority to appeal to,
@@ -33,19 +33,28 @@ do, and the other two drift. The spec exists so that:
 | `docs/08-conformance-and-errors.md` | Canonical error taxonomy, test-harness protocol |
 | `docs/09-divergence-ledger.md` | Permitted vs forbidden implementation variation |
 | `docs/10-governance-and-versioning.md` | Spec-first workflow, SemVer, discrepancy protocol |
-| `grammars/oml.abnf` | OML grammar, machine-readable |
-| `grammars/osd.abnf` | OSD grammar, machine-readable |
-| `test-suite/` | Conformance test vectors (JSON) |
+| `docs/formats/` | Per-format codec chapters (JSON, YAML, TOML, XML, OML) |
+| `docs/extensions/` | Extensions to the Core: OSD-OML |
+| `docs/conformance-harness.md`, `docs/porting-a-conformance-runner.md` | The Track 1 harness protocol and a guide to building a runner |
+| `docs/operations-and-models-reference.md` | Reference tables of operations and models |
+| `grammars/oml.abnf` | OML grammar, machine-readable and executable |
+| `grammars/osd.abnf` | OSD grammar, machine-readable and executable |
+| `test-suite/` | Conformance test vectors (JSON, Track 2) |
+| `conformance/` | Track 1 fixtures and the referee self-test |
+| `tools/` | CI checks: version sync, rule coverage, vector validity, grammars |
+| `mkdocs.yml` | Configuration of the published site (spec.omnist.dev) |
+| `CHANGELOG.md` | Per-version change log |
 
 Read `docs/index.md` first, then the chapters in order. Chapters 2 and 3 are
 prerequisites for everything after them.
 
 ## Status
 
-Version 0.1. The document set is complete in outline and normative in the areas
-it covers. Chapter 8's error taxonomy is new material: it does not yet describe
-any implementation. Chapter 9 records which parts of the spec each
-implementation currently satisfies.
+Beta. The current version is the top entry of `CHANGELOG.md`. The document set
+is normative in the areas it covers, and five implementations (Python,
+TypeScript, Rust, Go, Java) are built against it. Chapter 9 records which parts
+of the spec each implementation currently satisfies, and the per-port
+conformance numbers.
 
 ## License
 

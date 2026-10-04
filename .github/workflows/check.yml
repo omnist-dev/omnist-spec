@@ -46,6 +46,22 @@ jobs:
           python-version: "3.12"
       - run: python3 tools/check_rule_coverage.py
 
+  # The two ABNF files are normative, and until this job existed nothing
+  # executed them: oml.abnf accepted `a: 1 b: 2`, rejected `a : 1`, and
+  # osd.abnf omitted whitespace and so could not be run at all (the 2026-10-04
+  # audit, F3 and F22). This runs both against every text-valued vector with a
+  # pinned `abnf` package; the only permitted disagreements are the named
+  # context-condition cases listed in tools/check_grammars.py.
+  grammars:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: "3.12"
+      - run: pip install -r tools/requirements-grammars.txt
+      - run: python3 tools/check_grammars.py
+
   # Every vector file must be strictly valid JSON. RFC 8259 forbids raw
   # control characters inside string literals, and a literal one very nearly
   # shipped during the 2026-09 audit -- it would have broken every port's

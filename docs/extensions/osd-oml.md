@@ -222,7 +222,7 @@ in full (see "Error path assignment" below).
 - **R-18.** `max`, if present, MUST be `integer`-kind, non-negative, and
   `>= min` (using `min`'s effective value, 0 if absent) →
   `schema.non-integer-cardinality` / `schema.invalid-cardinality`.
-- **R-19.** `{ min: 0, max: 0 }` is illegal, the same reasoning as OSD
+- **R-19.** `{ min: 0; max: 0 }` is illegal, the same reasoning as OSD
   text's `[0,0]` ban ([§5.5](../05-osd-grammar.md#55-cardinality)): a field
   that can never appear is indistinguishable from an undeclared one →
   `schema.invalid-cardinality`.
@@ -281,28 +281,28 @@ that's a bug in the example.
 ```oml
 record: {
   name: "Address"
-  field: { label: "street", type: { kind: "scalar", name: "string" } }
-  field: { label: "city", type: { kind: "scalar", name: "string" } }
+  field: { label: "street"; type: { kind: "scalar"; name: "string" } }
+  field: { label: "city"; type: { kind: "scalar"; name: "string" } }
 }
 record: {
   name: "Person"
-  field: { label: "name", type: { kind: "scalar", name: "string" } }
+  field: { label: "name"; type: { kind: "scalar"; name: "string" } }
   field: {
     label: "nickname"
-    type: { kind: "scalar", name: "string", nullable: true }
+    type: { kind: "scalar"; name: "string"; nullable: true }
   }
-  field: { label: "address", type: { kind: "ref", name: "Address" } }
+  field: { label: "address"; type: { kind: "ref"; name: "Address" } }
   field: {
     label: "tags"
     cardinality: { min: 0 }
-    type: { kind: "scalar", name: "string" }
+    type: { kind: "scalar"; name: "string" }
   }
   field: {
     label: "scores"
-    cardinality: { min: 1, max: 5 }
-    type: { kind: "scalar", name: "number" }
+    cardinality: { min: 1; max: 5 }
+    type: { kind: "scalar"; name: "number" }
   }
-  field: { label: "payload", type: { kind: "any" } }
+  field: { label: "payload"; type: { kind: "any" } }
 }
 root: "Person"
 ```
@@ -323,46 +323,46 @@ for it here until that's confirmed, rather than asserting an answer.
 
 **R-11 (`kind` outside the three-value set).**
 ```oml
-type: { kind: "text", name: "string" }
+type: { kind: "text"; name: "string" }
 ```
 illegal → `schema.invalid-type` — `"text"` is `string`-kind but not one of
 `scalar`/`ref`/`any`.
 
 **R-13 (`nullable: false` explicitly present).**
 ```oml
-type: { kind: "scalar", name: "string", nullable: false }
+type: { kind: "scalar"; name: "string"; nullable: false }
 ```
 illegal → `schema.invalid-type`. Compare to the legal non-nullable form,
-which omits the key entirely: `type: { kind: "scalar", name: "string" }`.
+which omits the key entirely: `type: { kind: "scalar"; name: "string" }`.
 
 **R-14 (`nullable` not legal on `ref-node`).**
 ```oml
-type: { kind: "ref", name: "Address", nullable: true }
+type: { kind: "ref"; name: "Address"; nullable: true }
 ```
 illegal → `schema.unknown-key` — `nullable` is not in `ref-node`'s closed
 key set (E.5), regardless of its value. This is the structural enforcement
 of Core's S-7.
 
-**R-16 (forward reference, legal).** A `record: { name: "Person", field: [{ label: "address", type: { kind: "ref", name: "Address" } }] }`
-declared *before* `record: { name: "Address", ... }` is legal — R-16
+**R-16 (forward reference, legal).** A `record: { name: "Person"; field: [{ label: "address"; type: { kind: "ref"; name: "Address" } }] }`
+declared *before* `record: { name: "Address"; ... }` is legal — R-16
 collects all record names before resolving any `ref`, so declaration order
 carries no meaning.
 
-**R-19 (`{min: 0, max: 0}` illegal).**
+**R-19 (`{min: 0; max: 0}` illegal).**
 ```oml
-field: { label: "x", cardinality: { min: 0, max: 0 }, type: { kind: "scalar", name: "string" } }
+field: { label: "x"; cardinality: { min: 0; max: 0 }; type: { kind: "scalar"; name: "string" } }
 ```
 illegal → `schema.invalid-cardinality`.
 
 **R-20 (unknown key, general case).**
 ```oml
-record: { name: "Person", description: "a person", field: [] }
+record: { name: "Person"; description: "a person" }
 ```
 illegal → `schema.unknown-key` — `description` is not in `record-node`'s
 closed key set (E.5), even though it's a plausible-looking addition.
 
 **E.8 (canonical omission, general case).**
-`field: { label: "name", type: { kind: "scalar", name: "string" } }` is
+`field: { label: "name"; type: { kind: "scalar"; name: "string" } }` is
 the canonical form for a required, non-nullable `string` field — no
 `cardinality` edge, not `cardinality: {}`.
 
@@ -434,7 +434,7 @@ it once here subsumes every specific case:
 
 - `nullable: true` is the only legal explicit value (E.5); its default is
   effectively "absent" — never emitted, full stop.
-- `cardinality` at `{min: 1, max: 1}` (exactly-one, the default) MUST be
+- `cardinality` at `{min: 1; max: 1}` (exactly-one, the default) MUST be
   omitted entirely — MUST NOT be emitted as `{}`.
 - `type.name` on an `any-node` — not applicable; E.5's `any-node` grammar
   branch has no `name` key to omit or emit in the first place.
@@ -545,25 +545,57 @@ record Person {
 root Person
 ```
 
-**OSD-OML** (canonical form, one record/field per line for readability —
-compact form is also legal and parses to the same Document, per OML's own
-compact-mode guarantee, [§4.9](../04-oml-grammar.md#49-canonical-output)):
+**OSD-OML** (canonical form: one edge per line, per
+[OML-19](../04-oml-grammar.md#49-canonical-output); the compact
+single-line form is also legal and parses to the same Document, per OML's own
+compact-mode guarantee, and so does the inline `;` spelling used in the
+E.6a examples above):
 
 ```oml
 record: {
   name: "Address"
-  field: { label: "street", type: { kind: "scalar", name: "string" } }
-  field: { label: "city", type: { kind: "scalar", name: "string" } }
+  field: {
+    label: "street"
+    type: {
+      kind: "scalar"
+      name: "string"
+    }
+  }
+  field: {
+    label: "city"
+    type: {
+      kind: "scalar"
+      name: "string"
+    }
+  }
 }
 record: {
   name: "Person"
-  field: { label: "name", type: { kind: "scalar", name: "string" } }
+  field: {
+    label: "name"
+    type: {
+      kind: "scalar"
+      name: "string"
+    }
+  }
   field: {
     label: "nickname"
-    cardinality: { min: 0 }
-    type: { kind: "scalar", name: "string", nullable: true }
+    cardinality: {
+      min: 0
+    }
+    type: {
+      kind: "scalar"
+      name: "string"
+      nullable: true
+    }
   }
-  field: { label: "address", type: { kind: "ref", name: "Address" } }
+  field: {
+    label: "address"
+    type: {
+      kind: "ref"
+      name: "Address"
+    }
+  }
 }
 root: "Person"
 ```

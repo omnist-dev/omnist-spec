@@ -402,7 +402,7 @@ turns on the next significant token, in [§4.2.1](#421-separators)'s sense:
   `x: {a: [1, 2` newline `}` is `2:1`, the `}`.
 - **A `,` or `]`** is the delimiter that was owed, so the newline or `;` was
   not standing in for anything. It is insignificant, after the first element
-  as after every later one (the `[SEP]` that follows each `array-element` in
+  as after every later one (the `gap` that follows each `array-element` in
   `grammars/oml.abnf`): `a: [1` newline `]`, `a: [1` newline `, 2]`,
   `a: [1, 2` newline `]` and `a: [1;]` are valid, each expanding to the
   edges it would without the separator.
@@ -431,7 +431,12 @@ and 200 levels parse; 4301 digits and 201 levels do not.
 ## 4.8 Worked examples
 
 **OML-18.** Every row below MUST hold for a conformant implementation, and the ABNF in
-`grammars/oml.abnf` accepts every accepted input shown.
+`grammars/oml.abnf` accepts every accepted input shown. The grammar is
+executable: `tools/check_grammars.py` runs it, and `grammars/osd.abnf`, against
+every text-valued conformance vector in CI, and the only vectors on which the
+ABNF and the expected result may differ are those that turn on a context
+condition (T1-T4, the surrogate-pairing condition on `escape`) the ABNF cannot
+express; that script lists each one by name.
 
 | Input | Result |
 |---|---|

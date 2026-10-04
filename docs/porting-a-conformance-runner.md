@@ -4,20 +4,21 @@
 [`docs/conformance-harness.md`](conformance-harness.md) (track 1: OML/OSD
 CLI-wrapper fixtures) and [§8.5](08-conformance-and-errors.md#85-conformance-harness-protocol)
 (track 2: JSON vectors). If this page and either of those ever disagree, they
-win — this page only collects what three separate ports (`omnist` in Python,
-`omnist-ts`, `omnist-rs`) already learned building their own runners, so a
-fourth doesn't have to rediscover it from scratch.
+win — this page only collects what the five ports (`omnist` in Python,
+`omnist-ts`, `omnist-rs`, `omnist-go`, `omnist-j`) already learned building
+their own runners, so a sixth doesn't have to rediscover it from scratch.
 
 ## Two tracks, both worth building
 
 **Track 1** (`conformance/fixtures/` in this repo) exercises a real CLI or
 direct library calls against small, hand-written fixtures — 19 currently,
 plus a 10-case referee self-test. **Track 2** (`test-suite/`) is a larger
-JSON-vector suite — 338 vectors as of v0.28.0-beta — dispatched by operation
-name rather than fixture directory shape. They're complementary, not
-redundant: track 1 proves your CLI wrapper (if you have one) actually works
+JSON-vector suite (`python3 tools/check_vectors.py` prints the current count)
+— dispatched by operation name rather than fixture directory shape. They're
+complementary, not redundant: track 1 proves your CLI wrapper (if you have one)
+actually works
 end to end; track 2 has far denser coverage of individual rules. Build both;
-all three existing ports did.
+all five existing ports did.
 
 ## What to build, in order
 
@@ -28,7 +29,7 @@ data, per [§2.3](02-document-model.md#23-structural-invariants) D-1/D-3).
 
 Schema comparison needs **three modes**, and *which one an operation uses
 depends on the track*. Two ports built one structural referee and reused it
-for everything; this table exists so a fourth does not.
+for everything; this table exists so a new port does not.
 
 | Mode | What it does | Used by |
 |---|---|---|
@@ -62,7 +63,7 @@ uses as its canonical "same schema" comparison.
 
 Prove the referee trustworthy **before** it judges anything: port the
 10-case self-test under `conformance/fixtures/_referee-self-test/` and get
-it passing first. All three existing ports did this as their literal step
+it passing first. All five existing ports did this as their literal step
 one. The self-test covers `exact` and `isomorphic` only: `canonical` is a string
 comparison and has no fixtures there, so prove it with a mutation of your own
 instead — change one detail of your canonical output (an indentation width, the
@@ -118,8 +119,12 @@ because a codec's blamed character is implementation-defined (E-31). For that
 entry compare the `code`, and check only that the reported path is a
 well-formed text position, `^[1-9][0-9]*:[1-9][0-9]*$`; do not compare its
 value. Every other path in the suite stays byte for byte. A runner that skips
-this step fails the four `formats-*/syntax/` vectors. Rule 4's code-agnostic
-mode is the one permitted relaxation of the code, and the run MUST say it was
+this step
+fails every vector that uses the placeholder (the four `formats-*/syntax/`
+vectors and five in `formats-yaml/alias-expansion.json`: nine at v0.29.0-beta;
+`python3 tools/check_vectors.py` prints the current count). Rule 4's
+code-agnostic mode is the one permitted relaxation of the code, and the run
+MUST say it was
 used.
 
 | `operation` | `expect` fields on success | What a runner MUST compare, and how |
@@ -181,9 +186,9 @@ flag names in your own CLI.
 
 ## Fixture sourcing: a pinned git submodule
 
-All three existing ports vendor this repo the same way: a git submodule
+All five existing ports vendor this repo the same way: a git submodule
 pinned to a tag, never tracking `master`, so fixture updates are explicit,
-reviewable commits rather than silent drift. See any of the three repos'
+reviewable commits rather than silent drift. See any of the five repos'
 `tools/conformance/README.md` for the exact bump procedure — they're
 functionally identical.
 
@@ -236,12 +241,14 @@ allowlist on every submodule bump, and treat a new key as part of adopting
 the rule that introduced it, not as separate work.
 
 As of **v0.26.0-beta** the newest key is `declared_max_expanded_slots`
-(§2.4.1's D-22, the absolute cap on expanded size); eight vectors in
-`formats-yaml/alias-expansion.json` carry it. It follows the same rule as
+(§2.4.1's D-22, the absolute cap on expanded size); ten vectors in
+`formats-yaml/alias-expansion.json` carry it (`python3 tools/check_vectors.py`
+prints the current per-key counts). It follows the same rule as
 every other key: allowlist it, and report `skip` until the cap is implemented.
 Before it, as of **v0.18.0-beta**, the newest was `declared_max_alias_expansion`
-(§2.4.1's D-18). Every vector in `formats-yaml/alias-expansion.json` carries
-one of the two. All five existing ports now implement both rules, so this
+(§2.4.1's D-18). Most vectors in `formats-yaml/alias-expansion.json` carry one
+of the two; seven of its 42 carry neither and run against the implementation's
+own defaults. All five existing ports now implement both rules, so this
 applies to a new port: until you implement a rule, a runner MUST report each
 vector carrying its key as an E-20 skip, citing the tracking issue for your
 port's gap, and never as a pass.
@@ -365,8 +372,8 @@ Triage before touching anything:
 
 Report real, verified pass/fail/skip counts once you have them — don't imply
 parity with another port's numbers if your true ceiling differs for
-principled, documented reasons. It usually will: Rust's port currently has
-*fewer* skips than Python's or TypeScript's, because its `parse.*`-family
-errors already carry structured paths the other two don't yet — a favorable
-divergence, still worth reporting accurately rather than rounding to "the
+principled, documented reasons. It usually will: the ports' skip counts
+differ today (§9.3's "What each port skips" gives the current split, for
+instance the `limits` vectors only a port with runtime-configurable limits can
+run), and each count is worth reporting accurately rather than rounding to "the
 same as everyone else."
