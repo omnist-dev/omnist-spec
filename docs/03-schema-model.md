@@ -169,8 +169,8 @@ Constraints on a well-formed schema:
   already draws for OSD text; S-8 applies it to the abstract model directly
   so every syntax surface inherits it uniformly. Field labels are
   unaffected — they were never identifiers in this sense and remain
-  arbitrary non-empty strings (S-5, and the bracket/empty-string rules in
-  [§5.4](05-osd-grammar.md#54-records-and-fields)). A violation reached by
+  arbitrary strings subject to S-5, S-22 and the empty-string and bracket
+  rules S-25 and S-26 ([§5.4](05-osd-grammar.md#54-records-and-fields)). A violation reached by
   **direct programmatic construction** is `schema.invalid-name` at `$`, the
   offending name in the message only: it may be malformed, and the field path
   of a `Ref` would carry a label that S-22 may also reject
@@ -202,15 +202,15 @@ OSD-OML ([extensions](extensions/osd-oml.md)), by an algebra operation
 ([chapter 6](06-schema-algebra.md)), or **by direct programmatic
 construction** through an implementation's own API — the same way
 [§2.4](02-document-model.md#24-safety-limits) treats a Document builder as
-a peer of the OML parser rather than an afterthought. S-1 through S-8, S-22 and
-S-23 are properties of the model, not of any one route into it.
+a peer of the OML parser rather than an afterthought. S-1 through S-8, S-22, S-23,
+S-25 and S-26 are properties of the model, not of any one route into it.
 
 This matters because the routes are not equally constrained. A text grammar
 can make a violation unwritable, and where it does, the corresponding check
 has historically gone unstated — S-8 existed only inside OSD's tokenizer
 until OSD-OML needed it, and `max = 0` ([§3.4](#34-cardinality)) is
 representable programmatically while both text surfaces reject it. An
-implementation MUST enforce S-1 through S-8, S-22 and S-23 at construction,
+implementation MUST enforce S-1 through S-8, S-22, S-23, S-25 and S-26 at construction,
 not rely on its
 parsers to have made violations unreachable.
 
@@ -350,6 +350,17 @@ deliberately left open here rather than settled in passing.
   `max = 0` fields from every record it rebuilds, but keeps an unsatisfiable
   root record intact ([§6.5](06-schema-algebra.md#65-prunes)), so a caller
   prunes before writing and cannot rely on that alone.
+- **S-25.** A field label MUST NOT be the empty string. A violation is a
+  `schema.empty-label` at the record path `R` of the record holding the field
+  ([§8.4.1](08-conformance-and-errors.md#841-which-kind-each-schema-code-uses)),
+  whichever way the schema was built: OSD text ([OSD-2](05-osd-grammar.md#54-records-and-fields)),
+  OSD-OML ([R-7](extensions/osd-oml.md)) or direct programmatic construction.
+- **S-26.** A field label MUST NOT contain `[` or `]`, because the diagnostic-path
+  convention ([§3.6.1](#361-validatedocument-schema-pseudocode)) appends `[i]`
+  to a repeated label and a label spelled `a[1]` would produce the same path for
+  a different field. A violation is a `schema.bracket-in-label` at the record
+  path `R`, from every route into the model, as for S-25
+  ([OSD-3](05-osd-grammar.md#54-records-and-fields)).
 
 ---
 

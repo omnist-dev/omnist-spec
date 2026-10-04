@@ -211,8 +211,8 @@ exists to descend into.
 | `schema.non-integer-cardinality` | A cardinality bound is not a whole number |
 | `schema.empty-cardinality` | `[]` written as a cardinality |
 | `schema.unquoted-label` | A bare name in field-label position |
-| `schema.empty-label` | A field label is the empty string |
-| `schema.bracket-in-label` | A field label contains `[` or `]`, which could collide with the repeated-label diagnostic-path convention (§3.6.1) |
+| `schema.empty-label` | A field label is the empty string (S-25) |
+| `schema.bracket-in-label` | A field label contains `[` or `]`, which could collide with the repeated-label diagnostic-path convention (§3.6.1) (S-26) |
 | `schema.quoted-type` | A quoted string in type position |
 | `schema.nullable-ref` | `?` applied to a reference |
 | `schema.nullable-any` | `any?` |
