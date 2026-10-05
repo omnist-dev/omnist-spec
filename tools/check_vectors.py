@@ -19,6 +19,13 @@ heuristic for this one mistake (audit F1, which found comma-separated braces
 in 27 of 28 vectors), not an OML parser, and checks nothing else about the
 text. It has no dependency on any port.
 
+``check_envelope`` enforces the envelope rules of 8.5.1: ``operation`` must be
+listed on the Operations Reference page (E-15), ``purpose`` must be in E-16's
+set, ``spec`` must name a docs/ file whose heading ids (computed as MkDocs
+does) include the anchor, and each operation's ``input`` and ``expect`` carry
+the keys 8.5.3 gives them. The page, 8.5.3's driver table and this script's
+shape tables must name the same operations.
+
 Deliberately not a conformance runner: it never executes a vector, only
 checks that the files are well-formed and internally consistent. Semantic
 correctness is the ports' job.
@@ -29,7 +36,9 @@ from __future__ import annotations
 import collections
 import json
 import pathlib
+import re
 import sys
+import unicodedata
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SUITE = ROOT / "test-suite"
@@ -263,13 +272,216 @@ def check_oml_brace_commas(rel: str, name: str, vec: dict) -> list[str]:
     return errors
 
 
+# --- E-15, E-16 and the `spec` anchor (audit F12) ---------------------------
+
+DOCS = ROOT / "docs"
+OPERATIONS_PAGE = DOCS / "operations-and-models-reference.md"
+CHAPTER_8 = DOCS / "08-conformance-and-errors.md"
+
+# E-16's closed set. If chapter 8 changes it, this and the rule change together.
+PURPOSES = {"happy-path", "edge-case", "error-case", "determinism-regression"}
+
+# Sec8.5.3, as (required, allowed) key sets: `input` and success/failure
+# `expect`. Keyed by operation, so the keys of these dicts are compared with
+# the operations 8.5.3's table actually lists: a new driver cannot be added
+# there without this table (and so the shape check) learning about it.
+# `text`/`bytes_hex` are the E-27 alternatives and are checked separately;
+# the declared_* limit keys are checked by check_declared_limits.
+_TEXT = {"text", "bytes_hex"}
+INPUT_SHAPE: dict[str, tuple[set[str], set[str]]] = {
+    "parse": ({"format"}, {"format"} | _TEXT),
+    "parse_schema": (set(), _TEXT),
+    "parse_schema_oml": (set(), _TEXT),
+    "validate": ({"schema", "document"}, {"schema", "document"}),
+    "materialize": ({"schema", "document"}, {"schema", "document"}),
+    "write": ({"document", "format"}, {"document", "format", "strict"}),
+    "compatible_with": ({"a", "b"}, {"a", "b"}),
+    "equivalent": ({"a", "b"}, {"a", "b"}),
+    "normalize": ({"schema"}, {"schema"}),
+    "prune": ({"schema"}, {"schema"}),
+    "is_empty": ({"schema"}, {"schema"}),
+    "extract": ({"schema", "keep"}, {"schema", "keep"}),
+    "infer": ({"samples"}, {"samples", "allow_any"}),
+    "infer_with_report": ({"samples"}, {"samples", "allow_any"}),
+    "lint": ({"schema"}, {"schema"}),
+    "schema_from_document": ({"document"}, {"document"}),
+    "schema_to_document": ({"schema"}, {"schema"}),
+    "write_schema_oml": ({"schema"}, {"schema"}),
+}
+EXPECT_SHAPE: dict[str, tuple[set[str], set[str]]] = {
+    "parse": ({"ok"}, {"ok", "document", "diagnostics"}),
+    "parse_schema": ({"ok"}, {"ok", "schema", "diagnostics"}),
+    "parse_schema_oml": ({"ok"}, {"ok", "schema", "diagnostics"}),
+    "validate": ({"ok"}, {"ok", "diagnostics"}),
+    "materialize": ({"ok"}, {"ok", "document", "diagnostics"}),
+    "write": ({"ok"}, {"ok", "text", "diagnostics"}),
+    "compatible_with": ({"result"}, {"result"}),
+    "equivalent": ({"result"}, {"result"}),
+    "normalize": ({"schema"}, {"schema"}),
+    "prune": ({"schema"}, {"schema"}),
+    "is_empty": ({"empty"}, {"empty"}),
+    "extract": ({"ok"}, {"ok", "schema", "diagnostics"}),
+    "infer": ({"ok"}, {"ok", "schema", "diagnostics"}),
+    "infer_with_report": (
+        {"ok"}, {"ok", "schema", "fallbacks", "diagnostics"}),
+    "lint": ({"ok", "findings"}, {"ok", "findings"}),
+    "schema_from_document": ({"ok"}, {"ok", "schema", "diagnostics"}),
+    "schema_to_document": ({"ok"}, {"ok", "document", "diagnostics"}),
+    "write_schema_oml": ({"ok"}, {"ok", "text", "diagnostics"}),
+}
+
+_TABLE_NAME = re.compile(r"^\|\s*`([a-z_]+)`\s*\|")
+
+
+def table_operations(path: pathlib.Path, heading: str) -> set[str]:
+    """First-column backticked names of the table under `heading`."""
+    names: set[str] = set()
+    inside = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("#"):
+            inside = line.strip() == heading
+            continue
+        if inside:
+            m = _TABLE_NAME.match(line)
+            if m:
+                names.add(m.group(1))
+    # 8.5.3's header cell is the backticked word `operation`.
+    names.discard("operation")
+    return names
+
+
+def slugify(text: str) -> str:
+    """Python-Markdown's toc slugify, which MkDocs uses for heading ids."""
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore")
+    text = re.sub(r"[^\w\s-]", "", text.decode("ascii")).strip().lower()
+    return re.sub(r"[-\s]+", "-", text)
+
+
+_ANCHORS: dict[pathlib.Path, set[str]] = {}
+
+
+def heading_anchors(path: pathlib.Path) -> set[str]:
+    """Every heading id MkDocs generates for `path` (fences skipped; a
+    repeated heading gets `_1`, `_2`, ... as Python-Markdown does), plus
+    explicit `{#id}` attributes and `id="..."` HTML anchors."""
+    if path in _ANCHORS:
+        return _ANCHORS[path]
+    ids: set[str] = set()
+    fence = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^\s*(```+|~~~+)", line)
+        if m:
+            marker = m.group(1)[0] * 3
+            fence = None if fence == marker else (fence or marker)
+            continue
+        if fence:
+            continue
+        h = re.match(r"^#{1,6}\s+(.*?)\s*#*\s*$", line)
+        if h:
+            title = h.group(1)
+            explicit = re.search(r"\{#([^}\s]+)\}\s*$", title)
+            if explicit:
+                ids.add(explicit.group(1))
+                continue
+            base = slugify(title) or "section"
+            ident, n = base, 0
+            while ident in ids:
+                n += 1
+                ident = f"{base}_{n}"
+            ids.add(ident)
+    ids.update(re.findall(r"""\bid=["']([^"']+)["']""",
+                          path.read_text(encoding="utf-8")))
+    _ANCHORS[path] = ids
+    return ids
+
+
+def check_operation_vocabulary() -> list[str]:
+    """E-15's vocabulary is the Operations Reference page; 8.5.3's driver
+    table and this script's shape tables must name the same operations."""
+    page = table_operations(OPERATIONS_PAGE, "## Operations")
+    drivers = table_operations(CHAPTER_8, "### 8.5.3 Operation drivers")
+    errors = []
+    if not page:
+        errors.append("could not read the Operations table of "
+                      "docs/operations-and-models-reference.md")
+    if not drivers:
+        errors.append("could not read the 8.5.3 driver table of "
+                      "docs/08-conformance-and-errors.md")
+    for op in sorted(drivers - page):
+        errors.append(f"8.5.3 lists operation {op!r} but the Operations "
+                      f"Reference page does not (E-15)")
+    for op in sorted(page - drivers):
+        errors.append(f"the Operations Reference page lists {op!r} but "
+                      f"8.5.3's driver table does not (E-15)")
+    for op in sorted(drivers - set(INPUT_SHAPE) | drivers - set(EXPECT_SHAPE)):
+        errors.append(f"8.5.3 lists operation {op!r} that tools/"
+                      f"check_vectors.py has no input/expect shape for")
+    for op in sorted((set(INPUT_SHAPE) | set(EXPECT_SHAPE)) - drivers):
+        errors.append(f"tools/check_vectors.py has a shape for {op!r}, "
+                      f"which 8.5.3 does not list")
+    return errors
+
+
+def check_envelope(rel: str, name: str, vec: dict,
+                   operations: set[str]) -> list[str]:
+    """E-15 (operation), E-16 (purpose), `spec` anchor, input/expect shape."""
+    errors: list[str] = []
+    op = vec.get("operation")
+    if op not in operations:
+        errors.append(f"{rel}: {name!r} operation {op!r} is not on the "
+                      f"Operations Reference page (E-15)")
+    purpose = vec.get("purpose")
+    if purpose not in PURPOSES:
+        errors.append(f"{rel}: {name!r} purpose {purpose!r} is not one of "
+                      f"{', '.join(sorted(PURPOSES))} (E-16)")
+
+    spec = vec.get("spec")
+    if not isinstance(spec, str) or not spec:
+        errors.append(f"{rel}: {name!r} has no 'spec' (8.5.1: a vector with "
+                      f"no section to point at tests something unspecified)")
+    else:
+        file_part, _, anchor = spec.partition("#")
+        target = ROOT / file_part
+        if not file_part.startswith("docs/") or not target.is_file():
+            errors.append(f"{rel}: {name!r} spec {spec!r} names no file "
+                          f"under docs/")
+        elif anchor and anchor not in heading_anchors(target):
+            errors.append(f"{rel}: {name!r} spec anchor #{anchor} does not "
+                          f"exist in {file_part}")
+
+    inp, exp = vec.get("input"), vec.get("expect")
+    if op in INPUT_SHAPE and isinstance(inp, dict):
+        required, allowed = INPUT_SHAPE[op]
+        keys = {k for k in inp if not k.startswith("declared_")}
+        for k in sorted(required - keys):
+            errors.append(f"{rel}: {name!r} {op} input has no {k!r} "
+                          f"(8.5.3)")
+        for k in sorted(keys - allowed):
+            errors.append(f"{rel}: {name!r} {op} input has unexpected key "
+                          f"{k!r} (8.5.3)")
+    elif op in INPUT_SHAPE:
+        errors.append(f"{rel}: {name!r} 'input' is not an object")
+    if op in EXPECT_SHAPE and isinstance(exp, dict):
+        required, allowed = EXPECT_SHAPE[op]
+        for k in sorted(required - set(exp)):
+            errors.append(f"{rel}: {name!r} {op} expect has no {k!r} "
+                          f"(8.5.3)")
+        for k in sorted(set(exp) - allowed):
+            errors.append(f"{rel}: {name!r} {op} expect has unexpected key "
+                          f"{k!r} (8.5.3)")
+    elif op in EXPECT_SHAPE:
+        errors.append(f"{rel}: {name!r} 'expect' is not an object")
+    return errors
+
+
 def main() -> int:
     files = sorted(SUITE.glob("*/*.json"))
     if not files:
         print(f"error: no vector files found under {SUITE}", file=sys.stderr)
         return 1
 
-    errors: list[str] = []
+    errors: list[str] = check_operation_vocabulary()
+    operations = table_operations(OPERATIONS_PAGE, "## Operations")
     seen: dict[str, str] = {}
     total = 0
     # Counts the prose in docs/ and test-suite/README.md used to hardcode
@@ -332,6 +544,7 @@ def main() -> int:
                     for d in exp.get("diagnostics") or []):
                 placeholder_vectors += 1
 
+            errors.extend(check_envelope(str(rel), name, vec, operations))
             errors.extend(check_declared_limits(str(rel), name, vec))
             errors.extend(check_input_form(str(rel), name, vec))
             errors.extend(check_path_placeholder(str(rel), name, vec))
@@ -350,7 +563,10 @@ def main() -> int:
         f"{total} vectors across {len(files)} files: valid JSON, no raw control "
         f"characters, unique names, required fields present, "
         f"'bytes_hex' inputs well-formed (E-27), path placeholder only where "
-        f"E-32 allows it, no comma between braced edges in OSD-OML texts."
+        f"E-32 allows it, no comma between braced edges in OSD-OML texts, "
+        f"operation on the Operations Reference page (E-15), purpose in "
+        f"E-16's set, spec anchors that resolve, input/expect keys per "
+        f"8.5.3."
     )
     keys = ", ".join(f"{k}: {n}" for k, n in sorted(declared_keys.items()))
     print(f"vectors per declared-limit key: {keys}; vectors using the "
