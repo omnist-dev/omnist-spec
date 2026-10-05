@@ -246,7 +246,8 @@ none failing. `DIV-22`, `DIV-23` and `DIV-24` (the C-10 XML null leaf in
 TypeScript, Rust and Go; Java never had one) closed the same day with the
 `0.8.0-alpha`, `0.9.0-alpha` and `0.10.0-alpha` releases, whose vector runs
 pass all five `formats-xml/nulls` vectors. `DIV-11` (Rust's Document arena
-counting scalar values against the node cap, omnist-rs#192) closed on
+counting scalar values against the node cap, omnist-rs#192, closed as not
+reproducing) closed on
 2026-10-05 by measurement, not by an issue: see "Retired by measurement" at the
 end of this section. `DIV-5`, `DIV-12`, `DIV-13`, `DIV-21`, `DIV-25`, `DIV-26`,
 `DIV-27` and `DIV-28` are live.
@@ -415,7 +416,7 @@ other ports' XML writers handle these two code points the same way was not
 measured.
 **Remove this entry when #133 is fixed.**
 
-**DIV-27. The XML reader's `format.attribute-dropped` and `format.namespace-dropped` paths lack the E-10 index for a repeated element in Python, TypeScript and Java ([omnist#357](https://github.com/omnist-dev/omnist/issues/357); no issue yet in omnist-ts or omnist-j).**
+**DIV-27. The XML reader's `format.attribute-dropped` and `format.namespace-dropped` paths lack the E-10 index for a repeated element in Python, TypeScript and Java ([omnist#357](https://github.com/omnist-dev/omnist/issues/357); fix in omnist#358 pending; [omnist-ts#163](https://github.com/omnist-dev/omnist-ts/issues/163); [omnist-j#124](https://github.com/omnist-dev/omnist-j/issues/124)).**
 `<r><a x="1"/><a x="2"/></r>` should report the dropped attribute at `$.r.a[0]`
 and `$.r.a[1]` ([E-10](08-conformance-and-errors.md#84-paths), and the XML
 format page's "at the element"). Measured 2026-10-05: Python `0.14.0` reports
@@ -443,14 +444,14 @@ removable. No issue is open for either port.
 **Retired by measurement: Rust's arena cap.** `DIV-11` recorded that Rust's
 Document arena counted scalar leaves against the 1,000,000-node cap, so a large
 input under D-22's maximum could be refused with `document.limit.nodes`
-([omnist-rs#192](https://github.com/omnist-dev/omnist-rs/issues/192), which was
-still open on 2026-10-05). On Rust `0.9.0-alpha` the arena's `push` counts only
+([omnist-rs#192](https://github.com/omnist-dev/omnist-rs/issues/192), closed
+as not reproducing). On Rust `0.9.0-alpha` the arena's `push` counts only
 container entries (`omnist/src/document.rs`, the `arena.containers` counter
 tested against `max_nodes`), and the CLI measured 2026-10-05 reads a
 1,100,000-scalar JSON array and a 1,100,000-item YAML sequence (each read
 wrapped under a key, since the CLI refuses a bare top-level array or sequence
 for its shape, not for a limit), a 1,100,000-key JSON object and a
-1,100,000-key TOML file without a limit error. The counter arrived in commit `5aad212` (runtime-configurable limits, omnist-rs#181 and #182), whose first containing tag is `v0.9.0-alpha`; at `7e297ba`, the source the entry was read from, the arena had no such counter. The issue should be closed or re-scoped by its owner.
+1,100,000-key TOML file without a limit error. The counter arrived in commit `5aad212` (runtime-configurable limits, omnist-rs#181 and #182), whose first containing tag is `v0.9.0-alpha`; at `7e297ba`, the source the entry was read from, the arena had no such counter. The issue was closed as not planned because it does not reproduce.
 
 Java (`0.5.0-alpha`), Rust (`0.9.0-alpha`), Go (`v0.10.0-alpha`) and
 TypeScript (`0.8.0-alpha`) pass all five `formats-xml/nulls` vectors: an XML
