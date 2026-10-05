@@ -341,7 +341,11 @@ there is no separate set of names for them.
 
 **E-5.** **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
-they describe occurs, with a conformance vector for each. Per-implementation
+they describe occurs, with a conformance vector for each. The same holds for
+`format.temporal-stringified` and `format.value-stringified`: a writer MUST emit
+each wherever the stringification occurs, once per leaf, at the Document path of
+the leaf (indexed per [E-10](#84-paths)); `formats-xml/stringified/*` pins the
+second. Per-implementation
 status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
 nowhere else.
 
@@ -947,9 +951,13 @@ map-and-array shape smuggling assumptions back in. The encoding is explicit:
 - A node is `{"edges": [[label, target], ...]}`. The outer array preserves
   order; repeated labels appear as repeated entries.
 - A scalar is `{"scalar": {"kind": K, "value": V}}` where `K` is one of the
-  seven kinds. Temporal values are ISO-8601 strings. For `integer` values see
-  the threshold rule below.
-- `null` is `{"scalar": {"kind": null, "value": null}}`.
+  seven kinds of [§2.2.1](02-document-model.md#221-scalar-kinds): `string`,
+  `integer`, `number`, `boolean`, `date`, `time` or `datetime`. Temporal values
+  are ISO-8601 strings. For `integer` values see the threshold rule below; for
+  a `number` that is not finite see E-33.
+- `null` is `{"scalar": {"kind": null, "value": null}}`. `null` is a value, not
+  a kind ([§2.2.1](02-document-model.md#221-scalar-kinds)), so this is the one
+  scalar whose `kind` is not one of the seven.
 
 **E-19. The integer threshold is exactly ±(2^53 − 1).** An `integer` whose absolute
 value is at most 9007199254740991 MUST be encoded as a JSON number; any
@@ -967,6 +975,16 @@ This is verbose on purpose, and the threshold is part of that purpose. A
 vector file must not depend on the reader's JSON library to decide whether
 `1` is an integer or a number, and it must not depend on that library to
 decide where "fits exactly" stops either.
+
+**E-33. A non-finite `number` is encoded as a string.** A scalar of kind
+`number` whose value is NaN, positive infinity or negative infinity MUST be
+encoded with `value` the JSON string `"NaN"`, `"Infinity"` or `"-Infinity"`
+respectively, never a bare JSON number: JSON has no token for any of the three,
+so a vector file could not hold one otherwise. The string form is unambiguous
+because the `value` of every other `number` is a JSON number and never a JSON
+string, and it applies to kind `number` only: a `string` scalar whose text is
+`NaN` is an ordinary string. A vector author and a vector reader apply the
+same three spellings, as they apply the integer threshold of E-19.
 
 ### 8.5.5 Reporting
 

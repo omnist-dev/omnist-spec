@@ -1,0 +1,212 @@
+{
+  "vectors": [
+    {
+      "name": "formats-xml/stringified/integer-leaf-reports-value-stringified",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 5
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><n>5</n></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.n",
+            "code": "format.value-stringified"
+          }
+        ]
+      },
+      "comment": "XML has no typed literals, so an integer is written as its text, `<n>5</n>`, and reads back as the string \"5\". That is an adjustment (E-6 explains why it succeeds, unlike a null), and 8.3.8 gives it `format.value-stringified` at the Document path of the leaf."
+    },
+    {
+      "name": "formats-xml/stringified/boolean-leaf-reports-value-stringified",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><n>true</n></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.n",
+            "code": "format.value-stringified"
+          }
+        ]
+      },
+      "comment": "The same adjustment for a boolean: written `true`, read back as the string \"true\"."
+    },
+    {
+      "name": "formats-xml/stringified/number-leaf-reports-value-stringified",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "number",
+                        "value": 1.5
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><n>1.5</n></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.n",
+            "code": "format.value-stringified"
+          }
+        ]
+      },
+      "comment": "The same adjustment for a number."
+    },
+    {
+      "name": "formats-xml/stringified/repeated-leaves-are-reported-per-edge-with-an-index",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><n>1</n><n>2</n></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.n[0]",
+            "code": "format.value-stringified"
+          },
+          {
+            "path": "$.r.n[1]",
+            "code": "format.value-stringified"
+          }
+        ]
+      },
+      "comment": "E-10 on a write diagnostic: a label that occurs twice in its node is indexed on every edge, the first included, so the two reports are `$.r.n[0]` and `$.r.n[1]`, and one report per stringified leaf."
+    },
+    {
+      "name": "formats-xml/stringified/string-leaf-reports-nothing",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "5"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><n>5</n></r>",
+        "diagnostics": []
+      },
+      "comment": "The control: a string leaf is already text, so nothing is stringified and no diagnostic is reported. The written text is identical to the integer case; only the diagnostics differ."
+    }
+  ]
+}
