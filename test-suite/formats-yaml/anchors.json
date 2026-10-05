@@ -1,0 +1,382 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/anchors/self-referential-mapping-is-rejected",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a {k: *a}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-20: the anchored mapping `a` contains an alias to itself, so its expansion is unbounded. The code is the D-18 code, document.limit.alias-expansion, at `$` (D-18, D-22). No declared limit is carried: an unbounded W exceeds every finite maximum, so the vector needs no configuration surface and every implementation runs it. A reader that materializes a cyclic structure, or loops, has failed D-20 whatever it reports."
+    },
+    {
+      "name": "formats-yaml/anchors/self-merge-is-rejected",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a {<<: *a, k: 1}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-20, the self-merging form: `a` merges itself. Before omnist#352 the reference accepted this and materialized `{k: 1}`; D-20 says it is unbounded and MUST be rejected, not resolved by dropping the cycle."
+    },
+    {
+      "name": "formats-yaml/anchors/self-referential-sequence-is-rejected",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a [*a]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-20 for a sequence anchor: `a` is a sequence whose only member is an alias to `a`."
+    },
+    {
+      "name": "formats-yaml/anchors/cycle-through-two-anchors-is-rejected",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a [&b [*a]]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-20 for a cycle \"through other definitions\": `a` contains `b`, and `b` refers back to `a`. Neither definition refers to itself directly."
+    },
+    {
+      "name": "formats-yaml/anchors/self-referential-root-is-rejected",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "&a [*a]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-20 where the cyclic anchor is the document root, which is a candidate node like any other (D-18)."
+    },
+    {
+      "name": "formats-yaml/anchors/redefined-anchor-referring-to-itself-is-a-cycle",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &x [1]\nb: &x [*x]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-27 with D-20: an alias inside the definition that carries its own name refers to that definition, not to the earlier `&x`, so `b` is self-referential. Shadowing only applies to aliases that come after the new definition is complete."
+    },
+    {
+      "name": "formats-yaml/anchors/alias-to-undefined-anchor-is-a-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: *x\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-27: no definition of `x` exists, so the alias refers to nothing. YAML makes this an error, and the code for input that is not well formed in its source format is parse.codec-syntax (the position is the E-32 placeholder)."
+    },
+    {
+      "name": "formats-yaml/anchors/alias-before-its-anchor-is-a-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: *x\nb: &x 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-27: an anchor defines a name only for the aliases that follow it. `x` is defined, but after the alias, so this is the same error as an undefined anchor."
+    },
+    {
+      "name": "formats-yaml/anchors/redefined-anchor-scalar-later-alias-uses-latest",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &x 1\nb: &x 2\nc: *x\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "c",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: redefining an anchor is legal, not an error (YAML 1.1 and 1.2 both say an alias refers to the most recent preceding definition of the name). `c` reads 2."
+    },
+    {
+      "name": "formats-yaml/anchors/redefined-anchor-mapping-each-alias-uses-nearest-preceding",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &x {k: 1}\nb: *x\nc: &x {k: 2}\nd: *x\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "b",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "c",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "d",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: the alias before the redefinition (`b`) keeps the first `&x`; the alias after it (`d`) takes the second. A reader that applies one definition to the whole document, first or last, fails one of the two."
+    },
+    {
+      "name": "formats-yaml/anchors/quoted-merge-key-is-an-ordinary-key",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p {x: 1}\nq: {\"<<\": *p}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "<<",
+                    {
+                      "edges": [
+                        [
+                          "x",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: only a plain `<<` is a merge key. A double-quoted `\"<<\"` is the string `<<` and makes an ordinary edge labelled `<<` holding the aliased mapping; `q` is NOT `{x: 1}`. (The explicitly tagged forms are not decided by D-27.)"
+    },
+    {
+      "name": "formats-yaml/anchors/quoted-merge-key-with-a-scalar-value-is-not-malformed",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "q: {\"<<\": 1}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "<<",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27 against D-18a: a plain `<<: 1` is a syntax error (a merge value must be a mapping or a sequence of mappings), but a quoted `\"<<\"` is not a merge key at all, so the scalar value is fine."
+    }
+  ]
+}

@@ -560,6 +560,31 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   mapping anchor with an uncoded `DocumentError` and accepted the self-merging
   form `a: &a {<<: *a, k: 1}`, materializing `{k: 1}`.
 
+- **D-27. Which definition an alias refers to, and what a merge key is.**
+  Three questions the rules above leave to the YAML specification are fixed
+  here, because the accounting of D-18 and D-22 counts an alias against the
+  definition it resolves to and so depends on the answer.
+
+  - **An alias refers to the most recent preceding definition of its name.**
+    Redefining an anchor is legal, not an error: the later definition
+    shadows the earlier one for every alias that follows it, and an alias
+    that precedes it keeps the earlier one. `W` and `S` count each alias
+    against the definition it resolves to. An alias written *inside* the node
+    that an anchor of the same name defines refers to that node, not to the
+    earlier definition, so it is a self-reference and D-20 rejects it.
+  - **An alias with no preceding definition is malformed input.** A name that
+    is never defined, and a name defined only after the alias, are both a
+    syntax error, `parse.codec-syntax`
+    ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
+    the code D-18a already gives a malformed merge. It is not a limit error,
+    and a codec MUST NOT resolve the alias to null or to an empty value.
+  - **Only a plain `<<` is a merge key.** A quoted `<<` (`"<<"` or `'<<'`) is
+    the string `<<`: it makes an ordinary edge labelled `<<` and merges
+    nothing, so it is not subject to D-18a's shape rule and is not counted as
+    a merge key by D-22. Whether an explicitly tagged `<<`, and the aliases
+    inside a `!!pairs` or `!!omap` collection, are covered by D-18 and D-22
+    is not decided here.
+
 - **D-22.** A codec for a format with an anchor/reference mechanism MUST also
   enforce a finite maximum **expanded size** on the input as a whole: the
   number of value slots it materializes, which is `W(root)` as defined above,
@@ -569,8 +594,8 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   limit and D-23's input-size bound, where one is enforced, govern, and a
   plain YAML file is treated as a JSON or OML file of the same size is. A
   **merge key** here is a
-  `<<` key as [§ YAML](formats/yaml.md) uses the term; that page says nothing
-  of a quoted or explicitly tagged `<<`, and this rule does not decide it. A
+  `<<` key as [§ YAML](formats/yaml.md) uses the term, which D-27 limits to a
+  plain `<<`; this rule does not decide an explicitly tagged one. A
   codec subject to D-22
   MUST reject the input with
   `document.limit.expanded-size`
