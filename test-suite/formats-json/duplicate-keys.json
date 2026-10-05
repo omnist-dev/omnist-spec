@@ -1,0 +1,223 @@
+{
+  "vectors": [
+    {
+      "name": "formats-json/duplicate-keys/repeated-key-reads-as-one-edge-with-the-last-value",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"a\": 2}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: `{\"a\":1,\"a\":2}` reads as `[(a,2)]`: one edge, not two, carrying the last value. The vector uses one key so that where the surviving edge sits among its siblings, which C-11 does not specify, cannot affect the result."
+    },
+    {
+      "name": "formats-json/duplicate-keys/three-occurrences-keep-the-last",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"a\": 2, \"a\": 3}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11 with more than one repeat: the last of three wins, and the result is still one edge."
+    },
+    {
+      "name": "formats-json/duplicate-keys/nested-object-collapses-independently",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"m\": {\"x\": 1, \"x\": 2}}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11 applies to every object, not only the top level."
+    },
+    {
+      "name": "formats-json/duplicate-keys/last-value-replaces-the-first-whatever-its-shape",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"a\": {\"z\": 9}}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "z",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 9
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the later value replaces the earlier one outright, including when the two are different shapes, a leaf and then an object."
+    },
+    {
+      "name": "formats-json/duplicate-keys/objects-are-replaced-not-merged",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": {\"x\": 1}, \"a\": {\"y\": 2}}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the earlier object is discarded, not merged with the later one, so `x` is gone."
+    },
+    {
+      "name": "formats-json/duplicate-keys/later-scalar-replaces-an-earlier-array",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": [1, 2], \"a\": 3}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11 against the array rule: `\"a\": [1, 2]` alone is two edges (a repeated label), but a later `\"a\": 3` is a duplicate key and replaces the whole earlier value, so the result is the single edge `(a,3)`. A reader that appends the later key to the run would produce three edges."
+    },
+    {
+      "name": "formats-json/duplicate-keys/array-under-one-key-is-not-a-duplicate",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"m\": [1, 2]}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "m",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The control for C-11: a JSON array under a single key is a repeated label, `[(m,1),(m,2)]`, not a duplicate-key situation. Duplicate keys collapse to one edge; an array does not."
+    }
+  ]
+}

@@ -164,7 +164,7 @@ proxy; no registry). No port implements the OSD-OML extension (§9.6).
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported (the XML reader's drop paths lack the E-10 index, `DIV-27`) | all four, attribute/namespace/interleaving drops reported (same gap, `DIV-27`) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported (same gap, `DIV-27`) |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI (re-measured 2026-10-05) | yes, via the CLI (re-measured) | yes, via `omnist-cli` (re-measured) | yes, at the front of all six readers (CLI re-measured) | yes, in the CLI for a file (re-measured; stdin not re-run) |
-| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 367 at v0.33.0-beta) | 328 pass / 0 fail / 34 skip of 362 at its pin, v0.32.0-beta; against the v0.33.0-beta suite 329 / 4 / 34 of 367 (the 4 are `DIV-21`); the 34 are 28 OSD-OML and 6 `limits` | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML |
+| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 374 at v0.33.0-beta) | 328 pass / 0 fail / 34 skip of 362 at its pin, v0.32.0-beta; against the v0.33.0-beta suite 329 / 4 / 34 of 367 (the 4 are `DIV-21`); the 34 are 28 OSD-OML and 6 `limits` | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML |
 | Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 29/0/0 (Java's Track 1 headline: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage (gate read from each port's config 2026-10-05; the percentages are not re-measured) | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.72% line / 99.36% branch (the port's `docs/limitations.md`, three runs at v0.33.0-beta; not re-run here), gated at 99.6% / 99.1% |
@@ -174,7 +174,7 @@ Rows this edit did not re-measure (the OML, OSD, `any`, `validate`,
 the 2026-10-04 edit; the vector suites each port passes cover them. The
 coverage percentages are the ports' own figures.
 
-The Track 2 suite is v0.33.0-beta, 367 vectors. Go, Rust and Java run all of it
+The Track 2 suite is v0.33.0-beta, 374 vectors (367 at the tag; the pass counts below were measured there). Go, Rust and Java run all of it
 and pass 339, with the 28 OSD-OML vectors skipped. TypeScript passes 333 and
 skips 34. Python, whose pin is still v0.32.0-beta, passes all 328 of the 362
 vectors it pins; the five `formats-xml/nulls` vectors v0.33.0-beta added fail

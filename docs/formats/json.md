@@ -44,8 +44,9 @@ a non-empty one.
 **Top level.** A JSON document may have many top-level keys, which becomes many
 top-level edges. That is legal, and it is also the shape XML cannot carry.
 
-**Duplicate keys: last one wins.** `{"a":1,"a":2}` reads as `[(a,2)]` — one
-edge, not two. The JSON grammar itself is silent on duplicate names (RFC 8259
+**Duplicate keys: last one wins**
+([C-11](../07-codecs-and-deserialization.md#71-two-stages)). `{"a":1,"a":2}`
+reads as `[(a,2)]` — one edge, not two. The JSON grammar itself is silent on duplicate names (RFC 8259
 permits but discourages them and does not define a resolution), so this is an
 Omnist policy choice, not a JSON requirement — chosen because it is already
 the de facto behavior of essentially every mainstream JSON parser (a later

@@ -26,7 +26,7 @@ test-suite/
   extract/                   extract vectors
   infer/                     infer / infer_with_report vectors, including allow_any
   lint/                      lint vectors
-  formats-json/              JSON codec vectors
+  formats-json/              JSON codec vectors, including the duplicate-key rule (C-11)
   formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, and the D-18 alias-expansion bound
   formats-toml/              TOML codec vectors
   formats-xml/               XML codec vectors
