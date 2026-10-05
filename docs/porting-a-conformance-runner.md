@@ -247,10 +247,11 @@ the rule that introduced it, not as separate work.
 As of **v0.30.0-beta** the newest key is `declared_max_input_bytes`
 (§2.4.2's D-23, the maximum input size in bytes); ten vectors in
 `document-model/input-size.json` carry it. It follows the same rule: allowlist
-it, and report an E-20 skip until D-23 is implemented. No port implements it
-yet, and three of the five runners that did not allowlist it run the accepted
-boundary vectors against their own default and report green, which is the
-false pass this section warns about.
+it, and report an E-20 skip until D-23 is implemented. All five ports implement
+it now and their runners honour the key; at v0.30.0-beta none did, and three of
+the five runners that did not allowlist it ran the accepted boundary vectors
+against their own default and reported green, which is the false pass this
+section warns about.
 
 Before it, as of **v0.26.0-beta** the newest key was `declared_max_expanded_slots`
 (§2.4.1's D-22, the absolute cap on expanded size); ten vectors in

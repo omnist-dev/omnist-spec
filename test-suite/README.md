@@ -165,9 +165,9 @@ input size in **bytes** (D-23). Ten vectors in
 `document-model/input-size.json` carry it: an input of exactly the maximum is
 accepted and one byte over is refused with `document.limit.input-size` at `$`,
 for JSON, YAML and OML, a multi-byte pair that pins that the unit is bytes,
-not characters, and a pair that pins that a leading BOM is counted. No port
-enforces D-23 yet (`DIV-17`), so a runner reports every
-vector carrying the key as an E-20 skip. The same two steps apply, and so does
+not characters, and a pair that pins that a leading BOM is counted. All five ports
+enforce D-23 now (the retired `DIV-17`), so no runner reports these vectors as
+a skip; a port that does not yet enforce it reports every vector carrying the key as an E-20 skip. The same two steps apply, and so does
 the false-pass hazard: a runner that does not allowlist the key runs the accepted
 boundary vectors against its own default and passes without testing
 the boundary.
