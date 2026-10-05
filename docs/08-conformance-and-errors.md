@@ -370,7 +370,10 @@ simply failing on that case, rather than disabling the format broadly:
 - **A string contains a character the target format cannot represent at all**
   (e.g. a raw C0 control character XML 1.0 forbids) — `format.string-illegal-char`.
 - **A null leaf cannot be represented in the target format at all** (e.g.
-  TOML, which has no null token of any kind) — `format.null-unrepresentable`.
+  TOML, which has no null token of any kind, and XML, whose only candidate
+  spelling, the empty element `<a/>`, reads back as the empty string,
+  [C-10](07-codecs-and-deserialization.md#73-writing)) —
+  `format.null-unrepresentable`.
   There is no substitute value at all here, only the option to silently
   drop the edge entirely, which erases the edge's existence rather than
   merely altering its value.
@@ -418,7 +421,7 @@ diagnostic code is needed for this case at all.
 
 | Code | Raised when |
 |---|---|
-| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf/special-float/empty-node cannot be represented at all in the target format's own syntax without colliding with some other, distinct, valid input (unconditional, regardless of `strict`), **or** a string value or label has no UTF-8 encoding ([C-9](07-codecs-and-deserialization.md#73-writing), unconditional) |
+| `write.unsupported-value` | A value has no representation in the target format and strict mode is in force, **or** a label/string/null leaf/special-float/empty-node cannot be represented at all in the target format's own syntax without colliding with some other, distinct, valid input (unconditional, regardless of `strict`; a null leaf in TOML or XML, [C-10](07-codecs-and-deserialization.md#73-writing)), **or** a string value or label has no UTF-8 encoding ([C-9](07-codecs-and-deserialization.md#73-writing), unconditional) |
 
 **E-26. "Target format" includes OSD, not only the four codecs.** The
 schema-writing surfaces are writers like any other and this is the code they

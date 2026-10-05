@@ -30,7 +30,7 @@ graph LR
 | [JSON](json.md) | The baseline. Universally available, unambiguous scalar syntax, many top-level keys. | Temporal types, `NaN`/`Infinity`, cross-label interleaving, bare nested arrays. |
 | [YAML](yaml.md) | Readable nesting, aliases, and a resolver that types dates without a schema. | Standalone time-of-day (a bare `12:00:00` becomes an integer), cross-label interleaving, shared identity across an alias. |
 | [TOML](toml.md) | Native `date`, `time`, and `datetime` literals in both directions. `[[table]]` is the repeated label, written idiomatically. | `null`, a non-table top level, cross-label interleaving. |
-| [XML](xml.md) | Repeated and interleaved elements in original order — the shape the Document model was built around. | Typed leaves (all text is string), several top-level edges, and — in the current profile — attributes and namespace prefixes. |
+| [XML](xml.md) | Repeated and interleaved elements in original order — the shape the Document model was built around. | Typed leaves (all text is string), `null`, several top-level edges, and — in the current profile — attributes and namespace prefixes. |
 | [OML](oml.md) | Every Document shape, with zero adjustments: any nesting, any repeated label, any interleaving. | Temporal literals; a temporal value writes as a string and needs a schema to read back. |
 
 **A string with no UTF-8 encoding is refused by every writer.** A lone

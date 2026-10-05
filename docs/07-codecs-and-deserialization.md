@@ -313,6 +313,25 @@ valid UTF-8, and bytes that decode to one are a D-14 `parse.invalid-encoding`.
 Adoption is tracked under `DIV-5`
 ([§9.4](09-divergence-ledger.md#94-known-open-divergences)).
 
+**C-10. An XML writer MUST fail on a null leaf.** The XML writer MUST fail
+with `write.unsupported-value`
+([§8.3.9](08-conformance-and-errors.md#839-write)), unconditionally and
+regardless of `strict`, when the Document holds a leaf whose value is null.
+The `path` is the Document path of that leaf, indexed per
+[E-10](08-conformance-and-errors.md#84-paths). XML has no null token. The one
+spelling a writer could reach for is the empty element, `<a/>`, and the
+[XML read rule](formats/xml.md#model-mapping) makes an element with no child
+elements a string leaf holding its text, so `<a/>` reads back as the empty
+string `""`. A written null would then be indistinguishable from the different,
+valid Document that holds `""` there, which is the collision
+[E-6](08-conformance-and-errors.md#838-format-codec-adjustments) fails on
+instead of adjusting. This is the rule TOML already follows for its null
+([TOML](formats/toml.md#model-mapping)); JSON, YAML and OML spell null natively
+and are unaffected. No `format.*` code is involved: a writer MUST NOT emit an
+empty element for the null, and MUST NOT report the write as an adjustment.
+An empty string leaf is not a null leaf and still writes as `<a/>`. A writer
+MAY stop at the first null leaf it finds.
+
 ## 7.4 Format reports
 
 A reader or writer SHOULD be able to report the adjustments a given conversion
