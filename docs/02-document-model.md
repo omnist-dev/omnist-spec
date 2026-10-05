@@ -203,7 +203,7 @@ is the only one that bounds bytes, and the only one that is a SHOULD. A
 Document built programmatically from native objects has no anchors and is
 unaffected.
 
-The reference defaults are what the Python implementation uses today, and what
+The reference defaults of D-9's limits are what the Python implementation uses today, and what
 a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
 matches CPython's own default for `sys.set_int_max_str_digits` — conversion
 between an arbitrarily long digit string and a big integer is superlinear, so
