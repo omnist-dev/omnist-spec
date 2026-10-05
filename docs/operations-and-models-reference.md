@@ -45,6 +45,10 @@ already normative elsewhere, in the same spirit as the glossary indexing
 | `infer` | `infer(samples, root_name = "Root", allow_any = false) -> Schema` | Drafts a schema that accepts a set of sample Documents — a starting point meant to be hand-edited, never normalized automatically. | [§6.10](06-schema-algebra.md#610-infersamples) |
 | `infer_with_report` | `infer_with_report(samples, root_name = "Root", allow_any = false) -> (Schema, [AnyFallback])` | Same as `infer`, but also returns every `any`-opening it introduced, with location and reason. | [§6.10](06-schema-algebra.md#610-infersamples) |
 | `lint` | `lint(S) -> [LintFinding]` | Diagnoses structural issues in a schema itself (unsatisfiable/unreachable/duplicate records, `any` openings) — reports only, never mutates. | [§6.11](06-schema-algebra.md#611-lints) |
+| `schema_from_document` | `schema_from_document(document) -> Schema` | Builds a Schema from an already-parsed Document of the OSD-OML shape, applying the rules of E.6; the pure primitive under `parse_schema_oml`. | [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
+| `parse_schema_oml` | `parse_schema_oml(text) -> Schema` | Reads OSD-OML text into a Schema: `schema_from_document(read_oml(text))`. | [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
+| `schema_to_document` | `schema_to_document(S) -> Document` | Renders a Schema as its canonical OSD-OML Document (E.8); the inverse of `schema_from_document`. | [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
+| `write_schema_oml` | `write_schema_oml(S) -> OML text` | Writes a Schema as OSD-OML text: `write_oml(schema_to_document(S))`. | [§E.11](extensions/osd-oml.md#e11-api-cli-surface) |
 
 ## How this affects vector and fixture authoring
 

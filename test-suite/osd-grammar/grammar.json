@@ -475,7 +475,7 @@
       "name": "osd-grammar/reserved-names/case-mismatched-name-is-not-reserved",
       "spec": "docs/03-schema-model.md#33-formal-definition",
       "operation": "parse_schema",
-      "purpose": "characterization",
+      "purpose": "edge-case",
       "input": {
         "text": "record String {\n    \"x\": string,\n}\nroot String\n"
       },

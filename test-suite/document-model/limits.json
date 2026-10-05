@@ -121,7 +121,7 @@
     },
     {
       "name": "document-model/limits/integer-beyond-fixed-width-still-parses-under-default-limit",
-      "spec": "docs/02-document-model.md#22-values",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
       "operation": "parse",
       "purpose": "edge-case",
       "input": {
