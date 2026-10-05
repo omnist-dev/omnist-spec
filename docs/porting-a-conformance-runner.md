@@ -101,10 +101,10 @@ Source: [`conformance-harness.md`](conformance-harness.md) §2 (contract), §3
 | `normalize`, `prune` | output OSD against `expected.osd` | `exact` (§4) |
 | `extract` | on success `expected/output.osd`; `expected/ok.txt` either way | `exact` (§4) |
 | `infer` | on success `expected/output.osd`; `expected/ok.txt` either way | `isomorphic` (§4) |
-| `validate` | `expected/ok.txt`; on failure `expected/diagnostics.json` | paths; `code` is informational until §9.3 reads "yes" for every implementation (§2, the `lint` findings note) |
+| `validate` | `expected/ok.txt`; on failure `expected/diagnostics.json` | `(path, code)` set (§2, the `lint` findings note) |
 | `materialize` | `expected/ok.txt`; on success `expected/output.oml`, on failure `expected/diagnostics.json` | Document equality; failure as `validate` |
 | `is_empty`, `compatible_with`, `equivalent` | `expected.txt`, a boolean | equality |
-| `lint` | `expected.json` findings | `severity` and `location` exactly; `code` informational (§2) |
+| `lint` | `expected.json` findings | `code`, `severity` and `location` exactly (§2) |
 
 ### Track 2 — JSON vectors
 
@@ -123,8 +123,8 @@ this step
 fails every vector that uses the placeholder (the four `formats-*/syntax/`
 vectors and five in `formats-yaml/alias-expansion.json`: nine at v0.29.0-beta;
 `python3 tools/check_vectors.py` prints the current count). Rule 4's
-code-agnostic mode is the one permitted relaxation of the code, and the run
-MUST say it was
+code-agnostic mode is the one permitted relaxation of the code, a bring-up aid
+whose results are not a conformance claim, and the run MUST say it was
 used.
 
 | `operation` | `expect` fields on success | What a runner MUST compare, and how |
@@ -354,9 +354,11 @@ your runner will tell you whether you do; it is a unit-test obligation
 ## Say which comparison mode produced your numbers
 
 §8.5.2 rule 4 permits a runner to compare **code-agnostically** — `ok` plus
-the set of `path`s, never `code` — because §8.1 does not yet make §8.3
-mandatory. That is a legitimate mode; the Python reference's runner used it until
-v0.21.0-beta. It is also a quiet one: **a code-agnostic run passes vectors the implementation does not
+the set of `path`s, never `code` — as a bring-up aid while a port has not yet
+adopted §8.3. §8.3 is mandatory
+([§8.1](08-conformance-and-errors.md#81-status-of-this-chapter)), so a
+code-agnostic run is never a conformance result; the Python reference's runner
+used that mode until v0.21.0-beta. It is also a quiet one: **a code-agnostic run passes vectors the implementation does not
 actually satisfy.** A diagnostic with the right `ok` and the right position
 but the wrong code reports green, and nothing in the run says so.
 

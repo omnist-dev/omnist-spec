@@ -1,1 +1,1 @@
-{"ok": false, "findings": [{"code": "unreachable-record", "severity": "warning", "location": "Orphan", "message": "IGNORED -- message text is never compared, see docs/conformance-harness.md"}]}
+{"ok": false, "findings": [{"code": "lint.unreachable-record", "severity": "warning", "location": "Orphan", "message": "IGNORED -- message text is never compared, see docs/conformance-harness.md"}]}
