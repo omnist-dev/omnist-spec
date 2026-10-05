@@ -447,8 +447,10 @@ input under D-22's maximum could be refused with `document.limit.nodes`
 still open on 2026-10-05). On Rust `0.9.0-alpha` the arena's `push` counts only
 container entries (`omnist/src/document.rs`, the `arena.containers` counter
 tested against `max_nodes`), and the CLI measured 2026-10-05 reads a
-1,100,000-scalar JSON array, a 1,100,000-key JSON object, a 1,100,000-key TOML
-file and a 1,100,000-item YAML sequence without a limit error. The counter arrived in commit `5aad212` (runtime-configurable limits, omnist-rs#181 and #182), whose first containing tag is `v0.9.0-alpha`; at `7e297ba`, the source the entry was read from, the arena had no such counter. The issue should be closed or re-scoped by its owner.
+1,100,000-scalar JSON array and a 1,100,000-item YAML sequence (each read
+wrapped under a key, since the CLI refuses a bare top-level array or sequence
+for its shape, not for a limit), a 1,100,000-key JSON object and a
+1,100,000-key TOML file without a limit error. The counter arrived in commit `5aad212` (runtime-configurable limits, omnist-rs#181 and #182), whose first containing tag is `v0.9.0-alpha`; at `7e297ba`, the source the entry was read from, the arena had no such counter. The issue should be closed or re-scoped by its owner.
 
 Java (`0.5.0-alpha`), Rust (`0.9.0-alpha`), Go (`v0.10.0-alpha`) and
 TypeScript (`0.8.0-alpha`) pass all five `formats-xml/nulls` vectors: an XML
