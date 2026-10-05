@@ -469,6 +469,208 @@
         ]
       },
       "comment": "E-31/E-32: malformed XML. `<b>` is still open when `</a>` closes, so the document is not well-formed; no XML parser accepts it. The code is parse.codec-syntax. The path is the placeholder `line:col` (E-32): the blamed character is implementation-defined."
+    },
+    {
+      "name": "formats-xml/nulls/null-leaf-at-top-level-cannot-be-written",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "XML has no null token and `<a/>` reads back as the empty string, a different valid Document, so the write fails unconditionally (C-10), the same treatment as a TOML null. Here the null is the single top-level edge, so the path is $.a."
+    },
+    {
+      "name": "formats-xml/nulls/null-leaf-nested-cannot-be-written",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "root",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "edges": [
+                        [
+                          "n",
+                          {
+                            "scalar": {
+                              "kind": null,
+                              "value": null
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.root.x.n",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "XML has no null token and `<a/>` reads back as the empty string, a different valid Document, so the write fails unconditionally (C-10), the same treatment as a TOML null. The null is two levels down; the path names every edge down to it and none repeats, so no index."
+    },
+    {
+      "name": "formats-xml/nulls/null-leaf-in-repeated-label-is-indexed",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "root",
+              {
+                "edges": [
+                  [
+                    "item",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "a"
+                      }
+                    }
+                  ],
+                  [
+                    "item",
+                    {
+                      "scalar": {
+                        "kind": null,
+                        "value": null
+                      }
+                    }
+                  ],
+                  [
+                    "item",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "c"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.root.item[1]",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "XML has no null token and `<a/>` reads back as the empty string, a different valid Document, so the write fails unconditionally (C-10), the same treatment as a TOML null. The label item occurs three times in root, so E-10 indexes every one of them, the first included; the null is the second, index 1. The string siblings are written fine and are not reported."
+    },
+    {
+      "name": "formats-xml/nulls/null-leaf-cannot-be-written-strict-is-the-same",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        },
+        "strict": true
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "write.unsupported-value"
+          }
+        ]
+      },
+      "comment": "Companion to formats-xml/nulls/null-leaf-at-top-level-cannot-be-written, differing only in strict:true. Both MUST produce the identical result: the failure is unconditional, not a strict-mode behavior."
+    },
+    {
+      "name": "formats-xml/nulls/empty-element-reads-as-the-empty-string",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<root><s/></root>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "root",
+              {
+                "edges": [
+                  [
+                    "s",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": ""
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "The read rule C-10 rests on: an element with no child elements is a string leaf holding its text, so the empty element reads as the empty string, never as null. This is why a null written as <s/> would be indistinguishable from an empty string. A write vector cannot pin the positive neighbour (an empty string leaf still writes as an empty element): the spelling is not fixed by E-18, and the ports write <s />, <s/> or <s></s>."
     }
   ]
 }

@@ -141,9 +141,9 @@ Python ([omnist#352](https://github.com/omnist-dev/omnist/pull/352), merged as
 `0133f89`, pinned to v0.27.0-beta).
 
 **Versions.** The Version row is each port's latest **tag**, checked
-2026-10-04 with `git ls-remote --tags`. Python `v0.13.0` is tagged and the
-PyPI Simple index serves `omnist-0.13.0` (checked 2026-10-04, after its
-Publish run succeeded; `0.12.0` is also served). Rust `v0.6.1-alpha` is tagged and
+2026-10-05 with `git ls-remote --tags`. Python `v0.14.0` is tagged and the
+PyPI Simple index serves `omnist-0.14.0` (checked 2026-10-05, after its
+Publish run succeeded; `0.13.0` is also served). Rust `v0.6.1-alpha` is tagged and
 crates.io's newest version is `0.6.1-alpha` (`0.6.0-alpha` is also published). Go `v0.9.0-alpha` is distributed by tag only (module proxy; no
 registry). TypeScript `v0.7.0-alpha` is tagged; npm (`@omnist-dev/omnist`)
 serves `0.6.0-alpha` as both the `latest` and `alpha` dist-tag, so
@@ -157,13 +157,14 @@ in Go `v0.7.1-alpha` and later, Rust `v0.5.1-alpha`, TypeScript `v0.6.1-alpha`,
 Java `v0.3.1-alpha` and Python `v0.11.0`. The v0.28.0-beta schema diagnostics
 (S-8, S-22, S-23 and S-24; see `DIV-5`) are in Python `v0.12.0`, TypeScript
 `v0.7.0-alpha`, Rust `v0.6.0-alpha` and later, Go `v0.9.0-alpha` and Java
-`v0.4.0-alpha`. Python `v0.13.0` pins v0.28.0-beta and adopts no later rule.
-Of the v0.28.0-beta releases only Python `0.12.0` and `0.13.0` and Rust
-`0.6.0-alpha` and `0.6.1-alpha` are served by their registries today. No port implements the OSD-OML extension (§9.6).
+`v0.4.0-alpha`. Python `v0.13.0` pins v0.28.0-beta and adopts no later rule;
+Python `v0.14.0` pins v0.32.0-beta (`634ff12`). Of the v0.28.0-beta releases
+only Python `0.12.0`, `0.13.0` and `0.14.0` and Rust `0.6.0-alpha` and
+`0.6.1-alpha` are served by their registries today. No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.13.0 | 0.7.0-alpha | 0.6.1-alpha | 0.9.0-alpha | 0.4.0-alpha |
+| Version | 0.14.0 | 0.7.0-alpha | 0.6.1-alpha | 0.9.0-alpha | 0.4.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five) | all three | all three | all three | all three | all three |
@@ -171,6 +172,7 @@ Of the v0.28.0-beta releases only Python `0.12.0` and `0.13.0` and Rust
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14) | both done | both done (OSD-15 fixed in #150) | both done (`to_osd` returns `Result`) | both done (`osd.Write` returns an error) | both done |
 | Writers refuse a string with no UTF-8 encoding (C-9) | no (measured 2026-10-04, `DIV-5`) | no (measured, `DIV-5`) | not applicable (`String`) | no (measured, `DIV-5`) | no (measured, `DIV-5`) |
+| An XML writer refuses a null leaf (C-10) | no (measured 2026-10-05, `DIV-21`) | no (measured, `DIV-22`) | no (measured, `DIV-23`) | partly (measured, `DIV-24`: refuses, but the path of a repeated label lacks its index) | yes (measured) |
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
@@ -192,7 +194,9 @@ repeated-label path vectors (`DIV-14`, `DIV-15`, `DIV-16`) and 10 input-size
 vectors (`DIV-17`), none of them in the cells above, which stay at the
 v0.27.0-beta figures. v0.31.0-beta added 7 more (362 in all), the OML-29
 vectors in `oml-grammar/grammar.json` (`DIV-18`, `DIV-19`, `DIV-20`), likewise
-not in the cells above.
+not in the cells above. v0.33.0-beta added 5 more (367 in all), the XML null
+vectors in `formats-xml/xml.json` (`DIV-21`, `DIV-22`, `DIV-23`, `DIV-24`),
+also not in the cells above.
 
 **What each port skips.** Python: 28
 OSD-OML ([omnist#341](https://github.com/omnist-dev/omnist/issues/341)) and 6
@@ -243,7 +247,8 @@ when their own removal condition, every port passing every one of the fifteen,
 was found met: the Go and TypeScript runners were re-run that day and pass them,
 and the other three ports' own PR figures (§9.3) report 0 failures on the full
 suite. `DIV-5`, `DIV-11`, `DIV-12`, `DIV-13`, `DIV-14`, `DIV-15`, `DIV-16`,
-`DIV-17`, `DIV-18`, `DIV-19` and `DIV-20` are live.
+`DIV-17`, `DIV-18`, `DIV-19`, `DIV-20`, `DIV-21`, `DIV-22`, `DIV-23` and
+`DIV-24` are live.
 One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
@@ -459,6 +464,51 @@ The same shape as `DIV-18`. Measured 2026-10-04 on Rust at `7e297ba`
 Go (`0.9.0-alpha`, `d43b83f`) and Java (`0.4.0-alpha`, `362b88b`) were measured
 the same way and pass all 7 (Go 317 pass, 0 fail, 28 skip; Java's Track 2 run
 passes 317): they already skip a gap after the colon.
+
+**DIV-21. Python writes a null leaf as an empty XML element instead of failing ([C-10](07-codecs-and-deserialization.md#73-writing); [omnist-spec#164](https://github.com/omnist-dev/omnist-spec/issues/164)).**
+`write_xml(read_json('{"a":null}'))` on Python `0.14.0` (`96ba4a4`, the tag)
+returns `<a />`, which reads back as the empty string. With `strict=True` it
+raises `WriteError` carrying a warning, "null written as an empty element",
+not `write.unsupported-value`. Measured 2026-10-05 with its vector runner on
+the tag, the `formats-xml` file replaced by v0.33.0-beta's: 4 of the 5 new
+`formats-xml/nulls` vectors fail (the top-level, nested and repeated-label
+ones with "expected failure, command succeeded"; the `strict` one with no
+diagnostics), and the read-side `empty-element-reads-as-the-empty-string`
+passes.
+**Remove this entry when Python passes all 5 `formats-xml/nulls` vectors.**
+
+**DIV-22. TypeScript writes a null leaf as an empty XML element instead of failing (C-10).**
+The same shape as `DIV-21`. Measured 2026-10-05 on TypeScript `0.7.0-alpha`
+(`89bc1bd`), `npm run conformance:vectors`: the top-level, nested and
+repeated-label vectors fail ("expected failure, write succeeded"); the
+`strict` vector is skipped by the runner because the `WriteError` carries no
+structured code or path (the writer itself throws, "null written as an empty
+element"); the read-side vector passes. The writer's report code for the
+non-strict case is the port-local `null.omitted`.
+**Remove this entry when TypeScript passes all 5 `formats-xml/nulls` vectors.**
+
+**DIV-23. Rust writes a null leaf as an empty XML element instead of failing (C-10).**
+The same shape as `DIV-21`. Measured 2026-10-05 on Rust `0.6.1-alpha`
+(`7e297ba`, `vector_runner`): the top-level, nested and repeated-label vectors
+fail ("expected failure, write succeeded"); the `strict` vector fails because
+the write fails with a warning-level error that carries no structured path and
+code; the read-side vector passes. The report code is the port-local
+`null.omitted`, which no part of the spec defines.
+**Remove this entry when Rust passes all 5 `formats-xml/nulls` vectors.**
+
+**DIV-24. Go refuses an XML null leaf but reports a repeated label's path without its index (C-10, [E-10](08-conformance-and-errors.md#84-paths)).**
+Measured 2026-10-05 on Go `0.9.0-alpha` (`d43b83f`), conformance runner: the
+top-level, nested and `strict` vectors pass, and
+`null-leaf-in-repeated-label-is-indexed` fails with
+`$.root.item:write.unsupported-value` where `$.root.item[1]` is expected. It is
+the same missing-index defect `DIV-14` records for `validate`, here in the XML
+writer. Only the null case was measured; whether the XML writer's other
+diagnostics on a repeated label share it was not.
+**Remove this entry when Go passes all 5 `formats-xml/nulls` vectors.**
+
+Java (`0.4.0-alpha`, `362b88b`) was measured the same way and passes all 5: its
+XML writer already fails on a null leaf with `write.unsupported-value` at the
+right path, unconditionally.
 
 **Open, unpinned behaviours.** These are spec-unspecified: no rule fixes them,
 no vector pins them, and they are not divergences to fix. They are recorded

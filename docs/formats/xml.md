@@ -58,6 +58,19 @@ so its Document has exactly one top-level edge. A Document with several
 top-level edges cannot be written as XML. To share one Document across all
 formats, wrap the data under a single top-level key.
 
+**An empty element is the empty string, and XML has no `null`.** An element
+with no child elements is a string leaf holding its text, so `<a/>` and
+`<a></a>` both read as `(a,"")`. XML has no null token to write instead, and
+writing a null leaf as `<a/>` would produce text that reads back as the empty
+string, a different Document. A writer MUST therefore fail on a null leaf with
+`write.unsupported-value`, unconditionally and not only under `strict`, at the
+Document path of the leaf (`$.root.item[1]` for the second of a repeated
+`item`), exactly as TOML does for its null
+([C-10](../07-codecs-and-deserialization.md#73-writing)). It MUST NOT write an
+empty element and report an adjustment; there is no `format.*` code for it. An
+*absent* optional field is written by omitting the element, which is what
+`[0,1]` cardinality already means; an empty string leaf still writes as `<a/>`.
+
 **Attributes and namespace prefixes are dropped, and the drop MUST be
 reported.** `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the
 attribute is gone, and a reader MUST report `format.attribute-dropped`

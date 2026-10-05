@@ -3,6 +3,41 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.33.0-beta (2026-10-05)
+
+**Normative (minor)** - resolves
+[#164](https://github.com/omnist-dev/omnist-spec/issues/164): an XML writer
+fails on a null leaf.
+
+- **New rule [C-10](docs/07-codecs-and-deserialization.md#73-writing).** The
+  XML writer MUST fail with `write.unsupported-value`, unconditionally and
+  regardless of `strict`, at the Document path of a null leaf (indexed per
+  E-10). XML has no null token, and the empty element `<a/>` reads back as the
+  empty string, so a written null was indistinguishable from the different,
+  valid Document holding `""`. This is the treatment TOML's null already had
+  and the case E-26 and the `write.unsupported-value` row describe; the
+  rejected alternative, a `format.*` code for a null written as an empty
+  element, would have broken section 8.3.8's own test that an adjustment never
+  produces output indistinguishable from another valid Document. E-6's null
+  bullet, the `write.unsupported-value` row, `docs/formats/xml.md` (which also
+  states the read rule: a childless element is a string leaf) and the format
+  overview's table now name XML. Rust's port-local `null.omitted` report code
+  has no place in the spec.
+- **Five vectors** in `test-suite/formats-xml/xml.json`
+  (`formats-xml/nulls/*`): a null leaf at the top level (`$.a`), nested
+  (`$.root.x.n`), in a repeated label (`$.root.item[1]`, the second of three),
+  the top-level one again with `strict: true`, and the read-side neighbour
+  `<root><s/></root>` reading as the empty string. The positive write
+  neighbour, an empty string leaf written as an empty element, has no vector:
+  the ports write `<s />`, `<s/>` and `<s></s>`, which E-18 does not
+  normalise. Measured 2026-10-05 at each port's latest tag: Java passes all
+  five; Go refuses the null but omits the index in the repeated-label path
+  (`DIV-24`); Python, TypeScript and Rust write an empty element (`DIV-21`,
+  `DIV-22`, `DIV-23`).
+- **Ledger Version row.** Python is `0.14.0`, tagged and served by the PyPI
+  Simple index (checked 2026-10-05); it pins v0.32.0-beta. The suite is **367**
+  vectors (362 plus 5).
+
 ## v0.32.0-beta (2026-10-04)
 
 **Normative (minor)** - resolves
