@@ -205,9 +205,10 @@ Four rules, all normative, all from chapter 8:
 2. Diagnostics compare as a **set**. Order is not specified.
 3. The match is exact. An extra diagnostic fails the vector just as a missing
    one does.
-4. **Code-agnostic mode** compares only `ok` and the set of paths. This is the
-   mode for implementations that have not adopted the chapter 8 code taxonomy —
-   which today is all of them. A run must state which mode produced it.
+4. **Code-agnostic mode** compares only `ok` and the set of paths. It is a
+   bring-up aid for a port that has not yet adopted the chapter 8 code
+   taxonomy, which §8.1 makes mandatory; a result from it is not a conformance
+   claim. A run must state which mode produced it.
 
 **One narrow exception to comparing paths byte for byte (E-32).** A
 `parse.codec-syntax` diagnostic on JSON, YAML, TOML or XML input may carry the

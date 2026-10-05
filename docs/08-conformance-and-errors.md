@@ -2,19 +2,22 @@
 
 ## 8.1 Status of this chapter
 
-**The error-code taxonomy in §8.3 is normative content that implementations
-are still migrating onto.** It exists because conformance testing needs
-stable, language-independent identifiers — comparing human-readable message
-strings across languages is not a test, it is a coincidence. See the
+**The error-code taxonomy in §8.3 is normative and mandatory.** It exists
+because conformance testing needs stable, language-independent identifiers —
+comparing human-readable message strings across languages is not a test, it
+is a coincidence. An implementation is conformant on error *behavior* — which
+inputs fail, and where — **and** on error *codes*: it MUST report, for every
+failure, the code §8.3 assigns to it, at the path §8.4 assigns to it. This is
+what E-1, E-2 and the other rules of this chapter already say; this section
+no longer carries a transition exception to them. See the
 `§8.3 error codes` row in [§9.3](09-divergence-ledger.md#93-current-status)
-for current per-port adoption status.
+for current per-port status.
 
-**None of this is required for the current release; it is required before a
-version of this spec declares §8.3 mandatory.** Until then, an
-implementation is conformant on error *behavior* — which inputs fail, and
-where — without being conformant on error *codes*. §8.5 separates the two
-so that can be measured, and §8.5.2 rule 4 lets a harness run in
-code-agnostic mode for exactly this reason.
+§8.5 still separates behavior from codes, so that a failing run can say
+which of the two is wrong. That separation is a diagnostic aid, not a
+conformance level: [§8.5.2](#852-diagnostics-matching) rule 4 keeps a
+code-agnostic mode for bringing up a port that has not yet adopted §8.3, and
+results from it are not a conformance claim.
 
 ## 8.2 Code format
 
@@ -724,8 +727,10 @@ Matching rules, all normative:
    be. Partial matching is not permitted; an implementation reporting three
    problems where the vector expects two has failed.
 4. A harness MAY be run in **code-agnostic mode**, comparing only `ok` and the
-   set of paths. This is the mode implementations that have not yet adopted
-   §8.3 run in. A run MUST state which mode produced its results.
+   set of paths. This is a bring-up aid for an implementation that has not yet
+   adopted §8.3 (§8.1), and no more: a result obtained in that mode is **not**
+   a conformance claim, since §8.3 is mandatory. A run MUST state which mode
+   produced its results.
 
 **E-32. A vector MAY give a `parse.codec-syntax` diagnostic's `path` as the
 placeholder `"line:col"`, meaning "compare the code; do not compare the path,

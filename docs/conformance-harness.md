@@ -54,10 +54,8 @@ The real conventions, applying to every subcommand:
   second mechanism — see the exact JSON shape below, which is **not**
   identical to §8.2's envelope (no per-error `severity` field; errors are
   wrapped under `{"ok", "message", "errors"}` rather than a bare array).
-  This is consistent with §8.1's own disclosure that no implementation
-  emits the full §8.3 taxonomy yet — Python's `--json` output is real,
-  existing, partial convergence, not yet full §8.2 compliance, and this
-  track does not require Python to close that gap before being usable.
+  The `code` in each error is the §8.3 identifier, so it is compared
+  exactly (see the `lint` note below).
 - **`--json` failure payloads print to stdout, not stderr**, across every
   command in this table (`validate`, `extract`, `infer`, `convert`) — this
   is deliberate, not an accident of one command.
@@ -79,22 +77,18 @@ The real conventions, applying to every subcommand:
 | `infer` | `omnist infer FILE [FILE...] --from oml [--allow-any] [--compact] [-o FILE] [--json]` — **multiple positional document files, one per sample; not a single stdin stream** | OSD. With `--allow-any` and an opened field, a plain-text report prints to **stderr** (not stdout, not JSON): `opened N field(s) as \`any\`:\n  RecordName.label — reason` | **0 (including the `--allow-any` success case), or 2 on ambiguous type without `--allow-any`** — `--json` gives `{"ok": false, "message", "errors": []}` on stdout for the exit-2 case |
 | `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | **1 if any `warning`-severity finding is present, 0 otherwise** |
 
-**`lint` findings' `code` field is compared code-agnostically, like Track
-2's diagnostics.** [§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching)
-rule 4 already establishes this for the JSON-vector suite specifically
-because §8.3-namespaced code adoption is still rolling out across
-implementations — see the `§8.3 error codes` row in
-[§9.3](09-divergence-ledger.md#93-current-status) for current per-port
-status. The reference implementation itself still emits the bare
-pre-namespacing form in places (`unreachable-record`, not
-`lint.unreachable-record`), so a fixture's `expected.json` recorded
-against it necessarily carries that same bare form — an implementation
-that has already adopted §8.3's namespaced codes MUST NOT be marked
-failing for that; compare `severity` and `location` exactly, and treat
-`code` as informational only until every implementation's row in §9.3
-reads "yes." This applies to every operation whose fixture carries a
-`code` field, not lint alone — the same reasoning that produced §8.5.2
-rule 4 for Track 2 applies identically here.
+**`lint` findings' `code` field is compared exactly, like Track 2's
+diagnostics.** §8.3 is mandatory
+([§8.1](08-conformance-and-errors.md#81-status-of-this-chapter)), and
+[§8.3.7](08-conformance-and-errors.md#837-lint-schema-diagnostics) spells the
+lint codes namespaced (`lint.unreachable-record`), so a fixture's
+`expected.json` records that namespaced form and a CLI that prints the bare
+pre-namespacing spelling fails it. Compare `code`, `severity` and `location`
+exactly; `message` is never compared. This applies to every operation whose
+fixture carries a `code` field, not lint alone. A runner MAY still run
+code-agnostically ([§8.5.2](08-conformance-and-errors.md#852-diagnostics-matching)
+rule 4) while a port is being brought up; such a run is not a conformance
+claim and MUST say that it is code-agnostic.
 
 **`is_empty`/`compatible_with`/`equivalent` encode their boolean result in
 the exit code too** (0 = true, 1 = false), not just in stdout. The

@@ -16,7 +16,7 @@ Python's `schema.compatible_with(other)` and Rust's
 
 **Error representation.** Exception classes, `Result` types, error enums, unions
 of tagged objects. What matters is that the same inputs fail, at the same paths,
-with the same codes once §8.3 is adopted.
+with the same codes (§8.3 is mandatory, §8.1).
 
 **Message text.** Wording, punctuation, capitalization, suggested fixes, and
 localization. Conformance never compares messages.
