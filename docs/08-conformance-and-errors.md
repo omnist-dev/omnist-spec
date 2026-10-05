@@ -987,7 +987,7 @@ required:**
   this implementation, or the rule or behaviour a vector pins has not been
   adopted yet. Temporary by nature — expected to become a `pass`
   once the work lands. No ledger entry is required for this category on its
-  own, though the usual issue tracker SHOULD have something open for it.
+  own (E-20), though the usual issue tracker SHOULD have something open for it.
 - **E-21. Documented divergence.** The vector's outcome depends on a capability
   this implementation's target language or design genuinely cannot provide
   — not a missing feature, a structural limit. This category MUST have a

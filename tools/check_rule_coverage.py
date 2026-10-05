@@ -20,6 +20,12 @@ A citable number also has to mean one thing. Since v0.21.0-beta this script
 also fails when a rule label is *defined* twice -- omnist-spec#105's first
 head gave a new rule the `E-26` that v0.20.0-beta had already spent on an
 unrelated one, and nothing here noticed.
+
+Since omnist-spec#149 the gate also covers SHOULD, not
+only MUST/SHALL; counts a letter-suffixed label (`R-3a`) as a rule number;
+sees definitions that sit in a table cell (`| `infer` | **S-21.** ...`) or
+inline (`**A-9:**`, `**(A-10)**`, `**Determinism requirement (A-5).**`); and fails when a document cites a rule
+number nothing defines. What it does not do is listed next to `REPORTED`.
 """
 
 from __future__ import annotations
@@ -44,9 +50,44 @@ ENFORCED = {
 # Every normative chapter is enforced. Chapters 2 and 3 joined the set once
 # omnist-spec#93 closed the 22 paragraphs that sat outside their existing
 # D- and S- spines -- a gap invisible until this script existed.
-REPORTED: dict[str, str] = {}
+#
+# Reported, not enforced: normative text that has no rule-number spine to be
+# held to. A value of None means "any rule label counts", because the file
+# has no namespace of its own. Each needs a decision about numbering before it
+# can be a gate (omnist-spec#149):
+#   - formats/*.md state per-format MUST requirements (JSON has no temporal
+#     types, XML refusals, ...) that chapter 7's C- rules do not number;
+#   - extensions/osd-oml.md has an R- spine (R-1..R-23), but E.7, E.8, E.10
+#     and E.11 carry MUST paragraphs outside it, and the extension is still
+#     being rewritten (omnist-spec#53), so renumbering now would collide;
+#   - the porting guide, the conformance harness and the glossary restate
+#     rules of other chapters.
+REPORTED: dict[str, str | None] = {
+    "docs/extensions/osd-oml.md": "R",
+    "docs/formats/json.md": None,
+    "docs/formats/oml.md": None,
+    "docs/formats/overview.md": None,
+    "docs/formats/toml.md": None,
+    "docs/formats/xml.md": None,
+    "docs/formats/yaml.md": None,
+    "docs/porting-a-conformance-runner.md": None,
+    "docs/conformance-harness.md": None,
+    "docs/01-glossary.md": None,
+}
 
-NORMATIVE = re.compile(r"\bMUST\b|\bSHALL\b")
+# SHOULD counts as normative too (MAY does not: it grants, it does not bind).
+NORMATIVE = re.compile(r"\bMUST\b|\bSHALL\b|\bSHOULD\b")
+
+# A normative paragraph that genuinely has no rule number yet, and that the
+# spec owner has not decided how to number. Matched by the start of the
+# paragraph's first line; every entry needs a reason, and the check fails if
+# an entry stops matching, so this list cannot rot.
+UNNUMBERED = {
+    ("docs/07-codecs-and-deserialization.md",
+     "A reader or writer SHOULD be able to report the adjustments"):
+        "7.4 format reports: a SHOULD with no C- rule; numbering it is a "
+        "spec-owner decision",
+}
 
 # Where each rule namespace is defined. A label may be *cited* anywhere; it
 # may be *defined* only in its owning file, which is what makes the
@@ -57,6 +98,7 @@ DEFINING_FILE = dict(
     (path, prefix) for path, prefix in ENFORCED.items()
 )
 DEFINING_FILE["docs/09-divergence-ledger.md"] = "DIV"
+DEFINING_FILE["docs/extensions/osd-oml.md"] = "R"
 
 # A definition is a bold label opening a paragraph or a list item:
 #
@@ -75,6 +117,40 @@ DEFINITION = re.compile(
     r"(?=[.,]|\*\*)"
 )
 
+# Definitions that do not open the line: a table cell
+# (`| `infer` | **S-21.** ...`), and the inline forms chapter 6 uses
+# (`**A-9:** ...`, `**(A-10)** ...`). `**S-9** applies` is a citation: the
+# label closes the bold with nothing after it inside.
+INLINE_DEFINITION = re.compile(
+    r"\*\*(?:\((?P<paren>(?:D|S|A|C|E|R|OML|OSD|DIV)-\d+[a-z]?)\)"
+    r"|(?P<label>(?:D|S|A|C|E|R|OML|OSD|DIV)-\d+[a-z]?)(?=[.:,]))"
+)
+
+# A bold run-in title that ends in a label (`**Determinism requirement
+# (A-5).**`). It is a definition only when nothing else defines that label:
+# chapter 2 has `**On writers (D-15).**`, a sub-heading *citing* a rule
+# defined elsewhere, which must not count as a second definition.
+TITLE_DEFINITION = re.compile(
+    r"\*\*[^*\n]*?\((?P<label>(?:D|S|A|C|E|R|OML|OSD|DIV)-\d+[a-z]?)\)\.?\*\*"
+)
+
+
+def definitions_in(line: str) -> list[str]:
+    """Every rule label a line defines, at line start or inline."""
+    found = []
+    m = DEFINITION.match(line)
+    if m:
+        found.append(m.group("label"))
+    for m in INLINE_DEFINITION.finditer(line):
+        label = m.group("paren") or m.group("label")
+        if label not in found:
+            found.append(label)
+    return found
+
+
+def title_definitions_in(line: str) -> list[str]:
+    return [m.group("label") for m in TITLE_DEFINITION.finditer(line)]
+
 
 def duplicate_definitions() -> list[str]:
     """Fail when one rule label is defined twice.
@@ -86,6 +162,7 @@ def duplicate_definitions() -> list[str]:
     preamble guards against by hand, applied to every namespace.
     """
     seen: dict[str, list[str]] = {}
+    titles: dict[str, list[str]] = {}
     for rel, prefix in DEFINING_FILE.items():
         path = ROOT / rel
         lines = path.read_text(encoding="utf-8").splitlines()
@@ -96,15 +173,20 @@ def duplicate_definitions() -> list[str]:
                 continue
             if in_fence:
                 continue
-            m = DEFINITION.match(line)
-            if not m:
-                continue
-            label = m.group("label")
-            # Only a label from this file's own namespace is a definition
-            # here; anything else is a citation being used as a heading.
-            if label.rsplit("-", 1)[0] != prefix:
-                continue
-            seen.setdefault(label, []).append(f"{rel}:{lineno}")
+            for label in definitions_in(line):
+                # Only a label from this file's own namespace is a
+                # definition here; anything else is a citation being used
+                # as a heading.
+                if label.rsplit("-", 1)[0] != prefix:
+                    continue
+                seen.setdefault(label, []).append(f"{rel}:{lineno}")
+            for label in title_definitions_in(line):
+                if label.rsplit("-", 1)[0] == prefix:
+                    titles.setdefault(label, []).append(f"{rel}:{lineno}")
+
+    for label, places in titles.items():
+        if label not in seen:
+            seen[label] = places[:1]
 
     errors = []
     for label, places in sorted(seen.items()):
@@ -165,17 +247,141 @@ def _rules(lines: list[str]):
             yield item
 
 
-def gaps_in(path: str, prefix: str) -> list[tuple[int, str]]:
+ANY_LABEL = r"(?:D|S|A|C|E|R|OML|OSD)"
+
+
+def gaps_in(path: str, prefix: str | None) -> list[tuple[int, str]]:
     lines = (ROOT / path).read_text(encoding="utf-8").split("\n")
-    tag = re.compile(rf"\b{re.escape(prefix)}-\d+\b")
+    # `R-3a` is a rule number: the letter suffix must not defeat `\b`.
+    tag = re.compile(
+        rf"\b{re.escape(prefix) if prefix else ANY_LABEL}-\d+[a-z]?\b")
     out = []
     for item in _rules(lines):
         text = " ".join(lines[i] for i in item)
         if not NORMATIVE.search(text):
             continue
         if not tag.search(text):
-            out.append((item[0] + 1, lines[item[0]].strip()[:88]))
+            first = lines[item[0]].strip()
+            if any(path == p and first.startswith(start)
+                   for (p, start) in UNNUMBERED):
+                continue
+            out.append((item[0] + 1, first[:88]))
     return out
+
+
+def stale_exemptions() -> list[str]:
+    """An UNNUMBERED entry that no longer matches a paragraph is an error."""
+    errors = []
+    for (path, start), reason in UNNUMBERED.items():
+        lines = (ROOT / path).read_text(encoding="utf-8").split("\n")
+        hit = any(lines[item[0]].strip().startswith(start)
+                  and NORMATIVE.search(" ".join(lines[i] for i in item))
+                  for item in _rules(lines))
+        if not hit:
+            errors.append(f"{path}: the UNNUMBERED exemption {start!r} "
+                          f"matches no normative paragraph any more; "
+                          f"remove it ({reason})")
+    return errors
+
+
+# --- citations must resolve ---------------------------------------------------
+
+CITE = re.compile(r"(?<![\w-])((?:D|S|A|C|E|R|OML|OSD)-\d+[a-z]?)(?![\w-])")
+
+
+def all_definitions() -> set[str]:
+    """Every defined label, from each namespace's owning file."""
+    defined: set[str] = set()
+    for rel, prefix in DEFINING_FILE.items():
+        in_fence = False
+        for line in (ROOT / rel).read_text(encoding="utf-8").splitlines():
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if not in_fence:
+                defined.update(
+                    d for d in definitions_in(line) + title_definitions_in(line)
+                    if d.rsplit("-", 1)[0] == prefix)
+    return defined
+
+
+def citation_files() -> list[pathlib.Path]:
+    """Prose that cites rule numbers. The CHANGELOG is history (it cites
+    numbers as they stood in their release), and DIV- numbers are exempt:
+    a closed divergence leaves the ledger by design, so a citation of it is
+    a pointer into history, not into the current text."""
+    files = sorted((ROOT / "docs").rglob("*.md"))
+    files += [ROOT / "README.md", ROOT / "test-suite" / "README.md",
+              ROOT / "conformance" / "README.md"]
+    return [f for f in files if f.is_file()]
+
+
+def dangling_citations() -> list[str]:
+    defined = all_definitions()
+    bases = {re.sub(r"[a-z]$", "", d) for d in defined}
+    errors = []
+    for path in citation_files():
+        rel = path.relative_to(ROOT).as_posix()
+        in_fence = False
+        for lineno, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), start=1):
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            for m in CITE.finditer(line):
+                label = m.group(1)
+                # `E-4a` is satisfied by a defined `E-4a`; a bare `E-4` by
+                # `E-4` or by any of its lettered sub-rules.
+                if label in defined or label in bases:
+                    continue
+                errors.append(f"{rel}:{lineno}: cites {label}, which "
+                              f"nothing defines")
+    return errors
+
+
+RANGE_CLAIM = re.compile(
+    r"numbered \*\*(?P<p>[A-Z]+)-1\*\* through \*\*(?P=p)-(?P<n>\d+)\*\*")
+
+
+def stale_range_claims() -> list[str]:
+    """A chapter that says "numbered A-1 through A-23" must have defined
+    exactly that many: a rule added past the stated end, or a stated end
+    nothing reaches, is a count gone stale."""
+    defined = all_definitions()
+    errors = []
+    for path in citation_files():
+        text = path.read_text(encoding="utf-8")
+        for m in RANGE_CLAIM.finditer(text):
+            prefix, claimed = m.group("p"), int(m.group("n"))
+            nums = [int(d.rsplit("-", 1)[1].rstrip("abcdefghijklmnopqrstuvwxyz"))
+                    for d in defined if d.rsplit("-", 1)[0] == prefix]
+            top = max(nums, default=0)
+            if top != claimed:
+                errors.append(
+                    f"{path.relative_to(ROOT).as_posix()}: says {prefix}-1 "
+                    f"through {prefix}-{claimed}, but the highest {prefix}- "
+                    f"rule defined is {prefix}-{top}")
+    return errors
+
+
+def cited_not_defined(path: str, prefix: str) -> int:
+    """Report-only: normative paragraphs that cite a rule of this namespace
+    without defining one. `gaps_in` is satisfied by any same-namespace
+    number, so a paragraph that merely mentions `E-5` passes; most of these
+    are continuation paragraphs of the rule above them. Deciding which are
+    real gaps needs a continuation-paragraph convention first."""
+    lines = (ROOT / path).read_text(encoding="utf-8").split("\n")
+    n = 0
+    for item in _rules(lines):
+        text = " ".join(lines[i] for i in item)
+        if NORMATIVE.search(text) and not any(
+                d.rsplit("-", 1)[0] == prefix
+                for i in item
+                for d in definitions_in(lines[i]) + title_definitions_in(lines[i])):
+            n += 1
+    return n
 
 
 def main() -> int:
@@ -194,8 +400,34 @@ def main() -> int:
 
     for path, prefix in REPORTED.items():
         gaps = gaps_in(path, prefix)
-        note = "covered" if not gaps else f"{len(gaps)} outside the {prefix}- spine"
+        what = f"the {prefix}- spine" if prefix else "any rule number"
+        note = "covered" if not gaps else f"{len(gaps)} outside {what}"
         print(f"{path}: {note} (reported, not enforced)")
+        for line_no, preview in gaps:
+            print(f"    {path}:{line_no}: {preview}")
+
+    for path, prefix in ENFORCED.items():
+        n = cited_not_defined(path, prefix)
+        print(f"{path}: {n} normative paragraph(s) cite a {prefix}- rule "
+              f"without defining one (reported, not enforced)")
+
+    for err in stale_exemptions():
+        failed = True
+        print(f"error: {err}", file=sys.stderr)
+
+    for err in stale_range_claims():
+        failed = True
+        print(f"error: {err}", file=sys.stderr)
+
+    dangling = dangling_citations()
+    if dangling:
+        failed = True
+        print(f"error: {len(dangling)} citation(s) of a rule number that "
+              f"nothing defines:", file=sys.stderr)
+        for line in dangling:
+            print(f"  {line}", file=sys.stderr)
+    else:
+        print("citations: every cited rule number is defined")
 
     dupes = duplicate_definitions()
     if dupes:
