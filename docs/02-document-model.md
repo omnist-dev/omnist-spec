@@ -230,17 +230,18 @@ documents. Whatever values an implementation chooses:
   within one implementation (§2.4 note below) — a document that parses MUST
   NOT then fail to build.
 
-**Where this stands today.** No implementation currently exposes a public
-configuration surface for any of these limits. Python's `_MAX_DEPTH`,
-`_MAX_NODES`, and `_MAX_INT_DIGITS` are hardcoded module constants with no
+**Where this stands today.** Rust, Go and Java expose a configuration
+surface for the depth, node-count and integer-digit limits (a `Limits`
+struct, struct or record passed to the readers; checked 2026-10-05, see
+[§9.3](09-divergence-ledger.md#93-current-status)). Python and TypeScript do
+not: Python's `_MAX_DEPTH`, `_MAX_NODES`, and `_MAX_INT_DIGITS` are
+hardcoded module constants and TypeScript's are compile-time constants, with no
 constructor argument, function parameter, or environment variable that lets a
-caller change them — the only place they vary at all is inside Python's own
-test suite, via direct monkeypatching of the private module attribute, which
-is a test technique, not a configuration surface a real caller can use. "MAY
-set any of these limits" is written for an implementation that chooses to expose
-one — an embedded or big-data target with an actual reason to deviate — not a
-capability any implementation ships today. A future implementation is free to
-be the first.
+caller change them. That is permitted ("MAY set any of these limits"), and it
+is why those two ports skip the six `document-model/limits` vectors, which
+need a runtime-configurable limit to declare
+([`DIV-28`](09-divergence-ledger.md#94-known-open-divergences)). All five ports
+do expose the maximum input size of D-23 (§2.4.2).
 
 **D-13. What is fixed regardless of the chosen value: how exceeding it is reported.**
 Exceeding a declared limit — whatever number the implementation chose — MUST
