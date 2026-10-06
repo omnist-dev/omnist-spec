@@ -349,7 +349,7 @@ there is no separate set of names for them.
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
-| `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
+| `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips (in YAML, with the `\N` escape, [E-34](#838-format-codec-adjustments)) |
 | `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
 
 **E-5.** **`format.attribute-dropped`, `format.namespace-dropped`, and
@@ -360,6 +360,9 @@ is written as text, once per leaf, at the Document path of the leaf (indexed per
 [E-10](#84-paths)); `formats-xml/stringified/*` pins it. Per-implementation
 status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
 nowhere else.
+The same holds for `format.string-line-break-char`, which a YAML writer MUST
+emit, once per string value, at the Document path of the leaf, wherever it
+writes a value containing U+0085 ([E-34](#838-format-codec-adjustments)).
 
 Every code above describes a write that still succeeds, and — this is the
 test that matters, not merely "is there only one available fallback" —
@@ -435,6 +438,20 @@ a compliant parser and reads back as the exact original byte sequence.
 Once the writer does this, the write is genuinely lossless, not merely
 reported-as-lossy — there is nothing left to adjust or warn about, so no
 diagnostic code is needed for this case at all.
+
+**E-34. A YAML writer writes U+0085 (NEL) as the escape `\N`.** A string value
+or label containing U+0085 is written as a double-quoted YAML scalar in which
+each NEL is the two characters `\N`, never as the raw character: `"x\Ny"` for
+the string `x` NEL `y`. YAML 1.1 reads a raw NEL inside a scalar as a line
+break and folds it, so the raw character does not round-trip, and `\N` is the
+one YAML escape defined for it (YAML 1.2 keeps `\N`), which any YAML reader
+resolves back to the single character. The writer MUST also report
+`format.string-line-break-char` (warning) once per such string value, at the
+Document path of the leaf, indexed per [E-10](#84-paths); the path of the
+diagnostic for a label holding NEL is not decided here. The `\N` escape
+is the whole adjustment, so a reader sees the original string back and the
+`write` succeeds. How the other writers treat U+0085, and whether they report
+the code, is not decided here.
 
 ### 8.3.9 `write.*`
 

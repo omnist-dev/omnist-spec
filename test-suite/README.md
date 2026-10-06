@@ -27,7 +27,7 @@ test-suite/
   infer/                     infer / infer_with_report vectors, including allow_any
   lint/                      lint vectors
   formats-json/              JSON codec vectors, including the duplicate-key rule (C-11)
-  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, and anchor/alias resolution (D-20, D-27)
+  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, anchor/alias resolution (D-20, D-27), duplicate keys rejected (C-12), the tagged merge key (D-27) and the rejected `!!pairs`/`!!omap`/`!!set` collections (C-13), and the NEL escape a YAML writer uses (E-34)
   formats-toml/              TOML codec vectors
   formats-xml/               XML codec vectors
   formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15)

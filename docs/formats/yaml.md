@@ -207,6 +207,11 @@ the **value**, not of the spelling
 is a value of 4 335 decimal digits and is refused with
 `document.limit.int-digits`, and `1_000` has four digits, not five.
 
+**A NEL is written as `\N`.** YAML 1.1 reads a raw U+0085 in a scalar as a line
+break, so the writer quotes the string and spells the character with the `\N`
+escape, `a: "x\Ny"`, and reports `format.string-line-break-char`
+([E-34](../08-conformance-and-errors.md#838-format-codec-adjustments)); a YAML
+reader resolves `\N` back to the one character.
 
 ### Worked example
 
