@@ -1,0 +1,193 @@
+{
+  "vectors": [
+    {
+      "name": "formats-oml/escapes/control-character-writes-as-u00xx",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u0001b"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"a\\u0001b\"\n"
+      },
+      "comment": "OML-15: a control character with no short escape (here U+0001) is written as \\u00XX. The vector uses a character whose hex digits are all decimal, so it does not depend on the case of a hex letter."
+    },
+    {
+      "name": "formats-oml/escapes/backspace-writes-as-u0008-not-b",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\bb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"a\\u0008b\"\n"
+      },
+      "comment": "OML-15: the writer MUST NOT emit \\b. U+0008 therefore takes the \\u00XX form."
+    },
+    {
+      "name": "formats-oml/escapes/slash-is-not-escaped",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a/b"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"a/b\"\n"
+      },
+      "comment": "OML-15: the writer MUST NOT emit \\/. A solidus is written as itself."
+    },
+    {
+      "name": "formats-oml/escapes/quote-and-backslash-are-escaped",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "q\"b\\"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"q\\\"b\\\\\"\n"
+      },
+      "comment": "OML-15: the two characters that would end or corrupt the string are the escapes \\\" and \\\\."
+    },
+    {
+      "name": "formats-oml/escapes/newline-return-and-tab-use-short-escapes",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\nb\rc\td"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"a\\nb\\rc\\td\"\n"
+      },
+      "comment": "OML-15: \\n, \\r and \\t are the three short escapes the writer uses; it never writes a raw line break or tab inside a string, and never a multiline string."
+    },
+    {
+      "name": "formats-oml/escapes/non-ascii-is-written-literally",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "caf\u00e9 \u4e2d \ud83d\ude00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"caf\u00e9 \u4e2d \ud83d\ude00\"\n"
+      },
+      "comment": "OML-15: non-ASCII characters are emitted literally, including one outside the Basic Multilingual Plane (U+1F600), which MUST NOT be written as a surrogate-pair escape."
+    },
+    {
+      "name": "formats-oml/escapes/label-control-character-is-escaped-too",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a\u0001b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "\"a\\u0001b\": 1\n"
+      },
+      "comment": "OML-15 applies to a quoted label as it does to a string value."
+    }
+  ]
+}
