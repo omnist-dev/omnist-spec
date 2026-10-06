@@ -78,8 +78,7 @@ function le(x, y):
 ## Normative rules in this chapter
 
 Requirements here are numbered **A-1** through **A-23**, almost in document
-order (A-22 sits earlier in the chapter than A-14 to A-21, beside the inference
-step it constrains), so they can be cited directly rather than paraphrased.
+order (A-22 and A-23 sit earlier in the chapter than A-14 to A-21), so they can be cited directly rather than paraphrased.
 A number identifies a rule; it does not promise a reading order. The convention matches
 [§2.3](02-document-model.md#23-structural-invariants)'s `D-` rules and
 [§3.3](03-schema-model.md#33-formal-definition)'s `S-` rules.

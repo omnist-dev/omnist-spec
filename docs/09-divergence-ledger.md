@@ -113,22 +113,22 @@ kept terse deliberately: this table records **what**, not **how it got that
 way** — the reasoning, history, and audit trail for any cell live in that
 port's own issue tracker and commit history, not here.*
 
-**Last updated: 2026-10-05**, from read-only checkouts of each port's default
+**Last updated: 2026-10-06**, from read-only checkouts of each port's default
 branch, which is at its latest tag in all five. Every conformance figure below
 was measured on that date by running the port's own vector and fixture
 runners; none is carried forward from an earlier edit or from a port's PR
-description. Go (`v0.10.0-alpha`), Rust (`v0.9.0-alpha`), Java
-(`v0.5.0-alpha`) and TypeScript (`v0.8.0-alpha`) pin spec **v0.33.0-beta**
-(`64cbb68`, 367 Track 2 vectors) and were run against it. Python (`v0.14.0`)
-pins **v0.32.0-beta** (`634ff12`, 362 vectors) and was run against that pin,
-and again with its `vendor/omnist-spec` checkout moved to `64cbb68` to measure
-what v0.33.0-beta adds. All five compare diagnostics as `(path, code)` sets
-with strict runners.
+description. Python (`v0.15.0`), Go (`v0.11.0-alpha`), Rust (`v0.9.0-alpha`),
+Java (`v0.5.0-alpha`) and TypeScript (`v0.8.0-alpha`) all pin spec
+**v0.33.0-beta** (`64cbb68`, 367 Track 2 vectors; Python's pin read with
+`git ls-tree` at its tag) and were run against it. Python and Go were re-run
+on 2026-10-06 at their new tags; Rust, Java and TypeScript were run on
+2026-10-05 and their tags have not moved. All five compare diagnostics as
+`(path, code)` sets with strict runners.
 
 All five ports implement **v0.32.0-beta**: the E-10 index on every occurrence
 of a repeated label, the D-23 maximum input size (64 MiB by default in every
-port), OML-29 and C-9. All but Python implement **v0.33.0-beta**'s C-10 (an
-XML writer fails on a null leaf); Python's gap is `DIV-21`. Earlier waves,
+port), OML-29 and C-9, and **v0.33.0-beta**'s C-10 (an XML writer fails on a
+null leaf). Earlier waves,
 all complete in every port: v0.22.0-beta's fourteen vectors, v0.27.0-beta's
 YAML alias rule set (D-18, D-18a, D-19, D-20 and D-22, malformed-merge errors
 winning over limit codes, `<<: []` accepted as a carrier that merges nothing),
@@ -136,20 +136,21 @@ and v0.28.0-beta's programmatic schema diagnostics (see `DIV-5`). Which port
 adopted what, in which release, is in each port's own changelog.
 
 **Versions.** The Version row is each port's latest **tag**, checked
-2026-10-05 with `git ls-remote --tags`; it is what `tools/check_version_sync.py`
-compares. Registries, checked the same day: Python `v0.14.0` is on PyPI (the
-Simple index serves `omnist-0.14.0`). TypeScript `v0.8.0-alpha` is on npm
+2026-10-06 with `git ls-remote --tags`; it is what `tools/check_version_sync.py`
+compares. Registries: Python `v0.15.0` is on PyPI (the Simple index serves
+`omnist-0.15.0`, checked 2026-10-06); the checks of the other registries are
+from 2026-10-05 and their tags have not moved. TypeScript `v0.8.0-alpha` is on npm
 (`@omnist-dev/omnist`, both the `latest` and `alpha` dist-tags). Rust
 `v0.9.0-alpha` is on crates.io (`omnist`, newest version). Java `v0.5.0-alpha`
 is on Maven Central (`dev.omnist:omnist-j`, `<latest>` and `<release>` in
-`maven-metadata.xml`). Go `v0.10.0-alpha` is distributed by tag only (module
+`maven-metadata.xml`). Go `v0.11.0-alpha` is distributed by tag only (module
 proxy; no registry). No port implements the OSD-OML extension (§9.6).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
-| Version | 0.14.0 | 0.8.0-alpha | 0.9.0-alpha | 0.10.0-alpha | 0.5.0-alpha |
+| Version | 0.15.0 | 0.8.0-alpha | 0.9.0-alpha | 0.11.0-alpha | 0.5.0-alpha |
 | Maturity | beta, reference | alpha | alpha | alpha | alpha |
-| Spec version pinned | v0.32.0-beta | v0.33.0-beta | v0.33.0-beta | v0.33.0-beta | v0.33.0-beta |
+| Spec version pinned | v0.33.0-beta | v0.33.0-beta | v0.33.0-beta | v0.33.0-beta | v0.33.0-beta |
 | Document model | complete | complete (`bigint` for `integer`) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) | complete (all 7 kinds natively distinguished) |
 | Resource caps (§2.4's three universal limits; D-18 and D-22 are enforced by all five) | all three | all three | all three | all three | all three |
 | Maximum input size (D-23, a SHOULD; default 64 MiB) | yes (`max_input_bytes`) | yes (`maxInputBytes`) | yes (`Limits::max_input_bytes`) | yes (`Limits.MaxInputBytes`) | yes (`Limits.maxInputBytes`) |
@@ -157,14 +158,14 @@ proxy; no registry). No port implements the OSD-OML extension (§9.6).
 | OSD read/write | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) | complete (duplicate root rejected) |
 | OSD writer: label escaping (OSD-15), unwritable label refused (OSD-14) | both done | both done (OSD-15 fixed in #150) | both done (`to_osd` returns `Result`) | both done (`osd.Write` returns an error) | both done |
 | Writers refuse a string with no UTF-8 encoding (C-9) | yes (measured 2026-10-05: all five writers fail with `write.unsupported-value` at `$.a`; `DIV-5`) | yes (measured 2026-10-05, same five writers and result) | not applicable (`String` is always valid UTF-8) | yes (the C-9 unit tests pass, run 2026-10-05; `DIV-5`) | yes (`Utf8WriterTest` passes, run 2026-10-05; `DIV-5`) |
-| An XML writer refuses a null leaf (C-10) | no (measured 2026-10-05, `DIV-21`) | yes (all 5 `formats-xml/nulls` vectors pass, measured) | yes (measured, vector runner) | yes (measured, conformance runner) | yes (measured, harness) |
+| An XML writer refuses a null leaf (C-10) | yes (measured 2026-10-06: `write_xml` of a null leaf fails with `write.unsupported-value` at `$.a`; all 5 `formats-xml/nulls` vectors pass) | yes (all 5 `formats-xml/nulls` vectors pass, measured) | yes (measured, vector runner) | yes (measured, conformance runner) | yes (measured, harness) |
 | `any` type | yes | yes | yes | yes | yes |
 | `validate` / `materialize` | complete | complete | complete | complete | complete |
 | Schema algebra (all 6 ops) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #137) | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback | complete, codepoint-safe alphabetical fallback (PR #103) |
-| Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported (the XML reader's drop paths lack the E-10 index, `DIV-27`) | all four, attribute/namespace/interleaving drops reported (same gap, `DIV-27`) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported (same gap, `DIV-27`) |
+| Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported (drop paths indexed, measured 2026-10-06) | all four, attribute/namespace/interleaving drops reported (the XML reader's drop paths lack the E-10 index, `DIV-27`) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported (same gap, `DIV-27`) |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI (re-measured 2026-10-05) | yes, via the CLI (re-measured) | yes, via `omnist-cli` (re-measured) | yes, at the front of all six readers (CLI re-measured) | yes, in the CLI for a file (re-measured; stdin not re-run) |
-| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 367 at v0.33.0-beta) | 328 pass / 0 fail / 34 skip of 362 at its pin, v0.32.0-beta; against the v0.33.0-beta suite 329 / 4 / 34 of 367 (the 4 are `DIV-21`); the 34 are 28 OSD-OML and 6 `limits` | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML |
+| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 367 at v0.33.0-beta) | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML |
 | Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 29/0/0 (Java's Track 1 headline: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage (gate read from each port's config 2026-10-05; the percentages are not re-measured) | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.72% line / 99.36% branch (the port's `docs/limitations.md`, three runs at v0.33.0-beta; not re-run here), gated at 99.6% / 99.1% |
@@ -174,11 +175,10 @@ Rows this edit did not re-measure (the OML, OSD, `any`, `validate`,
 the 2026-10-04 edit; the vector suites each port passes cover them. The
 coverage percentages are the ports' own figures.
 
-The Track 2 suite is v0.33.0-beta, 367 vectors. Go, Rust and Java run all of it
+The Track 2 suite is v0.33.0-beta, 367 vectors, and all five ports pin it. Go, Rust and Java run all of it
 and pass 339, with the 28 OSD-OML vectors skipped. TypeScript passes 333 and
-skips 34. Python, whose pin is still v0.32.0-beta, passes all 328 of the 362
-vectors it pins; the five `formats-xml/nulls` vectors v0.33.0-beta added fail
-four times (`DIV-21`) and pass once. The growth since v0.27.0-beta (338
+skips 34; Python, which now pins v0.33.0-beta too, passes 333 and skips 34
+(28 OSD-OML and 6 `limits`). The growth since v0.27.0-beta (338
 vectors) is v0.30.0-beta's 17 (7 repeated-label path vectors and 10 input-size
 vectors), v0.31.0-beta's 7 OML-29 vectors in `oml-grammar/grammar.json`, and
 v0.33.0-beta's 5 XML null vectors in `formats-xml/xml.json`. Every port that
@@ -220,8 +220,8 @@ appeared in the same chapter.
 
 **`DIV-1`, `DIV-2`, `DIV-3`, `DIV-4`, `DIV-6`, `DIV-7`, `DIV-8`, `DIV-9`,
 `DIV-10`, `DIV-11`, `DIV-14`, `DIV-15`, `DIV-16`, `DIV-17`, `DIV-18`, `DIV-19`,
-`DIV-20`, `DIV-22`, `DIV-23` and `DIV-24` are retired numbers and MUST NOT be
-reused.** All twenty entries closed and were deleted; the numbers stay spent so
+`DIV-20`, `DIV-21`, `DIV-22`, `DIV-23`, `DIV-24`, `DIV-25` and `DIV-26` are
+retired numbers and MUST NOT be reused.** All twenty-three entries closed and were deleted; the numbers stay spent so
 a citation to any of them in an older document, issue, vector comment, or port
 changelog cannot silently come to mean something else. `DIV-3` (the YAML alias
 rules D-18, D-18a, D-19, D-20 and D-22) closed when the last port, Python,
@@ -249,8 +249,14 @@ pass all five `formats-xml/nulls` vectors. `DIV-11` (Rust's Document arena
 counting scalar values against the node cap, omnist-rs#192, closed as not
 reproducing) closed on
 2026-10-05 by measurement, not by an issue: see "Retired by measurement" at the
-end of this section. `DIV-5`, `DIV-12`, `DIV-13`, `DIV-21`, `DIV-25`, `DIV-26`,
-`DIV-27` and `DIV-28` are live.
+end of this section. `DIV-21` (Python's XML writer writing a null leaf as an
+empty element) closed on 2026-10-06 with Python `0.15.0`, which pins
+v0.33.0-beta and passes all five `formats-xml/nulls` vectors. `DIV-25` (Go's
+TOML and XML readers quadratic in the number of keys or elements,
+omnist-go#132) and `DIV-26` (Go's XML writer replacing U+FFFE and U+FFFF with
+U+FFFD, omnist-go#133) closed the same day with Go `v0.11.0-alpha`: the
+re-measured times and the writer's refusal are in the unpinned notes below.
+`DIV-5`, `DIV-12`, `DIV-13`, `DIV-27` and `DIV-28` are live.
 One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
@@ -360,7 +366,7 @@ The port's own `docs/limitations.md` adds that its default 64 MiB input cap
 does not bound this, and that the `smol-toml` parse of a long array of tables is
 also superlinear (46.7 s at 10 MiB; read from that file, not re-run). Slow
 parsing is not unique to TypeScript, but the quadratic shape is only measured
-there and in Go (`DIV-25`): the omnist#352 description reports PyYAML parsing a
+there (Go had it too, until `v0.11.0-alpha`): the omnist#352 description reports PyYAML parsing a
 1.1 MB, 50,000-key mapping in about 4 s (one point, no scaling series; not
 re-run here).
 **Remove this entry when #157 is fixed.** [D-23](02-document-model.md#242-resource-bounds-beyond-the-document) lets an
@@ -379,55 +385,20 @@ at the tag (`src/schema.ts`, the `min === 0 && max === 0` branch of `field()`);
 not run here.
 **Remove this entry when TypeScript's `field()` accepts `[0,0]` (S-15).**
 
-**DIV-21. Python writes a null leaf as an empty XML element instead of failing ([C-10](07-codecs-and-deserialization.md#73-writing); [omnist-spec#164](https://github.com/omnist-dev/omnist-spec/issues/164)).**
-`write_xml(read_json('{"a":null}'))` on Python `0.14.0` (`96ba4a4`, the tag)
-returns `<a />`, which reads back as the empty string. With `strict=True` it
-raises `WriteError` carrying a warning, "null written as an empty element",
-not `write.unsupported-value`. Measured 2026-10-05 with its vector runner on
-the tag, `vendor/omnist-spec` moved to v0.33.0-beta (`64cbb68`): 4 of the 5
-`formats-xml/nulls` vectors fail (the top-level, nested and repeated-label
-ones with "expected failure, command succeeded"; the `strict` one with no
-diagnostics), and the read-side `empty-element-reads-as-the-empty-string`
-passes. Python's pin is v0.32.0-beta, so its own runner does not run these
-vectors; the other 328 vectors of its pin pass.
-**Remove this entry when Python passes all 5 `formats-xml/nulls` vectors.**
-
-**DIV-25. Go's TOML and XML readers are quadratic in the number of keys or elements ([omnist-go#132](https://github.com/omnist-dev/omnist-go/issues/132)).**
-Each key or element computes its `line:col` eagerly. Measured 2026-10-05 on Go
-`v0.10.0-alpha` (`cmd/omnist parse`, the whole run, one run each): a TOML file
-of 10,000 flat keys took 2.8 s and one of 20,000 keys took 11.6 s; an XML
-document of 10,000 elements took 2.2 s and one of 20,000 took 9.2 s. Doubling
-the input roughly quadruples the time. The port's `docs/limitations.md`
-reports 50,000 flat keys at about 77 s (TOML) and 49 s (XML) and that no byte
-cap bounds it; those figures are read from that file, not re-run. D-23's 64 MiB
-default limits memory but not this time. The same measurement was not taken on
-the other ports' TOML and XML readers. This is an implementation defect
-against D-9's purpose, not a spec gap.
-**Remove this entry when #132 is fixed.**
-
-**DIV-26. Go's XML writer silently replaces U+FFFE and U+FFFF in a string value with U+FFFD ([omnist-go#133](https://github.com/omnist-dev/omnist-go/issues/133)).**
-Measured 2026-10-05 on Go `v0.10.0-alpha`: JSON `{"a":"x` U+FFFE `y"}` converted
-to XML writes the bytes `EF BF BD` (U+FFFD) in place of `EF BF BE`, with no
-error and no diagnostic. The port's `docs/limitations.md` says the same and
-calls it outside C-9's letter. It is the repair "fail, don't invent" forbids
-([C-9](07-codecs-and-deserialization.md#73-writing)'s rationale names `U+FFFD`
-as one), a Document that does not read back as the one written. Whether the
-other ports' XML writers handle these two code points the same way was not
-measured.
-**Remove this entry when #133 is fixed.**
-
-**DIV-27. The XML reader's `format.attribute-dropped` and `format.namespace-dropped` paths lack the E-10 index for a repeated element in Python, TypeScript and Java ([omnist#357](https://github.com/omnist-dev/omnist/issues/357); fix in omnist#358 pending; [omnist-ts#163](https://github.com/omnist-dev/omnist-ts/issues/163); [omnist-j#124](https://github.com/omnist-dev/omnist-j/issues/124)).**
+**DIV-27. The XML reader's `format.attribute-dropped` and `format.namespace-dropped` paths lack the E-10 index for a repeated element in TypeScript and Java ([omnist-ts#163](https://github.com/omnist-dev/omnist-ts/issues/163); [omnist-j#124](https://github.com/omnist-dev/omnist-j/issues/124)).**
 `<r><a x="1"/><a x="2"/></r>` should report the dropped attribute at `$.r.a[0]`
 and `$.r.a[1]` ([E-10](08-conformance-and-errors.md#84-paths), and the XML
-format page's "at the element"). Measured 2026-10-05: Python `0.14.0` reports
-`$.r.a` twice (`read_xml` with a `WriteReport`), TypeScript `0.8.0-alpha`
-reports `$.r.a` twice (`readXml` with a `WriteReport`), and Java `0.5.0-alpha`
+format page's "at the element"). Measured 2026-10-05: TypeScript `0.8.0-alpha`
+reports `$.r.a` twice (`readXml` with a `WriteReport`) and Java `0.5.0-alpha`
 reports `$.r.a` for both (a throwaway `XmlCodec.read` test, discarded).
-Go (`v0.10.0-alpha`, `omnist parse`) and Rust (`0.9.0-alpha`, a throwaway
-`read_xml_report` test, discarded) report the index. No vector pins it: the
-`formats-xml/basic` drop vectors each have a single element. The adjacent
-`DIV-14`-class gap in `validate` and `materialize` paths is closed.
-**Remove this entry when Python, TypeScript and Java index these paths.**
+Measured 2026-10-06, Python `0.15.0` (`read_xml` with a `WriteReport`) reports
+`$.r.a[0]` and `$.r.a[1]` (omnist#357, fixed); Go (`v0.11.0-alpha`,
+`omnist parse`) indexes them; Rust (`0.9.0-alpha`, measured 2026-10-05 with a
+throwaway `read_xml_report` test, discarded) too. Both issues are open and the
+TypeScript issue was last checked open on 2026-10-06 (no merged fix at
+`0.8.0-alpha`; whether a pull request is open was not examined). No vector pins
+it: the `formats-xml/basic` drop vectors each have a single element.
+**Remove this entry when TypeScript and Java index these paths.**
 
 **DIV-28. TypeScript, like Python, skips the six `document-model/limits` vectors because its depth, node-count and integer-digit limits have no runtime configuration surface.**
 TypeScript `0.8.0-alpha` passes 333 of 367 and skips 34: 28 OSD-OML and these
@@ -453,7 +424,7 @@ wrapped under a key, since the CLI refuses a bare top-level array or sequence
 for its shape, not for a limit), a 1,100,000-key JSON object and a
 1,100,000-key TOML file without a limit error. The counter arrived in commit `5aad212` (runtime-configurable limits, omnist-rs#181 and #182), whose first containing tag is `v0.9.0-alpha`; at `7e297ba`, the source the entry was read from, the arena had no such counter. The issue was closed as not planned because it does not reproduce.
 
-Java (`0.5.0-alpha`), Rust (`0.9.0-alpha`), Go (`v0.10.0-alpha`) and
+Python (`0.15.0`), Java (`0.5.0-alpha`), Rust (`0.9.0-alpha`), Go (`v0.11.0-alpha`) and
 TypeScript (`0.8.0-alpha`) pass all five `formats-xml/nulls` vectors: an XML
 writer fails on a null leaf with `write.unsupported-value` at the right path,
 unconditionally.
@@ -473,7 +444,7 @@ as facts about the ports, re-measured 2026-10-05 at each port's latest tag.
   `CR` itself (Python, TypeScript and Go with `parse.unexpected-token`; Rust's
   CLI shows no code). Java reports `parse.trailing-content` at `1:6`, the
   character after, so it differs in both position and code. Go moved from `1:6`
-  to `1:5` in `v0.10.0-alpha`. `CRLF` was not re-measured.
+  to `1:5` in `v0.10.0-alpha`. `CRLF` was not re-measured. Measured on Python `0.14.0` and Go `v0.10.0-alpha`; not re-run on `0.15.0` and `v0.11.0-alpha` (provisional).
 - *TOML nesting depth.* Rust refuses a TOML document nested about 80 levels
   deep, below the configured depth limit of 200, because the `toml_edit` crate
   has its own recursion cap; the port documents it as `document.limit.depth` at
@@ -482,6 +453,20 @@ as facts about the ports, re-measured 2026-10-05 at each port's latest tag.
   inline-table chain and a 100-level table header were both refused by Rust,
   and a 100-level inline-table chain was accepted by Python and Go. The
   threshold is permitted variation (§9.1); the code is the part the spec fixes.
+
+- *U+FFFE and U+FFFF in an XML string value* (omnist-go#133). The spec does
+  not yet name XML 1.0's `Char` production: E-6 gives only a raw C0 control
+  character as its example of a character XML 1.0 forbids
+  (`format.string-illegal-char`), and a spec follow-up is pending. Measured
+  2026-10-06: Go `v0.11.0-alpha` refuses a string holding U+FFFE with
+  `write.unsupported-value` at `$.a` ("U+FFFE is not a character XML 1.0 allows
+  and cannot be written"), where `v0.10.0-alpha` wrote U+FFFD in its place.
+  Which code the other ports' XML writers give for U+FFFE and U+FFFF was not
+  measured, so whether they agree is unknown.
+- *Go's TOML and XML reader speed.* Measured 2026-10-06 on Go `v0.11.0-alpha`
+  (`omnist parse`, whole run, one run each): 20,000 flat TOML keys took 0.09 s
+  and 20,000 XML elements 0.10 s, against 11.6 s and 9.2 s on `v0.10.0-alpha`.
+  The 50,000-key figures were not re-run.
 
 ## 9.5 Adding a sixth implementation
 
