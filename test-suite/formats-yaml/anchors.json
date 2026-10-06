@@ -379,14 +379,14 @@
       "comment": "D-27 against D-18a: a plain `<<: 1` is a syntax error (a merge value must be a mapping or a sequence of mappings), but a quoted `\"<<\"` is not a merge key at all, so the scalar value is fine."
     },
     {
-      "name": "formats-yaml/anchors/aliases-inside-a-tagged-omap-count-toward-expanded-size",
+      "name": "formats-yaml/anchors/aliases-inside-a-sequence-of-single-entry-mappings-count-toward-expanded-size",
       "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
       "operation": "parse",
       "purpose": "error-case",
       "input": {
         "format": "yaml",
         "declared_max_expanded_slots": 20,
-        "text": "p: &p {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10}\nt: !!omap [{k: *p}, {l: *p}]\n"
+        "text": "p: &p {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10}\nt: [{k: *p}, {l: *p}]\n"
       },
       "expect": {
         "ok": false,
@@ -397,28 +397,7 @@
           }
         ]
       },
-      "comment": "D-27 (a tag does not change what an alias contributes) with D-22. W(p) = 11. The tagged sequence t holds two single-entry mappings, each an alias to p: W(t) = 1 + 2 * (1 + 11) = 25 and W(root) = 1 + 11 + 25 = 37. Counted as scalars instead (the defect D-27 rules out), the two aliases would be one slot each and W(root) would be 1 + 11 + 5 = 17. The declared maximum of 20 sits between the two, so only a reader that skips the items of a tagged collection accepts this input. No expansion factor is near its limit (E(t) = 25 / 5 = 5.00 against 50), so the vector isolates the expanded size. declared_max_expanded_slots is vector-local; an implementation with no configuration surface reports skip, not fail. What Document shape the tagged collection produces is not decided, and the vector does not depend on it."
-    },
-    {
-      "name": "formats-yaml/anchors/aliases-inside-a-tagged-pairs-count-toward-expanded-size",
-      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
-      "operation": "parse",
-      "purpose": "error-case",
-      "input": {
-        "format": "yaml",
-        "declared_max_expanded_slots": 20,
-        "text": "p: &p {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10}\nt: !!pairs [{k: *p}, {l: *p}]\n"
-      },
-      "expect": {
-        "ok": false,
-        "diagnostics": [
-          {
-            "path": "$",
-            "code": "document.limit.expanded-size"
-          }
-        ]
-      },
-      "comment": "D-27 (a tag does not change what an alias contributes) with D-22. W(p) = 11. The tagged sequence t holds two single-entry mappings, each an alias to p: W(t) = 1 + 2 * (1 + 11) = 25 and W(root) = 1 + 11 + 25 = 37. Counted as scalars instead (the defect D-27 rules out), the two aliases would be one slot each and W(root) would be 1 + 11 + 5 = 17. The declared maximum of 20 sits between the two, so only a reader that skips the items of a tagged collection accepts this input. No expansion factor is near its limit (E(t) = 25 / 5 = 5.00 against 50), so the vector isolates the expanded size. declared_max_expanded_slots is vector-local; an implementation with no configuration surface reports skip, not fail. What Document shape the tagged collection produces is not decided, and the vector does not depend on it."
+      "comment": "D-22: aliases inside a sequence of single-entry mappings count toward the expanded size. W(p) = 11. The sequence t holds two single-entry mappings, each an alias to p: W(t) = 1 + 2 * (1 + 11) = 25 and W(root) = 1 + 11 + 25 = 37. Counted as scalars instead, the two aliases would be one slot each and W(root) would be 1 + 11 + 5 = 17. The declared maximum of 20 sits between the two, so only a reader that skips the items of the sequence accepts this input. No expansion factor is near its limit (E(t) = 25 / 5 = 5.00 against 50), so the vector isolates the expanded size. declared_max_expanded_slots is vector-local; an implementation with no configuration surface reports skip, not fail. The vector used to carry a `!!omap` tag (and a twin a `!!pairs` tag); C-13 now rejects those collections, so the untagged sequence is what pins the accounting."
     },
     {
       "name": "formats-yaml/anchors/single-quoted-merge-key-is-an-ordinary-key",

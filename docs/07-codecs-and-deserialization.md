@@ -98,6 +98,18 @@ the mapping's own entry overrides the merged one, as
 defining a key twice is TOML's own rule, dotted keys and inline tables
 included.
 
+**C-13. A YAML `!!pairs`, `!!omap` or `!!set` collection is rejected.** A YAML
+input holding a node explicitly tagged `!!pairs`, `!!omap` or `!!set`
+(`tag:yaml.org,2002:pairs`, `:omap`, `:set`), whatever its content, is
+rejected with `parse.codec-syntax` and a text position, like any input the
+codec cannot accept. The three tags describe collections that the Document
+model has two readings for: the plain sequence of single-entry mappings (or the
+plain mapping of null values) the text is, and the keyed-set or ordered-map
+shape the tag names. The ports read them four different ways, and none of the
+shapes is needed to read a configuration file, so the rule removes the choice
+rather than making it. This rule is about those three tags only: every
+other tag keeps the reading it already has, and what an explicitly tagged `<<`
+is, is [D-27](02-document-model.md#241-bounding-alias-expansion)'s.
 
 ## 7.2 Materialization rules
 

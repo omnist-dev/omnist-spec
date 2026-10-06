@@ -1,0 +1,419 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/tags/str-tagged-merge-key-is-an-ordinary-key",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "q: {!!str <<: 2}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "<<",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: `!!str <<` is the string `<<`, an ordinary key, so the mapping reads as the edge `(<<,2)`. A reader that treats it as a merge key rejects the scalar 2 as a malformed merge (D-18a)."
+    },
+    {
+      "name": "formats-yaml/tags/str-tagged-merge-key-with-an-alias-value-merges-nothing",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p {x: 1}\nq: {!!str <<: *p}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "<<",
+                    {
+                      "edges": [
+                        [
+                          "x",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: the `!!str`-tagged `<<` is an ordinary key whose value is a copy of `p`; nothing is flattened into `q`."
+    },
+    {
+      "name": "formats-yaml/tags/merge-tagged-merge-key-merges",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p {x: 1}\nq: {!!merge <<: *p, y: 2}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: `!!merge <<` is a merge key exactly like a plain one: `p`'s entries come first, then the mapping's own."
+    },
+    {
+      "name": "formats-yaml/tags/merge-tagged-merge-key-takes-a-sequence-of-aliases",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p {x: 1}\nr: &r {y: 2}\nq: {!!merge <<: [*p, *r]}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: the sequence form of the merge key works under the `!!merge` tag, merging each in turn in source order."
+    },
+    {
+      "name": "formats-yaml/tags/merge-tagged-merge-key-with-a-scalar-value-is-malformed",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "q: {!!merge <<: 1}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-27 with D-18a: a `!!merge` key is a merge key, so a scalar merge value is a malformed merge, parse.codec-syntax. The same input with a plain `<<` is the same error; with `!!str` it is an ordinary edge."
+    },
+    {
+      "name": "formats-yaml/tags/omap-is-rejected",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: !!omap [{k: 1}, {j: 2}]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-13: a `!!omap` collection is rejected with parse.codec-syntax whatever the content; the plain sequence of single-entry mappings reads as repeated edges."
+    },
+    {
+      "name": "formats-yaml/tags/pairs-is-rejected",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: !!pairs [{k: 1}, {k: 2}]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-13: a `!!pairs` collection is rejected."
+    },
+    {
+      "name": "formats-yaml/tags/flow-set-is-rejected",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: !!set {x, y}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-13: a `!!set` collection in flow style is rejected."
+    },
+    {
+      "name": "formats-yaml/tags/block-set-is-rejected",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: !!set\n  ? x\n  ? y\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-13: a `!!set` collection in block style is rejected."
+    },
+    {
+      "name": "formats-yaml/tags/empty-omap-is-rejected",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "t: !!omap []\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-13 applies whatever the content, an empty collection included."
+    },
+    {
+      "name": "formats-yaml/tags/top-level-omap-is-rejected",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "!!omap [{k: 1}]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-13 at the document root."
+    },
+    {
+      "name": "formats-yaml/tags/untagged-sequence-of-single-entry-mappings-reads-as-repeated-edges",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "text": "t:\n  - {k: 1}\n  - {j: 2}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "t",
+              {
+                "edges": [
+                  [
+                    "j",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Control for C-13: the untagged sequence of single-entry mappings, the plain form the rule points to, reads as two `t` edges."
+    }
+  ]
+}

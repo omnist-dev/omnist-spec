@@ -123,7 +123,7 @@ sequence of mappings is a syntax error, `parse.codec-syntax`; a sequence with
 no members is a sequence of mappings and merges nothing. An alias with no
 preceding anchor is also a syntax error, a redefined anchor shadows the earlier
 one for the aliases that follow it, and a quoted `<<` is an ordinary key, not a
-merge key
+merge key; so is a `<<` tagged `!!str`, while one tagged `!!merge` is a merge key
 ([D-27](../02-document-model.md#241-bounding-alias-expansion)). §2.4.1 defines
 `E`, gives the
 reasoning behind the default, and explains why ordinary anchored YAML — merge
@@ -190,6 +190,12 @@ unique, so a JSON reader has a result to choose and Omnist chooses the one every
 mainstream JSON parser already gives. A key a merge key supplies is not a
 duplicate of the same key written in the mapping; the merge section above
 states that collision. `a` and `"a"` are one key.
+
+**`!!pairs`, `!!omap` and `!!set` are rejected**
+([C-13](../07-codecs-and-deserialization.md#71-two-stages)) with
+`parse.codec-syntax`. They name ordered-pair and set collections the Document
+model has no single reading for; write the plain sequence of single-key
+mappings, or the plain mapping, instead.
 
 
 ### Worked example

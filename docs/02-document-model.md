@@ -581,14 +581,22 @@ maximum of 6 for exactly the reason an anchored `t` would be.
     for a malformed merge, the syntax error takes precedence over every
     `document.limit.*` code: an input with both a bomb and an undefined alias
     is reported as `parse.codec-syntax`.
-  - **Only a plain `<<` is a merge key.** A quoted `<<` (`"<<"` or `'<<'`) is
-    the string `<<`: it makes an ordinary edge labelled `<<` and merges
-    nothing, so it is not subject to D-18a's shape rule and is not counted as
-    a merge key by D-22. Whether an explicitly tagged `<<` is a merge key is
-    not decided here. A tag does not change what an alias contributes: the
-    aliases inside a `!!pairs` or `!!omap` collection are counted by D-18 and
-    D-22 like those in any sequence or mapping. What Document shape such a
-    collection produces is not decided here either.
+  - **A plain `<<` and a `<<` tagged `!!merge` are merge keys; nothing else
+    is.** A quoted `<<` (`"<<"` or `'<<'`) is the string `<<`: it makes an
+    ordinary edge labelled `<<` and merges nothing, so it is not subject to
+    D-18a's shape rule and is not counted as a merge key by D-22. An explicit
+    tag decides what a `<<` is, as YAML 1.1 resolves the merge key by its tag:
+    `!!str <<` is the string `<<`, an ordinary key exactly like the quoted one
+    (`{!!str <<: 2}` reads as the single edge `(<<,2)`, and `{!!str <<: *p}` as
+    an edge `<<` holding a copy of `p`, merging nothing), and `!!merge <<`
+    (`tag:yaml.org,2002:merge`) is a merge key exactly like the plain one, with
+    D-18a's shape rule and D-22's counting. A reader MUST NOT reject either tag
+    on a `<<` as unsupported, and MUST NOT treat the tag as irrelevant. What any other tag on a
+    `<<` means is not decided here. A tag does not change what an alias
+    contributes, wherever a tag is accepted. The `!!pairs`, `!!omap` and `!!set`
+    collections are not accepted at all
+    ([C-13](07-codecs-and-deserialization.md#71-two-stages)), so there is no
+    alias accounting inside them.
 
 - **D-22.** A codec for a format with an anchor/reference mechanism MUST also
   enforce a finite maximum **expanded size** on the input as a whole: the
@@ -599,8 +607,8 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   limit and D-23's input-size bound, where one is enforced, govern, and a
   plain YAML file is treated as a JSON or OML file of the same size is. A
   **merge key** here is a
-  `<<` key as [§ YAML](formats/yaml.md) uses the term, which D-27 limits to a
-  plain `<<`; this rule does not decide an explicitly tagged one. A
+  `<<` key as [§ YAML](formats/yaml.md) uses the term, which D-27 defines as a
+  plain `<<` or one tagged `!!merge`. A
   codec subject to D-22
   MUST reject the input with
   `document.limit.expanded-size`
