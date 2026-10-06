@@ -61,6 +61,14 @@ collapse to one edge; a JSON array under a single key does not. YAML and TOML
 do not take this policy: their own specifications call a repeated key an error,
 and Omnist rejects it there ([C-12](../07-codecs-and-deserialization.md#71-two-stages)).
 
+**A number too large for binary64 reads as an infinity.** `{"a": 1e999}` reads
+as the `number` `+Infinity` and `-1e999` as `-Infinity`, with no diagnostic
+([D-29](../02-document-model.md#221-scalar-kinds)); a literal smaller than the
+smallest subnormal reads as `0.0`. A Document holding an infinity cannot then be
+written back as JSON, since the format has no token for it (see above). An
+integer literal, one with no fraction and no exponent, is an `integer` however
+long it is, and [D-28](../02-document-model.md#24-safety-limits) bounds its
+digits.
 
 **Interleaving is lost on write.** Edges sharing a label are grouped into one
 key regardless of position, because a JSON object cannot express

@@ -85,6 +85,24 @@ Exactly seven scalar kinds exist:
 non-integral values. Implementations MUST NOT add scalar kinds; adding one changes the
 Schema Algebra's subtyping lattice and therefore changes conformance results.
 
+**D-29. A number literal too large for binary64 is accepted and reads as an
+infinity.** A literal of kind `number` whose magnitude exceeds the largest
+finite binary64 (about 1.797e308) is not an error: it reads as positive
+infinity, or negative infinity with a minus sign, which is what IEEE 754
+round-to-nearest conversion gives and what D-6's binary64 `number` can hold.
+`1e999` reads as `+Infinity` and `-1e999` as `-Infinity`, in JSON, in OML and
+in the float spellings of YAML and TOML (`1.0e+999`, `1e999`). No `parse.*` or
+`document.*` diagnostic is raised, and no D-9 limit applies, since the limit
+bounds the digits of an `integer`, not the exponent of a `number`. The same
+holds below the range: a literal smaller than the smallest subnormal reads as
+`0.0`, or `-0.0` with a minus sign. A reader MUST NOT reject, clamp to the
+largest finite value, or read as `NaN` either case. The consequence is a
+Document the JSON writer cannot write: an infinity has no JSON spelling and
+the write fails with `write.unsupported-value`
+([E-6](08-conformance-and-errors.md#838-format-codec-adjustments)). A literal
+with no fraction and no exponent is an `integer`, never a `number`, however
+many digits it has (D-28).
+
 `null` is a value but not a kind. It has no scalar kind of its own and is
 admitted only where a schema permits it (§3).
 

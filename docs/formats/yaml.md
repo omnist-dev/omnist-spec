@@ -197,6 +197,16 @@ states that collision. `a` and `"a"` are one key.
 model has no single reading for; write the plain sequence of single-key
 mappings, or the plain mapping, instead.
 
+**A number literal too large for binary64 reads as an infinity**
+([D-29](../02-document-model.md#221-scalar-kinds)): `a: 1.0e+999` reads as the
+`number` `+Infinity` with no diagnostic. Which spellings YAML resolves as a float
+is the resolver's own business; the rule is about what a float literal beyond
+the range means. For an integer literal D-9's digit limit counts the digits of
+the **value**, not of the spelling
+([D-28](../02-document-model.md#24-safety-limits)): `0x` followed by 3 600 `F`
+is a value of 4 335 decimal digits and is refused with
+`document.limit.int-digits`, and `1_000` has four digits, not five.
+
 
 ### Worked example
 
