@@ -1,0 +1,717 @@
+{
+  "vectors": [
+    {
+      "name": "document-model/limits-codecs/json-integer-digits-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_int_digits": 3,
+        "text": "{\"a\": 999}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 999
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three decimal digits against a declared limit of 3, exactly at the boundary, MUST succeed. Same Document as the OML vector `document-model/limits/integer-digits-at-declared-limit-succeeds` (declared_max_int_digits is vector-local; an implementation with no configuration surface reports skip, DIV-28)."
+    },
+    {
+      "name": "document-model/limits-codecs/json-integer-digits-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_int_digits": 3,
+        "text": "{\"a\": 1000}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "document.limit.int-digits"
+          }
+        ]
+      },
+      "comment": "One digit past the same limit. D-13 and E-4: the code is document.limit.int-digits whatever the format; E-9 and E-11: the path is a Document path, the one the OML vector pins for the same Document (the integer literal's, `$.a`), not a text position."
+    },
+    {
+      "name": "document-model/limits-codecs/yaml-integer-digits-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_int_digits": 3,
+        "text": "a: 999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 999
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three decimal digits against a declared limit of 3, exactly at the boundary, MUST succeed. Same Document as the OML vector `document-model/limits/integer-digits-at-declared-limit-succeeds` (declared_max_int_digits is vector-local; an implementation with no configuration surface reports skip, DIV-28)."
+    },
+    {
+      "name": "document-model/limits-codecs/yaml-integer-digits-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_int_digits": 3,
+        "text": "a: 1000\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "document.limit.int-digits"
+          }
+        ]
+      },
+      "comment": "One digit past the same limit. D-13 and E-4: the code is document.limit.int-digits whatever the format; E-9 and E-11: the path is a Document path, the one the OML vector pins for the same Document (the integer literal's, `$.a`), not a text position."
+    },
+    {
+      "name": "document-model/limits-codecs/toml-integer-digits-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "declared_max_int_digits": 3,
+        "text": "a = 999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 999
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three decimal digits against a declared limit of 3, exactly at the boundary, MUST succeed. Same Document as the OML vector `document-model/limits/integer-digits-at-declared-limit-succeeds` (declared_max_int_digits is vector-local; an implementation with no configuration surface reports skip, DIV-28)."
+    },
+    {
+      "name": "document-model/limits-codecs/toml-integer-digits-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "declared_max_int_digits": 3,
+        "text": "a = 1000\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "document.limit.int-digits"
+          }
+        ]
+      },
+      "comment": "One digit past the same limit. D-13 and E-4: the code is document.limit.int-digits whatever the format; E-9 and E-11: the path is a Document path, the one the OML vector pins for the same Document (the integer literal's, `$.a`), not a text position."
+    },
+    {
+      "name": "document-model/limits-codecs/json-negative-integer-sign-is-not-counted",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_int_digits": 3,
+        "text": "{\"a\": -999}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": -999
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9: the digit count excludes the sign, so `-999` is three digits and is at the limit."
+    },
+    {
+      "name": "document-model/limits-codecs/json-negative-integer-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_int_digits": 3,
+        "text": "{\"a\": -1000}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "document.limit.int-digits"
+          }
+        ]
+      },
+      "comment": "The same, one past."
+    },
+    {
+      "name": "document-model/limits-codecs/json-repeated-label-element-path-is-indexed",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_int_digits": 3,
+        "text": "{\"a\": [1, 2000]}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a[1]",
+            "code": "document.limit.int-digits"
+          }
+        ]
+      },
+      "comment": "E-10 on a limit diagnostic: the label `a` occurs twice in its node (a JSON array is a run of edges), so the path is `$.a[1]`, the second occurrence."
+    },
+    {
+      "name": "document-model/limits-codecs/json-nested-integer-path-descends-by-label",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_int_digits": 3,
+        "text": "{\"a\": {\"b\": 1000}}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a.b",
+            "code": "document.limit.int-digits"
+          }
+        ]
+      },
+      "comment": "The literal's Document path descends by label."
+    },
+    {
+      "name": "document-model/limits-codecs/json-depth-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_depth": 3,
+        "text": "{\"a\": {\"b\": {\"c\": 1}}}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "edges": [
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three levels of nesting (a > b > c) against a declared limit of 3 succeed; the same Document as the OML vector `document-model/limits/depth-at-declared-limit-succeeds`."
+    },
+    {
+      "name": "document-model/limits-codecs/json-depth-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_depth": 3,
+        "text": "{\"a\": {\"b\": {\"c\": {\"d\": 1}}}}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.depth"
+          }
+        ]
+      },
+      "comment": "One level past the limit: document.limit.depth at `$`, exactly as the OML vector `document-model/limits/depth-one-past-declared-limit-fails` pins for the same Document (D-13, E-4, E-4a)."
+    },
+    {
+      "name": "document-model/limits-codecs/yaml-depth-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_depth": 3,
+        "text": "a:\n  b:\n    c: 1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "edges": [
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three levels of nesting (a > b > c) against a declared limit of 3 succeed; the same Document as the OML vector `document-model/limits/depth-at-declared-limit-succeeds`."
+    },
+    {
+      "name": "document-model/limits-codecs/yaml-depth-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_depth": 3,
+        "text": "a:\n  b:\n    c:\n      d: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.depth"
+          }
+        ]
+      },
+      "comment": "One level past the limit: document.limit.depth at `$`, exactly as the OML vector `document-model/limits/depth-one-past-declared-limit-fails` pins for the same Document (D-13, E-4, E-4a)."
+    },
+    {
+      "name": "document-model/limits-codecs/toml-depth-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "declared_max_depth": 3,
+        "text": "[a.b]\nc = 1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "edges": [
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three levels of nesting (a > b > c, with `c` a leaf) against a declared limit of 3 succeed; the same Document as the OML vector `document-model/limits/depth-at-declared-limit-succeeds`."
+    },
+    {
+      "name": "document-model/limits-codecs/toml-depth-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "declared_max_depth": 3,
+        "text": "[a.b.c]\nd = 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.depth"
+          }
+        ]
+      },
+      "comment": "One level past the limit: document.limit.depth at `$`, exactly as the OML vector `document-model/limits/depth-one-past-declared-limit-fails` pins for the same Document (D-13, E-4, E-4a)."
+    },
+    {
+      "name": "document-model/limits-codecs/xml-depth-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "declared_max_depth": 3,
+        "text": "<a><b><c>x</c></b></a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "edges": [
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "string",
+                              "value": "x"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: three levels of nesting (a > b > c) against a declared limit of 3 succeed; the same Document as the OML vector `document-model/limits/depth-at-declared-limit-succeeds`."
+    },
+    {
+      "name": "document-model/limits-codecs/xml-depth-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "declared_max_depth": 3,
+        "text": "<a><b><c><d>x</d></c></b></a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.depth"
+          }
+        ]
+      },
+      "comment": "One level past the limit: document.limit.depth at `$`, exactly as the OML vector `document-model/limits/depth-one-past-declared-limit-fails` pins for the same Document (D-13, E-4, E-4a)."
+    },
+    {
+      "name": "document-model/limits-codecs/json-node-count-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_nodes": 1,
+        "text": "{\"a\": 1, \"b\": 2}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: one node (the root, however many edges it holds) against a declared limit of 1 succeeds, as the OML vector `document-model/limits/node-count-at-declared-limit-succeeds` pins."
+    },
+    {
+      "name": "document-model/limits-codecs/json-node-count-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "declared_max_nodes": 1,
+        "text": "{\"a\": {\"b\": 1}}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.nodes"
+          }
+        ]
+      },
+      "comment": "Two nodes against a declared limit of 1: document.limit.nodes at `$`, as the OML vector `document-model/limits/node-count-one-past-declared-limit-fails` pins for the same Document."
+    },
+    {
+      "name": "document-model/limits-codecs/yaml-node-count-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_nodes": 1,
+        "text": "a: 1\nb: 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: one node (the root, however many edges it holds) against a declared limit of 1 succeeds, as the OML vector `document-model/limits/node-count-at-declared-limit-succeeds` pins."
+    },
+    {
+      "name": "document-model/limits-codecs/yaml-node-count-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_nodes": 1,
+        "text": "a:\n  b: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.nodes"
+          }
+        ]
+      },
+      "comment": "Two nodes against a declared limit of 1: document.limit.nodes at `$`, as the OML vector `document-model/limits/node-count-one-past-declared-limit-fails` pins for the same Document."
+    },
+    {
+      "name": "document-model/limits-codecs/toml-node-count-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "declared_max_nodes": 1,
+        "text": "a = 1\nb = 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: one node (the root, however many edges it holds) against a declared limit of 1 succeeds, as the OML vector `document-model/limits/node-count-at-declared-limit-succeeds` pins."
+    },
+    {
+      "name": "document-model/limits-codecs/toml-node-count-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "declared_max_nodes": 1,
+        "text": "[a]\nb = 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.nodes"
+          }
+        ]
+      },
+      "comment": "Two nodes against a declared limit of 1: document.limit.nodes at `$`, as the OML vector `document-model/limits/node-count-one-past-declared-limit-fails` pins for the same Document."
+    },
+    {
+      "name": "document-model/limits-codecs/xml-node-count-at-declared-limit-succeeds",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "declared_max_nodes": 1,
+        "text": "<a>1</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "1"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-9 on every route: one node (the root, however many edges it holds) against a declared limit of 1 succeeds, as the OML vector `document-model/limits/node-count-at-declared-limit-succeeds` pins."
+    },
+    {
+      "name": "document-model/limits-codecs/xml-node-count-one-past-declared-limit-fails",
+      "spec": "docs/02-document-model.md#24-safety-limits",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "declared_max_nodes": 1,
+        "text": "<r><a>1</a></r>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.nodes"
+          }
+        ]
+      },
+      "comment": "Two nodes against a declared limit of 1: document.limit.nodes at `$`, as the OML vector `document-model/limits/node-count-one-past-declared-limit-fails` pins for the same Document."
+    }
+  ]
+}
