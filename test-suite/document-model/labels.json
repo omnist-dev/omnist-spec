@@ -1,0 +1,263 @@
+{
+  "vectors": [
+    {
+      "name": "document-model/labels/oml-nfc-and-nfd-labels-are-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "\"caf\u00e9\": 1\n\"cafe\u0301\": 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "caf\u00e9",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "cafe\u0301",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-16: `caf\\u00e9` (precomposed, U+00E9) and `cafe\\u0301` (e plus combining acute) are two distinct labels, so the node has two edges, in source order. An implementation that normalizes labels to NFC or NFD on read would collapse them or reorder them. Labels are quoted because OML identifiers are ASCII."
+    },
+    {
+      "name": "document-model/labels/json-nfc-and-nfd-labels-are-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"caf\u00e9\": 1, \"cafe\u0301\": 2}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "caf\u00e9",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "cafe\u0301",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-16 through JSON. The two keys are different byte sequences, so they are not a duplicate-key collision (which would collapse to one edge)."
+    },
+    {
+      "name": "document-model/labels/yaml-nfc-and-nfd-labels-are-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "caf\u00e9: 1\ncafe\u0301: 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "caf\u00e9",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "cafe\u0301",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-16 through YAML."
+    },
+    {
+      "name": "document-model/labels/toml-nfc-and-nfd-labels-are-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "\"caf\u00e9\" = 1\n\"cafe\u0301\" = 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "caf\u00e9",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "cafe\u0301",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-16 through TOML. Quoted keys, so the vector does not depend on the bare-key character set."
+    },
+    {
+      "name": "document-model/labels/xml-nfc-and-nfd-element-names-are-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><caf\u00e9>1</caf\u00e9><cafe\u0301>2</cafe\u0301></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "caf\u00e9",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "1"
+                      }
+                    }
+                  ],
+                  [
+                    "cafe\u0301",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "2"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-16 through XML element names (which arrive as strings, so the leaves are \"1\" and \"2\"). U+0301 is a legal XML NameChar, so both names are well formed."
+    },
+    {
+      "name": "document-model/labels/string-values-are-not-normalized",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": \"caf\u00e9\", \"b\": \"cafe\u0301\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "caf\u00e9"
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "cafe\u0301"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-16 says labels and names; the same discipline holds for values, which D-14 and D-16 together leave byte-for-byte: a string value keeps whichever normalization form it was written in."
+    },
+    {
+      "name": "document-model/labels/json-writer-keeps-nfc-and-nfd-labels-distinct",
+      "spec": "docs/02-document-model.md#25-encoding",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "caf\u00e9",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "cafe\u0301",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"caf\u00e9\": 1, \"cafe\u0301\": 2}"
+      },
+      "comment": "D-16 on write: the writer MUST NOT normalize either, so both keys come out, in order, byte for byte."
+    }
+  ]
+}

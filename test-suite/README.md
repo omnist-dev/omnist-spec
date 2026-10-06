@@ -15,7 +15,7 @@ disagree, chapter 8 wins.
 test-suite/
   validate/                  document-against-schema vectors
   algebra-compatibility/     compatible_with / equivalent vectors
-  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, input size)
+  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, input size), and label identity (D-16)
   oml-grammar/               OML text-to-Document parse vectors (ch.4)
   osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)
@@ -30,7 +30,8 @@ test-suite/
   formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, and anchor/alias resolution (D-20, D-27)
   formats-toml/              TOML codec vectors
   formats-xml/               XML codec vectors
-  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare
+  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15)
+  extensions-osd-oml/        OSD-OML extension vectors: parse_schema_oml, write_schema_oml
 ```
 
 Every surface's `encoding/` group (in `oml-grammar/`, `osd-grammar/` and the
@@ -55,6 +56,12 @@ Every vector is a JSON object with the same six keys.
 | `expect` | Either a success value or `{"ok": false, "diagnostics": [...]}`. |
 
 A file holds `{"vectors": [ ... ]}`.
+
+On a `write` vector the `diagnostics` list is compared like any other
+([E-17](../docs/08-conformance-and-errors.md#852-diagnostics-matching)): each
+entry's path **and code**, exactly, as a set. A runner that compares only the
+paths of a write vector's diagnostics is in code-agnostic mode for that
+operation and has to say so; it is not reporting a conformance pass.
 
 ### `bytes_hex`: giving a read-side input as bytes
 
@@ -115,7 +122,8 @@ a number.
   number. JSON itself has no token for any of the three, so a vector can't
   hold one as an ordinary numeric `V` without making the vector file itself
   invalid JSON; the string form is unambiguous here because a real
-  `number`'s `V` is always a JSON number, never a JSON string.
+  `number`'s `V` is always a JSON number, never a JSON string. This is
+  normative: [E-33](../docs/08-conformance-and-errors.md#854-canonical-document-encoding).
 
 **Some vectors cannot be honestly run by every implementation, and that's
 expected.** A `document` whose `kind` is `"integer"` or
