@@ -377,6 +377,48 @@
         }
       },
       "comment": "D-27 against D-18a: a plain `<<: 1` is a syntax error (a merge value must be a mapping or a sequence of mappings), but a quoted `\"<<\"` is not a merge key at all, so the scalar value is fine."
+    },
+    {
+      "name": "formats-yaml/anchors/aliases-inside-a-tagged-omap-are-counted",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1, b: 2, c: 3}\nt: !!omap [{a: *p}, {b: *p}, {c: *p}, {d: *p}]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "D-18 does not look at tags: a sequence is a candidate node whether or not it carries !!omap, and each alias inside it adds what it materializes. p has W = S = 4; t holds four aliases, so W(t) = 1 + 4 * (1 + 4) = 21 against S(t) = 1 + 4 * 2 = 9, E(t) = 2.33, over the declared maximum of 2 (D-18). A reader that skips the accounting for a tagged collection would accept it. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail. What Document shape an !!omap produces is not decided, and the vector does not depend on it."
+    },
+    {
+      "name": "formats-yaml/anchors/aliases-inside-a-tagged-pairs-are-counted",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1, b: 2, c: 3}\nt: !!pairs [{a: *p}, {b: *p}, {c: *p}, {d: *p}]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$",
+            "code": "document.limit.alias-expansion"
+          }
+        ]
+      },
+      "comment": "The same for !!pairs: the tag does not change the count."
     }
   ]
 }

@@ -581,9 +581,11 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   - **Only a plain `<<` is a merge key.** A quoted `<<` (`"<<"` or `'<<'`) is
     the string `<<`: it makes an ordinary edge labelled `<<` and merges
     nothing, so it is not subject to D-18a's shape rule and is not counted as
-    a merge key by D-22. Whether an explicitly tagged `<<`, and the aliases
-    inside a `!!pairs` or `!!omap` collection, are covered by D-18 and D-22
-    is not decided here.
+    a merge key by D-22. Whether an explicitly tagged `<<` is a merge key is
+    not decided here. A tag does not change what an alias contributes: the
+    aliases inside a `!!pairs` or `!!omap` collection are counted by D-18 and
+    D-22 like those in any sequence or mapping. What Document shape such a
+    collection produces is not decided here either.
 
 - **D-22.** A codec for a format with an anchor/reference mechanism MUST also
   enforce a finite maximum **expanded size** on the input as a whole: the
