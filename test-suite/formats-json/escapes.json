@@ -1,0 +1,58 @@
+{
+  "vectors": [
+    {
+      "name": "formats-json/escapes/control-character-hex-digits-are-lowercase",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u001fb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"a\": \"a\\u001fb\"}"
+      },
+      "comment": "C-14: the JSON writer spells U+001F as `\\u001f`, lowercase. The `text` is compared with JSON's inter-token whitespace left to the writer where a runner can; the digits are the point."
+    },
+    {
+      "name": "formats-json/escapes/vertical-tab-hex-digit-is-lowercase",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u000bb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"a\": \"a\\u000bb\"}"
+      },
+      "comment": "C-14: U+000B is `\\u000b`, lowercase `b`."
+    }
+  ]
+}

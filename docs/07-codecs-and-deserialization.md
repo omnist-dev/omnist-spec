@@ -401,6 +401,18 @@ empty element for the null, and MUST NOT report the write as an adjustment.
 An empty string leaf is not a null leaf and still writes as `<a/>`. A writer
 MAY stop at the first null leaf it finds.
 
+**C-14. The hexadecimal digits of a `\uXXXX` escape are lowercase.** A writer
+that spells a character as a `\uXXXX` escape writes its four hex digits in
+lowercase, in every format that has the escape: U+001F is `\u001f` in an OML,
+JSON or TOML string, never `\u001F`
+([OML-15](04-oml-grammar.md#45-strings) is this rule for OML). Two writers that
+disagree on the case write different bytes for one Document, and OML-19 and the
+`write` vectors compare bytes. The rule fixes the case of the digits and
+nothing else: which characters a format escapes, and whether it spells one
+with `\uXXXX` at all (YAML also has `\xXX`), stay the format's own. XML's
+numeric character references (`&#13;`, [E-8](08-conformance-and-errors.md#838-format-codec-adjustments))
+are decimal and out of scope.
+
 ## 7.4 Format reports
 
 A reader or writer SHOULD be able to report the adjustments a given conversion

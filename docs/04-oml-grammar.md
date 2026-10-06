@@ -251,7 +251,9 @@ that run are returned to the scanner. A run of one or two quotes is literal
 content. Tab and newline are legal inside; other control characters are not.
 
 **OML-15.** The canonical writer MUST emit only `\"`, `\\`, `\n`, `\r`, `\t`, and `\u00XX`
-for other control characters. It MUST NOT emit `\/`, `\b`, `\f`, surrogate
+for other control characters, with the hexadecimal digits in lowercase
+(`\u001f`, never `\u001F`; [C-14](07-codecs-and-deserialization.md#73-writing)).
+It MUST NOT emit `\/`, `\b`, `\f`, surrogate
 pairs, raw strings, or multiline strings. Non-ASCII characters are emitted
 literally. A string with no UTF-8 encoding, a lone surrogate for one, has no
 OML spelling at all (the reader rejects an unpaired `\uXXXX` escape): the

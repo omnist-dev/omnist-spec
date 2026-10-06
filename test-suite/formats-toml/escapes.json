@@ -1,0 +1,58 @@
+{
+  "vectors": [
+    {
+      "name": "formats-toml/escapes/control-character-hex-digits-are-lowercase",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "document": {
+          "edges": [
+            [
+              "a b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u001fb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "\"a b\" = \"a\\u001fb\"\n"
+      },
+      "comment": "C-14: the TOML writer spells U+001F as `\\u001f`, lowercase. The key contains a space so that every writer must quote it: TOML writer layout beyond that (bare versus quoted keys where either is legal) is not what the vector pins."
+    },
+    {
+      "name": "formats-toml/escapes/vertical-tab-hex-digit-is-lowercase",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "document": {
+          "edges": [
+            [
+              "a b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u000bb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "\"a b\" = \"a\\u000bb\"\n"
+      },
+      "comment": "C-14: U+000B is `\\u000b`, lowercase `b`. The key is quoted for the reason given on the vector above."
+    }
+  ]
+}
