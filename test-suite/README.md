@@ -30,7 +30,7 @@ test-suite/
   formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, anchor/alias resolution (D-20, D-27), duplicate keys rejected (C-12), the tagged merge key (D-27) and the rejected `!!pairs`/`!!omap`/`!!set` collections (C-13), and the NEL escape a YAML writer uses (E-34)
   formats-toml/              TOML codec vectors
   formats-xml/               XML codec vectors
-  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15)
+  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15), and compact mode (OML-22..24, asked for with `compact: true`, E-35)
   extensions-osd-oml/        OSD-OML extension vectors: parse_schema_oml, write_schema_oml
 ```
 
@@ -56,6 +56,15 @@ Every vector is a JSON object with the same six keys.
 | `expect` | Either a success value or `{"ok": false, "diagnostics": [...]}`. |
 
 A file holds `{"vectors": [ ... ]}`.
+
+A `write` vector's `input` is `{document, format}` and may also carry two booleans,
+both defaulting to `false` when absent: `strict`, and, on an OML vector only,
+`compact` ([E-35](../docs/08-conformance-and-errors.md#853-operation-drivers)),
+which asks for OML's one-line layout (OML-22). A runner passes `compact` to the
+implementation's OML writer, or `--compact` to its CLI; one that drops it
+compares the expanded layout with the compact text and fails every compact
+vector for its own reason. `tools/check_vectors.py` rejects `compact` on any
+other format and a non-boolean `strict` or `compact`.
 
 On a `write` vector the `diagnostics` list is compared like any other
 ([E-17](../docs/08-conformance-and-errors.md#852-diagnostics-matching)): each

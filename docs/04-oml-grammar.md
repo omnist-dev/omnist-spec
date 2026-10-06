@@ -546,7 +546,9 @@ tag: "y"
 separated by `;` rather than newlines. "Compact" means single-line, not
 merely unindented — a writer that keeps newlines but drops indentation is
 producing a third layout, which this section does not define and which a
-canonical writer MUST NOT emit.
+canonical writer MUST NOT emit. A conformance `write` vector asks for compact
+mode with `compact: true` ([E-35](08-conformance-and-errors.md#853-operation-drivers)),
+and the suite pins it: `formats-oml/compact/*`.
 
 ```oml
 name: "Ann"; adr: { city: "Z"; pc: "8001" }; tag: "x"; tag: "y"

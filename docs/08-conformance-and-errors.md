@@ -815,7 +815,7 @@ implementation.
 | `parse_schema` | `{text}` or `{bytes_hex}` (E-27) | `{ok}` — `schema: <canonical OSD text>` MAY additionally be present, compared byte for byte per §3.3/§5.9, for a vector specifically pinning declaration-order or formatting round-trip fidelity rather than mere acceptance |
 | `validate` | `{schema, document}` | `{ok}` |
 | `materialize` | `{schema, document}` | `{ok, document}` |
-| `write` | `{document, format}` | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
+| `write` | `{document, format}`, and optionally `strict` and (OML only) `compact` (E-35) | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
 | `compatible_with` | `{a, b}` | `{result: bool}` |
 | `equivalent` | `{a, b}` | `{result: bool}` |
 | `normalize` | `{schema}` | `{schema: <canonical OSD text>}` — compared byte for byte per §5.9's canonical-output requirement |
@@ -903,6 +903,23 @@ XML-comparison algorithm.) One reference implementation: strip via
 `text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
 the existing outer-whitespace trim every `write` vector comparison already
 does.
+
+**E-35. A `write` vector MAY ask for OML's compact layout with `compact`.** The
+`write` driver's `input` takes an optional boolean `compact`, default `false`.
+`compact: true` asks the writer for the compact mode of
+[OML-22](04-oml-grammar.md#49-canonical-output): the whole Document on one line,
+edges separated by `;`. It is meaningful only when `format` is `oml`, the one
+format whose specification defines a compact layout, and a vector MUST NOT set
+it on any other format. A runner MUST pass it to the implementation's OML writer
+(the writer's compact option, or the CLI's `--compact` where the runner goes
+through the CLI) and MUST NOT ignore it: a runner that drops the key compares
+the expanded layout with the compact `text` and fails every compact vector for
+a reason that is the runner's. `strict` is likewise optional, boolean, and
+absent means `false`. The `text` of a compact vector is compared like any other
+`write` text, byte for byte after the outer-whitespace trim every `write`
+comparison does. With `compact` absent or `false` the canonical expanded layout
+of [OML-19](04-oml-grammar.md#49-canonical-output) applies, as for every
+existing vector.
 
 **E-27. A read-side vector MAY give its input as bytes, as `bytes_hex`.**
 The three drivers above whose `input` carries the source text of a document
