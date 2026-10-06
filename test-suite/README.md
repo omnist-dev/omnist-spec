@@ -15,7 +15,7 @@ disagree, chapter 8 wins.
 test-suite/
   validate/                  document-against-schema vectors
   algebra-compatibility/     compatible_with / equivalent vectors
-  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, input size)
+  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, in OML and in the four other formats; input size)
   oml-grammar/               OML text-to-Document parse vectors (ch.4)
   osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)

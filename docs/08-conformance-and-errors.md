@@ -187,7 +187,11 @@ the code is fixed all the same, so an implementation that enforces a maximum
 raises exactly `document.limit.input-size` when it is crossed.
 
 **E-4a.** The first three apply to every Document on every route into the
-model. `document.limit.alias-expansion` and `document.limit.expanded-size` are
+model, and on every route the diagnostic is the one the OML reader raises for
+the same Document: `document.limit.depth` and `document.limit.nodes` at `$`,
+and `document.limit.int-digits` at the Document path of the integer literal,
+indexed per [E-10](#84-paths), never a text position
+([E-11](#84-paths)). `document.limit.alias-expansion` and `document.limit.expanded-size` are
 different in reach, not in kind: per
 [D-18](02-document-model.md#241-bounding-alias-expansion) and D-22 they are
 raised only by a codec for a format that has an anchor/reference mechanism —
