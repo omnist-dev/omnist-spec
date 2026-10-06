@@ -176,13 +176,21 @@ booleans.
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.
 
-**Duplicate keys: last one wins**, matching JSON's policy
-([§ JSON, "Duplicate keys"](json.md)) rather than the YAML 1.1 spec's own
-stance — YAML 1.1 actually calls duplicate mapping keys an error, but no
-mainstream implementation library enforces that, all silently resolving to
-last-key-wins in practice. Omnist follows the implementations, not the
-unenforced spec text, for the same reason as JSON: consistency with what
-every reader is already going to do, at zero cost.
+**Duplicate keys are rejected**
+([C-12](../07-codecs-and-deserialization.md#71-two-stages)). A mapping that
+holds the same key twice, in block or flow style and at any depth, fails the
+read with `parse.codec-syntax`: `a: 1` / `b: 2` / `a: 3` is an error, not the
+edges `a = 3, b = 2`. YAML 1.1 and YAML 1.2 both require the keys of a mapping
+to be unique, and the mainstream libraries that enforce it (the JavaScript
+`yaml` package, `go-yaml` v3) are the ones that read the specification
+literally; the ones that let the last key win are the lenient exception, not
+the consensus. This is not JSON's policy
+([§ JSON, "Duplicate keys"](json.md)): RFC 8259 only advises that names be
+unique, so a JSON reader has a result to choose and Omnist chooses the one every
+mainstream JSON parser already gives. A key a merge key supplies is not a
+duplicate of the same key written in the mapping; the merge section above
+states that collision. `a` and `"a"` are one key.
+
 
 ### Worked example
 

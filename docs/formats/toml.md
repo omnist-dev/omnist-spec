@@ -28,6 +28,16 @@ TOML.
 
 **Interleaving is lost on write**, as in the rest of the JSON family.
 
+**Duplicate keys are rejected**
+([C-12](../07-codecs-and-deserialization.md#71-two-stages)). A table that
+defines a key twice (`a = 1` then `a = 2`, `a` and `"a"` included) fails the read
+with `parse.codec-syntax`; TOML itself calls it invalid, and Omnist does not
+turn it into JSON's last-value-wins
+([§ JSON, "Duplicate keys"](json.md)). The same key in two different tables is
+not a repeat, and `[[x]]` written twice is the repeated-label shape, not a
+duplicate.
+
+
 ### Worked example
 
 The schema:

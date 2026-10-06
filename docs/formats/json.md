@@ -44,9 +44,11 @@ a non-empty one.
 **Top level.** A JSON document may have many top-level keys, which becomes many
 top-level edges. That is legal, and it is also the shape XML cannot carry.
 
-**Duplicate keys: last one wins**
+**Duplicate keys: the last value wins, at the first position**
 ([C-11](../07-codecs-and-deserialization.md#71-two-stages)). `{"a":1,"a":2}`
-reads as `[(a,2)]` — one edge, not two. The JSON grammar itself is silent on duplicate names (RFC 8259
+reads as `[(a,2)]` — one edge, not two — and `{"a":1,"b":2,"a":3}` reads as
+`[(a,3),(b,2)]`: the surviving edge sits where the key was first written and
+carries the value written last. The JSON grammar itself is silent on duplicate names (RFC 8259
 permits but discourages them and does not define a resolution), so this is an
 Omnist policy choice, not a JSON requirement — chosen because it is already
 the de facto behavior of essentially every mainstream JSON parser (a later
@@ -55,7 +57,10 @@ nothing across ports and avoids inventing divergent behavior where none
 currently exists in practice. This is unrelated to a **repeated** label
 becoming a repeated edge (`{"m":[A,B]}` → `[(m,A),(m,B)]`, see above) — that
 is JSON's own array syntax, not a duplicate-key situation. Duplicate keys
-collapse to one edge; a JSON array under a single key does not.
+collapse to one edge; a JSON array under a single key does not. YAML and TOML
+do not take this policy: their own specifications call a repeated key an error,
+and Omnist rejects it there ([C-12](../07-codecs-and-deserialization.md#71-two-stages)).
+
 
 **Interleaving is lost on write.** Edges sharing a label are grouped into one
 key regardless of position, because a JSON object cannot express

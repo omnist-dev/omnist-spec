@@ -52,21 +52,52 @@ after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
 rule.
 
 **C-11. When a JSON object repeats a key, the last value replaces the earlier
-ones.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later value
-replaces an earlier one whatever the two shapes are: it is not appended to the
-earlier value and it is not merged into it. An array value contributes its
-elements, as it does anywhere: `{"a":1,"a":[2,3]}` reads as `[(a,2),(a,3)]` and
-`{"a":1,"a":[]}` as no `a` edge at all. RFC 8259 says names within an
-object SHOULD be unique and defines no result when they are not, so this is
-this specification's rule, chosen because it is what the mainstream JSON
-parsers already do. It is the same at every depth, and it is not the array
-rule: a JSON array under one key is a run of same-label edges
-(`{"m":[A,B]}` reads as `[(m,A),(m,B)]`), and a duplicate key is not. The rule
-fixes the surviving edge's *value*; where that edge sits among its siblings
-when other keys come between the repeats is not specified here, and a
-conformance vector does not depend on it (the `formats-json/duplicate-keys/*`
-vectors).
-This rule is about JSON; YAML and TOML duplicate keys are not covered by it.
+ones, and the surviving edge keeps the position of the key's first
+occurrence.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later
+value replaces an earlier one whatever the two shapes are: it is not appended
+to the earlier value and it is not merged into it. An array value contributes
+its elements, as it does anywhere: `{"a":1,"a":[2,3]}` reads as
+`[(a,2),(a,3)]` and `{"a":1,"a":[]}` as no `a` edge at all. RFC 8259 says names
+within an object SHOULD be unique and defines no result when they are not, so
+this is this specification's rule, chosen because it is what the mainstream
+JSON parsers already do. It is the same at every depth, and it is not the
+array rule: a JSON array under one key is a run of same-label edges
+(`{"m":[A,B]}` reads as `[(m,A),(m,B)]`), and a duplicate key is not.
+
+**Where the surviving edge sits.** The edge (or, for an array value, the run of
+edges) stands where the key was **first** written among its siblings, and
+carries the value of the key's **last** occurrence. `{"a":1,"b":2,"a":3}` reads
+as `[(a,3),(b,2)]`, not `[(b,2),(a,3)]`; `{"a":1,"b":2,"a":[3,4]}` reads as
+`[(a,3),(a,4),(b,2)]`; `{"a":1,"b":2,"a":[]}` reads as `[(b,2)]`, because the
+last value contributes no edge. This is [D-1](02-document-model.md#23-structural-invariants)
+applied to a read that collapses: the position a key takes is fixed by where
+the text first mentions it, so a later repeat changes the value and never
+reorders the siblings, which is also what assigning to an ordered map does in
+the mainstream JSON parsers.
+
+C-11 is about JSON. YAML and TOML repeat no key silently: see C-12.
+
+**C-12. A YAML mapping or a TOML table that repeats a key is rejected.** The
+read fails with `parse.codec-syntax`
+([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
+whose `path` is a text position ([E-11](08-conformance-and-errors.md#84-paths),
+[E-31](08-conformance-and-errors.md#84-paths)), and no Document is produced.
+This is the opposite of C-11, and for a reason: RFC 8259 only advises that
+JSON names be unique, so a reader has a result to choose, whereas YAML (1.1
+and 1.2) requires the keys of a mapping to be unique and TOML forbids defining
+a key twice, so the input is malformed in its own format and a lenient
+reader is the outlier, not the norm. The rule is the same at every depth and
+in every style (YAML block and flow mappings, TOML tables and inline tables).
+Keys are compared as strings, byte for byte
+([D-16](02-document-model.md#25-encoding)): `a` and `"a"` are one key,
+and two keys that differ only in Unicode normalization are two. The same key in
+two different mappings or tables is not a repeat, and a key a YAML merge key
+(`<<`) supplies is not a repeat of the same key written in the mapping itself:
+the mapping's own entry overrides the merged one, as
+[§ YAML](formats/yaml.md) states for key collisions. For TOML, what counts as
+defining a key twice is TOML's own rule, dotted keys and inline tables
+included.
+
 
 ## 7.2 Materialization rules
 
