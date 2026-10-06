@@ -85,6 +85,24 @@ Exactly seven scalar kinds exist:
 non-integral values. Implementations MUST NOT add scalar kinds; adding one changes the
 Schema Algebra's subtyping lattice and therefore changes conformance results.
 
+**D-29. A number literal too large for binary64 is accepted and reads as an
+infinity.** A literal of kind `number` whose magnitude exceeds the largest
+finite binary64 (about 1.797e308) is not an error: it reads as positive
+infinity, or negative infinity with a minus sign, which is what IEEE 754
+round-to-nearest conversion gives and what D-6's binary64 `number` can hold.
+`1e999` reads as `+Infinity` and `-1e999` as `-Infinity`, in JSON, in OML and
+in the float spellings of YAML and TOML (`1.0e+999`, `1e999`). No `parse.*` or
+`document.*` diagnostic is raised, and no D-9 limit applies, since the limit
+bounds the digits of an `integer`, not the exponent of a `number`. The same
+holds below the range: a literal smaller than the smallest subnormal reads as
+`0.0`, or `-0.0` with a minus sign. A reader MUST NOT reject, clamp to the
+largest finite value, or read as `NaN` either case. The consequence is a
+Document the JSON writer cannot write: an infinity has no JSON spelling and
+the write fails with `write.unsupported-value`
+([E-6](08-conformance-and-errors.md#838-format-codec-adjustments)). A literal
+with no fraction and no exponent is an `integer`, never a `number`, however
+many digits it has (D-28).
+
 `null` is a value but not a kind. It has no scalar kind of its own and is
 admitted only where a schema permits it (§3).
 
@@ -162,7 +180,7 @@ implementation that cannot construct its input.
 
 **D-9.** A Document is built from untrusted input. Three quantities bound the work an
 implementation will do before refusing to continue: nesting depth, total node
-count, and the digit length of an `integer` literal. Every conformant
+count, and the digit length of an `integer` literal's value (D-28). Every conformant
 implementation MUST enforce a finite limit on all three. **No implementation
 MAY be unbounded on any of them.** Two further quantities, the alias expansion
 factor (D-18) and the expanded size (D-22), both in §2.4.1, bound a format
@@ -187,7 +205,7 @@ big-data ingestion engine.
 |---|---|---|
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
-| Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
+| Maximum integer digits | 4 300 | Decimal digits of the value of an `integer` literal, sign excluded (D-28) |
 | Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, any other mapping or sequence, and the document root, in a format that has an anchor/reference mechanism (D-18) |
 | Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, for an input that contains an alias or a merge key (D-22) |
 | Maximum input size | none (D-24) | Bytes of one input, any format (D-23, a SHOULD) |
@@ -208,6 +226,27 @@ a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
 matches CPython's own default for `sys.set_int_max_str_digits` — conversion
 between an arbitrarily long digit string and a big integer is superlinear, so
 an unbounded literal is a denial-of-service vector regardless of language.
+
+**D-28. The integer-digit limit counts the decimal digits of the value, not of
+the literal.** Whatever notation a format writes an integer in, the number
+that D-9's limit bounds is the number of digits of that integer's decimal
+representation, sign excluded. YAML and TOML hexadecimal (`0x…`), octal (`0o…`,
+and YAML 1.1's leading `0`) and binary (`0b…`) literals, digit-separating
+underscores (`1_000`), and YAML 1.1's sexagesimal integers (`190:20:30`) are all
+counted by the value they denote: the radix prefix, the underscores, any
+leading zeros and the colons are not digits. At a limit of three, `0xFFF`
+(4 095) and the binary `0b1111101000` (1 000) are four digits and refused,
+while `0b1111100111` (999) and `0o1747` (999) are three and accepted, though
+the first is spelled with ten digits. At the reference default of 4 300, a
+hexadecimal literal of 3 600 digits (a value of 4 335 decimal digits) is
+refused and a binary literal of 4 301 digits (a value of 1 295) is accepted.
+The reason is the one D-9 gives for the number: the limit exists to bound the
+cost of converting an integer to decimal, which depends on the value and not
+on how it was spelled, and a Document holds the value, so a writer or a
+`materialize` step will have to render it in decimal whatever the source
+looked like. The rule is the same on every route into the model (JSON, YAML,
+TOML, OML, and the schema-directed pretyping of an XML leaf,
+[E-4a](08-conformance-and-errors.md#832-document-building-and-limits)).
 
 **Choosing different values.** An implementation MAY set any of these limits
 lower or higher than the reference default, to fit its deployment target —
@@ -581,14 +620,22 @@ maximum of 6 for exactly the reason an anchored `t` would be.
     for a malformed merge, the syntax error takes precedence over every
     `document.limit.*` code: an input with both a bomb and an undefined alias
     is reported as `parse.codec-syntax`.
-  - **Only a plain `<<` is a merge key.** A quoted `<<` (`"<<"` or `'<<'`) is
-    the string `<<`: it makes an ordinary edge labelled `<<` and merges
-    nothing, so it is not subject to D-18a's shape rule and is not counted as
-    a merge key by D-22. Whether an explicitly tagged `<<` is a merge key is
-    not decided here. A tag does not change what an alias contributes: the
-    aliases inside a `!!pairs` or `!!omap` collection are counted by D-18 and
-    D-22 like those in any sequence or mapping. What Document shape such a
-    collection produces is not decided here either.
+  - **A plain `<<` and a `<<` tagged `!!merge` are merge keys; nothing else
+    is.** A quoted `<<` (`"<<"` or `'<<'`) is the string `<<`: it makes an
+    ordinary edge labelled `<<` and merges nothing, so it is not subject to
+    D-18a's shape rule and is not counted as a merge key by D-22. An explicit
+    tag decides what a `<<` is, as YAML 1.1 resolves the merge key by its tag:
+    `!!str <<` is the string `<<`, an ordinary key exactly like the quoted one
+    (`{!!str <<: 2}` reads as the single edge `(<<,2)`, and `{!!str <<: *p}` as
+    an edge `<<` holding a copy of `p`, merging nothing), and `!!merge <<`
+    (`tag:yaml.org,2002:merge`) is a merge key exactly like the plain one, with
+    D-18a's shape rule and D-22's counting. A reader MUST NOT reject either tag
+    on a `<<` as unsupported, and MUST NOT treat the tag as irrelevant. What any other tag on a
+    `<<` means is not decided here. A tag does not change what an alias
+    contributes, wherever a tag is accepted. The `!!pairs`, `!!omap` and `!!set`
+    collections are not accepted at all
+    ([C-13](07-codecs-and-deserialization.md#71-two-stages)), so there is no
+    alias accounting inside them.
 
 - **D-22.** A codec for a format with an anchor/reference mechanism MUST also
   enforce a finite maximum **expanded size** on the input as a whole: the
@@ -599,8 +646,8 @@ maximum of 6 for exactly the reason an anchored `t` would be.
   limit and D-23's input-size bound, where one is enforced, govern, and a
   plain YAML file is treated as a JSON or OML file of the same size is. A
   **merge key** here is a
-  `<<` key as [§ YAML](formats/yaml.md) uses the term, which D-27 limits to a
-  plain `<<`; this rule does not decide an explicitly tagged one. A
+  `<<` key as [§ YAML](formats/yaml.md) uses the term, which D-27 defines as a
+  plain `<<` or one tagged `!!merge`. A
   codec subject to D-22
   MUST reject the input with
   `document.limit.expanded-size`

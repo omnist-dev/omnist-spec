@@ -46,27 +46,79 @@ accept or reject). This pretyping step is not stage 1 in the sense every
 other format's stage 1 is — it exists only because XML's stage 1 has
 strictly less information than every sibling format's stage 1 does, and it
 never substitutes for stage 2's record-shape and cardinality checking, which
-still runs afterward exactly as it does for every other format. No other
+still runs afterward exactly as it does for every other format. Pretyping is a
+route into the model like any other, so [D-9](02-document-model.md#24-safety-limits)'s
+integer-digit limit binds it ([D-28](02-document-model.md#24-safety-limits)):
+a leaf the schema types as `integer` whose text is an integer literal with more
+digits than the limit is refused with `document.limit.int-digits` at the
+Document path of the leaf (indexed per
+[E-10](08-conformance-and-errors.md#84-paths)), as
+[E-4a](08-conformance-and-errors.md#832-document-building-and-limits) states. It
+does not stay a string for stage 2 to reject as `materialize.inexact-conversion`,
+and it does not crash the reader. No other
 format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
 after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
 rule.
 
 **C-11. When a JSON object repeats a key, the last value replaces the earlier
-ones.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later value
-replaces an earlier one whatever the two shapes are: it is not appended to the
-earlier value and it is not merged into it. An array value contributes its
-elements, as it does anywhere: `{"a":1,"a":[2,3]}` reads as `[(a,2),(a,3)]` and
-`{"a":1,"a":[]}` as no `a` edge at all. RFC 8259 says names within an
-object SHOULD be unique and defines no result when they are not, so this is
-this specification's rule, chosen because it is what the mainstream JSON
-parsers already do. It is the same at every depth, and it is not the array
-rule: a JSON array under one key is a run of same-label edges
-(`{"m":[A,B]}` reads as `[(m,A),(m,B)]`), and a duplicate key is not. The rule
-fixes the surviving edge's *value*; where that edge sits among its siblings
-when other keys come between the repeats is not specified here, and a
-conformance vector does not depend on it (the `formats-json/duplicate-keys/*`
-vectors).
-This rule is about JSON; YAML and TOML duplicate keys are not covered by it.
+ones, and the surviving edge keeps the position of the key's first
+occurrence.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later
+value replaces an earlier one whatever the two shapes are: it is not appended
+to the earlier value and it is not merged into it. An array value contributes
+its elements, as it does anywhere: `{"a":1,"a":[2,3]}` reads as
+`[(a,2),(a,3)]` and `{"a":1,"a":[]}` as no `a` edge at all. RFC 8259 says names
+within an object SHOULD be unique and defines no result when they are not, so
+this is this specification's rule, chosen because it is what the mainstream
+JSON parsers already do. It is the same at every depth, and it is not the
+array rule: a JSON array under one key is a run of same-label edges
+(`{"m":[A,B]}` reads as `[(m,A),(m,B)]`), and a duplicate key is not.
+
+**Where the surviving edge sits.** The edge (or, for an array value, the run of
+edges) stands where the key was **first** written among its siblings, and
+carries the value of the key's **last** occurrence. `{"a":1,"b":2,"a":3}` reads
+as `[(a,3),(b,2)]`, not `[(b,2),(a,3)]`; `{"a":1,"b":2,"a":[3,4]}` reads as
+`[(a,3),(a,4),(b,2)]`; `{"a":1,"b":2,"a":[]}` reads as `[(b,2)]`, because the
+last value contributes no edge. This is [D-1](02-document-model.md#23-structural-invariants)
+applied to a read that collapses: the position a key takes is fixed by where
+the text first mentions it, so a later repeat changes the value and never
+reorders the siblings, which is also what assigning to an ordered map does in
+the mainstream JSON parsers.
+
+C-11 is about JSON. YAML and TOML repeat no key silently: see C-12.
+
+**C-12. A YAML mapping or a TOML table that repeats a key is rejected.** The
+read fails with `parse.codec-syntax`
+([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
+whose `path` is a text position ([E-11](08-conformance-and-errors.md#84-paths),
+[E-31](08-conformance-and-errors.md#84-paths)), and no Document is produced.
+This is the opposite of C-11, and for a reason: RFC 8259 only advises that
+JSON names be unique, so a reader has a result to choose, whereas YAML (1.1
+and 1.2) requires the keys of a mapping to be unique and TOML forbids defining
+a key twice, so the input is malformed in its own format and a lenient
+reader is the outlier, not the norm. The rule is the same at every depth and
+in every style (YAML block and flow mappings, TOML tables and inline tables).
+Keys are compared as strings, byte for byte
+([D-16](02-document-model.md#25-encoding)): `a` and `"a"` are one key,
+and two keys that differ only in Unicode normalization are two. The same key in
+two different mappings or tables is not a repeat, and a key a YAML merge key
+(`<<`) supplies is not a repeat of the same key written in the mapping itself:
+the mapping's own entry overrides the merged one, as
+[§ YAML](formats/yaml.md) states for key collisions. For TOML, what counts as
+defining a key twice is TOML's own rule, dotted keys and inline tables
+included.
+
+**C-13. A YAML `!!pairs`, `!!omap` or `!!set` collection is rejected.** A YAML
+input holding a node explicitly tagged `!!pairs`, `!!omap` or `!!set`
+(`tag:yaml.org,2002:pairs`, `:omap`, `:set`), whatever its content, is
+rejected with `parse.codec-syntax` and a text position, like any input the
+codec cannot accept. The three tags describe collections that the Document
+model has two readings for: the plain sequence of single-entry mappings (or the
+plain mapping of null values) the text is, and the keyed-set or ordered-map
+shape the tag names. The ports read them four different ways, and none of the
+shapes is needed to read a configuration file, so the rule removes the choice
+rather than making it. This rule is about those three tags only: every
+other tag keeps the reading it already has, and what an explicitly tagged `<<`
+is, is [D-27](02-document-model.md#241-bounding-alias-expansion)'s.
 
 ## 7.2 Materialization rules
 
@@ -348,6 +400,18 @@ and are unaffected. No `format.*` code is involved: a writer MUST NOT emit an
 empty element for the null, and MUST NOT report the write as an adjustment.
 An empty string leaf is not a null leaf and still writes as `<a/>`. A writer
 MAY stop at the first null leaf it finds.
+
+**C-14. The hexadecimal digits of a `\uXXXX` escape are lowercase.** A writer
+that spells a character as a `\uXXXX` escape writes its four hex digits in
+lowercase, in every format that has the escape: U+001F is `\u001f` in an OML,
+JSON or TOML string, never `\u001F`
+([OML-15](04-oml-grammar.md#45-strings) is this rule for OML). Two writers that
+disagree on the case write different bytes for one Document, and OML-19 and the
+`write` vectors compare bytes. The rule fixes the case of the digits and
+nothing else: which characters a format escapes, and whether it spells one
+with `\uXXXX` at all (YAML also has `\xXX`), stay the format's own. XML's
+numeric character references (`&#13;`, [E-8](08-conformance-and-errors.md#838-format-codec-adjustments))
+are decimal and out of scope.
 
 ## 7.4 Format reports
 

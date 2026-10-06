@@ -271,6 +271,283 @@
         }
       },
       "comment": "C-11: the later value is an empty array, which contributes no edges, so the earlier `1` is replaced by nothing and the Document is empty."
+    },
+    {
+      "name": "formats-json/duplicate-keys/surviving-edge-keeps-the-first-position-and-the-last-value",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"b\": 2, \"a\": 3}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the key `a` is first written before `b`, so its surviving edge sits before `b`, and it carries the last value, 3. A reader that moves the edge to the position of the last occurrence reads `[(b,2),(a,3)]`."
+    },
+    {
+      "name": "formats-json/duplicate-keys/several-repeated-keys-each-keep-their-own-first-position",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"b\": 0, \"a\": 1, \"c\": 2, \"a\": 3, \"b\": 4}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 4
+                }
+              }
+            ],
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ],
+            [
+              "c",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11 with two repeated keys interleaved: `b` is first written first and `a` second, so they keep that order (b, a, c) while each carries its last value (b = 4, a = 3)."
+    },
+    {
+      "name": "formats-json/duplicate-keys/a-last-array-value-stands-at-the-first-position",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"b\": 2, \"a\": [3, 4]}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ],
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 4
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the last value is an array, so the run of two `a` edges it contributes stands at the first position of the key, before `b`."
+    },
+    {
+      "name": "formats-json/duplicate-keys/a-last-empty-array-removes-the-key-and-leaves-the-siblings",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"b\": 2, \"a\": []}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the last value is the empty array, which contributes no edge, so no `a` edge survives and `b` is unaffected."
+    },
+    {
+      "name": "formats-json/duplicate-keys/a-last-scalar-replaces-an-earlier-array-at-the-first-position",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": [1, 2], \"b\": 3, \"a\": 4}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 4
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the earlier array is replaced whole by the later scalar, which takes the first position of the key."
+    },
+    {
+      "name": "formats-json/duplicate-keys/a-last-scalar-replaces-an-earlier-object-at-the-first-position",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": {\"k\": 1}, \"b\": 2, \"a\": 3}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the later scalar replaces the earlier object (not merged into it) and sits where the object was."
+    },
+    {
+      "name": "formats-json/duplicate-keys/position-rule-applies-inside-a-nested-object",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"o\": {\"x\": 1, \"y\": 2, \"x\": 3}, \"p\": 0}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "o",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "p",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11 at depth: the nested object's `x` keeps its first position and last value, and the outer siblings are untouched."
     }
   ]
 }

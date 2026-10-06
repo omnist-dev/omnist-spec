@@ -133,7 +133,7 @@ used.
 | `parse_schema` | `ok`; `schema` only when the vector pins round-trip fidelity | `schema` present: **`canonical`**, byte for byte (§8.5.3, §3.3/§5.9). Absent: acceptance only. |
 | `validate` | `ok` | `ok`; on failure the `(path, code)` set. |
 | `materialize` | `ok`, `document` | `document`: Document equality; on failure the `(path, code)` set. |
-| `write` | `ok`, `text`; `diagnostics` MAY accompany a success (`format.temporal-stringified`, `format.interleaving-lost`) | `text`: byte for byte, with §8.5.3 E-18's whitespace rule for XML; `diagnostics` as a `(path, code)` set. On failure the `(path, code)` set. The `strict` key some `write` vectors carry in `input` selects strict mode ([§8.3.9](08-conformance-and-errors.md#839-write)). |
+| `write` | `ok`, `text`; `diagnostics` MAY accompany a success (`format.temporal-stringified`, `format.interleaving-lost`) | `text`: byte for byte, with §8.5.3 E-18's whitespace rule for XML; `diagnostics` as a `(path, code)` set. On failure the `(path, code)` set. The `strict` key some `write` vectors carry in `input` selects strict mode ([§8.3.9](08-conformance-and-errors.md#839-write)). The `compact` key (OML vectors only, E-35) selects OML's compact layout (OML-22): pass it to your OML writer's compact option, or `--compact` if the runner goes through the CLI, and do not drop it, or every compact vector fails for the runner's reason. |
 | `compatible_with`, `equivalent` | `result` | the boolean. |
 | `is_empty` | `empty` | the boolean. |
 | `normalize`, `prune` | `schema` | **`canonical`** (§8.5.3; §9.2: "compared as canonical OSD text byte for byte"). |

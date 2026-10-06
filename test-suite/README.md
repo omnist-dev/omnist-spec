@@ -15,7 +15,7 @@ disagree, chapter 8 wins.
 test-suite/
   validate/                  document-against-schema vectors
   algebra-compatibility/     compatible_with / equivalent vectors
-  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, in OML and in the four other formats; input size), and label identity (D-16)
+  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, in OML and in the four other formats; input size), the digits of an integer by value across hex, octal, binary and underscored literals (D-28), number literals past binary64's range (D-29), and label identity (D-16)
   oml-grammar/               OML text-to-Document parse vectors (ch.4)
   osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)
@@ -26,11 +26,11 @@ test-suite/
   extract/                   extract vectors
   infer/                     infer / infer_with_report vectors, including allow_any
   lint/                      lint vectors
-  formats-json/              JSON codec vectors, including the duplicate-key rule (C-11)
-  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, and anchor/alias resolution (D-20, D-27)
-  formats-toml/              TOML codec vectors
-  formats-xml/               XML codec vectors
-  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15)
+  formats-json/              JSON codec vectors, including the duplicate-key rule and the position it leaves the edge in (C-11), and the lowercase `\uXXXX` escape (C-14)
+  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, anchor/alias resolution (D-20, D-27), duplicate keys rejected (C-12), the tagged merge key (D-27) and the rejected `!!pairs`/`!!omap`/`!!set` collections (C-13), and the NEL escape a YAML writer uses (E-34)
+  formats-toml/              TOML codec vectors, including duplicate keys rejected (C-12) and the lowercase `\uXXXX` escape (C-14)
+  formats-xml/               XML codec vectors, including the codes a writer reports for a typed leaf (`format.value-stringified`, and `format.temporal-stringified` for a date, time or datetime, E-5)
+  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15), and compact mode (OML-22..24, asked for with `compact: true`, E-35)
   extensions-osd-oml/        OSD-OML extension vectors: parse_schema_oml, write_schema_oml
 ```
 
@@ -56,6 +56,15 @@ Every vector is a JSON object with the same six keys.
 | `expect` | Either a success value or `{"ok": false, "diagnostics": [...]}`. |
 
 A file holds `{"vectors": [ ... ]}`.
+
+A `write` vector's `input` is `{document, format}` and may also carry two booleans,
+both defaulting to `false` when absent: `strict`, and, on an OML vector only,
+`compact` ([E-35](../docs/08-conformance-and-errors.md#853-operation-drivers)),
+which asks for OML's one-line layout (OML-22). A runner passes `compact` to the
+implementation's OML writer, or `--compact` to its CLI; one that drops it
+compares the expanded layout with the compact text and fails every compact
+vector for its own reason. `tools/check_vectors.py` rejects `compact` on any
+other format and a non-boolean `strict` or `compact`.
 
 On a `write` vector the `diagnostics` list is compared like any other
 ([E-17](../docs/08-conformance-and-errors.md#852-diagnostics-matching)): each

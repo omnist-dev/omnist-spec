@@ -123,7 +123,7 @@ sequence of mappings is a syntax error, `parse.codec-syntax`; a sequence with
 no members is a sequence of mappings and merges nothing. An alias with no
 preceding anchor is also a syntax error, a redefined anchor shadows the earlier
 one for the aliases that follow it, and a quoted `<<` is an ordinary key, not a
-merge key
+merge key; so is a `<<` tagged `!!str`, while one tagged `!!merge` is a merge key
 ([D-27](../02-document-model.md#241-bounding-alias-expansion)). §2.4.1 defines
 `E`, gives the
 reasoning behind the default, and explains why ordinary anchored YAML — merge
@@ -176,13 +176,42 @@ booleans.
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.
 
-**Duplicate keys: last one wins**, matching JSON's policy
-([§ JSON, "Duplicate keys"](json.md)) rather than the YAML 1.1 spec's own
-stance — YAML 1.1 actually calls duplicate mapping keys an error, but no
-mainstream implementation library enforces that, all silently resolving to
-last-key-wins in practice. Omnist follows the implementations, not the
-unenforced spec text, for the same reason as JSON: consistency with what
-every reader is already going to do, at zero cost.
+**Duplicate keys are rejected**
+([C-12](../07-codecs-and-deserialization.md#71-two-stages)). A mapping that
+holds the same key twice, in block or flow style and at any depth, fails the
+read with `parse.codec-syntax`: `a: 1` / `b: 2` / `a: 3` is an error, not the
+edges `a = 3, b = 2`. YAML 1.1 and YAML 1.2 both require the keys of a mapping
+to be unique, and the mainstream libraries that enforce it (the JavaScript
+`yaml` package, `go-yaml` v3) are the ones that read the specification
+literally; the ones that let the last key win are the lenient exception, not
+the consensus. This is not JSON's policy
+([§ JSON, "Duplicate keys"](json.md)): RFC 8259 only advises that names be
+unique, so a JSON reader has a result to choose and Omnist chooses the one every
+mainstream JSON parser already gives. A key a merge key supplies is not a
+duplicate of the same key written in the mapping; the merge section above
+states that collision. `a` and `"a"` are one key.
+
+**`!!pairs`, `!!omap` and `!!set` are rejected**
+([C-13](../07-codecs-and-deserialization.md#71-two-stages)) with
+`parse.codec-syntax`. They name ordered-pair and set collections the Document
+model has no single reading for; write the plain sequence of single-key
+mappings, or the plain mapping, instead.
+
+**A number literal too large for binary64 reads as an infinity**
+([D-29](../02-document-model.md#221-scalar-kinds)): `a: 1.0e+999` reads as the
+`number` `+Infinity` with no diagnostic. Which spellings YAML resolves as a float
+is the resolver's own business; the rule is about what a float literal beyond
+the range means. For an integer literal D-9's digit limit counts the digits of
+the **value**, not of the spelling
+([D-28](../02-document-model.md#24-safety-limits)): `0x` followed by 3 600 `F`
+is a value of 4 335 decimal digits and is refused with
+`document.limit.int-digits`, and `1_000` has four digits, not five.
+
+**A NEL is written as `\N`.** YAML 1.1 reads a raw U+0085 in a scalar as a line
+break, so the writer quotes the string and spells the character with the `\N`
+escape, `a: "x\Ny"`, and reports `format.string-line-break-char`
+([E-34](../08-conformance-and-errors.md#838-format-codec-adjustments)); a YAML
+reader resolves `\N` back to the one character.
 
 ### Worked example
 

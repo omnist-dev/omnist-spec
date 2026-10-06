@@ -188,6 +188,87 @@
         "text": "\"a\\u0001b\": 1\n"
       },
       "comment": "OML-15 applies to a quoted label as it does to a string value."
+    },
+    {
+      "name": "formats-oml/escapes/control-character-hex-digits-are-lowercase",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u001fb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"a\\u001fb\"\n"
+      },
+      "comment": "OML-15 with C-14: U+001F is written `\\u001f`, with a lowercase `f`, never `\\u001F`. Earlier escapes vectors use control characters whose hex digits are all numerals, which cannot tell the two apart."
+    },
+    {
+      "name": "formats-oml/escapes/vertical-tab-hex-digit-is-lowercase",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "a\u000bb"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"a\\u000bb\"\n"
+      },
+      "comment": "OML-15 with C-14: U+000B is `\\u000b`, lowercase `b`."
+    },
+    {
+      "name": "formats-oml/escapes/label-control-character-hex-digits-are-lowercase",
+      "spec": "docs/04-oml-grammar.md#45-strings",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a\u001fb",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "\"a\\u001fb\": 1\n"
+      },
+      "comment": "OML-15 with C-14: a label is escaped with the same lowercase digits."
     }
   ]
 }

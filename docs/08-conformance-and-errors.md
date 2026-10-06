@@ -164,7 +164,7 @@ a syntax error, or the reverse, sends a user looking in the wrong place.
 |---|---|
 | `document.limit.depth` | Nesting exceeds the implementation's configured depth limit |
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
-| `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
+| `document.limit.int-digits` | The value of an integer literal has more decimal digits than the implementation's configured digit limit ([D-28](02-document-model.md#24-safety-limits)) |
 | `document.limit.alias-expansion` | The expansion factor of an anchored definition, of any other mapping or sequence, or of the document root exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.limit.expanded-size` | The number of value slots an input that contains an alias or merge key materializes, `W` of the document root, exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.limit.input-size` | The input is larger, in bytes, than the implementation's configured maximum input size, in any format ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document)) |
@@ -192,9 +192,15 @@ diagnostic is the one the OML reader raises for the same Document:
 `document.limit.depth` and `document.limit.nodes` at `$`, and
 `document.limit.int-digits` at the Document path of the integer literal,
 indexed per [E-10](#84-paths), never a text position
-([E-11](#84-paths)). Whether, where and with which code the schema-directed
-pretyping of an XML leaf ([§7.1](07-codecs-and-deserialization.md#71-two-stages))
-enforces the digit limit is not decided here. `document.limit.alias-expansion` and `document.limit.expanded-size` are
+([E-11](#84-paths)). **The schema-directed pretyping of an XML leaf is one of
+these routes** ([§7.1](07-codecs-and-deserialization.md#71-two-stages)): an XML
+leaf the schema types as `integer`, whose text is an integer literal with more
+digits than the limit, is refused with `document.limit.int-digits` at the
+Document path of that leaf, the diagnostic the OML reader gives for the same
+Document. It is not left a string for materialization to reject as
+`materialize.inexact-conversion`, and it is not an uncoded failure. The digits
+counted are those of the value ([D-28](02-document-model.md#24-safety-limits)),
+as on every other route. `document.limit.alias-expansion` and `document.limit.expanded-size` are
 different in reach, not in kind: per
 [D-18](02-document-model.md#241-bounding-alias-expansion) and D-22 they are
 raised only by a codec for a format that has an anchor/reference mechanism —
@@ -335,7 +341,7 @@ there is no separate set of names for them.
 
 | Code | Severity | Meaning |
 |---|---|---|
-| `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
+| `format.temporal-stringified` | warning | A temporal leaf (`date`, `time` or `datetime`) was written as an ISO-8601 string |
 | `format.dtd-forbidden` | error | A `DOCTYPE` declaration, outside the data-XML profile ([XML](formats/xml.md#the-data-xml-profile)) |
 | `format.entity-forbidden` | error | An entity reference other than XML's five predefined ones |
 | `format.mixed-content` | error | Text alongside child elements in one element, which has no Document shape |
@@ -343,17 +349,26 @@ there is no separate set of names for them.
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
-| `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips |
-| `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
+| `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips (in YAML, with the `\N` escape, [E-34](#838-format-codec-adjustments)) |
+| `format.value-stringified` | warning | A non-string, non-temporal scalar was written as text in a format with no native typed literals for it, so it reads back as a string; a temporal leaf takes `format.temporal-stringified` instead, never both |
 
 **E-5.** **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
 they describe occurs, with a conformance vector for each. The same holds for
 `format.value-stringified`: a writer MUST emit it wherever a non-string scalar
 is written as text, once per leaf, at the Document path of the leaf (indexed per
-[E-10](#84-paths)); `formats-xml/stringified/*` pins it. Per-implementation
-status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
-nowhere else.
+[E-10](#84-paths)); `formats-xml/stringified/*` pins it. **The same holds for
+`format.temporal-stringified` in XML**: an XML writer MUST emit it, once per
+leaf and at the same path, wherever a `date`, `time` or `datetime` leaf is
+written as its ISO-8601 text (`<d>2024-01-15</d>`), and MUST NOT also emit
+`format.value-stringified` for that leaf: a leaf takes one of the two codes,
+the temporal one for the three temporal kinds and the value one for the
+rest. Per-implementation status lives in
+[§9.3](09-divergence-ledger.md#93-current-status)'s table and nowhere else.
+
+The same holds for `format.string-line-break-char`, which a YAML writer MUST
+emit, once per string value, at the Document path of the leaf, wherever it
+writes a value containing U+0085 ([E-34](#838-format-codec-adjustments)).
 
 Every code above describes a write that still succeeds, and — this is the
 test that matters, not merely "is there only one available fallback" —
@@ -429,6 +444,20 @@ a compliant parser and reads back as the exact original byte sequence.
 Once the writer does this, the write is genuinely lossless, not merely
 reported-as-lossy — there is nothing left to adjust or warn about, so no
 diagnostic code is needed for this case at all.
+
+**E-34. A YAML writer writes U+0085 (NEL) as the escape `\N`.** A string value
+or label containing U+0085 is written as a double-quoted YAML scalar in which
+each NEL is the two characters `\N`, never as the raw character: `"x\Ny"` for
+the string `x` NEL `y`. YAML 1.1 reads a raw NEL inside a scalar as a line
+break and folds it, so the raw character does not round-trip, and `\N` is the
+one YAML escape defined for it (YAML 1.2 keeps `\N`), which any YAML reader
+resolves back to the single character. The writer MUST also report
+`format.string-line-break-char` (warning) once per such string value, at the
+Document path of the leaf, indexed per [E-10](#84-paths); the path of the
+diagnostic for a label holding NEL is not decided here. The `\N` escape
+is the whole adjustment, so a reader sees the original string back and the
+`write` succeeds. How the other writers treat U+0085, and whether they report
+the code, is not decided here.
 
 ### 8.3.9 `write.*`
 
@@ -792,7 +821,7 @@ implementation.
 | `parse_schema` | `{text}` or `{bytes_hex}` (E-27) | `{ok}` — `schema: <canonical OSD text>` MAY additionally be present, compared byte for byte per §3.3/§5.9, for a vector specifically pinning declaration-order or formatting round-trip fidelity rather than mere acceptance |
 | `validate` | `{schema, document}` | `{ok}` |
 | `materialize` | `{schema, document}` | `{ok, document}` |
-| `write` | `{document, format}` | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
+| `write` | `{document, format}`, and optionally `strict` and (OML only) `compact` (E-35) | `{ok, text}` — `diagnostics` MAY be present alongside a successful `{ok: true, ...}` result (a write can succeed with a reported adjustment, e.g. `format.temporal-stringified`; success and a diagnostics list are not mutually exclusive here the way they are for every other operation) |
 | `compatible_with` | `{a, b}` | `{result: bool}` |
 | `equivalent` | `{a, b}` | `{result: bool}` |
 | `normalize` | `{schema}` | `{schema: <canonical OSD text>}` — compared byte for byte per §5.9's canonical-output requirement |
@@ -880,6 +909,23 @@ XML-comparison algorithm.) One reference implementation: strip via
 `text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
 the existing outer-whitespace trim every `write` vector comparison already
 does.
+
+**E-35. A `write` vector MAY ask for OML's compact layout with `compact`.** The
+`write` driver's `input` takes an optional boolean `compact`, default `false`.
+`compact: true` asks the writer for the compact mode of
+[OML-22](04-oml-grammar.md#49-canonical-output): the whole Document on one line,
+edges separated by `;`. It is meaningful only when `format` is `oml`, the one
+format whose specification defines a compact layout, and a vector MUST NOT set
+it on any other format. A runner MUST pass it to the implementation's OML writer
+(the writer's compact option, or the CLI's `--compact` where the runner goes
+through the CLI) and MUST NOT ignore it: a runner that drops the key compares
+the expanded layout with the compact `text` and fails every compact vector for
+a reason that is the runner's. `strict` is likewise optional, boolean, and
+absent means `false`. The `text` of a compact vector is compared like any other
+`write` text, byte for byte after the outer-whitespace trim every `write`
+comparison does. With `compact` absent or `false` the canonical expanded layout
+of [OML-19](04-oml-grammar.md#49-canonical-output) applies, as for every
+existing vector.
 
 **E-27. A read-side vector MAY give its input as bytes, as `bytes_hex`.**
 The three drivers above whose `input` carries the source text of a document
