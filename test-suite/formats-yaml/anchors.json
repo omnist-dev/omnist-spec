@@ -118,7 +118,7 @@
           }
         ]
       },
-      "comment": "D-27 with D-20: an alias inside the definition that carries its own name refers to that definition, not to the earlier `&x`, so `b` is self-referential. Shadowing only applies to aliases that come after the new definition is complete."
+      "comment": "D-27 with D-20: an alias inside the definition that carries its own name refers to that definition, not to the earlier `&x`, so `b` is self-referential. The new definition shadows the earlier one from the point where it begins, including inside itself."
     },
     {
       "name": "formats-yaml/anchors/alias-to-undefined-anchor-is-a-syntax-error",
@@ -379,46 +379,246 @@
       "comment": "D-27 against D-18a: a plain `<<: 1` is a syntax error (a merge value must be a mapping or a sequence of mappings), but a quoted `\"<<\"` is not a merge key at all, so the scalar value is fine."
     },
     {
-      "name": "formats-yaml/anchors/aliases-inside-a-tagged-omap-are-counted",
+      "name": "formats-yaml/anchors/aliases-inside-a-tagged-omap-count-toward-expanded-size",
       "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
       "operation": "parse",
       "purpose": "error-case",
       "input": {
         "format": "yaml",
-        "declared_max_alias_expansion": 2,
-        "text": "p: &p {a: 1, b: 2, c: 3}\nt: !!omap [{a: *p}, {b: *p}, {c: *p}, {d: *p}]\n"
+        "declared_max_expanded_slots": 20,
+        "text": "p: &p {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10}\nt: !!omap [{k: *p}, {l: *p}]\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
             "path": "$",
-            "code": "document.limit.alias-expansion"
+            "code": "document.limit.expanded-size"
           }
         ]
       },
-      "comment": "D-18 does not look at tags: a sequence is a candidate node whether or not it carries !!omap, and each alias inside it adds what it materializes. p has W = S = 4; t holds four aliases, so W(t) = 1 + 4 * (1 + 4) = 21 against S(t) = 1 + 4 * 2 = 9, E(t) = 2.33, over the declared maximum of 2 (D-18). A reader that skips the accounting for a tagged collection would accept it. declared_max_alias_expansion is vector-local; an implementation with no configuration surface reports skip, not fail. What Document shape an !!omap produces is not decided, and the vector does not depend on it."
+      "comment": "D-27 (a tag does not change what an alias contributes) with D-22. W(p) = 11. The tagged sequence t holds two single-entry mappings, each an alias to p: W(t) = 1 + 2 * (1 + 11) = 25 and W(root) = 1 + 11 + 25 = 37. Counted as scalars instead (the defect D-27 rules out), the two aliases would be one slot each and W(root) would be 1 + 11 + 5 = 17. The declared maximum of 20 sits between the two, so only a reader that skips the items of a tagged collection accepts this input. No expansion factor is near its limit (E(t) = 25 / 5 = 5.00 against 50), so the vector isolates the expanded size. declared_max_expanded_slots is vector-local; an implementation with no configuration surface reports skip, not fail. What Document shape the tagged collection produces is not decided, and the vector does not depend on it."
     },
     {
-      "name": "formats-yaml/anchors/aliases-inside-a-tagged-pairs-are-counted",
+      "name": "formats-yaml/anchors/aliases-inside-a-tagged-pairs-count-toward-expanded-size",
       "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
       "operation": "parse",
       "purpose": "error-case",
       "input": {
         "format": "yaml",
-        "declared_max_alias_expansion": 2,
-        "text": "p: &p {a: 1, b: 2, c: 3}\nt: !!pairs [{a: *p}, {b: *p}, {c: *p}, {d: *p}]\n"
+        "declared_max_expanded_slots": 20,
+        "text": "p: &p {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10}\nt: !!pairs [{k: *p}, {l: *p}]\n"
       },
       "expect": {
         "ok": false,
         "diagnostics": [
           {
             "path": "$",
-            "code": "document.limit.alias-expansion"
+            "code": "document.limit.expanded-size"
           }
         ]
       },
-      "comment": "The same for !!pairs: the tag does not change the count."
+      "comment": "D-27 (a tag does not change what an alias contributes) with D-22. W(p) = 11. The tagged sequence t holds two single-entry mappings, each an alias to p: W(t) = 1 + 2 * (1 + 11) = 25 and W(root) = 1 + 11 + 25 = 37. Counted as scalars instead (the defect D-27 rules out), the two aliases would be one slot each and W(root) would be 1 + 11 + 5 = 17. The declared maximum of 20 sits between the two, so only a reader that skips the items of a tagged collection accepts this input. No expansion factor is near its limit (E(t) = 25 / 5 = 5.00 against 50), so the vector isolates the expanded size. declared_max_expanded_slots is vector-local; an implementation with no configuration surface reports skip, not fail. What Document shape the tagged collection produces is not decided, and the vector does not depend on it."
+    },
+    {
+      "name": "formats-yaml/anchors/single-quoted-merge-key-is-an-ordinary-key",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "p: &p {x: 1}\nq: {'<<': *p}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "p",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "q",
+              {
+                "edges": [
+                  [
+                    "<<",
+                    {
+                      "edges": [
+                        [
+                          "x",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27: the single-quoted `'<<'` is the string `<<`, like the double-quoted form."
+    },
+    {
+      "name": "formats-yaml/anchors/merge-key-uses-the-nearest-preceding-definition",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &x {k: 1}\nb: {<<: *x}\nc: &x {k: 2}\nd: {<<: *x}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "b",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "c",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "d",
+              {
+                "edges": [
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-27 in merge position: `b` merges the first `&x`, `d` the second."
+    },
+    {
+      "name": "formats-yaml/anchors/undefined-alias-in-merge-position-is-a-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: {<<: *x}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-27: the undefined-alias rule holds where the alias is a merge value too."
+    },
+    {
+      "name": "formats-yaml/anchors/undefined-alias-in-a-flow-sequence-is-a-syntax-error",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: [1, *x]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-27: and inside a flow sequence."
+    },
+    {
+      "name": "formats-yaml/anchors/undefined-alias-wins-over-a-limit-code",
+      "spec": "docs/02-document-model.md#241-bounding-alias-expansion",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "declared_max_alias_expansion": 2,
+        "text": "p: &p {a: 1, b: 2, c: 3}\nt: {<<: [*p, *p, *p, *p]}\nbad: *zz\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "D-27: an undefined alias is malformed input, so it is reported as parse.codec-syntax even though `t` alone would exceed the declared expansion maximum of 2 (E(t) = 6.50, as in the D-18 worked example); the same precedence D-18a states for a malformed merge. The undefined alias comes after the bomb."
     }
   ]
 }

@@ -577,7 +577,10 @@ maximum of 6 for exactly the reason an anchored `t` would be.
     syntax error, `parse.codec-syntax`
     ([§8.3.1](08-conformance-and-errors.md#831-parse-text-to-document-stage-1)),
     the code D-18a already gives a malformed merge. It is not a limit error,
-    and a codec MUST NOT resolve the alias to null or to an empty value.
+    and a codec MUST NOT resolve the alias to null or to an empty value. As
+    for a malformed merge, the syntax error takes precedence over every
+    `document.limit.*` code: an input with both a bomb and an undefined alias
+    is reported as `parse.codec-syntax`.
   - **Only a plain `<<` is a merge key.** A quoted `<<` (`"<<"` or `'<<'`) is
     the string `<<`: it makes an ordinary edge labelled `<<` and merges
     nothing, so it is not subject to D-18a's shape rule and is not counted as
