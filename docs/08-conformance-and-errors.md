@@ -341,7 +341,7 @@ there is no separate set of names for them.
 
 | Code | Severity | Meaning |
 |---|---|---|
-| `format.temporal-stringified` | warning | A temporal leaf was written as an ISO-8601 string |
+| `format.temporal-stringified` | warning | A temporal leaf (`date`, `time` or `datetime`) was written as an ISO-8601 string |
 | `format.dtd-forbidden` | error | A `DOCTYPE` declaration, outside the data-XML profile ([XML](formats/xml.md#the-data-xml-profile)) |
 | `format.entity-forbidden` | error | An entity reference other than XML's five predefined ones |
 | `format.mixed-content` | error | Text alongside child elements in one element, which has no Document shape |
@@ -350,16 +350,22 @@ there is no separate set of names for them.
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
 | `format.multiple-roots` | error | A multi-root Document cannot be written to a single-root format |
 | `format.string-line-break-char` | warning | A label or value contains U+0085 (NEL); written quoted so it round-trips (in YAML, with the `\N` escape, [E-34](#838-format-codec-adjustments)) |
-| `format.value-stringified` | warning | A non-string scalar was written as text in a format with no native typed literals for it, so it reads back as a string |
+| `format.value-stringified` | warning | A non-string, non-temporal scalar was written as text in a format with no native typed literals for it, so it reads back as a string; a temporal leaf takes `format.temporal-stringified` instead, never both |
 
 **E-5.** **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
 they describe occurs, with a conformance vector for each. The same holds for
 `format.value-stringified`: a writer MUST emit it wherever a non-string scalar
 is written as text, once per leaf, at the Document path of the leaf (indexed per
-[E-10](#84-paths)); `formats-xml/stringified/*` pins it. Per-implementation
-status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
-nowhere else.
+[E-10](#84-paths)); `formats-xml/stringified/*` pins it. **The same holds for
+`format.temporal-stringified` in XML**: an XML writer MUST emit it, once per
+leaf and at the same path, wherever a `date`, `time` or `datetime` leaf is
+written as its ISO-8601 text (`<d>2024-01-15</d>`), and MUST NOT also emit
+`format.value-stringified` for that leaf: a leaf takes one of the two codes,
+the temporal one for the three temporal kinds and the value one for the
+rest. Per-implementation status lives in
+[§9.3](09-divergence-ledger.md#93-current-status)'s table and nowhere else.
+
 The same holds for `format.string-line-break-char`, which a YAML writer MUST
 emit, once per string value, at the Document path of the leaf, wherever it
 writes a value containing U+0085 ([E-34](#838-format-codec-adjustments)).

@@ -29,7 +29,7 @@ test-suite/
   formats-json/              JSON codec vectors, including the duplicate-key rule and the position it leaves the edge in (C-11), and the lowercase `\uXXXX` escape (C-14)
   formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, anchor/alias resolution (D-20, D-27), duplicate keys rejected (C-12), the tagged merge key (D-27) and the rejected `!!pairs`/`!!omap`/`!!set` collections (C-13), and the NEL escape a YAML writer uses (E-34)
   formats-toml/              TOML codec vectors, including duplicate keys rejected (C-12) and the lowercase `\uXXXX` escape (C-14)
-  formats-xml/               XML codec vectors
+  formats-xml/               XML codec vectors, including the codes a writer reports for a typed leaf (`format.value-stringified`, and `format.temporal-stringified` for a date, time or datetime, E-5)
   formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15), and compact mode (OML-22..24, asked for with `compact: true`, E-35)
   extensions-osd-oml/        OSD-OML extension vectors: parse_schema_oml, write_schema_oml
 ```
