@@ -57,6 +57,12 @@ Every vector is a JSON object with the same six keys.
 
 A file holds `{"vectors": [ ... ]}`.
 
+On a `write` vector the `diagnostics` list is compared like any other
+([E-17](../docs/08-conformance-and-errors.md#852-diagnostics-matching)): each
+entry's path **and code**, exactly, as a set. A runner that compares only the
+paths of a write vector's diagnostics is in code-agnostic mode for that
+operation and has to say so; it is not reporting a conformance pass.
+
 ### `bytes_hex`: giving a read-side input as bytes
 
 The three read-side drivers — `parse`, `parse_schema` and `parse_schema_oml`

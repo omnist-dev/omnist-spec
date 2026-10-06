@@ -342,10 +342,9 @@ there is no separate set of names for them.
 **E-5.** **`format.attribute-dropped`, `format.namespace-dropped`, and
 `format.interleaving-lost` MUST be emitted** wherever the codec adjustment
 they describe occurs, with a conformance vector for each. The same holds for
-`format.temporal-stringified` and `format.value-stringified`: a writer MUST emit
-each wherever the stringification occurs, once per leaf, at the Document path of
-the leaf (indexed per [E-10](#84-paths)); `formats-xml/stringified/*` pins the
-second. Per-implementation
+`format.value-stringified`: a writer MUST emit it wherever a non-string scalar
+is written as text, once per leaf, at the Document path of the leaf (indexed per
+[E-10](#84-paths)); `formats-xml/stringified/*` pins it. Per-implementation
 status lives in [§9.3](09-divergence-ledger.md#93-current-status)'s table and
 nowhere else.
 
