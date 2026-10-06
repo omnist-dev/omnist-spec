@@ -51,6 +51,23 @@ format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
 after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
 rule.
 
+**C-11. When a JSON object repeats a key, the last value replaces the earlier
+ones.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later value
+replaces an earlier one whatever the two shapes are: it is not appended to the
+earlier value and it is not merged into it. An array value contributes its
+elements, as it does anywhere: `{"a":1,"a":[2,3]}` reads as `[(a,2),(a,3)]` and
+`{"a":1,"a":[]}` as no `a` edge at all. RFC 8259 says names within an
+object SHOULD be unique and defines no result when they are not, so this is
+this specification's rule, chosen because it is what the mainstream JSON
+parsers already do. It is the same at every depth, and it is not the array
+rule: a JSON array under one key is a run of same-label edges
+(`{"m":[A,B]}` reads as `[(m,A),(m,B)]`), and a duplicate key is not. The rule
+fixes the surviving edge's *value*; where that edge sits among its siblings
+when other keys come between the repeats is not specified here, and a
+conformance vector does not depend on it (the `formats-json/duplicate-keys/*`
+vectors).
+This rule is about JSON; YAML and TOML duplicate keys are not covered by it.
+
 ## 7.2 Materialization rules
 
 Materialization upgrades a leaf **only when the conversion is value-exact.**
