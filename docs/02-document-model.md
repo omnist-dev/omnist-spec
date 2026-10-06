@@ -162,7 +162,7 @@ implementation that cannot construct its input.
 
 **D-9.** A Document is built from untrusted input. Three quantities bound the work an
 implementation will do before refusing to continue: nesting depth, total node
-count, and the digit length of an `integer` literal. Every conformant
+count, and the digit length of an `integer` literal's value (D-28). Every conformant
 implementation MUST enforce a finite limit on all three. **No implementation
 MAY be unbounded on any of them.** Two further quantities, the alias expansion
 factor (D-18) and the expanded size (D-22), both in §2.4.1, bound a format
@@ -187,7 +187,7 @@ big-data ingestion engine.
 |---|---|---|
 | Maximum nesting depth | 200 | Levels of node nesting, counted from the Document root |
 | Maximum node count | 1 000 000 | Nodes materialized while building one Document |
-| Maximum integer digits | 4 300 | Decimal digits in an `integer` literal, sign excluded |
+| Maximum integer digits | 4 300 | Decimal digits of the value of an `integer` literal, sign excluded (D-28) |
 | Maximum alias expansion factor | 50 | The materialized-to-written value-slot ratio of any one anchored definition, any other mapping or sequence, and the document root, in a format that has an anchor/reference mechanism (D-18) |
 | Maximum expanded size | 1 000 000 | The value slots one input materializes, `W` of the document root, for an input that contains an alias or a merge key (D-22) |
 | Maximum input size | none (D-24) | Bytes of one input, any format (D-23, a SHOULD) |
@@ -208,6 +208,27 @@ a new implementation SHOULD adopt absent a specific reason to deviate. 4 300
 matches CPython's own default for `sys.set_int_max_str_digits` — conversion
 between an arbitrarily long digit string and a big integer is superlinear, so
 an unbounded literal is a denial-of-service vector regardless of language.
+
+**D-28. The integer-digit limit counts the decimal digits of the value, not of
+the literal.** Whatever notation a format writes an integer in, the number
+that D-9's limit bounds is the number of digits of that integer's decimal
+representation, sign excluded. YAML and TOML hexadecimal (`0x…`), octal (`0o…`,
+and YAML 1.1's leading `0`) and binary (`0b…`) literals, digit-separating
+underscores (`1_000`), and YAML 1.1's sexagesimal integers (`190:20:30`) are all
+counted by the value they denote: the radix prefix, the underscores, any
+leading zeros and the colons are not digits. At a limit of three, `0xFFF`
+(4 095) and the binary `0b1111101000` (1 000) are four digits and refused,
+while `0b1111100111` (999) and `0o1747` (999) are three and accepted, though
+the first is spelled with ten digits. At the reference default of 4 300, a
+hexadecimal literal of 3 600 digits (a value of 4 335 decimal digits) is
+refused and a binary literal of 4 301 digits (a value of 1 295) is accepted.
+The reason is the one D-9 gives for the number: the limit exists to bound the
+cost of converting an integer to decimal, which depends on the value and not
+on how it was spelled, and a Document holds the value, so a writer or a
+`materialize` step will have to render it in decimal whatever the source
+looked like. The rule is the same on every route into the model (JSON, YAML,
+TOML, OML, and the schema-directed pretyping of an XML leaf,
+[E-4a](08-conformance-and-errors.md#832-document-building-and-limits)).
 
 **Choosing different values.** An implementation MAY set any of these limits
 lower or higher than the reference default, to fit its deployment target —

@@ -164,7 +164,7 @@ a syntax error, or the reverse, sends a user looking in the wrong place.
 |---|---|
 | `document.limit.depth` | Nesting exceeds the implementation's configured depth limit |
 | `document.limit.nodes` | Node count exceeds the implementation's configured node limit |
-| `document.limit.int-digits` | An integer literal exceeds the implementation's configured digit limit |
+| `document.limit.int-digits` | The value of an integer literal has more decimal digits than the implementation's configured digit limit ([D-28](02-document-model.md#24-safety-limits)) |
 | `document.limit.alias-expansion` | The expansion factor of an anchored definition, of any other mapping or sequence, or of the document root exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.limit.expanded-size` | The number of value slots an input that contains an alias or merge key materializes, `W` of the document root, exceeds the implementation's configured maximum, in a format with an anchor/reference mechanism |
 | `document.limit.input-size` | The input is larger, in bytes, than the implementation's configured maximum input size, in any format ([D-23](02-document-model.md#242-resource-bounds-beyond-the-document)) |
@@ -192,9 +192,15 @@ diagnostic is the one the OML reader raises for the same Document:
 `document.limit.depth` and `document.limit.nodes` at `$`, and
 `document.limit.int-digits` at the Document path of the integer literal,
 indexed per [E-10](#84-paths), never a text position
-([E-11](#84-paths)). Whether, where and with which code the schema-directed
-pretyping of an XML leaf ([§7.1](07-codecs-and-deserialization.md#71-two-stages))
-enforces the digit limit is not decided here. `document.limit.alias-expansion` and `document.limit.expanded-size` are
+([E-11](#84-paths)). **The schema-directed pretyping of an XML leaf is one of
+these routes** ([§7.1](07-codecs-and-deserialization.md#71-two-stages)): an XML
+leaf the schema types as `integer`, whose text is an integer literal with more
+digits than the limit, is refused with `document.limit.int-digits` at the
+Document path of that leaf, the diagnostic the OML reader gives for the same
+Document. It is not left a string for materialization to reject as
+`materialize.inexact-conversion`, and it is not an uncoded failure. The digits
+counted are those of the value ([D-28](02-document-model.md#24-safety-limits)),
+as on every other route. `document.limit.alias-expansion` and `document.limit.expanded-size` are
 different in reach, not in kind: per
 [D-18](02-document-model.md#241-bounding-alias-expansion) and D-22 they are
 raised only by a codec for a format that has an anchor/reference mechanism —

@@ -46,7 +46,16 @@ accept or reject). This pretyping step is not stage 1 in the sense every
 other format's stage 1 is — it exists only because XML's stage 1 has
 strictly less information than every sibling format's stage 1 does, and it
 never substitutes for stage 2's record-shape and cardinality checking, which
-still runs afterward exactly as it does for every other format. No other
+still runs afterward exactly as it does for every other format. Pretyping is a
+route into the model like any other, so [D-9](02-document-model.md#24-safety-limits)'s
+integer-digit limit binds it ([D-28](02-document-model.md#24-safety-limits)):
+a leaf the schema types as `integer` whose text is an integer literal with more
+digits than the limit is refused with `document.limit.int-digits` at the
+Document path of the leaf (indexed per
+[E-10](08-conformance-and-errors.md#84-paths)), as
+[E-4a](08-conformance-and-errors.md#832-document-building-and-limits) states. It
+does not stay a string for stage 2 to reject as `materialize.inexact-conversion`,
+and it does not crash the reader. No other
 format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
 after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
 rule.
