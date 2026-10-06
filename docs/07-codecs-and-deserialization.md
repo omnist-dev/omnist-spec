@@ -51,10 +51,12 @@ format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
 after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
 rule.
 
-**C-11. A JSON object that repeats a key reads as one edge holding the last
-value.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later value
+**C-11. When a JSON object repeats a key, the last value replaces the earlier
+ones.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later value
 replaces an earlier one whatever the two shapes are: it is not appended to the
-earlier value and it is not merged into it. RFC 8259 says names within an
+earlier value and it is not merged into it. An array value contributes its
+elements, as it does anywhere: `{"a":1,"a":[2,3]}` reads as `[(a,2),(a,3)]` and
+`{"a":1,"a":[]}` as no `a` edge at all. RFC 8259 says names within an
 object SHOULD be unique and defines no result when they are not, so this is
 this specification's rule, chosen because it is what the mainstream JSON
 parsers already do. It is the same at every depth, and it is not the array

@@ -218,6 +218,59 @@
         }
       },
       "comment": "The control for C-11: a JSON array under a single key is a repeated label, `[(m,1),(m,2)]`, not a duplicate-key situation. Duplicate keys collapse to one edge; an array does not."
+    },
+    {
+      "name": "formats-json/duplicate-keys/last-value-an-array-contributes-its-elements",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"a\": [2, 3]}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-11: the later value replaces the earlier `1`; because that value is an array it contributes its elements as usual, so the result is two edges, `(a,2)` and `(a,3)`, not one. The earlier value leaves no trace."
+    },
+    {
+      "name": "formats-json/duplicate-keys/last-value-an-empty-array-removes-the-key",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1, \"a\": []}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": []
+        }
+      },
+      "comment": "C-11: the later value is an empty array, which contributes no edges, so the earlier `1` is replaced by nothing and the Document is empty."
     }
   ]
 }
