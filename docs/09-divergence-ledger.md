@@ -165,7 +165,7 @@ proxy; no registry). No port implements the OSD-OML extension (§9.6).
 | Codecs (JSON/YAML/TOML/XML) | all four, attribute/namespace/interleaving drops reported (drop paths indexed, measured 2026-10-06) | all four, attribute/namespace/interleaving drops reported (the XML reader's drop paths lack the E-10 index, `DIV-27`) | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported | all four, attribute/namespace/interleaving drops reported (same gap, `DIV-27`) |
 | §8.3 error codes | yes | yes | yes | yes | yes |
 | D-14, invalid UTF-8 rejected with `parse.invalid-encoding` at `1:1` (§2.5) | yes, via the CLI (re-measured 2026-10-05) | yes, via the CLI (re-measured) | yes, via `omnist-cli` (re-measured) | yes, at the front of all six readers (CLI re-measured) | yes, in the CLI for a file (re-measured; stdin not re-run) |
-| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 367 at v0.33.0-beta) | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML |
+| Conformance (Track 2 JSON vectors, all compared as `(path, code)` sets; 386 in this tree, 367 at the v0.33.0-beta tag) | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 333 pass / 0 fail / 34 skip of 367; the 34 are 28 OSD-OML and 6 `limits` (`DIV-28`) | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML | 339 pass / 0 fail / 28 skip of 367; the 28 are all OSD-OML |
 | Conformance (fixtures) | 19/19 | 19/19 | 19/19 | 19/19 | 29/0/0 (Java's Track 1 headline: the 10 `_referee-self-test/*` fixtures are folded into it, [omnist-j#110](https://github.com/omnist-dev/omnist-j/issues/110)) |
 | Fuzz testing | yes | yes | yes | yes | yes |
 | Test coverage (gate read from each port's config 2026-10-05; the percentages are not re-measured) | 100% lines, gated (`coverage report --fail-under=100`) | 100% lines, branches, functions and statements, gated (vitest thresholds) | 100% lines, gated (`cargo llvm-cov --fail-under-lines 100`); region coverage is not gated | 100% per function, gated; excludes `main`, `cmdMaterialize` and the `tools/` harness and doc-example checker | 99.72% line / 99.36% branch (the port's `docs/limitations.md`, three runs at v0.33.0-beta; not re-run here), gated at 99.6% / 99.1% |
@@ -175,7 +175,7 @@ Rows this edit did not re-measure (the OML, OSD, `any`, `validate`,
 the 2026-10-04 edit; the vector suites each port passes cover them. The
 coverage percentages are the ports' own figures.
 
-The Track 2 suite is v0.33.0-beta, 367 vectors, and all five ports pin it. Go, Rust and Java run all of it
+The Track 2 suite is v0.33.0-beta, 386 vectors in this tree (367 at the tag; the pass counts below were measured at the tag), and all five ports pin it. Go, Rust and Java run all of it
 and pass 339, with the 28 OSD-OML vectors skipped. TypeScript passes 333 and
 skips 34; Python, which now pins v0.33.0-beta too, passes 333 and skips 34
 (28 OSD-OML and 6 `limits`). The growth since v0.27.0-beta (338
@@ -349,17 +349,17 @@ entry says so rather than letting a green suite imply coverage. Remove this
 entry when vectors pin OSD-14, OSD-16, C-9, S-22, S-23, S-24 and the
 programmatic S-8 path, supplied by such a driver, and every port passes them.
 
-**DIV-12. TypeScript's `yaml` library parses a block mapping in quadratic time, and aliases inside `!!pairs` and `!!omap` are not counted ([omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
-Two denial-of-service shapes that predate v0.26.0-beta and are specific to this
+**DIV-12. TypeScript's `yaml` library parses a block mapping in quadratic time ([omnist-ts#157](https://github.com/omnist-dev/omnist-ts/issues/157)).**
+A denial-of-service shape that predates v0.26.0-beta and is specific to this
 port, measured in omnist-ts#157 (still open on 2026-10-05; those figures are
 not re-run here). The `yaml` library's parse cost is quadratic in the keys of
 one block mapping: 20,000 keys took 22.4 s and a 1.19 MB, 50,000-key mapping
-took 194.8 s, before any omnist check runs, so D-18 and D-22 cannot help. And
-the alias pass treats the items of `!!pairs` and `!!omap` as scalars, so an
-alias tower inside them is invisible to the ratio and size checks (an 801-byte,
-7-level tower was accepted by both and stopped later by the node limit after
-about 10 s and 360 MB). This is a TypeScript implementation defect against D-9,
-D-18 and D-22, not a spec gap. One new point, measured 2026-10-05 on
+took 194.8 s, before any omnist check runs, so D-18 and D-22 cannot help. The
+second shape in that issue, an alias pass that treated the items of `!!pairs`
+and `!!omap` as scalars, is resolved: `0.8.0-alpha` counts them
+(`src/formats/yaml-alias.ts`) and `formats-yaml/anchors/aliases-inside-a-tagged-*`
+pass. This is a TypeScript implementation defect against D-9, D-18 and D-22,
+not a spec gap. One new point, measured 2026-10-05 on
 `0.8.0-alpha` (the whole CLI run, start-up included, one run each): a
 10,000-key block mapping converted in 14.1 s and a 20,000-key one in 31.9 s.
 The port's own `docs/limitations.md` adds that its default 64 MiB input cap

@@ -120,7 +120,11 @@ with neither is outside that limit, though
 [D-23](../02-document-model.md#242-resource-bounds-beyond-the-document)'s input
 size applies to it. A merge value that is not a mapping or a
 sequence of mappings is a syntax error, `parse.codec-syntax`; a sequence with
-no members is a sequence of mappings and merges nothing. §2.4.1 defines
+no members is a sequence of mappings and merges nothing. An alias with no
+preceding anchor is also a syntax error, a redefined anchor shadows the earlier
+one for the aliases that follow it, and a quoted `<<` is an ordinary key, not a
+merge key
+([D-27](../02-document-model.md#241-bounding-alias-expansion)). §2.4.1 defines
 `E`, gives the
 reasoning behind the default, and explains why ordinary anchored YAML — merge
 keys, shared constants, anchor chains — sits far below it. Nothing here
