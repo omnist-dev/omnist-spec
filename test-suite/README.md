@@ -61,7 +61,7 @@ A `write` vector's `input` is `{document, format}` and may also carry two boolea
 both defaulting to `false` when absent: `strict`, and, on an OML vector only,
 `compact` ([E-35](../docs/08-conformance-and-errors.md#853-operation-drivers)),
 which asks for OML's one-line layout (OML-22). A runner passes `compact` to the
-implementation's OML writer, or `--compact` to its CLI; one that drops it
+implementation's OML writer through the library; one that drops it
 compares the expanded layout with the compact text and fails every compact
 vector for its own reason. `tools/check_vectors.py` rejects `compact` on any
 other format and a non-boolean `strict` or `compact`.

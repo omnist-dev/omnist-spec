@@ -152,7 +152,7 @@ Distinguish this from the codec-adjustment codes in
 *shape* Omnist would have to build from input that is well-formed in its
 source format — either refusing it as outside the profile Omnist supports
 (`format.dtd-forbidden`, `format.entity-forbidden`, `format.mixed-content`,
-all error severity) or recording what the shape cost (`format.attribute-dropped`,
+`format.tag-forbidden`, all error severity) or recording what the shape cost (`format.attribute-dropped`,
 `format.namespace-dropped`, warnings). `parse.codec-syntax` means the read failed
 before any such shape existed: the input is genuinely malformed, or it fell
 at the one precondition E-24 names. Reporting a profile refusal as
@@ -345,6 +345,7 @@ there is no separate set of names for them.
 | `format.dtd-forbidden` | error | A `DOCTYPE` declaration, outside the data-XML profile ([XML](formats/xml.md#the-data-xml-profile)) |
 | `format.entity-forbidden` | error | An entity reference other than XML's five predefined ones |
 | `format.mixed-content` | error | Text alongside child elements in one element, which has no Document shape |
+| `format.tag-forbidden` | error | A YAML node tagged `!!pairs`, `!!omap` or `!!set`, outside the supported profile ([C-13](07-codecs-and-deserialization.md#71-two-stages)) |
 | `format.attribute-dropped` | warning | An XML attribute was discarded on read |
 | `format.namespace-dropped` | warning | An XML namespace prefix was discarded on read |
 | `format.interleaving-lost` | warning | Cross-label interleaving could not be written |
@@ -420,11 +421,12 @@ A previous version of this spec had all five succeed anyway. The correct
 behavior for all five is `write.unsupported-value` (below): the write
 fails, unconditionally, not only under `strict`.
 
-**E-7.** **`format.dtd-forbidden`, `format.entity-forbidden` and
-`format.mixed-content` are a different shape from the rest of this table.**
+**E-7.** **`format.dtd-forbidden`, `format.entity-forbidden`,
+`format.mixed-content` and `format.tag-forbidden` are a different shape from the rest of this table.**
 They are read-side *refusals*, not adjustments: the input is well-formed XML
 that Omnist declines to support, per the
-[data-XML profile](formats/xml.md#the-data-xml-profile). They sit here
+[data-XML profile](formats/xml.md#the-data-xml-profile) (`format.tag-forbidden`:
+well-formed YAML, declined per [C-13](07-codecs-and-deserialization.md#71-two-stages)). Their `path` is `$`. They sit here
 because they are codec-specific conditions, which is what this family is
 for — but note two consequences. They are `error` severity and the read
 fails, so there is no adjusted result to report alongside them. And they
@@ -456,7 +458,11 @@ resolves back to the single character. The writer MUST also report
 Document path of the leaf, indexed per [E-10](#84-paths); the path of the
 diagnostic for a label holding NEL is not decided here. The `\N` escape
 is the whole adjustment, so a reader sees the original string back and the
-`write` succeeds. How the other writers treat U+0085, and whether they report
+`write` succeeds. The code is reported although the write is lossless, unlike
+[E-8](#838-format-codec-adjustments)'s carriage return, which has none: the code
+already existed in this table, and the escape is the one place a YAML writer
+overrides its default scalar style for a character that YAML 1.1 consumers
+fold, which a caller auditing the output wants to see. It is a warning, not a loss. How the other writers treat U+0085, and whether they report
 the code, is not decided here.
 
 ### 8.3.9 `write.*`
@@ -917,8 +923,8 @@ does.
 edges separated by `;`. It is meaningful only when `format` is `oml`, the one
 format whose specification defines a compact layout, and a vector MUST NOT set
 it on any other format. A runner MUST pass it to the implementation's OML writer
-(the writer's compact option, or the CLI's `--compact` where the runner goes
-through the CLI) and MUST NOT ignore it: a runner that drops the key compares
+(the writer's compact option; a runner calls the library for this key, since
+not every CLI offers a compact flag) and MUST NOT ignore it: a runner that drops the key compares
 the expanded layout with the compact `text` and fails every compact vector for
 a reason that is the runner's. `strict` is likewise optional, boolean, and
 absent means `false`. The `text` of a compact vector is compared like any other

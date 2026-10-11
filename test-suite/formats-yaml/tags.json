@@ -258,12 +258,12 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "line:col",
-            "code": "parse.codec-syntax"
+            "path": "$",
+            "code": "format.tag-forbidden"
           }
         ]
       },
-      "comment": "C-13: a `!!omap` collection is rejected with parse.codec-syntax whatever the content; the plain sequence of single-entry mappings reads as repeated edges."
+      "comment": "C-13: a `!!omap` collection is rejected with format.tag-forbidden whatever the content; the plain sequence of single-entry mappings reads as repeated edges."
     },
     {
       "name": "formats-yaml/tags/pairs-is-rejected",
@@ -278,8 +278,8 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "line:col",
-            "code": "parse.codec-syntax"
+            "path": "$",
+            "code": "format.tag-forbidden"
           }
         ]
       },
@@ -298,8 +298,8 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "line:col",
-            "code": "parse.codec-syntax"
+            "path": "$",
+            "code": "format.tag-forbidden"
           }
         ]
       },
@@ -318,8 +318,8 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "line:col",
-            "code": "parse.codec-syntax"
+            "path": "$",
+            "code": "format.tag-forbidden"
           }
         ]
       },
@@ -338,8 +338,8 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "line:col",
-            "code": "parse.codec-syntax"
+            "path": "$",
+            "code": "format.tag-forbidden"
           }
         ]
       },
@@ -358,8 +358,8 @@
         "ok": false,
         "diagnostics": [
           {
-            "path": "line:col",
-            "code": "parse.codec-syntax"
+            "path": "$",
+            "code": "format.tag-forbidden"
           }
         ]
       },

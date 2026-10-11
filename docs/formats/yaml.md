@@ -191,9 +191,9 @@ mainstream JSON parser already gives. A key a merge key supplies is not a
 duplicate of the same key written in the mapping; the merge section above
 states that collision. `a` and `"a"` are one key.
 
-**`!!pairs`, `!!omap` and `!!set` are rejected**
+**`!!pairs`, `!!omap` and `!!set` are refused**
 ([C-13](../07-codecs-and-deserialization.md#71-two-stages)) with
-`parse.codec-syntax`. They name ordered-pair and set collections the Document
+`format.tag-forbidden`: well-formed YAML outside the profile, not a syntax error. They name ordered-pair and set collections the Document
 model has no single reading for; write the plain sequence of single-key
 mappings, or the plain mapping, instead.
 

@@ -86,8 +86,9 @@ non-integral values. Implementations MUST NOT add scalar kinds; adding one chang
 Schema Algebra's subtyping lattice and therefore changes conformance results.
 
 **D-29. A number literal too large for binary64 is accepted and reads as an
-infinity.** A literal of kind `number` whose magnitude exceeds the largest
-finite binary64 (about 1.797e308) is not an error: it reads as positive
+infinity.** A literal of kind `number` whose value rounds to infinity under
+IEEE 754 round-to-nearest (so `1e999`, though not a literal a hair above the
+largest finite binary64, about 1.797e308) is not an error: it reads as positive
 infinity, or negative infinity with a minus sign, which is what IEEE 754
 round-to-nearest conversion gives and what D-6's binary64 `number` can hold.
 `1e999` reads as `+Infinity` and `-1e999` as `-Infinity`, in JSON, in OML and

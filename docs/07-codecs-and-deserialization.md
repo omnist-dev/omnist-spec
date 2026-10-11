@@ -107,11 +107,13 @@ the mapping's own entry overrides the merged one, as
 defining a key twice is TOML's own rule, dotted keys and inline tables
 included.
 
-**C-13. A YAML `!!pairs`, `!!omap` or `!!set` collection is rejected.** A YAML
+**C-13. A YAML `!!pairs`, `!!omap` or `!!set` collection is refused.** A YAML
 input holding a node explicitly tagged `!!pairs`, `!!omap` or `!!set`
 (`tag:yaml.org,2002:pairs`, `:omap`, `:set`), whatever its content, is
-rejected with `parse.codec-syntax` and a text position, like any input the
-codec cannot accept. The three tags describe collections that the Document
+refused with `format.tag-forbidden` (error severity, `path` `$`;
+[E-7](08-conformance-and-errors.md#838-format-codec-adjustments)). The input is
+well-formed YAML that Omnist declines to support, like a `DOCTYPE` in XML, so
+it is not a syntax error and MUST NOT be reported as one. The three tags describe collections that the Document
 model has two readings for: the plain sequence of single-entry mappings (or the
 plain mapping of null values) the text is, and the keyed-set or ordered-map
 shape the tag names. The ports read them four different ways, and none of the
