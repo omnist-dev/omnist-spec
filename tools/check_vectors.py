@@ -210,6 +210,26 @@ def check_input_form(rel: str, name: str, vec: dict) -> list[str]:
     return errors
 
 
+def check_write_flags(rel: str, name: str, vec: dict) -> list[str]:
+    """E-35: `compact` and `strict` on a `write` vector are booleans, and
+    `compact` (OML-22's layout) is set only on an OML vector: no other
+    format's specification defines a compact layout to compare against."""
+    if vec.get("operation") != "write":
+        return []
+    inp = vec.get("input")
+    if not isinstance(inp, dict):
+        return []
+    errors = []
+    for key in ("strict", "compact"):
+        if key in inp and not isinstance(inp[key], bool):
+            errors.append(f"{rel}: {name!r} write input {key!r} is "
+                          f"{inp[key]!r} -- it must be a boolean (E-35)")
+    if "compact" in inp and inp.get("format") != "oml":
+        errors.append(f"{rel}: {name!r} sets 'compact' on format "
+                      f"{inp.get('format')!r} -- E-35 allows it only on 'oml'")
+    return errors
+
+
 OSD_OML_TEXT_OPERATIONS = {"parse_schema_oml", "write_schema_oml"}
 
 
@@ -294,7 +314,8 @@ INPUT_SHAPE: dict[str, tuple[set[str], set[str]]] = {
     "parse_schema_oml": (set(), _TEXT),
     "validate": ({"schema", "document"}, {"schema", "document"}),
     "materialize": ({"schema", "document"}, {"schema", "document"}),
-    "write": ({"document", "format"}, {"document", "format", "strict"}),
+    "write": ({"document", "format"},
+              {"document", "format", "strict", "compact"}),
     "compatible_with": ({"a", "b"}, {"a", "b"}),
     "equivalent": ({"a", "b"}, {"a", "b"}),
     "normalize": ({"schema"}, {"schema"}),
@@ -549,6 +570,7 @@ def main() -> int:
             errors.extend(check_input_form(str(rel), name, vec))
             errors.extend(check_path_placeholder(str(rel), name, vec))
             errors.extend(check_oml_brace_commas(str(rel), name, vec))
+            errors.extend(check_write_flags(str(rel), name, vec))
 
     if errors:
         for err in errors:

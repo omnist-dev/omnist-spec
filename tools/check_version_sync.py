@@ -7,32 +7,26 @@ the same "grep the exact old string everywhere, don't trust a
 single-file diff" gotcha every omnist port's own docs already warn
 about, applied to the spec repo itself.
 
+Offline by design. It used to compare the ledger's per-port Version row with
+each port's latest git tag over the network; that row, and every per-port
+version and conformance figure, is gone from the ledger (it went stale within
+days and caused most of the rework on it), and with it the network. What
+remains is internal to this repo: CHANGELOG.md's newest entry against every
+place the spec version is quoted, the ledger's "Spec version pinned" cells
+being real spec releases, and the vector counts the ledger quotes against
+test-suite/.
+
 Add a new (path, checker) pair to CITATIONS below for any other file
 found to cite the version -- don't special-case new fixes.
 """
 from __future__ import annotations
 
 import json
-import os
 import pathlib
 import re
 import sys
-import time
-import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-
-# (repo, ledger column index -- 0-based, matching the "| Version | ... |" row
-# in docs/09-divergence-ledger.md's Sec9.3 table: Python, TypeScript, Rust,
-# Go, Java in that order)
-PORT_REPOS = [
-    ("omnist", 0),
-    ("omnist-ts", 1),
-    ("omnist-rs", 2),
-    ("omnist-go", 3),
-    ("omnist-j", 4),
-]
-
 
 STAGE_RANK = {"alpha": 0, "beta": 1, "rc": 2, "": 3}
 VERSION = re.compile(r"v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+))?$")
@@ -148,97 +142,18 @@ def check_ledger_quotes(latest: str) -> list[str]:
 CITATIONS = [check_index_h1, check_changelog_order]
 
 
-class Unreachable(Exception):
-    """The tags of a port could not be fetched."""
-
-
-def latest_github_tag(repo: str) -> str | None:
-    """Newest tag (by version, not by the API's listing order) of
-    omnist-dev/<repo>. Retries a few times; raises Unreachable if GitHub
-    cannot be reached, which main() turns into a failure unless --offline
-    was given. A check that silently skips when offline is a check that
-    passes while checking nothing. Uses $GITHUB_TOKEN when present (CI
-    passes one, which lifts the unauthenticated rate limit)."""
-    headers = {"User-Agent": "omnist-spec-version-check"}
-    if os.environ.get("GITHUB_TOKEN"):
-        headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
-    url = f"https://api.github.com/repos/omnist-dev/{repo}/tags?per_page=100"
-    last: Exception | None = None
-    for attempt in range(3):
-        try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                tags = json.load(resp)
-            break
-        except Exception as e:  # noqa: BLE001 -- retried, then reported
-            last = e
-            time.sleep(2 * (attempt + 1))
-    else:
-        raise Unreachable(f"{repo}: {last}")
-    names = []
-    for t in tags:
-        try:
-            version_key(t["name"])
-        except ValueError:
-            continue  # a tag that is not a release version
-        names.append(t["name"])
-    if not names:
-        return None
-    return max(names, key=version_key)
-
-
-def check_ledger_versions(offline: bool = False) -> list[str]:
-    """Sec9.3's Version row cites each port's version -- compare against
-    that port's actual latest git tag. A port that cannot be reached is a
-    problem unless `offline` says the live check was skipped on purpose."""
-    path = ROOT / "docs" / "09-divergence-ledger.md"
-    text = path.read_text(encoding="utf-8")
-    m = re.search(r"^\| Version \|(.+)\|$", text, re.MULTILINE)
-    if not m:
-        return [f"{path}: could not find the '| Version | ... |' row in Sec9.3's table"]
-    cells = [c.strip() for c in m.group(1).split("|") if c.strip()]
-    problems = []
-    for repo, idx in PORT_REPOS:
-        if idx >= len(cells):
-            problems.append(f"{path}: Version row has fewer cells than expected (missing {repo}?)")
-            continue
-        ledger_version = cells[idx]
-        if offline:
-            continue
-        try:
-            tag = latest_github_tag(repo)
-        except Unreachable as e:
-            problems.append(f"could not fetch tags ({e}); run with --offline "
-                            f"to skip the live check on purpose")
-            continue
-        if tag is None:
-            problems.append(f"{repo}: no release tag found")
-            continue
-        tag_version = tag.lstrip("v")
-        if ledger_version != tag_version:
-            problems.append(
-                f"{path}: ledger says {repo} is {ledger_version!r}, "
-                f"but its latest tag is {tag!r} ({tag_version!r})"
-            )
-    return problems
-
-
 def main() -> int:
-    offline = "--offline" in sys.argv[1:] or os.environ.get("OMNIST_OFFLINE") == "1"
     latest = latest_changelog_version()
     problems = [p for check in CITATIONS if (p := check(latest))]
     problems += check_ledger_quotes(latest)
-    problems += check_ledger_versions(offline)
     if problems:
         print(f"CHANGELOG.md's latest entry is {latest!r}. Stale citations found:", file=sys.stderr)
         for p in problems:
             print(f"  - {p}", file=sys.stderr)
         return 1
-    live = ("is not checked (--offline)" if offline
-            else "matches every port's latest tag")
     print(f"All known version citations match CHANGELOG.md's latest entry "
           f"({latest}); the ledger's pinned versions are releases, its vector "
-          f"counts match test-suite/, and its Version row {live}.")
+          f"counts match test-suite/.")
     return 0
 
 

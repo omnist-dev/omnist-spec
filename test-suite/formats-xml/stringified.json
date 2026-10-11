@@ -207,6 +207,179 @@
         "diagnostics": []
       },
       "comment": "The control: a string leaf is already text, so nothing is stringified and no diagnostic is reported. The written text is identical to the integer case; only the diagnostics differ."
+    },
+    {
+      "name": "formats-xml/stringified/date-leaf-reports-temporal-stringified",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "date",
+                        "value": "2024-01-15"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><d>2024-01-15</d></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.d",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-5: a date leaf is written as its ISO-8601 text and reported as format.temporal-stringified at the Document path of the leaf. It is not also reported as format.value-stringified: a leaf takes one of the two codes."
+    },
+    {
+      "name": "formats-xml/stringified/time-leaf-with-seconds-reports-temporal-stringified",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "t",
+                    {
+                      "scalar": {
+                        "kind": "time",
+                        "value": "12:30:45"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><t>12:30:45</t></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.t",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-5: a time leaf, seconds included, is written as text and reported as format.temporal-stringified."
+    },
+    {
+      "name": "formats-xml/stringified/datetime-leaf-reports-temporal-stringified",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "dt",
+                    {
+                      "scalar": {
+                        "kind": "datetime",
+                        "value": "2024-01-15T12:30:45"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><dt>2024-01-15T12:30:45</dt></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.dt",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-5: a datetime leaf is written as its ISO-8601 text and reported as format.temporal-stringified."
+    },
+    {
+      "name": "formats-xml/stringified/repeated-temporal-leaves-are-reported-per-edge-with-an-index",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "date",
+                        "value": "2024-01-15"
+                      }
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "scalar": {
+                        "kind": "date",
+                        "value": "2024-01-16"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "<r><d>2024-01-15</d><d>2024-01-16</d></r>",
+        "diagnostics": [
+          {
+            "path": "$.r.d[0]",
+            "code": "format.temporal-stringified"
+          },
+          {
+            "path": "$.r.d[1]",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-5 with E-10: a label that occurs twice is indexed on both edges, so each temporal leaf is reported at its own path."
     }
   ]
 }

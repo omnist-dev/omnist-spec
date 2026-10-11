@@ -1,0 +1,348 @@
+{
+  "vectors": [
+    {
+      "name": "formats-oml/compact/whole-document-on-one-line-edges-separated-by-semicolons",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "name",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "Ann"
+                }
+              }
+            ],
+            [
+              "adr",
+              {
+                "edges": [
+                  [
+                    "city",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "Z"
+                      }
+                    }
+                  ],
+                  [
+                    "pc",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "8001"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "y"
+                }
+              }
+            ]
+          ]
+        },
+        "compact": true
+      },
+      "expect": {
+        "ok": true,
+        "text": "name: \"Ann\"; adr: { city: \"Z\"; pc: \"8001\" }; tag: \"x\"; tag: \"y\""
+      },
+      "comment": "OML-22: compact mode writes the whole Document on one line with edges separated by `;`; this is the section's own worked example. The Document is the one the expanded example denotes."
+    },
+    {
+      "name": "formats-oml/compact/compact-text-parses-to-the-same-document-as-the-expanded-form",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "name: \"Ann\"; adr: { city: \"Z\"; pc: \"8001\" }; tag: \"x\"; tag: \"y\""
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "name",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "Ann"
+                }
+              }
+            ],
+            [
+              "adr",
+              {
+                "edges": [
+                  [
+                    "city",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "Z"
+                      }
+                    }
+                  ],
+                  [
+                    "pc",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "8001"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ],
+            [
+              "tag",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "OML-23, first sense: parsing the compact text yields the Document the expanded form denotes. With the write vector above this also pins OML-24: writing this Document compactly reproduces exactly this text."
+    },
+    {
+      "name": "formats-oml/compact/nested-nodes-stay-on-the-line",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "edges": [
+                        [
+                          "c",
+                          {
+                            "scalar": {
+                              "kind": "integer",
+                              "value": 1
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "compact": true
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: { b: { c: 1 } }"
+      },
+      "comment": "OML-22: a node nested three deep is still on one line, braces spaced as in the example."
+    },
+    {
+      "name": "formats-oml/compact/repeated-labels-are-never-array-sugar",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 3
+                }
+              }
+            ]
+          ]
+        },
+        "compact": true
+      },
+      "expect": {
+        "ok": true,
+        "text": "b: 1; b: 2; b: 3"
+      },
+      "comment": "OML-21 holds in compact mode: three `b` edges, not `b: [1, 2, 3]`."
+    },
+    {
+      "name": "formats-oml/compact/string-escapes-keep-the-output-on-one-line",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\ny"
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        },
+        "compact": true
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\ny\"; b: 2"
+      },
+      "comment": "OML-22 with OML-15: a newline inside a string is the `\\n` escape, so the Document still writes on a single line."
+    },
+    {
+      "name": "formats-oml/compact/empty-node-is-written-as-empty-braces",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": []
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        },
+        "compact": true
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: {}; b: 1"
+      },
+      "comment": "OML-22: an empty node is `{}` (section 4.8's `a: {}`), followed by the next edge after `; `."
+    },
+    {
+      "name": "formats-oml/compact/compact-false-is-the-expanded-layout",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "edges": [
+                  [
+                    "c",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "compact": false
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 1\nb: {\n  c: 2\n}\n"
+      },
+      "comment": "E-35: `compact: false` is the same as absent, the expanded canonical layout of OML-19, one edge per line and a node's edges indented by two spaces."
+    }
+  ]
+}

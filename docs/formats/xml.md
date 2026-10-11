@@ -71,6 +71,20 @@ empty element and report an adjustment; there is no `format.*` code for it. An
 *absent* optional field is written by omitting the element, which is what
 `[0,1]` cardinality already means; an empty string leaf still writes as `<a/>`.
 
+**A typed leaf is written as its text, and the writer reports it.** XML has no
+typed literals, so an integer, a number or a boolean leaf is written as its text
+(`<n>5</n>`) and reads back as a string; the writer reports
+`format.value-stringified` at the Document path of the leaf. A `date`, `time` or
+`datetime` leaf is written as its ISO-8601 text (`<d>2024-01-15</d>`) and is
+reported as `format.temporal-stringified` instead, one code per leaf and never
+both ([E-5](../08-conformance-and-errors.md#838-format-codec-adjustments)). A
+repeated leaf is reported once per occurrence, each indexed
+(`$.r.d[0]`, `$.r.d[1]`, [E-10](../08-conformance-and-errors.md#84-paths)).
+An integer leaf read from XML under a schema is pretyped, and the digit limit
+binds that route: a leaf typed `integer` with more digits than the limit is
+refused with `document.limit.int-digits` at the leaf's path
+([E-4a](../08-conformance-and-errors.md#832-document-building-and-limits)).
+
 **Attributes and namespace prefixes are dropped, and the drop MUST be
 reported.** `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the
 attribute is gone, and a reader MUST report `format.attribute-dropped`

@@ -1,0 +1,154 @@
+{
+  "vectors": [
+    {
+      "name": "formats-toml/duplicate-keys/repeated-top-level-key-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "a = 1\na = 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12: a TOML table that defines a key twice is rejected. The path is a text position, so it is the E-32 placeholder."
+    },
+    {
+      "name": "formats-toml/duplicate-keys/repeated-key-in-a-table-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "[t]\nk = 1\nk = 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 inside a `[t]` table."
+    },
+    {
+      "name": "formats-toml/duplicate-keys/quoted-and-bare-spellings-are-the-same-key",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "a = 1\n\"a\" = 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 compares keys as strings, so `a` and `\"a\"` are one key."
+    },
+    {
+      "name": "formats-toml/duplicate-keys/repeated-dotted-key-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "a.b = 1\na.b = 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12: TOML's own rule decides what defines a key twice, dotted keys included."
+    },
+    {
+      "name": "formats-toml/duplicate-keys/repeated-key-in-an-inline-table-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "toml",
+        "text": "t = {k = 1, k = 2}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 in an inline table."
+    },
+    {
+      "name": "formats-toml/duplicate-keys/the-same-key-in-two-different-tables-is-accepted",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "toml",
+        "text": "[x]\na = 1\n\n[y]\na = 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "y",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Control for C-12: a key repeated across two different tables is not a repeat."
+    }
+  ]
+}

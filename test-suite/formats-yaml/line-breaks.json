@@ -1,0 +1,64 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/line-breaks/nel-is-written-as-the-n-escape-and-reported",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u0085y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\Ny\"\n",
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "format.string-line-break-char"
+          }
+        ]
+      },
+      "comment": "E-34: a string value holding U+0085 is written double-quoted with the escape `\\N`, never as the raw character, and the writer reports format.string-line-break-char at the Document path of the leaf. The expected text is `a: \"x\\Ny\"`."
+    },
+    {
+      "name": "formats-yaml/line-breaks/n-escape-reads-back-as-the-single-character",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: \"x\\Ny\"\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u0085y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-34's reverse direction: `\\N` in a double-quoted YAML scalar is the one character U+0085, so the written text reads back as the original string."
+    }
+  ]
+}

@@ -28,6 +28,24 @@ TOML.
 
 **Interleaving is lost on write**, as in the rest of the JSON family.
 
+**Duplicate keys are rejected**
+([C-12](../07-codecs-and-deserialization.md#71-two-stages)). A table that
+defines a key twice (`a = 1` then `a = 2`, `a` and `"a"` included) fails the read
+with `parse.codec-syntax`; TOML itself calls it invalid, and Omnist does not
+turn it into JSON's last-value-wins
+([§ JSON, "Duplicate keys"](json.md)). The same key in two different tables is
+not a repeat, and `[[x]]` written twice is the repeated-label shape, not a
+duplicate.
+
+**Integers and floats.** TOML hexadecimal (`0x`), octal (`0o`) and binary
+(`0b`) integers and `_`-separated digits are integers like any other, and D-9's
+digit limit counts the digits of their **value**
+([D-28](../02-document-model.md#24-safety-limits)): `0b` followed by 4 301 ones
+is a value of 1 295 decimal digits and is within the default limit. An integer is
+arbitrary precision, so one beyond 64 bits is read, not refused. A float literal
+beyond binary64's range, `1e999`, reads as `+Infinity` with no diagnostic
+([D-29](../02-document-model.md#221-scalar-kinds)).
+
 ### Worked example
 
 The schema:

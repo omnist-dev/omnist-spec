@@ -1,0 +1,210 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/duplicate-keys/repeated-top-level-key-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1\nb: 2\na: 3\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12: a YAML mapping that repeats a key is rejected, not read as `a = 3, b = 2` or any other Document. The path is a text position, so it is the E-32 placeholder."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/repeated-key-in-a-flow-mapping-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "{a: 1, a: 2}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 in flow style."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/repeated-key-in-a-nested-mapping-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "o:\n  k: 1\n  k: 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 at depth: the repeat is in a nested block mapping."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/repeated-key-inside-a-sequence-element-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "m:\n  - {a: 1, a: 2}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 inside a mapping that is an element of a sequence."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/quoted-and-plain-spellings-are-the-same-key",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1\n\"a\": 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12 compares keys as strings, so `a` and `\"a\"` are one key and the second is a repeat."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/a-repeat-with-a-different-value-shape-is-still-a-repeat",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1\na: [2, 3]\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12: the shape of the values is irrelevant; a scalar followed by a sequence under one key is a repeat."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/the-same-key-in-two-different-mappings-is-accepted",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "text": "x: {a: 1}\ny: {a: 2}\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "y",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Control for C-12: a key repeated across two different mappings is not a repeat."
+    },
+    {
+      "name": "formats-yaml/duplicate-keys/keys-differing-only-in-case-are-different-keys",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1\nA: 2\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "A",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "Control for C-12: keys compare byte for byte (D-16), so `a` and `A` are two keys."
+    }
+  ]
+}

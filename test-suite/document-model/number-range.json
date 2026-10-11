@@ -1,0 +1,290 @@
+{
+  "vectors": [
+    {
+      "name": "document-model/number-range/json-overflowing-literal-reads-as-positive-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1e999}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: `1e999` is too large for binary64 and reads as +Infinity (encoded `\"Infinity\"`, E-33), not as an error."
+    },
+    {
+      "name": "document-model/number-range/json-negative-overflowing-literal-reads-as-negative-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": -1e999}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "-Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: `-1e999` reads as -Infinity."
+    },
+    {
+      "name": "document-model/number-range/json-underflowing-literal-reads-as-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": 1e-999}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: a literal below the smallest subnormal reads as 0.0, the other end of the same IEEE 754 conversion."
+    },
+    {
+      "name": "document-model/number-range/json-overflow-in-a-nested-and-repeated-label",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"o\": {\"a\": [1e400, 2]}}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "o",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "number",
+                        "value": "Infinity"
+                      }
+                    }
+                  ],
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 at depth and inside an array: the overflowing element is +Infinity, its integer sibling is untouched."
+    },
+    {
+      "name": "document-model/number-range/oml-overflowing-literal-reads-as-positive-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1e999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 in the native format: OML's `NUMBER` with an exponent reads `1e999` as +Infinity."
+    },
+    {
+      "name": "document-model/number-range/oml-negative-overflowing-literal-reads-as-negative-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: -1e999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "-Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 in the native format: `-1e999` reads as -Infinity."
+    },
+    {
+      "name": "document-model/number-range/yaml-overflowing-float-reads-as-positive-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1.0e+999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 in YAML: the float `1.0e+999` (a float under both the 1.1 and 1.2 resolvers) reads as +Infinity."
+    },
+    {
+      "name": "document-model/number-range/yaml-negative-overflowing-float-reads-as-negative-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: -1.0e+999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "-Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 in YAML: `-1.0e+999` reads as -Infinity."
+    },
+    {
+      "name": "document-model/number-range/toml-overflowing-float-reads-as-positive-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "a = 1e999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 in TOML: `1e999` is a float and reads as +Infinity."
+    },
+    {
+      "name": "document-model/number-range/toml-negative-overflowing-float-reads-as-negative-infinity",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "a = -1e999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "-Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29 in TOML: `-1e999` reads as -Infinity."
+    }
+  ]
+}
