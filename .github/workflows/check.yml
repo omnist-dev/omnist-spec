@@ -15,8 +15,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: python3 tools/check_version_sync.py
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 
   # The docs build was previously verified only on a contributor's machine:
   # docs.yml runs `mkdocs gh-deploy` with no --strict, and only after merge,

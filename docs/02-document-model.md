@@ -791,7 +791,7 @@ implementation does about it.
   make any parse fast. Two measurements in the audit's record show the
   spread, and each is a single point. TypeScript's `yaml` library took 194.8 s
   on a 1.19 MB block mapping of 50 000 keys, on that one library
-  (omnist-ts#157, fixed in v0.8.1-alpha; the TOML parse still shows the
+  (omnist-ts#157, since fixed; the TOML parse still shows the
   shape, [DIV-12](09-divergence-ledger.md#94-known-open-divergences)), so a cap
   of 1.19 MB would still admit that input. PyYAML took
   about 4 s on a 1.1 MB, 50 000-key mapping, one point that was not re-run.
