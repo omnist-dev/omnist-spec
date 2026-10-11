@@ -3,6 +3,64 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.34.0-beta (2026-10-11)
+
+**Normative (minor)** - the audit's batch 3a and 3b and the decisions on what
+they left open ([#142](https://github.com/omnist-dev/omnist-spec/issues/142),
+[#143](https://github.com/omnist-dev/omnist-spec/issues/143),
+[#151](https://github.com/omnist-dev/omnist-spec/issues/151),
+[#157](https://github.com/omnist-dev/omnist-spec/issues/157)). The suite grows
+from 367 to **522** vectors.
+
+- **Batch 3a (#167 to #169).** Section 8.3 is declared mandatory (E-17 rule 4's
+  code-agnostic mode is a bring-up aid, not a conformance claim); `check_vectors`
+  enforces E-15, E-16 and the `spec` anchors; the rule-coverage and version-sync
+  gates are extended and the docs toolchain is pinned.
+- **Batch 3b (#175).** D-27 (an alias refers to the nearest preceding
+  definition; an undefined alias is `parse.codec-syntax`; a quoted `<<` is an
+  ordinary key) and D-20 vectors; C-11 numbers the JSON duplicate-key rule;
+  E-33 makes the `"NaN"`, `"Infinity"`, `"-Infinity"` encoding of a non-finite
+  `number` normative; E-4a says the depth, node and integer-digit limits give
+  the OML reader's diagnostic in every format; vectors for D-16, OML-15 and
+  `format.value-stringified` (E-5), and 26 non-OML limit vectors.
+- **Decisions.**
+  - **C-11** now fixes position: the surviving edge sits where the key was first
+    written and carries the last value.
+  - **C-12 (new).** A YAML mapping or TOML table that repeats a key is rejected
+    with `parse.codec-syntax`.
+  - **C-13 (new)** and **new code `format.tag-forbidden`** (error, `$`, in
+    8.3.8 and E-7): a YAML `!!pairs`, `!!omap` or `!!set` is refused as
+    well-formed input outside the profile, not as a syntax error.
+  - **D-27** now follows the tag on a `<<`: `!!str <<` is an ordinary key,
+    `!!merge <<` a merge key.
+  - **D-28 (new).** D-9's digit limit counts the decimal digits of the value,
+    not of the hex, octal, binary or underscored spelling; E-4a and 7.1 apply it
+    to the schema-directed pretyping of an XML integer leaf (prose only, no
+    vector: the `parse` driver takes no schema).
+  - **D-29 (new).** A number literal that rounds to infinity (`1e999`) is
+    accepted and reads as an infinity; underflow reads as `0.0`.
+  - **C-14 (new).** The hex digits of a `\uXXXX` escape are lowercase (OML-15
+    cites it).
+  - **E-34 (new).** A YAML writer writes U+0085 as `\N` and reports
+    `format.string-line-break-char`. **E-5** now also requires
+    `format.temporal-stringified` (not `format.value-stringified`) for an XML
+    date, time or datetime leaf.
+- **Runner contract.** **E-35 (new):** a `write` vector may set `compact: true`
+  (OML only) for OML-22..24, and a runner must pass it to the library's OML
+  writer. `check_vectors` checks it. A runner compares a `write` vector's text
+  byte for byte and its diagnostics by `(path, code)`; three runners did
+  neither before this release (`DIV-33`).
+- **Vectors.** 155 more than v0.33.0-beta (net), in 18 files, among them `formats-yaml/duplicate-keys`,
+  `formats-toml/duplicate-keys`, `formats-yaml/tags`, `document-model/limits-literals`,
+  `document-model/number-range`, `formats-oml/compact`, and the escape, NEL and
+  XML-temporal groups. Two `formats-yaml/anchors` vectors that put aliases inside
+  a tagged `!!omap` and `!!pairs` are replaced by one over an untagged sequence.
+- **Ledger.** The per-port Version row, the per-port conformance rows and the
+  prose quoting port versions and pass counts are removed; the divergence
+  entries, the spec-pin row and the repo-internal vector count stay.
+  `tools/check_version_sync.py` no longer reads the network. New entries `DIV-33`
+  and `DIV-34`; `DIV-28` to `DIV-32` are rewritten for the new vectors.
+
 ## v0.33.0-beta (2026-10-05)
 
 **Normative (minor)** - resolves
