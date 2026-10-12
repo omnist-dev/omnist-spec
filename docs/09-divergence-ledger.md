@@ -158,8 +158,8 @@ Rows this edit did not re-measure (the OML, OSD, `any`, `validate`,
 `materialize`, algebra and error-code rows and the fuzz row) are carried from
 an earlier edit; the vector suites each port passes cover them.
 
-The Track 2 suite is v0.34.0-beta, 522 vectors in this tree. The vectors the
-ports fail today are the divergence entries below (`DIV-29` to `DIV-34`); every
+The Track 2 suite is v0.35.0-beta, 722 vectors in this tree. The vectors the
+ports fail today are the divergence entries below (`DIV-29` to `DIV-42`); every
 port skips the 28 OSD-OML vectors until it implements that extension
 ([omnist#341](https://github.com/omnist-dev/omnist/issues/341),
 [omnist-ts#145](https://github.com/omnist-dev/omnist-ts/issues/145),
@@ -460,6 +460,105 @@ Rust rejects `a = 99999999999999999999` and `a = 1e999` ("out of range for a
 (pending); no issue numbers yet.
 **Remove this entry when every port passes the `number-range` and `limits-literals` vectors.**
 
+**DIV-35. Document paths print a label raw (E-36): all five ports.**
+[E-36](08-conformance-and-errors.md#84-paths) bracket-quotes a label that is
+empty or holds `.` `[` `]` `"` `\`, a control character, U+007F, U+0085, U+2028
+or U+2029 (`$["a.b"]`, `$["l1\nl2"]`, `$[""]`). Python, TypeScript, Rust, Go and
+Java print the raw label (`$.a.b`, `$.item[0]`, a real line feed in the path), so
+each fails the 18 quoting vectors in `validate/label-quoting`. The six
+vectors for labels that stay bare pass everywhere.
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when every port passes `validate/label-quoting`.**
+
+**DIV-36. Writing temporals (E-37): values altered, seconds dropped, invalid or crashing literals.**
+[E-37](08-conformance-and-errors.md#838-format-codec-adjustments) says a writer
+never alters a temporal value, always writes its seconds, uses the native
+literal where one is exact and otherwise stringifies with
+`format.temporal-stringified`.
+- *TypeScript* converts a `datetime` with an offset to UTC and drops the offset
+  in JSON, TOML and YAML (`+01:00` at 12:00:00 becomes `11:00:00`), truncates a
+  six-digit fraction to three, gives a local TOML datetime a `Z`, quotes a TOML
+  `time`, writes a `time` or `datetime` it was handed without seconds as it
+  came, and reports no diagnostic for a `time` in JSON, TOML or YAML.
+- *Python* crashes with an uncaught `ValueError` ("TOML does not support offset
+  times") writing a TOML `time` with an offset instead of stringifying it, and
+  writes a space between date and time in TOML and YAML where E-37 pins `T`, and
+  single quotes in YAML for a `time`.
+- *Go* writes `12:00` for `12:00:00` in JSON, TOML and YAML, and *Java* in JSON,
+  TOML, YAML, XML and OML (measured through its CLI; Java's runner compares a
+  `write` vector by re-parsing, `DIV-33`, so it does not show every byte
+  difference as a failure), producing TOML and YAML literals that are invalid
+  or read as another value, and both drop the offset of a TOML `time` without
+  reporting it. Java also single-quotes a YAML `time`.
+- *Rust* writes a `time` with a fraction, and an offset `time`, unquoted in
+  YAML, where YAML 1.1 reads `12:00:00.5` as a float, does not report the TOML
+  offset `time`, and keeps a seconds-less input as it came.
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when every port passes the `temporal-writing` and `formats-oml/temporal` vectors.**
+
+**DIV-37. Negative zero is written as `0.0` and read as `0.0` (D-29, OML-30): TypeScript.**
+TypeScript's JSON, TOML, YAML and OML writers print `-0.0` as `0.0`, and its
+readers return `0.0` for a literal `-0.0` and for `-1e-999`. The `parse`
+vectors cannot see a sign when the runner compares floats with `==`; the
+`negative-zero` write vectors and `formats-oml/spelling` can.
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when TypeScript passes the `negative-zero` and `spelling` vectors.**
+
+**DIV-38. XML characters, references and declarations (C-15, C-16).**
+- *TypeScript* decodes entities twice (`&amp;#65;` reads as `A`), silently drops
+  or keeps as text a reference to a character outside `Char` or a malformed one
+  (`&#0;`, `&#xD800;`, `&#;`), crashes on `&#x110000;`, and accepts raw C0
+  controls, U+FFFE and U+FFFF: 23 vectors.
+- *Rust* accepts `&#1;`, `&#x8;`, `&#xB;`, `&#xFFFE;` and `&#xFFFF;`, and raw C0
+  controls, U+FFFE and U+FFFF in text and CDATA: 12 vectors.
+- *Go* refuses every `encoding=` declaration except UTF-8, accepts the surrogate
+  references `&#xD800;` and `&#xDFFF;`, and reports `&#xE000;` as
+  `format.entity-forbidden`: 8 vectors.
+- *Python* and *Java* pass all of them.
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when every port passes `formats-xml/encoding-and-references`.**
+
+**DIV-39. YAML writing and reading detail (C-14, C-17, C-12).**
+- Escapes (C-14): Python and Go write uppercase hex (`\x1F`, `\uFFFE`); TypeScript
+  writes DEL and U+FFFE raw; Rust writes C0 controls, DEL and U+FFFE raw.
+- Number spellings (C-17): Go reads `0o17` as 15, `0:5` as 5, `1e3` and `1.0e3` as
+  numbers and `1:30.5` as a string; TypeScript reads `08` as 8, `0:5` as 5, and
+  `1e3` and `1.0e3` as numbers; Rust reads `1:30.5` as a string; Java reads `1e3`
+  and `1.0e3` as numbers.
+- Merge keys (C-12): TypeScript and Java place a `<<` that follows an explicit key
+  after that key's entries, where merged entries come first (measured through
+  the CLI; Java's runner compares order-insensitively, `DIV-33`, so its vector
+  passes); Java also accepts a quoted `"<<"` written twice (`DIV-30`).
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when every port passes `formats-yaml/escapes`, `number-spellings` and `merge-keys`.**
+
+**DIV-40. Java: leading zeros, sexagesimal integers and TOML underflow (D-28, D-29).**
+Java reads a YAML octal of 4,400 zeros then `17`, and a sexagesimal integer of
+over 4,300 digits, as strings (the second without the `document.limit.int-digits`
+refusal), and refuses TOML `1e-999` and `-1e-999` ("Float is too small").
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when Java passes the `limits-literals` and `number-range` vectors.**
+
+**DIV-41. Java accepts a lone `CR` in OML (E-29).**
+E-29 rejects a lone `CR` outside a string and a comment with
+`parse.unexpected-token` at the `CR`. Java treats it as whitespace, lets it end a
+comment, and for `a: 1`, `CR`, `}` reports `parse.trailing-content` at `1:6`:
+7 of the 10 `oml-grammar/lone-cr` vectors fail.
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when Java passes `oml-grammar/lone-cr`.**
+
+**DIV-42. XML integer pretyping (E-4a, C-1): prose only, no vector.**
+No vector can pin it, because `parse` takes no schema. Measured against the
+worked case (`<r><n>` with 4,301 digits, schema `Root { "r": R }`): Python and
+TypeScript refuse it with `document.limit.int-digits` at `$.r.n`; Rust refuses
+with `materialize.inexact-conversion`; Go's library accepts it as an integer
+with no limit and its CLI `materialize` does not pretype at all (even `3`
+stays a string); Java reports the right code at `$` and pretypes only when the
+schema root describes the document element's content rather than a record
+holding it.
+Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
+**Remove this entry when each port refuses the worked case at `$.r.n`.**
+
 **Retired by measurement: Rust's arena cap.** `DIV-11` recorded that Rust's
 Document arena counted scalar leaves against the 1,000,000-node cap, so a large
 input under D-22's maximum could be refused with `document.limit.nodes`
@@ -485,13 +584,6 @@ as facts about the ports, re-measured 2026-10-05 at each port's latest tag.
   `parse.unexpected-token`; Rust's CLI printed only the message ("expected a
   value") with no code, which was not read from the library. They agree today;
   the spec does not require it.
-- *A lone `CR`* ([omnist-spec#156](https://github.com/omnist-dev/omnist-spec/issues/156);
-  E-29 does not say which position is reported). Measured, OML `a: 1`, a lone
-  `CR`, `}`: Python, TypeScript, Rust and Go report the error at `1:5`, the
-  `CR` itself (Python, TypeScript and Go with `parse.unexpected-token`; Rust's
-  CLI shows no code). Java reports `parse.trailing-content` at `1:6`, the
-  character after, so it differs in both position and code. Go moved from `1:6`
-  to `1:5` in an earlier release. `CRLF` was not re-measured.
 - *TOML nesting depth.* Rust refuses a TOML document nested about 80 levels
   deep, below the configured depth limit of 200, because the `toml_edit` crate
   has its own recursion cap; the port documents it as `document.limit.depth` at

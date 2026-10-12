@@ -13,11 +13,11 @@ disagree, chapter 8 wins.
 
 ```
 test-suite/
-  validate/                  document-against-schema vectors
+  validate/                  document-against-schema vectors, including the bracket-quoted Document-path labels of E-36 (`label_quoting.json`)
   algebra-compatibility/     compatible_with / equivalent vectors
-  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, in OML and in the four other formats; input size), the digits of an integer by value across hex, octal, binary and underscored literals (D-28), number literals past binary64's range (D-29), and label identity (D-16)
-  oml-grammar/               OML text-to-Document parse vectors (ch.4)
-  osd-grammar/               OSD text-to-Schema parse vectors (ch.5)
+  document-model/            parse-stage safety limit vectors (depth/nodes/int-digits, in OML and in the four other formats; input size), the digits of an integer by value across hex, octal, binary and underscored literals (D-28), number literals past binary64's range and underflow and negative zero outside JSON (D-29), YAML integers by value across leading zeros and sexagesimal groups (D-28), and label identity (D-16)
+  oml-grammar/               OML text-to-Document parse vectors (ch.4), including a lone CR rejected at the CR itself (E-29, `lone_cr.json`)
+  osd-grammar/               OSD text-to-Schema parse vectors (ch.5), including a schema separated by lone CRs (OSD's `ws` admits CR)
   schema-wellformedness/     S-1..S-7 vectors not already covered by osd-grammar/ (dangling refs, forward refs, mutual recursion)
   materialize/               schema-directed deserialization vectors (ch.7): upgrades, rejections, any passthrough
   is-empty/                  is_empty / satisfiability vectors
@@ -26,11 +26,11 @@ test-suite/
   extract/                   extract vectors
   infer/                     infer / infer_with_report vectors, including allow_any
   lint/                      lint vectors
-  formats-json/              JSON codec vectors, including the duplicate-key rule and the position it leaves the edge in (C-11), and the lowercase `\uXXXX` escape (C-14)
-  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, anchor/alias resolution (D-20, D-27), duplicate keys rejected (C-12), the tagged merge key (D-27) and the rejected `!!pairs`/`!!omap`/`!!set` collections (C-13), and the NEL escape a YAML writer uses (E-34)
-  formats-toml/              TOML codec vectors, including duplicate keys rejected (C-12) and the lowercase `\uXXXX` escape (C-14)
-  formats-xml/               XML codec vectors, including the codes a writer reports for a typed leaf (`format.value-stringified`, and `format.temporal-stringified` for a date, time or datetime, E-5)
-  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15), and compact mode (OML-22..24, asked for with `compact: true`, E-35)
+  formats-json/              JSON codec vectors, including the duplicate-key rule and the position it leaves the edge in (C-11), the lowercase `\uXXXX` escape (C-14), temporal writing (E-37) and negative zero (D-29)
+  formats-yaml/              YAML codec vectors, including the sexagesimal-time and Norway-problem sharp edges, the D-18 alias-expansion bound, anchor/alias resolution (D-20, D-27), duplicate keys rejected (C-12), the tagged merge key (D-27) and the rejected `!!pairs`/`!!omap`/`!!set` collections (C-13), the NEL escape a YAML writer uses (E-34), the `\x`/`\u` lowercase escape form (C-14), repeated and late merge keys (C-12), YAML 1.1 integer and float spellings as PyYAML resolves them (C-17), and temporal writing (E-37)
+  formats-toml/              TOML codec vectors, including duplicate keys rejected (C-12), the lowercase `\uXXXX` escape (C-14), temporal writing (E-37) and negative zero (D-29)
+  formats-xml/               XML codec vectors, including the codes a writer reports for a typed leaf (`format.value-stringified`, and `format.temporal-stringified` for a date, time or datetime, E-5, E-37), the `encoding=` declaration and numeric character references (C-15, C-16, `encoding_and_references.json`), and whitespace-only element text (E-18, `whitespace.json`)
+  formats-oml/               OML write-direction vectors (ch.4): date/time/datetime-shaped strings must stay quoted, distinct from a genuinely temporal-kinded scalar writing bare; the string escapes the canonical writer may emit (OML-15), compact mode (OML-22..24, asked for with `compact: true`, E-35), the number and keyword spellings OML-30 pins (`spelling.json`), and temporal writing (E-37, `temporal.json`)
   extensions-osd-oml/        OSD-OML extension vectors: parse_schema_oml, write_schema_oml
 ```
 
