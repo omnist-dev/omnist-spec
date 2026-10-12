@@ -1,0 +1,490 @@
+{
+  "vectors": [
+    {
+      "name": "formats-oml/spelling/negative-zero-keeps-its-sign",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: -0.0"
+      },
+      "comment": "OML-30: a negative zero is written -0.0. Writing 0.0 changes the value (D-5, 2.2.1)."
+    },
+    {
+      "name": "formats-oml/spelling/positive-zero",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 0.0"
+      },
+      "comment": "OML-30: positive zero stays 0.0, distinct from the vector above."
+    },
+    {
+      "name": "formats-oml/spelling/nan",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "NaN"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: nan"
+      },
+      "comment": "OML-30: the reserved spelling for NaN (E-33 encodes it as the string NaN in the vector)."
+    },
+    {
+      "name": "formats-oml/spelling/positive-infinity",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: inf"
+      },
+      "comment": "OML-30: the reserved spelling for positive infinity."
+    },
+    {
+      "name": "formats-oml/spelling/negative-infinity",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "-Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: -inf"
+      },
+      "comment": "OML-30: the reserved spelling for negative infinity."
+    },
+    {
+      "name": "formats-oml/spelling/one-and-a-half",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 1.5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 1.5"
+      },
+      "comment": "OML-30: an ordinary fraction has one spelling in every writer."
+    },
+    {
+      "name": "formats-oml/spelling/one-tenth",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 0.1"
+      },
+      "comment": "OML-30: the shortest digits that read back as 0.1."
+    },
+    {
+      "name": "formats-oml/spelling/negative-half",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: -0.5"
+      },
+      "comment": "OML-30: sign and shortest digits."
+    },
+    {
+      "name": "formats-oml/spelling/whole-number-keeps-its-point",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 100.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 100.0"
+      },
+      "comment": "OML-30: a whole-valued number is a NUMBER, not an INTEGER, so it keeps a fraction."
+    },
+    {
+      "name": "formats-oml/spelling/two-and-a-quarter",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 2.25
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2.25"
+      },
+      "comment": "OML-30: a binary-exact fraction."
+    },
+    {
+      "name": "formats-oml/spelling/integer-zero",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 0"
+      },
+      "comment": "OML-30: an integer is its decimal digits."
+    },
+    {
+      "name": "formats-oml/spelling/negative-integer",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": -5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: -5"
+      },
+      "comment": "OML-30: a minus sign when negative, no plus sign."
+    },
+    {
+      "name": "formats-oml/spelling/large-integer",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 123456789012
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 123456789012"
+      },
+      "comment": "OML-30: no digit grouping or exponent."
+    },
+    {
+      "name": "formats-oml/spelling/integer-beyond-two-to-the-53",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": "9007199254740993"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 9007199254740993"
+      },
+      "comment": "OML-30, E-19: an integer past the JSON-safe threshold is encoded as a decimal string in the vector and written as the same digits."
+    },
+    {
+      "name": "formats-oml/spelling/negative-integer-beyond-two-to-the-53",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": "-9007199254740993"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: -9007199254740993"
+      },
+      "comment": "OML-30, E-19: the same for a negative integer."
+    },
+    {
+      "name": "formats-oml/spelling/boolean-true",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "boolean",
+                  "value": true
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: true"
+      },
+      "comment": "OML-30: the keyword."
+    },
+    {
+      "name": "formats-oml/spelling/boolean-false",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "boolean",
+                  "value": false
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: false"
+      },
+      "comment": "OML-30: the keyword."
+    },
+    {
+      "name": "formats-oml/spelling/null",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": null,
+                  "value": null
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: null"
+      },
+      "comment": "OML-30: the keyword."
+    }
+  ]
+}

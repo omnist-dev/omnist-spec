@@ -508,7 +508,8 @@ An OML writer is canonical if, for every Document, it emits text that parses
 back to an equal Document, following the canonical form below.
 
 **OML-19.** **Two conformant implementations writing the *same* Document MUST produce
-byte-identical text.** This guarantee is stronger than
+byte-identical text, apart from the spelling of number and temporal tokens
+(OML-30).** This guarantee is stronger than
 [OSD's](05-osd-grammar.md#59-canonical-output), for a structural reason: OML's
 syntax *is* the Document model, and edge order is data
 ([§2.3](02-document-model.md#23-structural-invariants) D-1), so there is no
@@ -533,6 +534,44 @@ Canonical form:
   indentation.
 - **Labels** bare only where §4.4 permits, quoted otherwise.
 - **String escapes** restricted to the set §4.5 allows.
+
+**OML-30. What OML-19 pins, and what it leaves to the writer.** The
+byte-identical guarantee covers the *shape* of the text and not every token in
+it. **Pinned**, byte for byte: the edges in Document order (D-1), OML-Core
+only (OML-20), repeated labels as repeated edges (OML-21), the layout (one
+edge per line, two-space indentation, a closing `}` at the parent's
+indentation, or the single-line compact layout of OML-22 to OML-24), the
+labels (bare only where §4.4 permits, OML-13), the string escapes (OML-15), the
+keywords `null`, `true` and `false`, an `integer` as its decimal digits (a
+minus sign when negative, no plus sign, no leading zero, OML-6), and the three
+reserved float spellings `nan`, `inf` and `-inf`. **A negative zero is written
+`-0.0`**: a writer that prints it as `0.0` has changed the value (D-5 compares
+scalars by kind and value, and `-0.0` is not `0.0` to a reader, §2.2.1), which
+is a defect, not a spelling choice; TypeScript's writer did exactly that.
+**Not pinned**, because §4.2.3 and §4.2.4 admit more than one lexically valid
+spelling of one value and this section chooses none:
+
+- **The spelling of a `number` token** other than those above: any `NUMBER`
+  that reads back as the same binary64 value is conformant, so `1e+21`,
+  `1000000000000000000000.0` and `1.0E21` are three conformant spellings of one
+  Document, as are `1e-07` and `0.0000001`. Writers that agree on a Document of
+  ordinary numbers (`1.5`, `0.1`, `100.0`) still write the same bytes, and the
+  suite pins those and no more.
+- **The spelling of a temporal token** beyond what
+  [E-37](08-conformance-and-errors.md#838-format-codec-adjustments) fixes for
+  every format: how many digits a fractional second is written with, and
+  whether an input that omitted its seconds keeps its spelling. E-37 does pin
+  that a writer never changes the value, never converts or drops an offset, and
+  writes the seconds.
+- **Whether the text ends with a line terminator.** A conformance `write`
+  vector's text is compared after the outer-whitespace trim every `write`
+  comparison does ([E-18](08-conformance-and-errors.md#853-operation-drivers)),
+  so no vector can pin it.
+
+Two writers can therefore disagree on a Document's bytes only in those tokens,
+and both outputs parse back to the Document, equal by D-5. Cross-port
+byte-stability of number and temporal spellings, if wanted, is a later
+decision that would add rules here; it is not implied by OML-19.
 
 ```oml
 name: "Ann"
