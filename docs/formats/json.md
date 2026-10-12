@@ -19,6 +19,7 @@ schema upgrades it in stage 2. A writer MUST stringify a temporal leaf to
 ISO-8601.
 
 **No `NaN` or `Infinity`.** Those tokens are not valid JSON. Writing one MUST
+([E-6](../08-conformance-and-errors.md#838-format-codec-adjustments))
 fail with `write.unsupported-value`
 ([§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments)),
 unconditionally — not gated behind a strict mode, and never by substituting
@@ -33,7 +34,7 @@ flatten it.
 **An empty array is a legitimate zero-edge encoding, not an error.**
 `{"m":[]}` reads to zero `m` edges: the label simply doesn't appear in the
 result, the same as if the key were absent entirely. This is JSON-specific
-and does not extend to OML's `[...]` array sugar — a bare `m: []` in OML MUST
+and does not extend to OML's `[...]` array sugar ([OML-11](../04-oml-grammar.md#431-arrays-are-sugar)) — a bare `m: []` in OML MUST
 be rejected (verified live: `empty array is not allowed`), because OML's
 array syntax is sugar for a *run* of same-label edges and a zero-length run
 is indistinguishable from no sugar being used at all. JSON has no such

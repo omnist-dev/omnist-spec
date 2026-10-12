@@ -51,28 +51,33 @@ ENFORCED = {
 # omnist-spec#93 closed the 22 paragraphs that sat outside their existing
 # D- and S- spines -- a gap invisible until this script existed.
 #
+# Citation-only enforcement (omnist-spec#149, v0.35.0-beta): the per-format
+# pages, the porting guide, the conformance harness and the glossary restate
+# or apply rules that other chapters own, and have no rule-number spine of
+# their own. Each normative paragraph in them MUST cite a rule number of any
+# namespace (`(C-10)`, `[E-7](...)`), so that a requirement stated here points
+# at the one place that owns it; the paragraphs are not themselves numbered,
+# and a citation must resolve (dangling_citations). A paragraph with no owning
+# rule yet goes in UNNUMBERED, with a reason, until it is numbered.
+CITATION_ONLY = [
+    "docs/formats/json.md",
+    "docs/formats/oml.md",
+    "docs/formats/overview.md",
+    "docs/formats/toml.md",
+    "docs/formats/xml.md",
+    "docs/formats/yaml.md",
+    "docs/porting-a-conformance-runner.md",
+    "docs/conformance-harness.md",
+    "docs/01-glossary.md",
+]
+
 # Reported, not enforced: normative text that has no rule-number spine to be
-# held to. A value of None means "any rule label counts", because the file
-# has no namespace of its own. Each needs a decision about numbering before it
-# can be a gate (omnist-spec#149):
-#   - formats/*.md state per-format MUST requirements (JSON has no temporal
-#     types, XML refusals, ...) that chapter 7's C- rules do not number;
+# held to.
 #   - extensions/osd-oml.md has an R- spine (R-1..R-23), but E.7, E.8, E.10
 #     and E.11 carry MUST paragraphs outside it, and the extension is still
-#     being rewritten (omnist-spec#53), so renumbering now would collide;
-#   - the porting guide, the conformance harness and the glossary restate
-#     rules of other chapters.
+#     being rewritten (omnist-spec#53), so renumbering now would collide.
 REPORTED: dict[str, str | None] = {
     "docs/extensions/osd-oml.md": "R",
-    "docs/formats/json.md": None,
-    "docs/formats/oml.md": None,
-    "docs/formats/overview.md": None,
-    "docs/formats/toml.md": None,
-    "docs/formats/xml.md": None,
-    "docs/formats/yaml.md": None,
-    "docs/porting-a-conformance-runner.md": None,
-    "docs/conformance-harness.md": None,
-    "docs/01-glossary.md": None,
 }
 
 # SHOULD counts as normative too (MAY does not: it grants, it does not bind).
@@ -87,6 +92,22 @@ UNNUMBERED = {
      "A reader or writer SHOULD be able to report the adjustments"):
         "7.4 format reports: a SHOULD with no C- rule; numbering it is a "
         "spec-owner decision",
+    ("docs/formats/json.md", "**Bare nested arrays are rejected.**"):
+        "JSON reader refusal with no owning rule; number it when next edited",
+    ("docs/formats/yaml.md", "**A second sharp edge, real enough to have a name"):
+        "a YAML boolean key is refused because a label is a string (2.2.2); "
+        "no rule numbers the refusal yet",
+    ("docs/conformance-harness.md", "- **Format is explicit, not assumed.**"):
+        "Track 1 CLI wrapper contract; 8.6 delegates it here and no E- rule "
+        "owns it",
+    ("docs/conformance-harness.md", "- **Schema-producing commands accept `--compact`**"):
+        "Track 1 CLI wrapper contract; no E- rule owns it",
+    ("docs/conformance-harness.md", "**`is_empty`/`compatible_with`/`equivalent` encode"):
+        "Track 1 CLI wrapper contract; no E- rule owns it",
+    ("docs/conformance-harness.md", "- `Record.__eq__`"):
+        "Track 1 referee comparison (harness section 4); no E- rule owns it",
+    ("docs/conformance-harness.md", "- `Schema.__eq__`"):
+        "Track 1 referee comparison (harness section 4); no E- rule owns it",
 }
 
 # Where each rule namespace is defined. A label may be *cited* anywhere; it
@@ -397,6 +418,20 @@ def main() -> int:
                 print(f"  {path}:{line_no}: {preview}", file=sys.stderr)
         else:
             print(f"{path}: covered ({prefix}-N)")
+
+    for path in CITATION_ONLY:
+        gaps = gaps_in(path, None)
+        if gaps:
+            failed = True
+            print(f"error: {path} has {len(gaps)} normative paragraph(s) "
+                  f"citing no rule number (a citation of any rule is "
+                  f"enough, or an UNNUMBERED entry with a reason):",
+                  file=sys.stderr)
+            for line_no, preview in gaps:
+                print(f"  {path}:{line_no}: {preview}", file=sys.stderr)
+        else:
+            print(f"{path}: every normative paragraph cites a rule "
+                  f"(citation-only)")
 
     for path, prefix in REPORTED.items():
         gaps = gaps_in(path, prefix)

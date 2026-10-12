@@ -78,7 +78,7 @@ The real conventions, applying to every subcommand:
 | `lint` | `omnist schema lint SCHEMA --json [--severity info\|warning]` | `{"ok": bool, "findings": [{"code","severity","location","message"}]}` — `ok` is `false` iff any `warning`-severity finding is present | **1 if any `warning`-severity finding is present, 0 otherwise** |
 
 **`lint` findings' `code` field is compared exactly, like Track 2's
-diagnostics.** §8.3 is mandatory
+diagnostics** ([E-17](08-conformance-and-errors.md#852-diagnostics-matching)). §8.3 is mandatory
 ([§8.1](08-conformance-and-errors.md#81-status-of-this-chapter)), and
 [§8.3.7](08-conformance-and-errors.md#837-lint-schema-diagnostics) spells the
 lint codes namespaced (`lint.unreachable-record`), so a fixture's

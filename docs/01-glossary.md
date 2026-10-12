@@ -53,18 +53,18 @@ edges. This is the only recursive structure in the Document model.
 
 **nullable** — A property of a *scalar* type, written with a trailing `?`. A
 nullable scalar additionally accepts `null`. Nullability MUST NOT be applied to
-a reference or to `any`. "This record might be absent" is cardinality `[0,1]`,
+a reference or to `any` ([S-7](03-schema-model.md#33-formal-definition)). "This record might be absent" is cardinality `[0,1]`,
 not nullability. See [chapter 3](03-schema-model.md).
 
 **OML** — Omnist Markup Language. The native text format for Documents.
 Brace-delimited, not indentation-sensitive. See
 [chapter 4](04-oml-grammar.md).
 
-**OML-Core** — The subset of OML that the canonical writer emits and every
+**OML-Core** — The subset of OML that the canonical writer emits ([OML-20](04-oml-grammar.md#49-canonical-output)) and every
 conformant reader MUST accept.
 
 **OML-Extended** — Read-only spellings a conformant reader MUST accept but a
-canonical writer MUST NOT emit: raw strings and triple-quoted multiline strings.
+canonical writer MUST NOT emit ([OML-20](04-oml-grammar.md#49-canonical-output)): raw strings and triple-quoted multiline strings.
 
 **optional** — Cardinality with `min = 0`. Distinct from nullable: optional
 means the edge may be absent, nullable means the value present at the edge may

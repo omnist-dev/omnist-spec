@@ -56,7 +56,7 @@ svc:
 ```
 
 reads `svc` as the three edges `region`, `retries`, `name`, in that order.
-Source order is normative because it is the only order the written text
+Source order is normative ([D-1](../02-document-model.md#23-structural-invariants)) because it is the only order the written text
 explains. Some YAML libraries flatten a merge sequence in *reverse* —
 PyYAML's constructor does, which is how the reference implementation came to
 produce `retries, region, name` — and a codec built on one of those MUST

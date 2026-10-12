@@ -21,7 +21,7 @@ the one format with no temporal stringification in either direction.
 **TOML has no `null`.** A null-valued leaf cannot be written, and there is no
 substitute value to fall back to — dropping the edge silently would erase
 its existence, not just its value. Writing one MUST fail
-(`write.unsupported-value`), not silently omit it.
+(`write.unsupported-value`, [C-10](../07-codecs-and-deserialization.md#73-writing)), not silently omit it.
 
 **Top level must be a table.** A bare scalar Document cannot be written as
 TOML.
