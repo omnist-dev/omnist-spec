@@ -371,7 +371,7 @@ they describe occurs, with a conformance vector for each. The same holds for
 `format.value-stringified`: a writer MUST emit it wherever a non-string scalar
 is written as text, once per leaf, at the Document path of the leaf (indexed per
 [E-10](#84-paths)); `formats-xml/stringified/*` pins it. **The same holds for
-`format.temporal-stringified` in XML**: an XML writer MUST emit it, once per
+`format.temporal-stringified` in XML** (E-37 generalises it to every format that writes a temporal as a string): an XML writer MUST emit it, once per
 leaf and at the same path, wherever a `date`, `time` or `datetime` leaf is
 written as its ISO-8601 text (`<d>2024-01-15</d>`), and MUST NOT also emit
 `format.value-stringified` for that leaf: a leaf takes one of the two codes,
@@ -476,6 +476,50 @@ already existed in this table, and the escape is the one place a YAML writer
 overrides its default scalar style for a character that YAML 1.1 consumers
 fold, which a caller auditing the output wants to see. It is a warning, not a loss. How the other writers treat U+0085, and whether they report
 the code, is not decided here.
+
+**E-37. A writer never alters a temporal value, always writes its seconds,
+and stringifies, with `format.temporal-stringified`, where the format has no
+exact literal.** A `date`, `time` or `datetime` ([§2.2.1](02-document-model.md#221-scalar-kinds))
+is written in every format by these rules:
+
+1. **The value is never altered.** A writer MUST NOT convert a `datetime` or a
+   `time` to UTC or to any other offset, drop or add an offset, drop or round
+   a fractional second, or change the date. `2024-01-15T12:00:00+01:00` is
+   written with `+01:00` and the clock reading `12:00:00`, not as
+   `2024-01-15T11:00:00` or `…Z`.
+2. **The seconds are always written.** A `time` or `datetime` is written with
+   its seconds field in every format that spells them: a value read from OML's
+   `12:00`, which §4.2.4 admits, is written as `12:00:00`, never `12:00`. The
+   offset is written as the value holds it (`+01:00`), after the seconds and any
+   fraction. How many digits a fractional second is written with is not pinned
+   ([OML-30](04-oml-grammar.md#49-canonical-output)), but a writer MUST write
+   every digit the value holds, so a fraction of six digits with a non-zero last
+   digit has one spelling.
+3. **A native literal is used where one holds the value exactly.** OML has
+   one for all three kinds. TOML has one for a `date`, a `time` without an
+   offset (local time), a `datetime` without an offset (local date-time) and a
+   `datetime` with an offset (offset date-time). YAML has one for a `date` and
+   for a `datetime`, written in its ISO-8601 spelling with the `T` separator and
+   no quotes (`2024-01-15T12:00:00+01:00`), the form YAML 1.1's timestamp
+   resolves.
+4. **Everywhere else the writer writes the value's ISO-8601 text as a string
+   and reports `format.temporal-stringified`**, a warning, once per leaf at the
+   Document path of the leaf indexed per [E-10](#84-paths), and does not fail
+   (the write succeeds, the value is intact). That is: every temporal in
+   **JSON** and in **XML** (E-5), a `time` **with an offset** in **TOML**
+   (TOML has no offset time), and every `time` in **YAML** (YAML 1.1 has no
+   time-of-day type, and an unquoted `12:00:00` would be read as a sexagesimal
+   integer and `12:00:00.5` as a float). A string TOML or YAML writes here is
+   double-quoted, as E-34 writes its YAML strings (`"12:00:00+01:00"`). A
+   writer MUST NOT instead fail, crash, drop the offset, or write a literal its
+   target grammar would read as another value.
+
+Rule 4 generalises E-5, which stated the XML case, and E-37 does not touch
+what a *reader* does with such a string: it reads it back as a string, which is
+what the code warns of. The suite pins this with `write` vectors under
+`formats-*/temporal-writing/*` and `formats-oml/temporal/*`, using values with
+seconds, an offset and a six-digit fraction so that every writer's spelling of
+each is forced.
 
 ### 8.3.9 `write.*`
 

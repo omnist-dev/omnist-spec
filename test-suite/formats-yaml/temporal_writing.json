@@ -1,0 +1,304 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/temporal-writing/time-with-seconds",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"12:00:00\"\n",
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-37: YAML has no time-of-day type; unquoted, this text would resolve to an integer or a float. It is written as a double-quoted ISO-8601 string with its seconds and reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/time-with-offset",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"12:00:00+01:00\"\n",
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-37: YAML has no time-of-day type; unquoted, this text would resolve to an integer or a float. It is written as a double-quoted ISO-8601 string with its seconds and reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/datetime-with-offset",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00:00+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00+01:00\n"
+      },
+      "comment": "E-37: YAML resolves this to a date or timestamp, so it is written as a plain ISO-8601 scalar with its seconds, the `T` separator and the offset as held; nothing is reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/time-with-six-digit-fraction",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00.123456"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"12:00:00.123456\"\n",
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-37: YAML has no time-of-day type; unquoted, this text would resolve to an integer or a float. It is written as a double-quoted ISO-8601 string with its seconds and reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/datetime-with-fraction-and-offset",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00:00.123456+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00.123456+01:00\n"
+      },
+      "comment": "E-37: YAML resolves this to a date or timestamp, so it is written as a plain ISO-8601 scalar with its seconds, the `T` separator and the offset as held; nothing is reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/datetime-without-offset",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00\n"
+      },
+      "comment": "E-37: YAML resolves this to a date or timestamp, so it is written as a plain ISO-8601 scalar with its seconds, the `T` separator and the offset as held; nothing is reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/date",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-15"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15\n"
+      },
+      "comment": "E-37: YAML resolves this to a date or timestamp, so it is written as a plain ISO-8601 scalar with its seconds, the `T` separator and the offset as held; nothing is reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/time-without-seconds-is-written-with-seconds",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"12:00:00\"\n",
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-37: YAML has no time-of-day type; unquoted, this text would resolve to an integer or a float. It is written as a double-quoted ISO-8601 string with its seconds and reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/datetime-without-seconds-is-written-with-seconds",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00\n"
+      },
+      "comment": "E-37: YAML resolves this to a date or timestamp, so it is written as a plain ISO-8601 scalar with its seconds, the `T` separator and the offset as held; nothing is reported."
+    },
+    {
+      "name": "formats-yaml/temporal-writing/time-with-offset-and-no-seconds",
+      "spec": "docs/08-conformance-and-errors.md#838-format-codec-adjustments",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"12:00:00+01:00\"\n",
+        "diagnostics": [
+          {
+            "path": "$.a",
+            "code": "format.temporal-stringified"
+          }
+        ]
+      },
+      "comment": "E-37: YAML has no time-of-day type; unquoted, this text would resolve to an integer or a float. It is written as a double-quoted ISO-8601 string with its seconds and reported."
+    }
+  ]
+}

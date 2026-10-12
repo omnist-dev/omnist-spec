@@ -142,7 +142,10 @@ integer instead, not a `time` (see the sharp edge below).
 `12:00:00` resolves to the **integer** 43200 — sexagesimal, twelve hours in
 seconds. That is YAML's behavior, not a choice Omnist makes, and there is no
 read-side workaround: by the time the value reaches Omnist it is already an
-integer. Quote it.
+integer. Quote it. A writer does: a `time` is written as a double-quoted
+ISO-8601 string and reported with `format.temporal-stringified`, so it reads
+back as a string, never as an integer or a float
+([E-37](../08-conformance-and-errors.md#838-format-codec-adjustments)).
 
 **A second sharp edge, real enough to have a name: the "Norway problem."**
 YAML 1.1's core schema resolves `on`/`off`/`yes`/`no`/`true`/`false` (in

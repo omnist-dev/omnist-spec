@@ -13,10 +13,12 @@ is not a value in the model, it is the same label occurring more than once.
 | `{"m":[A]}` | `[(m,A)]` — one edge, indistinguishable from `{"m":A}` |
 | `{"m":[]}` | zero `m` edges — the label is simply absent from the result |
 
-**No temporal types.** JSON has none, so a reader MUST NOT produce `date`,
+**No temporal types.** JSON has none ([C-1](../07-codecs-and-deserialization.md#71-two-stages)),
+so a reader MUST NOT produce `date`,
 `time`, or `datetime` on its own. A date-looking string stays a string unless a
 schema upgrades it in stage 2. A writer MUST stringify a temporal leaf to
-ISO-8601.
+ISO-8601, unaltered and with its seconds, and report `format.temporal-stringified`
+([E-37](../08-conformance-and-errors.md#838-format-codec-adjustments)).
 
 **No `NaN` or `Infinity`.** Those tokens are not valid JSON. Writing one MUST
 ([E-6](../08-conformance-and-errors.md#838-format-codec-adjustments))

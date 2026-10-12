@@ -15,8 +15,11 @@ repeated-label shape with no adjustment at all. Of the four non-native
 formats, TOML is the one whose own idiom already matches the model.
 
 **TOML has native `date`, `time`, and `datetime` literals.** All three parse to
-the matching types with no schema needed, and write back the same way. TOML is
-the one format with no temporal stringification in either direction.
+the matching types with no schema needed, and write back the same way, with one
+exception: TOML has no time of day *with* an offset, so a writer writes that as
+a quoted ISO-8601 string and reports `format.temporal-stringified`
+([E-37](../08-conformance-and-errors.md#838-format-codec-adjustments)). Every other temporal is
+written as its native literal, seconds included, unaltered.
 
 **TOML has no `null`.** A null-valued leaf cannot be written, and there is no
 substitute value to fall back to — dropping the edge silently would erase

@@ -1,0 +1,274 @@
+{
+  "vectors": [
+    {
+      "name": "formats-oml/temporal/time-with-seconds",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 12:00:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/time-with-offset",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 12:00:00+01:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/datetime-with-offset",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00:00+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00+01:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/time-with-six-digit-fraction",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00:00.123456"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 12:00:00.123456"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/datetime-with-fraction-and-offset",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00:00.123456+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00.123456+01:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/datetime-without-offset",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/date",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "date",
+                  "value": "2024-01-15"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/time-without-seconds-is-written-with-seconds",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 12:00:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/datetime-without-seconds-is-written-with-seconds",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "datetime",
+                  "value": "2024-01-15T12:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 2024-01-15T12:00:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    },
+    {
+      "name": "formats-oml/temporal/time-with-offset-and-no-seconds",
+      "spec": "docs/04-oml-grammar.md#49-canonical-output",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "time",
+                  "value": "12:00+01:00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: 12:00:00+01:00"
+      },
+      "comment": "E-37, OML-30: OML has a literal for each temporal kind, written unaltered and with its seconds."
+    }
+  ]
+}
