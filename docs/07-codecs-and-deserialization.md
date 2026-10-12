@@ -367,7 +367,8 @@ Three points keep the rule narrow:
 - **The path is the Document path of the node holding the string.** For a
   value that is the leaf (`$.a`, `$.item[1]`, indexed per
   [E-10](08-conformance-and-errors.md#84-paths)). For a label it is the node
-  that holds the *edge*, not the edge: §8.4 has no way to quote a label, and
+  that holds the *edge*, not the edge: [E-36](08-conformance-and-errors.md#84-paths)
+  gives a label with no UTF-8 encoding no path spelling, and
   the label is precisely what has no encoding, so the field form would put the
   unwritable string into a byte-compared path, the same reasoning as
   OSD-14's record path. A string beneath an edge whose own label has no

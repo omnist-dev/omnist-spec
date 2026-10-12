@@ -483,8 +483,9 @@ missing was anyone saying OSD is one of the formats that clause ranges over.
 [OSD-16](05-osd-grammar.md#59-canonical-output) applies the same rule, at the
 same path, to a field of `max = 0`.
 The `path` is the Schema path of the **record** holding the unwritable field
-— `R`, not `R.<label>` — because §8.4 gives no way to quote a label inside a
-path and the label here is precisely the thing with no spelling; putting the
+— `R`, not `R.<label>` — because a schema path has no way to quote a label (E-36
+quotes Document-path labels only) and the label here is precisely the thing with
+no spelling; putting the
 byte in a byte-compared path would restate the problem rather than report
 it.
 
@@ -515,6 +516,38 @@ paths as `$.item`, and the same label occurring twice paths as `$.item[0]` and
 path, an undeclared field's `unexpected-field` included. A cardinality
 diagnostic is at the parent node's path (§3.6), so it carries no index of its
 own.
+
+**E-36. A label that would make a Document path ambiguous or unsafe to print
+is written bracket-quoted.** A label is any Unicode string (§2.2.2), but the
+path grammar above spends `.`, `[` and `]` as punctuation, so a raw label could
+make two different edges print the same path (`b` inside `a` and `a.b` beside
+it both printed `$.a.b`), could pass for an index (`item[0]`), and could carry a
+line break into a log. A label segment is therefore written one of two ways,
+chosen by the label alone:
+
+- **Bare, as `.label`**, for every label that does not need quoting. This is
+  the form every example above uses, and it is unchanged: a label such as
+  `name`, `a b`, `$`, `é` or `0` stays bare.
+- **Quoted, as `["label"]`**, with no dot before the bracket, for a label that
+  *needs quoting*: one that is **empty**, or that contains any of `.` `[` `]`
+  `"` `\`, or any control character (U+0000 to U+001F), U+007F, U+0085 (NEL),
+  U+2028 (LS) or U+2029 (PS). The label sits between double quotes with these
+  escapes and no others: `\"` for `"`, `\\` for `\`, `\n`, `\r` and `\t` for
+  those three characters, and `\u` followed by exactly four **lowercase**
+  hexadecimal digits ([C-14](07-codecs-and-deserialization.md#73-writing)) for
+  every other control character, U+007F, U+0085, U+2028 and U+2029 (`\u0000`,
+  `\u001f`, `\u007f`, `\u0085`). Every other character, including `.`, `[`,
+  `]` and all non-ASCII text, is written as it is. Each label has exactly one
+  spelling.
+
+An E-10 occurrence index follows the segment in either form (`$["a.b"][0]`,
+`$.item[1]`), and a quoted segment may stand wherever a bare one may
+(`$.order["a.b"].sku`, `$[""]`). A label that is not valid UTF-8 (a lone
+surrogate) has no path spelling and cannot occur in a path, as it cannot in a
+conformance vector. **Schema paths are not affected**: `RecordName.label` keeps
+the raw label, which is why E-26 reports an unwritable field at the record's
+path. The suite pins this rule with `validate` vectors
+(`validate/label-quoting/*`) that report an undeclared field at a quoted path.
 
 **Schema paths** are `RecordName` for a record-level diagnostic and
 `RecordName.label` for a field-level one.
