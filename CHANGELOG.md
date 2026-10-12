@@ -14,7 +14,7 @@ This file starts at v0.3.0-alpha; earlier history is in `git log`.
 [#154](https://github.com/omnist-dev/omnist-spec/issues/154),
 [#156](https://github.com/omnist-dev/omnist-spec/issues/156),
 [#157](https://github.com/omnist-dev/omnist-spec/issues/157)) and the temporal
-writers. The suite grows from 522 to **722** vectors. No new diagnostic code:
+writers. The suite grows from 522 to **731** vectors. No new diagnostic code:
 every ruling uses a registered one. OSD-OML is untouched.
 
 - **Document paths (#144), E-36 (new).** A label that is empty or holds `.` `[`
@@ -55,7 +55,7 @@ every ruling uses a registered one. OSD-OML is untouched.
   offset, a YAML `time`).
 - **Runner contract.** No new input field or driver. Runners must report the
   quoted path of E-36 for a `validate` diagnostic, and `check_vectors` gained
-  the E-18 lint. Vectors: 200 more than v0.34.0-beta (net), in 19 new files.
+  the E-18 lint. Vectors: 209 more than v0.34.0-beta (net), in 19 new files.
 - **Ledger.** `DIV-35` to `DIV-42` record the port divergences these vectors
   and rules expose; the lone-CR note leaves the unpinned list.
 

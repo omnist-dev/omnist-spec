@@ -158,7 +158,7 @@ Rows this edit did not re-measure (the OML, OSD, `any`, `validate`,
 `materialize`, algebra and error-code rows and the fuzz row) are carried from
 an earlier edit; the vector suites each port passes cover them.
 
-The Track 2 suite is v0.35.0-beta, 722 vectors in this tree. The vectors the
+The Track 2 suite is v0.35.0-beta, 731 vectors in this tree. The vectors the
 ports fail today are the divergence entries below (`DIV-29` to `DIV-42`); every
 port skips the 28 OSD-OML vectors until it implements that extension
 ([omnist#341](https://github.com/omnist-dev/omnist/issues/341),
@@ -482,8 +482,8 @@ literal where one is exact and otherwise stringifies with
   came, and reports no diagnostic for a `time` in JSON, TOML or YAML.
 - *Python* crashes with an uncaught `ValueError` ("TOML does not support offset
   times") writing a TOML `time` with an offset instead of stringifying it, and
-  writes a space between date and time in TOML and YAML where E-37 pins `T`, and
-  single quotes in YAML for a `time`.
+  writes a space between date and time in TOML and YAML where E-37 pins `T` for both
+  (the pin exists so write vectors are byte-comparable; readers accept the space).
 - *Go* writes `12:00` for `12:00:00` in JSON, TOML and YAML, and *Java* in JSON,
   TOML, YAML, XML and OML (measured through its CLI; Java's runner compares a
   `write` vector by re-parsing, `DIV-33`, so it does not show every byte
@@ -508,19 +508,22 @@ Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
 - *TypeScript* decodes entities twice (`&amp;#65;` reads as `A`), silently drops
   or keeps as text a reference to a character outside `Char` or a malformed one
   (`&#0;`, `&#xD800;`, `&#;`), crashes on `&#x110000;`, and accepts raw C0
-  controls, U+FFFE and U+FFFF: 23 vectors.
+  controls, U+FFFE and U+FFFF, in text, CDATA, attributes, comments, processing
+  instructions and tag names, and a decimal surrogate reference: 29 vectors.
 - *Rust* accepts `&#1;`, `&#x8;`, `&#xB;`, `&#xFFFE;` and `&#xFFFF;`, and raw C0
-  controls, U+FFFE and U+FFFF in text and CDATA: 12 vectors.
+  controls, U+FFFE and U+FFFF in text, CDATA, attributes, comments, processing
+  instructions and tag names: 17 vectors.
 - *Go* refuses every `encoding=` declaration except UTF-8, accepts the surrogate
   references `&#xD800;` and `&#xDFFF;`, and reports `&#xE000;` as
-  `format.entity-forbidden`: 8 vectors.
+  `format.entity-forbidden`: 11 vectors.
 - *Python* and *Java* pass all of them.
 Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
 **Remove this entry when every port passes `formats-xml/encoding-and-references`.**
 
 **DIV-39. YAML writing and reading detail (C-14, C-17, C-12).**
-- Escapes (C-14): Python and Go write uppercase hex (`\x1F`, `\uFFFE`); TypeScript
-  writes DEL and U+FFFE raw; Rust writes C0 controls, DEL and U+FFFE raw.
+- Escapes (C-14): Python and Go write uppercase hex (`\x1F`, `\uFFFE`, `\uFFFF`);
+  TypeScript writes DEL, U+0080, U+FFFE and U+FFFF raw; Rust writes C0 controls,
+  DEL, U+0080, U+FFFE and U+FFFF raw.
 - Number spellings (C-17): Go reads `0o17` as 15, `0:5` as 5, `1e3` and `1.0e3` as
   numbers and `1:30.5` as a string; TypeScript reads `08` as 8, `0:5` as 5, and
   `1e3` and `1.0e3` as numbers; Rust reads `1:30.5` as a string; Java reads `1e3`
@@ -535,7 +538,9 @@ Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
 **DIV-40. Java: leading zeros, sexagesimal integers and TOML underflow (D-28, D-29).**
 Java reads a YAML octal of 4,400 zeros then `17`, and a sexagesimal integer of
 over 4,300 digits, as strings (the second without the `document.limit.int-digits`
-refusal), and refuses TOML `1e-999` and `-1e-999` ("Float is too small").
+refusal), and refuses TOML `1e-999` and `-1e-999` ("Float is too small"); an independent review
+also saw a `StackOverflowError` on the sexagesimal vector, which this run did not
+reproduce (it read the value as a string).
 Fixed in the v0.35.0-beta adoption PR (pending); no issue numbers yet.
 **Remove this entry when Java passes the `limits-literals` and `number-range` vectors.**
 

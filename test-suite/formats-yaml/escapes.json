@@ -82,6 +82,60 @@
       "comment": "C-14: U+007F is not printable in YAML 1.1 and is escaped as `\\x7f`."
     },
     {
+      "name": "formats-yaml/escapes/c1-control-uses-the-x-escape",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u0080y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\x80y\"\n"
+      },
+      "comment": "C-14: U+0080 is not printable in YAML 1.1 and is escaped as `\\x80`."
+    },
+    {
+      "name": "formats-yaml/escapes/noncharacter-ffff-uses-the-u-escape",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\uffffy"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\uffffy\"\n"
+      },
+      "comment": "C-14: U+FFFF is written `\\uffff`."
+    },
+    {
       "name": "formats-yaml/escapes/noncharacter-uses-the-u-escape",
       "spec": "docs/07-codecs-and-deserialization.md#73-writing",
       "operation": "write",

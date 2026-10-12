@@ -496,12 +496,14 @@ disagree on the case write different bytes for one Document, and OML-19 and the
 `write` vectors compare bytes. The rule fixes the case of the digits and,
 for YAML, the escape form, and nothing else: which characters a format
 escapes stays the format's own. **A YAML writer that escapes a control
-character with no named YAML escape (not `\t`, `\n`, `\r`, `\v`, `\f`, `\b`, `\a`, `\e`, `\0`) spells a code point below U+0100 as `\xXX` and one from U+0100 up as
+character with no named YAML escape (not `\t`, `\n`, `\r`, `\v`, `\f`, `\b`, `\a`, `\e`, `\0`, `\N`) spells a code point below U+0100 as `\xXX` and one from U+0100 up (U+FFFE and U+FFFF, below) as
 `\uXXXX`, always with lowercase hex digits**: U+0001 is `\x01`, U+001F is
 `\x1f` and U+007F is `\x7f`, in a double-quoted scalar; never `\x1F` or
-`\u001f`. A YAML writer MUST escape the control characters YAML 1.1 does not
-print (U+0000 to U+0008, U+000B, U+000C, U+000E to U+001F, U+007F) rather than
-write them raw, and U+0085 keeps its own escape (E-34). XML's
+`\u001f`. A YAML writer MUST escape the characters YAML 1.1 does not
+print, as PyYAML escapes them (U+0000 to U+0008, U+000B, U+000C, U+000E to
+U+001F, U+007F, U+0080 to U+009F except U+0085, and U+FFFE and U+FFFF), rather
+than write them raw; the last two are the ones the `\uXXXX` form is for,
+and U+0085 keeps its own escape (E-34). XML's
 numeric character references (`&#13;`, [E-8](08-conformance-and-errors.md#838-format-codec-adjustments))
 are decimal and out of scope.
 

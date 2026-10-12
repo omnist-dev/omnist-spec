@@ -559,10 +559,11 @@ spelling of one value and this section chooses none:
   suite pins those and no more.
 - **The spelling of a temporal token** beyond what
   [E-37](08-conformance-and-errors.md#838-format-codec-adjustments) fixes for
-  every format: how many digits a fractional second is written with, and
-  whether an input that omitted its seconds keeps its spelling. E-37 does pin
-  that a writer never changes the value, never converts or drops an offset, and
-  writes the seconds.
+  every format: nothing about the digits of a fractional second is pinned
+  beyond that a writer writes the digits the value holds, with no padding and no
+  trimming. E-37 does pin that a writer never changes the value, never converts
+  or drops an offset, and writes the seconds (an input `12:00` is written
+  `12:00:00`).
 - **Whether the text ends with a line terminator.** A conformance `write`
   vector's text is compared after the outer-whitespace trim every `write`
   comparison does ([E-18](08-conformance-and-errors.md#853-operation-drivers)),

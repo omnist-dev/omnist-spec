@@ -163,7 +163,8 @@ escape into user-visible Documents.
 **D-5. Scalar identity is by kind and value.** Two scalars are equal when their
 kinds and values are equal. An `integer` and a `number` of the same magnitude
 are distinct scalars in the Document model, even though `integer` is a subtype
-of `number` in the Schema model (§6).
+of `number` in the Schema model (§6). Number equality distinguishes `-0.0` from
+`0.0` (IEEE 754 `==` does not).
 
 **D-8.** This invariant is unconditional for the model itself — it is not weakened by
 what any particular host language can represent. An implementation targeting

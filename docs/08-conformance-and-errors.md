@@ -498,10 +498,10 @@ is written in every format by these rules:
 3. **A native literal is used where one holds the value exactly.** OML has
    one for all three kinds. TOML has one for a `date`, a `time` without an
    offset (local time), a `datetime` without an offset (local date-time) and a
-   `datetime` with an offset (offset date-time). YAML has one for a `date` and
-   for a `datetime`, written in its ISO-8601 spelling with the `T` separator and
-   no quotes (`2024-01-15T12:00:00+01:00`), the form YAML 1.1's timestamp
-   resolves.
+   `datetime` with an offset (offset date-time), written in its ISO-8601
+   spelling with the `T` separator (`2024-01-15T12:00:00+01:00`). YAML has one for
+   a `date` and for a `datetime`, written the same way, with the `T` separator
+   and no quotes, the form YAML 1.1's timestamp resolves.
 4. **Everywhere else the writer writes the value's ISO-8601 text as a string
    and reports `format.temporal-stringified`**, a warning, once per leaf at the
    Document path of the leaf indexed per [E-10](#84-paths), and does not fail
@@ -513,6 +513,13 @@ is written in every format by these rules:
    double-quoted, as E-34 writes its YAML strings (`"12:00:00+01:00"`). A
    writer MUST NOT instead fail, crash, drop the offset, or write a literal its
    target grammar would read as another value.
+
+The spelling pins of rule 3 and rule 4 (the `T` separator, double quotes) exist
+only so that `write` vectors are byte-comparable: a reader accepts the
+equivalent spellings (RFC 3339's space separator, YAML single quotes). **What
+"the same value" means here** is the clock reading: an omitted seconds field is
+`00`, trailing zeros of a fraction are insignificant, and the offset is kept;
+whether `Z` and `+00:00` are the same offset is not specified.
 
 Rule 4 generalises E-5, which stated the XML case, and E-37 does not touch
 what a *reader* does with such a string: it reads it back as a string, which is
@@ -651,7 +658,7 @@ Document path to descend into. The format is `line:col`, both 1-based:
   NOT let it end a comment (a `#` comment runs to the next `LF`, so a lone `CR`
   inside one is comment text), and MUST report the position of the `CR`, not of
   the character after it. `a: 1`, `CR`, `}` is therefore `parse.unexpected-token`
-  at `1:5`, and a leading `CR` is the same code at `1:1`. A `CR` inside a string
+  at `1:5`, and a leading `CR` is the same code at `1:1`. A `CR` inside a double-quoted or multiline string
   stays `parse.control-character`, positioned as any control character in a
   string is ([E-23](#84-paths)), and `CRLF` stays one line break.
   `oml-grammar/lone-cr/*` pins these; OSD, whose `ws` admits `CR`, is unchanged.
@@ -1013,8 +1020,9 @@ now stated as it holds:
 
 - **A `write` vector for XML MUST NOT contain a whitespace-only string leaf** (E-18):
   a non-empty string made up only of whitespace, that is, of characters the
-  strip below removes (the XML whitespace U+0009, U+000A, U+000D and U+0020, and
-  every other character a language's `\s` matches). The empty string is not
+  strip below removes: the characters for which Python's `str.isspace()` is true
+  (which include U+0009, U+000A, U+000D and U+0020), and U+FEFF, which JavaScript's
+  `\s` matches and Python's does not. The empty string is not
   whitespace-only and is fine. `tools/check_vectors.py` checks this. The write
   side of such a leaf is not pinned by any vector, and no port is relieved of
   writing it faithfully.

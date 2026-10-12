@@ -1126,6 +1126,146 @@
         }
       },
       "comment": "C-16: nothing inside a CDATA section is a reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-c0-control-in-attribute-value-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a x=\"p\u0001q\">y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-c0-control-in-comment-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a><!-- p\u0001q -->y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-c0-control-in-processing-instruction-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a><?t p\u0001q?>y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-c0-control-in-tag-name-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a\u0001>y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-noncharacter-fffe-in-cdata-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a><![CDATA[p\ufffeq]]></a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/decimal-surrogate-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#55296;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/c0-reference-in-attribute-value-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a x=\"&#1;\">y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers every place the document holds characters or references."
     }
   ]
 }
