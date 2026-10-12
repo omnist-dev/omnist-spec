@@ -11,7 +11,20 @@ instructions, the XML declaration, attributes (dropped on read, reported via
 `format.attribute-dropped`), and namespace prefixes (dropped, reported via
 `format.namespace-dropped`).
 
-**Not supported.** Each of these MUST fail the read:
+**The declaration's `encoding=` is ignored, and the input is read as UTF-8.**
+Whatever encoding the declaration names, the bytes are decoded as
+[D-14](../02-document-model.md#25-encoding) says, so a declaration that claims
+`ISO-8859-1` neither refuses the document nor re-decodes it
+([C-15](../07-codecs-and-deserialization.md#71-two-stages)).
+
+**Characters and references are checked, and entities are decoded once.** A
+character outside XML 1.0's `Char`, and a numeric character reference that is
+malformed or names such a character (`&#0;`, `&#1;`, `&#xD800;`, `&#xFFFE;`,
+`&#x110000;`, `&#;`, `&#65`), is `parse.codec-syntax`, never dropped, kept as
+text or replaced; `&amp;#65;` reads as the text `&#65;`, not as `A`
+([C-16](../07-codecs-and-deserialization.md#71-two-stages)).
+
+**Not supported.** Each of these MUST fail the read ([E-7](../08-conformance-and-errors.md#838-format-codec-adjustments)):
 
 | Construct | Why it is out of profile |
 |---|---|

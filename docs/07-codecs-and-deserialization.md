@@ -122,6 +122,48 @@ rather than making it. This rule is about those three tags only: every
 other tag keeps the reading it already has, and what an explicitly tagged `<<`
 is, is [D-27](02-document-model.md#241-bounding-alias-expansion)'s.
 
+**C-15. An XML `encoding=` declaration is ignored; D-14 decides the input
+encoding.** The XML declaration is part of the data-XML profile
+([formats/xml.md](formats/xml.md)), and its `encoding` pseudo-attribute is
+accepted whatever it names (`UTF-8`, `ISO-8859-1`, `UTF-16`, or a name that is
+no encoding at all) and changes nothing. The bytes are read as UTF-8, as
+[D-14](02-document-model.md#25-encoding) requires of every input: bytes that
+are not valid UTF-8 are `parse.invalid-encoding` at `1:1` even under a
+declaration that claims Latin-1 or UTF-16, and valid UTF-8 under such a
+declaration is read as UTF-8. A reader MUST NOT refuse a declaration for the
+encoding it names, and MUST NOT honour it by decoding the input another way: a
+mislabelled file is read as the UTF-8 it is or refused as the invalid bytes it
+holds, never silently re-decoded. The suite pins this with `bytes_hex` vectors.
+
+**C-16. XML text holds only XML 1.0 characters, character references are
+checked, and entities are decoded once.** XML 1.0's `Char` production admits
+U+0009, U+000A, U+000D, U+0020 to U+D7FF, U+E000 to U+FFFD and U+10000 to
+U+10FFFF, and nothing else. In an XML document, both of these are
+`parse.codec-syntax` (a text position, [E-31](08-conformance-and-errors.md#84-paths)):
+
+- **a character outside `Char`**, written directly in text, in a CDATA section or
+  anywhere else the document holds characters (U+0000 to U+0008, U+000B,
+  U+000C, U+000E to U+001F, U+FFFE and U+FFFF); and
+- **a numeric character reference that is malformed or names a code point
+  outside `Char`** (C-16): `&#` followed by decimal digits, or `&#x` (lowercase `x`)
+  followed by hexadecimal digits, and then `;`, with at least one digit.
+  `&#;`, `&#x;`, `&#65` without its `;`, `&#X41;` and a reference whose value
+  does not fit any integer type are malformed, and `&#0;`, `&#1;`, `&#xB;`, a
+  surrogate (`&#xD800;` to `&#xDFFF;`), `&#xFFFE;`, `&#xFFFF;` and `&#x110000;`
+  or above are outside `Char`. A reader MUST NOT drop such a reference, keep it
+  as literal text, replace it with U+FFFD, or fail with anything other than this
+  code, and it MUST NOT crash on one. A valid reference (`&#65;`, `&#x41;`,
+  `&#9;`, `&#x10FFFF;`) reads as the one character it names
+  ([E-8](08-conformance-and-errors.md#838-format-codec-adjustments) for the CR
+  that `&#13;` produces).
+
+**Entities are decoded exactly once.** The five predefined entities and the
+numeric references are replaced by the characters they stand for in a single
+pass, and the result is never scanned again: `&amp;#65;` reads as the six
+characters `&#65;`, not as `A`, and `&amp;lt;` as `&lt;`. The suite pins all of
+this with `parse` vectors (`formats-xml/encoding-and-references/*`), using the
+E-32 position placeholder for the syntax errors.
+
 ## 7.2 Materialization rules
 
 Materialization upgrades a leaf **only when the conversion is value-exact.**

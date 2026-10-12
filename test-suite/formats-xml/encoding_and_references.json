@@ -1,0 +1,1131 @@
+{
+  "vectors": [
+    {
+      "name": "formats-xml/encoding-and-references/declaration-iso-8859-1-over-an-ascii-body-is-ignored",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><a>x</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-15: `encoding=\"ISO-8859-1\"` is accepted and has no effect; the input is UTF-8 (D-14)."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/declaration-utf-16-over-an-ascii-body-is-ignored",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<?xml version=\"1.0\" encoding=\"UTF-16\"?><a>x</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-15: `encoding=\"UTF-16\"` is accepted and has no effect; the input is UTF-8 (D-14)."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/declaration-us-ascii-over-an-ascii-body-is-ignored",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<?xml version=\"1.0\" encoding=\"US-ASCII\"?><a>x</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-15: `encoding=\"US-ASCII\"` is accepted and has no effect; the input is UTF-8 (D-14)."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/declaration-no-such-encoding-over-an-ascii-body-is-ignored",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<?xml version=\"1.0\" encoding=\"no-such-encoding\"?><a>x</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-15: `encoding=\"no-such-encoding\"` is accepted and has no effect; the input is UTF-8 (D-14)."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/declaration-utf-8-in-lowercase-is-accepted",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "xml",
+        "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?><a>x</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-15: the UTF-8 declaration is accepted in any case."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/utf-8-bytes-under-an-iso-8859-1-declaration-are-read-as-utf-8",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "bytes_hex": "3c3f786d6c2076657273696f6e3d22312e302220656e636f64696e673d2249534f2d383835392d31223f3e3c613ec3a93c2f613e"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\u00e9"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-15: the declaration does not re-decode the input. The two bytes c3 a9 are read as U+00E9, not as the Latin-1 pair U+00C3 U+00A9."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/latin-1-bytes-under-an-iso-8859-1-declaration-are-invalid-encoding",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "bytes_hex": "3c3f786d6c2076657273696f6e3d22312e302220656e636f64696e673d2249534f2d383835392d31223f3e3c613ee93c2f613e"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "C-15, D-14: the byte e9 is not valid UTF-8, and the declaration that would make it Latin-1 is ignored, so the read fails with parse.invalid-encoding at 1:1."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/utf-16-bom-bytes-under-a-utf-16-declaration-are-invalid-encoding",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "bytes_hex": "fffe3c003f0078006d006c002000760065007200730069006f006e003d00220031002e0030002200200065006e0063006f00640069006e0067003d0022005500540046002d003100360022003f003e003c0061003e0078003c002f0061003e00"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.invalid-encoding"
+          }
+        ]
+      },
+      "comment": "C-15, D-14: a UTF-16 document, byte order mark and all, is not UTF-8 and is refused as invalid encoding at 1:1, declaration or not."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/nul-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#0;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#0;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/c0-decimal-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#1;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#1;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/backspace-hex-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x8;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#x8;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/vertical-tab-hex-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xB;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#xB;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/form-feed-decimal-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#12;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#12;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/high-surrogate-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xD800;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#xD800;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/low-surrogate-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xDFFF;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#xDFFF;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/noncharacter-fffe-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xFFFE;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#xFFFE;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/noncharacter-ffff-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xFFFF;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#xFFFF;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/code-point-past-10ffff-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x110000;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#x110000;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/decimal-code-point-past-10ffff-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#1114112;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#1114112;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/huge-decimal-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#99999999999999999999999999;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#99999999999999999999999999;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/huge-hex-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xFFFFFFFFFFFFFFFFFFFF;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#xFFFFFFFFFFFFFFFFFFFF;` names a code point outside XML 1.0 `Char`; it is not dropped, kept as text or replaced, and the reader does not crash."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/empty-decimal-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#;` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/empty-hex-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#x;` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/decimal-reference-without-semicolon-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#65</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#65` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/uppercase-x-hex-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#X41;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#X41;` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/non-hex-digit-in-hex-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x4g;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#x4g;` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/non-digit-in-decimal-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#6a;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#6a;` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/signed-decimal-reference-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#+65;</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: `&#+65;` is a malformed numeric character reference."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-c0-control-in-text-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>x\u0001y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: a character outside XML 1.0 `Char`, written directly, makes the document not well-formed."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-nul-in-text-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>x\u0000y</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: a character outside XML 1.0 `Char`, written directly, makes the document not well-formed."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-form-feed-in-text-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>x\fy</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: a character outside XML 1.0 `Char`, written directly, makes the document not well-formed."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-noncharacter-fffe-in-text-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>x\ufffey</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: a character outside XML 1.0 `Char`, written directly, makes the document not well-formed."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-noncharacter-ffff-in-text-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>x\uffffy</a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: a character outside XML 1.0 `Char`, written directly, makes the document not well-formed."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/raw-c0-control-in-cdata-is-codec-syntax",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "xml",
+        "text": "<a><![CDATA[x\u0001y]]></a>"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-16: the rule covers CDATA sections too."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/decimal-reference-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#65;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#65;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/hex-reference-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x41;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#x41;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/leading-zeros-in-reference-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x0041;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#x0041;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/last-bmp-char-before-surrogates-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xD7FF;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\ud7ff"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#xD7FF;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/first-char-after-surrogates-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xE000;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\ue000"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#xE000;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/last-char-before-noncharacters-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#xFFFD;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\ufffd"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#xFFFD;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/first-supplementary-char-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x10000;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\ud800\udc00"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#x10000;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/last-code-point-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#x10FFFF;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\udbff\udfff"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#x10FFFF;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/tab-reference-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#9;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\t"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#9;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/line-feed-reference-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#10;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\n"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#10;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/carriage-return-reference-reads-as-the-character",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&#13;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "\r"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&#13;` is a valid reference to one `Char` and reads as that character."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/amp-then-hash-is-text-not-a-reference",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&amp;#65;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "&#65;"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: entities are decoded once. `&amp;#65;` is the six characters `&#65;`; a second pass would turn them into `A`."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/amp-then-amp-is-text",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&amp;amp;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "&amp;"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&amp;amp;` reads as `&amp;`, once decoded."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/amp-then-lt-is-text",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>&amp;lt;b&amp;gt;</a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "&lt;b&gt;"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: `&amp;lt;` reads as `&lt;`, once decoded."
+    },
+    {
+      "name": "formats-xml/encoding-and-references/reference-in-cdata-is-literal",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a><![CDATA[&#65; &amp;]]></a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "&#65; &amp;"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-16: nothing inside a CDATA section is a reference."
+    }
+  ]
+}
