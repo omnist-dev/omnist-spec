@@ -173,6 +173,13 @@ value position. Don't assume the full YAML 1.1 alias list transfers; only
 `on`/`off`/`yes`/`no`/`true`/`false` (case variants included) resolve as
 booleans.
 
+**Integer and float spellings are YAML 1.1's core schema, as PyYAML's default
+`SafeLoader` resolves it** ([C-17](../07-codecs-and-deserialization.md#71-two-stages)):
+`0x1F`, `0b101`, `1_000`, `010` (octal, 8), `190:20:30` and `1:30.5` resolve,
+and `0o17`, `08`, `0:5`, `1e3` and `1.0e3` stay strings. A repeated `<<` merges
+every time it is written, and a `<<` after an explicit key still merges first
+([C-12](../07-codecs-and-deserialization.md#71-two-stages)).
+
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.
 

@@ -1,0 +1,31 @@
+{
+  "vectors": [
+    {
+      "name": "formats-toml/negative-zero/toml-writes-negative-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "document": {
+          "edges": [
+            [
+              "a b",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "\"a b\" = -0.0"
+      },
+      "comment": "D-29: a TOML writer keeps the sign of a negative zero."
+    }
+  ]
+}

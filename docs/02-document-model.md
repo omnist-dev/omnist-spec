@@ -92,11 +92,17 @@ largest finite binary64, about 1.797e308) is not an error: it reads as positive
 infinity, or negative infinity with a minus sign, which is what IEEE 754
 round-to-nearest conversion gives and what D-6's binary64 `number` can hold.
 `1e999` reads as `+Infinity` and `-1e999` as `-Infinity`, in JSON, in OML and
-in the float spellings of YAML and TOML (`1.0e+999`, `1e999`). No `parse.*` or
+in the float spellings of YAML and TOML (`1.0e+999` in YAML, `1e999` in TOML;
+what is a float in YAML is C-17's). No `parse.*` or
 `document.*` diagnostic is raised, and no D-9 limit applies, since the limit
 bounds the digits of an `integer`, not the exponent of a `number`. The same
 holds below the range: a literal smaller than the smallest subnormal reads as
-`0.0`, or `-0.0` with a minus sign. A reader MUST NOT reject, clamp to the
+`0.0`, or `-0.0` with a minus sign, **in every format, not only JSON**:
+`1e-999` is `0.0` and `-1e-999` is `-0.0` in OML and TOML, and so are
+`1.0e-999` and `-1.0e-999` in YAML. **A literal `-0.0` is a negative zero** in
+every format that spells it, and a reader MUST keep the sign (a reader that
+returns `0.0` for it has changed the value, D-5; the same holds for a writer,
+[OML-30](04-oml-grammar.md#49-canonical-output)). A reader MUST NOT reject, clamp to the
 largest finite value, or read as `NaN` either case. The consequence is a
 Document the JSON writer cannot write: an infinity has no JSON spelling and
 the write fails with `write.unsupported-value`
@@ -241,6 +247,12 @@ while `0b1111100111` (999) and `0o1747` (999) are three and accepted, though
 the first is spelled with ten digits. At the reference default of 4 300, a
 hexadecimal literal of 3 600 digits (a value of 4 335 decimal digits) is
 refused and a binary literal of 4 301 digits (a value of 1 295) is accepted.
+Leading zeros are the clearest case: a YAML octal literal written with 4 400
+zeros before `17` has the value 15, two digits, and reads as the integer 15, not
+as a string and not as refused. A sexagesimal integer is counted by its value
+too: `1` followed by 2 500 groups of `:30` denotes a number of about 4 446
+digits and is refused with `document.limit.int-digits`, where a reader that
+passed it through as a string would have let the oversized value in unchecked.
 The reason is the one D-9 gives for the number: the limit exists to bound the
 cost of converting an integer to decimal, which depends on the value and not
 on how it was spelled, and a Document holds the value, so a writer or a
