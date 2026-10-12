@@ -931,21 +931,40 @@ and the XML format page (`docs/formats/xml.md`) both describe only the
 writers may legitimately disagree on this and both be correct. Before
 comparing a `write` vector's `text` against a target's actual output for
 XML, a harness MUST first strip whitespace that occurs strictly between `>`
-and `<` from both strings, then compare what remains. Whitespace inside
-actual element text content (the content between an element's own opening
-and closing tags, with no nested elements) MUST NOT be touched — that is
-data, not formatting, and stripping it would corrupt what's being compared.
+and `<` from both strings, then compare what remains. Whitespace in element
+text that has a non-whitespace character beside it (` x `, `a b`) is not
+strictly between `>` and `<` and is compared as written: that is data, not
+formatting.
 
-This is safe specifically because an omnist writer never produces XML with
-mixed content — the Document model (§2) gives every node either child
-edges or a single scalar value, never both at once, so an element's content
-is always either entirely sub-elements or entirely one text value, and
-"whitespace strictly between `>` and `<`" can only ever be inter-tag
-formatting, never a fragment of real text data. (General XML documents with
-mixed content don't have this guarantee, which is why this rule is scoped
-to XML vectors in this conformance suite, not stated as a general-purpose
-XML-comparison algorithm.) One reference implementation: strip via
-`text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
+E-18 is safe for everything except one case, because an omnist writer never
+produces XML with mixed content — the Document model (§2) gives every node
+either child edges or a single scalar value, never both at once, so an
+element's content is either entirely sub-elements or entirely one text value.
+The exception is a **whitespace-only string leaf**: `<a>  </a>` has
+whitespace strictly between `>` and `<`, so the strip removes it, and a
+harness following this rule cannot tell the string `"  "` from the empty
+string `""`. The earlier wording of this paragraph ("whitespace inside element
+text MUST NOT be touched") was therefore false for that leaf, and the rule is
+now stated as it holds:
+
+- **A `write` vector for XML MUST NOT contain a whitespace-only string leaf** (E-18):
+  a non-empty string made up only of whitespace, that is, of characters the
+  strip below removes (the XML whitespace U+0009, U+000A, U+000D and U+0020, and
+  every other character a language's `\s` matches). The empty string is not
+  whitespace-only and is fine. `tools/check_vectors.py` checks this. The write
+  side of such a leaf is not pinned by any vector, and no port is relieved of
+  writing it faithfully.
+- **The read side is pinned instead.** A reader keeps the text of an element
+  that has no child elements exactly as written, whitespace included: `<a>  </a>`
+  reads as `(a, "  ")`, and an element holding only a line feed reads as the
+  one-character string. Whitespace between *child* elements is formatting and
+  is dropped. `parse` vectors in `formats-xml/whitespace` pin both
+  ([xml.md](formats/xml.md#model-mapping)).
+
+General XML documents with mixed content have no such guarantee, which is why
+this rule is scoped to XML vectors in this conformance suite, not stated as a
+general-purpose XML-comparison algorithm. One reference implementation: strip
+via `text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
 the existing outer-whitespace trim every `write` vector comparison already
 does.
 

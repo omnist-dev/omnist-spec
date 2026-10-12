@@ -73,7 +73,13 @@ formats, wrap the data under a single top-level key.
 
 **An empty element is the empty string, and XML has no `null`.** An element
 with no child elements is a string leaf holding its text, so `<a/>` and
-`<a></a>` both read as `(a,"")`. XML has no null token to write instead, and
+`<a></a>` both read as `(a,"")`. The text is kept exactly as written,
+whitespace included: `<a>  </a>` reads as `(a,"  ")`, and an element holding
+only a line feed as the one-character string. Whitespace between *child*
+elements is formatting and is dropped. The write side of a whitespace-only
+leaf cannot be pinned by a vector, because the harness comparison strips it
+([E-18](../08-conformance-and-errors.md#853-operation-drivers)), so the read
+side is pinned instead. XML has no null token to write instead, and
 writing a null leaf as `<a/>` would produce text that reads back as the empty
 string, a different Document. A writer MUST therefore fail on a null leaf with
 `write.unsupported-value`, unconditionally and not only under `strict`, at the
