@@ -102,8 +102,12 @@ repeated leaf is reported once per occurrence, each indexed
 (`$.r.d[0]`, `$.r.d[1]`, [E-10](../08-conformance-and-errors.md#84-paths)).
 An integer leaf read from XML under a schema is pretyped, and the digit limit
 binds that route: a leaf typed `integer` with more digits than the limit is
-refused with `document.limit.int-digits` at the leaf's path
-([E-4a](../08-conformance-and-errors.md#832-document-building-and-limits)).
+refused with `document.limit.int-digits` at the leaf's path (`$.r.n` for
+`<r><n>…</n></r>`, indexed for a repeated leaf), in the library and in a
+command-line `materialize` alike
+([E-4a](../08-conformance-and-errors.md#832-document-building-and-limits),
+which states it with a worked case; no vector can check it, because the `parse`
+driver takes no schema, so it is implemented from the text).
 
 **Attributes and namespace prefixes are dropped, and the drop MUST be
 reported** ([E-5](../08-conformance-and-errors.md#838-format-codec-adjustments)). `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the

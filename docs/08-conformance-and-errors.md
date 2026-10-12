@@ -200,7 +200,19 @@ Document path of that leaf, the diagnostic the OML reader gives for the same
 Document. It is not left a string for materialization to reject as
 `materialize.inexact-conversion`, and it is not an uncoded failure. The digits
 counted are those of the value ([D-28](02-document-model.md#24-safety-limits)),
-as on every other route. `document.limit.alias-expansion` and `document.limit.expanded-size` are
+as on every other route. **Worked, and prose only: no vector pins this**, since
+the `parse` driver takes no schema and `materialize` takes a Document, so a
+port implements it from this text. Under the schema `record R { "n": integer }`,
+`record Root { "r": R }`, `root Root` (the shape of
+[the XML worked example](formats/xml.md#worked-example): the document element is
+a field of the root record), the document `<r><n>` followed by 4 301 digits and
+`</n></r>` is refused with `document.limit.int-digits` at **`$.r.n`**; if `n`
+repeats, each occurrence over the limit is at its indexed path (`$.r.n[0]`,
+`$.r.n[1]`, [E-10](#84-paths)). The path is the leaf's, never `$` and never a
+text position, and the code is never `materialize.inexact-conversion`. The
+check runs whenever the schema types the leaf as `integer`, in the library and
+in a command-line `materialize` alike, and the limit is the configured digit
+limit (D-9), not a separate one for XML. `document.limit.alias-expansion` and `document.limit.expanded-size` are
 different in reach, not in kind: per
 [D-18](02-document-model.md#241-bounding-alias-expansion) and D-22 they are
 raised only by a codec for a format that has an anchor/reference mechanism —
