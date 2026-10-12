@@ -1,0 +1,17 @@
+{
+  "vectors": [
+    {
+      "name": "osd-grammar/lone-cr/osd-ws-admits-a-lone-cr",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse_schema",
+      "purpose": "edge-case",
+      "input": {
+        "text": "record R {\r    \"a\": string,\r}\rroot R\r"
+      },
+      "expect": {
+        "ok": true
+      },
+      "comment": "E-29: OSD's `ws` admits CR, so a schema separated only by lone CRs is accepted; only OML rejects a lone CR."
+    }
+  ]
+}

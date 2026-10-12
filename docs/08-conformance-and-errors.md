@@ -587,10 +587,18 @@ Document path to descend into. The format is `line:col`, both 1-based:
   `CR` is not a line break in either grammar — OML's `newline` does not admit it
   and OSD's `ws` treats it as ordinary whitespace, with comments running to the
   next `LF` in both — so it never advances `line`, and where a grammar admits it
-  at all it is one code point of the column like any other character. **What
-  is not specified** is which position an implementation reports for a lone
-  `CR` where OML rejects it, the `CR` itself or the character after it; the
-  ports differ ("Open, unpinned behaviours", §9.4), and this section does not choose.
+  at all it is one code point of the column like any other character.
+  **Where OML rejects a lone `CR` — outside a string and outside a comment — it
+  is `parse.unexpected-token` at the `CR` itself.** The `CR` is not whitespace
+  in OML (the grammar's `hspace` admits space and tab only) and not a `newline`, so
+  it can begin no token: a reader MUST NOT treat it as horizontal space, MUST
+  NOT let it end a comment (a `#` comment runs to the next `LF`, so a lone `CR`
+  inside one is comment text), and MUST report the position of the `CR`, not of
+  the character after it. `a: 1`, `CR`, `}` is therefore `parse.unexpected-token`
+  at `1:5`, and a leading `CR` is the same code at `1:1`. A `CR` inside a string
+  stays `parse.control-character`, positioned as any control character in a
+  string is ([E-23](#84-paths)), and `CRLF` stays one line break.
+  `oml-grammar/lone-cr/*` pins these; OSD, whose `ws` admits `CR`, is unchanged.
 - The origin is the text the grammar sees: a leading `U+FEFF` that
   [D-15](02-document-model.md#25-encoding) strips is not counted, which is what
   D-21's "computed on the text that remains" already says.

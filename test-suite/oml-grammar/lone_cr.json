@@ -1,0 +1,227 @@
+{
+  "vectors": [
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-before-closing-brace-is-unexpected-token-at-the-cr",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1\r}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:5",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "E-29: `a: 1`, a lone CR, `}`. The CR is not whitespace and not a newline, so it begins no token; the error is at the CR itself (1:5), not at the character after it (1:6), and it is unexpected-token, not trailing-content."
+    },
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-after-colon",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a:\r1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:3",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "E-29: a lone CR where a value is expected is not horizontal space and not a line break."
+    },
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-between-edges",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1\rb: 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:5",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "E-29: a lone CR does not separate two edges; only LF, CRLF and `;` do."
+    },
+    {
+      "name": "oml-grammar/lone-cr/leading-lone-cr",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "\ra: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "E-29: a lone CR at the very start of the document is rejected at 1:1."
+    },
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-does-not-advance-the-line",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1\nb: 2\r}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:5",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "E-29: the CR is one column of line 2 and does not start line 3."
+    },
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-after-a-comment-line-break",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "# c\n\ra: 1\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.unexpected-token"
+          }
+        ]
+      },
+      "comment": "E-29: a lone CR on a line of its own, after a comment's LF, is at 2:1."
+    },
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-in-string-is-control-character",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: \"x\ry\"\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.control-character"
+          }
+        ]
+      },
+      "comment": "E-29: a literal CR inside a string stays parse.control-character, positioned as any control character in a string is (the existing literal-control-character vector reports 1:4, the opening quote)."
+    },
+    {
+      "name": "oml-grammar/lone-cr/crlf-then-closing-brace-is-trailing-content",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1\r\n}\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "2:1",
+            "code": "parse.trailing-content"
+          }
+        ]
+      },
+      "comment": "E-29: CRLF is one line break, so the `}` is on line 2 and the document had already ended."
+    },
+    {
+      "name": "oml-grammar/lone-cr/lone-cr-inside-a-comment-is-comment-text",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1 # c\rb: }\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-29: a `#` comment runs to the next LF, so the CR and the `b: }` after it are comment text and the document is the one edge `a: 1`."
+    },
+    {
+      "name": "oml-grammar/lone-cr/crlf-line-breaks-are-accepted",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "a: 1\r\nb: 2\r\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ],
+            [
+              "b",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 2
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-29: CRLF is one line break; its CR belongs to the line it ends."
+    }
+  ]
+}
