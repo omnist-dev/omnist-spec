@@ -1,0 +1,1003 @@
+{
+  "vectors": [
+    {
+      "name": "validate/label-quoting/dotted-label-is-bracket-quoted",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a.b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a.b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a label holding a dot is quoted, so it cannot be mistaken for `b` inside `a`."
+    },
+    {
+      "name": "validate/label-quoting/bracketed-label-is-bracket-quoted",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "item[0]",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"item[0]\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a label that looks like an index is quoted."
+    },
+    {
+      "name": "validate/label-quoting/empty-label-is-bracket-quoted",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: the empty label is quoted; a bare form would print a dangling `$.`."
+    },
+    {
+      "name": "validate/label-quoting/double-quote-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "q\"x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"q\\\"x\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a double quote inside a quoted label is written `\\\"`."
+    },
+    {
+      "name": "validate/label-quoting/backslash-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\\b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\\\b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a backslash inside a quoted label is written `\\\\`."
+    },
+    {
+      "name": "validate/label-quoting/newline-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "l1\nl2",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"l1\\nl2\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a line feed is written `\\n`, so a path never carries a line break into a log."
+    },
+    {
+      "name": "validate/label-quoting/tab-and-carriage-return-use-short-escapes",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\tb\rc",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\tb\\rc\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: tab and carriage return use `\\t` and `\\r`."
+    },
+    {
+      "name": "validate/label-quoting/other-control-uses-lowercase-hex-escape",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\u001fb",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\u001fb\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36, C-14: U+001F is written `\\u001f`, lowercase hex, four digits."
+    },
+    {
+      "name": "validate/label-quoting/nul-uses-four-digit-escape",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\u0000b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\u0000b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: U+0000 is written `\\u0000`."
+    },
+    {
+      "name": "validate/label-quoting/del-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\u007fb",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\u007fb\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: DEL (U+007F) needs quoting and is written `\\u007f`."
+    },
+    {
+      "name": "validate/label-quoting/nel-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\u0085b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\u0085b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: NEL (U+0085) needs quoting and is written `\\u0085`."
+    },
+    {
+      "name": "validate/label-quoting/line-separator-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\u2028b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\u2028b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: LS (U+2028) needs quoting and is written `\\u2028`."
+    },
+    {
+      "name": "validate/label-quoting/paragraph-separator-is-escaped",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a\u2029b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a\\u2029b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: PS (U+2029) needs quoting and is written `\\u2029`."
+    },
+    {
+      "name": "validate/label-quoting/non-ascii-in-quoted-label-is-literal",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "\u00e9.\u00fc",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"\u00e9.\u00fc\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: characters other than the listed ones, non-ASCII included, stay literal inside the quotes."
+    },
+    {
+      "name": "validate/label-quoting/space-label-stays-bare",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a b",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a space does not need quoting, so the common form is unchanged."
+    },
+    {
+      "name": "validate/label-quoting/dollar-label-stays-bare",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "$",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.$",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: `$` does not need quoting."
+    },
+    {
+      "name": "validate/label-quoting/digit-label-stays-bare",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "0",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.0",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a numeric label does not need quoting; only brackets mean an index."
+    },
+    {
+      "name": "validate/label-quoting/non-ascii-label-stays-bare",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "caf\u00e9",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.caf\u00e9",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: non-ASCII text outside the listed characters is bare."
+    },
+    {
+      "name": "validate/label-quoting/hyphen-and-underscore-stay-bare",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "edge-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "x",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "ok"
+                }
+              }
+            ],
+            [
+              "a-b_c",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a-b_c",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: ordinary punctuation other than the listed characters is bare."
+    },
+    {
+      "name": "validate/label-quoting/nested-quoted-segment-keeps-the-dot-before-bare-labels",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Inner {\n    \"k\" [0,1]: string,\n}\nrecord R {\n    \"a\" [0,1]: Inner,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b.c",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "v"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a[\"b.c\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: a quoted segment follows a bare one with no dot; the bare path is `$.a.b.c`."
+    },
+    {
+      "name": "validate/label-quoting/dotted-label-and-nesting-no-longer-collide",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Inner {\n    \"k\" [0,1]: string,\n}\nrecord R {\n    \"a\" [0,1]: Inner,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "v"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "a.b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "w"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a.b",
+            "code": "validate.unexpected-field"
+          },
+          {
+            "path": "$[\"a.b\"]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36: `b` inside `a` is `$.a.b`; the label `a.b` beside `a` is `$[\"a.b\"]`. Before E-36 both were `$.a.b`."
+    },
+    {
+      "name": "validate/label-quoting/repeated-quoted-label-is-indexed",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a.b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ],
+            [
+              "a.b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "w"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a.b\"][0]",
+            "code": "validate.unexpected-field"
+          },
+          {
+            "path": "$[\"a.b\"][1]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36 and E-10: the occurrence index follows the quoted segment."
+    },
+    {
+      "name": "validate/label-quoting/repeated-bare-label-still-indexed",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record R {\n    \"x\" [0,1]: string,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "v"
+                }
+              }
+            ],
+            [
+              "a b",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "w"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$.a b[0]",
+            "code": "validate.unexpected-field"
+          },
+          {
+            "path": "$.a b[1]",
+            "code": "validate.unexpected-field"
+          }
+        ]
+      },
+      "comment": "E-36 and E-10: a bare label with a space is still bare and indexed."
+    },
+    {
+      "name": "validate/label-quoting/declared-field-with-dot-reports-quoted-document-path",
+      "spec": "docs/08-conformance-and-errors.md#84-paths",
+      "operation": "validate",
+      "purpose": "error-case",
+      "input": {
+        "schema": "record Inner {\n    \"n\": integer,\n}\nrecord R {\n    \"a.b\": Inner,\n}\nroot R\n",
+        "document": {
+          "edges": [
+            [
+              "a.b",
+              {
+                "edges": [
+                  [
+                    "n",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "x"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "$[\"a.b\"].n",
+            "code": "validate.type-mismatch"
+          }
+        ]
+      },
+      "comment": "E-36: a declared field whose label needs quoting is quoted in the Document path of a diagnostic beneath it."
+    }
+  ]
+}

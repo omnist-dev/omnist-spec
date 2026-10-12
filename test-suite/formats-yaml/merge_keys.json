@@ -1,0 +1,296 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/merge-keys/repeated-merge-key-applies-every-time-and-the-earlier-wins",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a {x: 1, k: a}\nb: &b {y: 2, k: b}\nc:\n  <<: *a\n  <<: *b\n  z: 3\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "a"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "b",
+              {
+                "edges": [
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "b"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "c",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "a"
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ],
+                  [
+                    "z",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 3
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-12: an unquoted `<<` is a merge instruction, not a key, so writing it twice is not a duplicate-key error. Both merges apply in order; `k` is supplied by both and the earlier one (`a`) wins."
+    },
+    {
+      "name": "formats-yaml/merge-keys/merge-key-after-an-explicit-key-still-contributes-first",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a {x: 1, k: a}\nc:\n  p: 0\n  <<: *a\n  k: own\n  q: 9\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "a"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "c",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "k",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "own"
+                      }
+                    }
+                  ],
+                  [
+                    "p",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 0
+                      }
+                    }
+                  ],
+                  [
+                    "q",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 9
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-12 and the YAML merge order: merged entries come before the mapping's own entries wherever the `<<` is written, and the mapping's own value wins the collision at the merged key's position."
+    },
+    {
+      "name": "formats-yaml/merge-keys/repeated-merge-key-with-sequence-values",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a {x: 1}\nb: &b {y: 2}\nc:\n  <<: [*a]\n  <<: [*b]\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "b",
+              {
+                "edges": [
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "c",
+              {
+                "edges": [
+                  [
+                    "x",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 1
+                      }
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "scalar": {
+                        "kind": "integer",
+                        "value": 2
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-12: the repeated `<<` rule holds when each value is a sequence of aliases."
+    },
+    {
+      "name": "formats-yaml/merge-keys/quoted-merge-key-written-twice-is-a-repeated-key",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: &a {x: 1}\nc:\n  \"<<\": 1\n  \"<<\": 2\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-12, D-27: a quoted `<<` is an ordinary key, so writing it twice is a duplicate key and the read fails."
+    }
+  ]
+}

@@ -3,6 +3,62 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.35.0-beta (2026-10-12)
+
+**Normative (minor)** - the nine rulings on the audit's remaining issues
+([#142](https://github.com/omnist-dev/omnist-spec/issues/142),
+[#144](https://github.com/omnist-dev/omnist-spec/issues/144),
+[#149](https://github.com/omnist-dev/omnist-spec/issues/149),
+[#150](https://github.com/omnist-dev/omnist-spec/issues/150),
+[#153](https://github.com/omnist-dev/omnist-spec/issues/153),
+[#154](https://github.com/omnist-dev/omnist-spec/issues/154),
+[#156](https://github.com/omnist-dev/omnist-spec/issues/156),
+[#157](https://github.com/omnist-dev/omnist-spec/issues/157)) and the temporal
+writers. The suite grows from 522 to **731** vectors. No new diagnostic code:
+every ruling uses a registered one. OSD-OML is untouched.
+
+- **Document paths (#144), E-36 (new).** A label that is empty or holds `.` `[`
+  `]` `"` `\`, a control character, U+007F, U+0085, U+2028 or U+2029 is written
+  bracket-quoted in a Document path (`$["a.b"]`), with `\"`, `\\`, `\n`, `\r`,
+  `\t` and lowercase `\u00xx` as the only escapes; every other label stays bare.
+  Schema paths are unchanged.
+- **OML canonical output (#150), OML-19 and OML-30 (new).** OML-19's
+  byte-identical promise now excludes the spelling of number and temporal
+  tokens and the final line terminator; OML-30 lists what is pinned (order,
+  layout, labels, escapes, compact mode, keywords, integers, `nan`, `inf`,
+  `-inf`) and says a negative zero is written `-0.0`.
+- **XML (#153), C-15 and C-16 (new).** An `encoding=` declaration is ignored and
+  D-14 decides the encoding; a character outside XML 1.0 `Char`, and a numeric
+  character reference that is malformed or names such a character, is
+  `parse.codec-syntax`; entities are decoded once (`&amp;#65;` is `&#65;`).
+- **E-18 (#154).** A whitespace-only string leaf falls inside the harness's
+  stripped gap, so an XML `write` vector MUST NOT contain one (`check_vectors`
+  checks it) and the read side is pinned with `parse` vectors.
+- **E-29 (#156).** A lone CR outside a string and a comment is
+  `parse.unexpected-token` at the CR itself.
+- **Tooling (#149).** `check_rule_coverage` now fails a normative paragraph in
+  `formats/*.md`, the porting guide, the conformance harness or the glossary
+  that cites no rule; seven paragraphs with no owning rule are listed with a
+  reason. The docs toolchain pins were already in place.
+- **XML pretyping digit limit (#142).** Stated with a worked case (`$.r.n`) in
+  E-4a and `formats/xml.md`; prose only, no vector.
+- **Leftovers of #157.** C-12 (a repeated or late `<<` merges every time; a
+  repeated quoted `"<<"` is a duplicate), C-17 (new: YAML integer and float
+  spellings are YAML 1.1's, as PyYAML's `SafeLoader` resolves them), D-28
+  (leading zeros and sexagesimal groups), D-29 (underflow and `-0.0` outside
+  JSON), C-14 (YAML escape form: `\xXX` below U+0100, `\uXXXX` above, lowercase).
+  DIV-5 stays.
+- **Writing temporals, E-37 (new).** A writer never alters a temporal value,
+  always writes its seconds and the offset as held, uses a native literal where
+  one is exact and otherwise writes the ISO-8601 string and reports
+  `format.temporal-stringified` (JSON and XML always, a TOML `time` with an
+  offset, a YAML `time`).
+- **Runner contract.** No new input field or driver. Runners must report the
+  quoted path of E-36 for a `validate` diagnostic, and `check_vectors` gained
+  the E-18 lint. Vectors: 209 more than v0.34.0-beta (net), in 19 new files.
+- **Ledger.** `DIV-35` to `DIV-42` record the port divergences these vectors
+  and rules expose; the lone-CR note leaves the unpinned list.
+
 ## v0.34.0-beta (2026-10-11)
 
 **Normative (minor)** - the audit's batch 3a and 3b and the decisions on what

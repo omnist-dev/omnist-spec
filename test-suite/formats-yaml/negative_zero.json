@@ -1,0 +1,31 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/negative-zero/yaml-writes-negative-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: -0.0\n"
+      },
+      "comment": "D-29: a YAML writer keeps the sign of a negative zero."
+    }
+  ]
+}

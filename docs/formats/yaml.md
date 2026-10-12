@@ -56,7 +56,7 @@ svc:
 ```
 
 reads `svc` as the three edges `region`, `retries`, `name`, in that order.
-Source order is normative because it is the only order the written text
+Source order is normative ([D-1](../02-document-model.md#23-structural-invariants)) because it is the only order the written text
 explains. Some YAML libraries flatten a merge sequence in *reverse* —
 PyYAML's constructor does, which is how the reference implementation came to
 produce `retries, region, name` — and a codec built on one of those MUST
@@ -142,7 +142,10 @@ integer instead, not a `time` (see the sharp edge below).
 `12:00:00` resolves to the **integer** 43200 — sexagesimal, twelve hours in
 seconds. That is YAML's behavior, not a choice Omnist makes, and there is no
 read-side workaround: by the time the value reaches Omnist it is already an
-integer. Quote it.
+integer. Quote it. A writer does: a `time` is written as a double-quoted
+ISO-8601 string and reported with `format.temporal-stringified`, so it reads
+back as a string, never as an integer or a float
+([E-37](../08-conformance-and-errors.md#838-format-codec-adjustments)).
 
 **A second sharp edge, real enough to have a name: the "Norway problem."**
 YAML 1.1's core schema resolves `on`/`off`/`yes`/`no`/`true`/`false` (in
@@ -172,6 +175,13 @@ Norway-problem case — confirmed live for `n`/`N`/`y`/`Y` in both key and
 value position. Don't assume the full YAML 1.1 alias list transfers; only
 `on`/`off`/`yes`/`no`/`true`/`false` (case variants included) resolve as
 booleans.
+
+**Integer and float spellings are YAML 1.1's core schema, as PyYAML's default
+`SafeLoader` resolves it** ([C-17](../07-codecs-and-deserialization.md#71-two-stages)):
+`0x1F`, `0b101`, `1_000`, `010` (octal, 8), `190:20:30` and `1:30.5` resolve,
+and `0o17`, `08`, `0:5`, `1e3` and `1.0e3` stay strings. A repeated `<<` merges
+every time it is written, and a `<<` after an explicit key still merges first
+([C-12](../07-codecs-and-deserialization.md#71-two-stages)).
 
 **Interleaving is lost on write**, as in JSON: same-label edges group into one
 key regardless of position.

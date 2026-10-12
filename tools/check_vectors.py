@@ -230,6 +230,43 @@ def check_write_flags(rel: str, name: str, vec: dict) -> list[str]:
     return errors
 
 
+def whitespace_only_strings(node: object, path: str = "$") -> list[str]:
+    """Paths of the non-empty, whitespace-only string scalars in a canonical
+    Document (8.5.4). U+FEFF is counted because JavaScript's `\\s` matches it
+    and Python's `str.isspace` does not."""
+    found: list[str] = []
+    if not isinstance(node, dict):
+        return found
+    scalar = node.get("scalar")
+    if isinstance(scalar, dict):
+        value = scalar.get("value")
+        if (scalar.get("kind") == "string" and isinstance(value, str)
+                and value != ""
+                and all(c.isspace() or c == "﻿" for c in value)):
+            found.append(path)
+        return found
+    for edge in node.get("edges") or []:
+        if isinstance(edge, list) and len(edge) == 2:
+            found.extend(whitespace_only_strings(edge[1], f"{path}.{edge[0]}"))
+    return found
+
+
+def check_xml_write_whitespace(rel: str, name: str, vec: dict) -> list[str]:
+    """E-18: an XML `write` vector MUST NOT contain a whitespace-only string
+    leaf. The harness strips whitespace between `>` and `<` from both texts, so
+    `<a>  </a>` and `<a></a>` compare equal and the vector would pin nothing
+    (the read side is pinned by `parse` vectors instead)."""
+    if vec.get("operation") != "write":
+        return []
+    inp = vec.get("input")
+    if not isinstance(inp, dict) or inp.get("format") != "xml":
+        return []
+    return [f"{rel}: {name!r} writes a whitespace-only string leaf at {p} "
+            f"as XML -- E-18's comparison strips it; pin the read side with "
+            f"a 'parse' vector instead"
+            for p in whitespace_only_strings(inp.get("document"))]
+
+
 OSD_OML_TEXT_OPERATIONS = {"parse_schema_oml", "write_schema_oml"}
 
 
@@ -571,6 +608,7 @@ def main() -> int:
             errors.extend(check_path_placeholder(str(rel), name, vec))
             errors.extend(check_oml_brace_commas(str(rel), name, vec))
             errors.extend(check_write_flags(str(rel), name, vec))
+            errors.extend(check_xml_write_whitespace(str(rel), name, vec))
 
     if errors:
         for err in errors:
@@ -588,7 +626,7 @@ def main() -> int:
         f"E-32 allows it, no comma between braced edges in OSD-OML texts, "
         f"operation on the Operations Reference page (E-15), purpose in "
         f"E-16's set, spec anchors that resolve, input/expect keys per "
-        f"8.5.3."
+        f"8.5.3, no whitespace-only string leaf in an XML write vector (E-18)."
     )
     keys = ", ".join(f"{k}: {n}" for k, n in sorted(declared_keys.items()))
     print(f"vectors per declared-limit key: {keys}; vectors using the "

@@ -200,7 +200,19 @@ Document path of that leaf, the diagnostic the OML reader gives for the same
 Document. It is not left a string for materialization to reject as
 `materialize.inexact-conversion`, and it is not an uncoded failure. The digits
 counted are those of the value ([D-28](02-document-model.md#24-safety-limits)),
-as on every other route. `document.limit.alias-expansion` and `document.limit.expanded-size` are
+as on every other route. **Worked, and prose only: no vector pins this**, since
+the `parse` driver takes no schema and `materialize` takes a Document, so a
+port implements it from this text. Under the schema `record R { "n": integer }`,
+`record Root { "r": R }`, `root Root` (the shape of
+[the XML worked example](formats/xml.md#worked-example): the document element is
+a field of the root record), the document `<r><n>` followed by 4 301 digits and
+`</n></r>` is refused with `document.limit.int-digits` at **`$.r.n`**; if `n`
+repeats, each occurrence over the limit is at its indexed path (`$.r.n[0]`,
+`$.r.n[1]`, [E-10](#84-paths)). The path is the leaf's, never `$` and never a
+text position, and the code is never `materialize.inexact-conversion`. The
+check runs whenever the schema types the leaf as `integer`, in the library and
+in a command-line `materialize` alike, and the limit is the configured digit
+limit (D-9), not a separate one for XML. `document.limit.alias-expansion` and `document.limit.expanded-size` are
 different in reach, not in kind: per
 [D-18](02-document-model.md#241-bounding-alias-expansion) and D-22 they are
 raised only by a codec for a format that has an anchor/reference mechanism —
@@ -359,7 +371,7 @@ they describe occurs, with a conformance vector for each. The same holds for
 `format.value-stringified`: a writer MUST emit it wherever a non-string scalar
 is written as text, once per leaf, at the Document path of the leaf (indexed per
 [E-10](#84-paths)); `formats-xml/stringified/*` pins it. **The same holds for
-`format.temporal-stringified` in XML**: an XML writer MUST emit it, once per
+`format.temporal-stringified` in XML** (E-37 generalises it to every format that writes a temporal as a string): an XML writer MUST emit it, once per
 leaf and at the same path, wherever a `date`, `time` or `datetime` leaf is
 written as its ISO-8601 text (`<d>2024-01-15</d>`), and MUST NOT also emit
 `format.value-stringified` for that leaf: a leaf takes one of the two codes,
@@ -465,6 +477,57 @@ overrides its default scalar style for a character that YAML 1.1 consumers
 fold, which a caller auditing the output wants to see. It is a warning, not a loss. How the other writers treat U+0085, and whether they report
 the code, is not decided here.
 
+**E-37. A writer never alters a temporal value, always writes its seconds,
+and stringifies, with `format.temporal-stringified`, where the format has no
+exact literal.** A `date`, `time` or `datetime` ([§2.2.1](02-document-model.md#221-scalar-kinds))
+is written in every format by these rules:
+
+1. **The value is never altered.** A writer MUST NOT convert a `datetime` or a
+   `time` to UTC or to any other offset, drop or add an offset, drop or round
+   a fractional second, or change the date. `2024-01-15T12:00:00+01:00` is
+   written with `+01:00` and the clock reading `12:00:00`, not as
+   `2024-01-15T11:00:00` or `…Z`.
+2. **The seconds are always written.** A `time` or `datetime` is written with
+   its seconds field in every format that spells them: a value read from OML's
+   `12:00`, which §4.2.4 admits, is written as `12:00:00`, never `12:00`. The
+   offset is written as the value holds it (`+01:00`), after the seconds and any
+   fraction. How many digits a fractional second is written with is not pinned
+   ([OML-30](04-oml-grammar.md#49-canonical-output)), but a writer MUST write
+   every digit the value holds, so a fraction of six digits with a non-zero last
+   digit has one spelling.
+3. **A native literal is used where one holds the value exactly.** OML has
+   one for all three kinds. TOML has one for a `date`, a `time` without an
+   offset (local time), a `datetime` without an offset (local date-time) and a
+   `datetime` with an offset (offset date-time), written in its ISO-8601
+   spelling with the `T` separator (`2024-01-15T12:00:00+01:00`). YAML has one for
+   a `date` and for a `datetime`, written the same way, with the `T` separator
+   and no quotes, the form YAML 1.1's timestamp resolves.
+4. **Everywhere else the writer writes the value's ISO-8601 text as a string
+   and reports `format.temporal-stringified`**, a warning, once per leaf at the
+   Document path of the leaf indexed per [E-10](#84-paths), and does not fail
+   (the write succeeds, the value is intact). That is: every temporal in
+   **JSON** and in **XML** (E-5), a `time` **with an offset** in **TOML**
+   (TOML has no offset time), and every `time` in **YAML** (YAML 1.1 has no
+   time-of-day type, and an unquoted `12:00:00` would be read as a sexagesimal
+   integer and `12:00:00.5` as a float). A string TOML or YAML writes here is
+   double-quoted, as E-34 writes its YAML strings (`"12:00:00+01:00"`). A
+   writer MUST NOT instead fail, crash, drop the offset, or write a literal its
+   target grammar would read as another value.
+
+The spelling pins of rule 3 and rule 4 (the `T` separator, double quotes) exist
+only so that `write` vectors are byte-comparable: a reader accepts the
+equivalent spellings (RFC 3339's space separator, YAML single quotes). **What
+"the same value" means here** is the clock reading: an omitted seconds field is
+`00`, trailing zeros of a fraction are insignificant, and the offset is kept;
+whether `Z` and `+00:00` are the same offset is not specified.
+
+Rule 4 generalises E-5, which stated the XML case, and E-37 does not touch
+what a *reader* does with such a string: it reads it back as a string, which is
+what the code warns of. The suite pins this with `write` vectors under
+`formats-*/temporal-writing/*` and `formats-oml/temporal/*`, using values with
+seconds, an offset and a six-digit fraction so that every writer's spelling of
+each is forced.
+
 ### 8.3.9 `write.*`
 
 | Code | Raised when |
@@ -483,8 +546,9 @@ missing was anyone saying OSD is one of the formats that clause ranges over.
 [OSD-16](05-osd-grammar.md#59-canonical-output) applies the same rule, at the
 same path, to a field of `max = 0`.
 The `path` is the Schema path of the **record** holding the unwritable field
-— `R`, not `R.<label>` — because §8.4 gives no way to quote a label inside a
-path and the label here is precisely the thing with no spelling; putting the
+— `R`, not `R.<label>` — because a schema path has no way to quote a label (E-36
+quotes Document-path labels only) and the label here is precisely the thing with
+no spelling; putting the
 byte in a byte-compared path would restate the problem rather than report
 it.
 
@@ -515,6 +579,38 @@ paths as `$.item`, and the same label occurring twice paths as `$.item[0]` and
 path, an undeclared field's `unexpected-field` included. A cardinality
 diagnostic is at the parent node's path (§3.6), so it carries no index of its
 own.
+
+**E-36. A label that would make a Document path ambiguous or unsafe to print
+is written bracket-quoted.** A label is any Unicode string (§2.2.2), but the
+path grammar above spends `.`, `[` and `]` as punctuation, so a raw label could
+make two different edges print the same path (`b` inside `a` and `a.b` beside
+it both printed `$.a.b`), could pass for an index (`item[0]`), and could carry a
+line break into a log. A label segment is therefore written one of two ways,
+chosen by the label alone:
+
+- **Bare, as `.label`**, for every label that does not need quoting. This is
+  the form every example above uses, and it is unchanged: a label such as
+  `name`, `a b`, `$`, `é` or `0` stays bare.
+- **Quoted, as `["label"]`**, with no dot before the bracket, for a label that
+  *needs quoting*: one that is **empty**, or that contains any of `.` `[` `]`
+  `"` `\`, or any control character (U+0000 to U+001F), U+007F, U+0085 (NEL),
+  U+2028 (LS) or U+2029 (PS). The label sits between double quotes with these
+  escapes and no others: `\"` for `"`, `\\` for `\`, `\n`, `\r` and `\t` for
+  those three characters, and `\u` followed by exactly four **lowercase**
+  hexadecimal digits ([C-14](07-codecs-and-deserialization.md#73-writing)) for
+  every other control character, U+007F, U+0085, U+2028 and U+2029 (`\u0000`,
+  `\u001f`, `\u007f`, `\u0085`). Every other character, including `.`, `[`,
+  `]` and all non-ASCII text, is written as it is. Each label has exactly one
+  spelling.
+
+An E-10 occurrence index follows the segment in either form (`$["a.b"][0]`,
+`$.item[1]`), and a quoted segment may stand wherever a bare one may
+(`$.order["a.b"].sku`, `$[""]`). A label that is not valid UTF-8 (a lone
+surrogate) has no path spelling and cannot occur in a path, as it cannot in a
+conformance vector. **Schema paths are not affected**: `RecordName.label` keeps
+the raw label, which is why E-26 reports an unwritable field at the record's
+path. The suite pins this rule with `validate` vectors
+(`validate/label-quoting/*`) that report an undeclared field at a quoted path.
 
 **Schema paths** are `RecordName` for a record-level diagnostic and
 `RecordName.label` for a field-level one.
@@ -554,10 +650,18 @@ Document path to descend into. The format is `line:col`, both 1-based:
   `CR` is not a line break in either grammar — OML's `newline` does not admit it
   and OSD's `ws` treats it as ordinary whitespace, with comments running to the
   next `LF` in both — so it never advances `line`, and where a grammar admits it
-  at all it is one code point of the column like any other character. **What
-  is not specified** is which position an implementation reports for a lone
-  `CR` where OML rejects it, the `CR` itself or the character after it; the
-  ports differ ("Open, unpinned behaviours", §9.4), and this section does not choose.
+  at all it is one code point of the column like any other character.
+  **Where OML rejects a lone `CR` — outside a string and outside a comment — it
+  is `parse.unexpected-token` at the `CR` itself.** The `CR` is not whitespace
+  in OML (the grammar's `hspace` admits space and tab only) and not a `newline`, so
+  it can begin no token: a reader MUST NOT treat it as horizontal space, MUST
+  NOT let it end a comment (a `#` comment runs to the next `LF`, so a lone `CR`
+  inside one is comment text), and MUST report the position of the `CR`, not of
+  the character after it. `a: 1`, `CR`, `}` is therefore `parse.unexpected-token`
+  at `1:5`, and a leading `CR` is the same code at `1:1`. A `CR` inside a double-quoted or multiline string
+  stays `parse.control-character`, positioned as any control character in a
+  string is ([E-23](#84-paths)), and `CRLF` stays one line break.
+  `oml-grammar/lone-cr/*` pins these; OSD, whose `ws` admits `CR`, is unchanged.
 - The origin is the text the grammar sees: a leading `U+FEFF` that
   [D-15](02-document-model.md#25-encoding) strips is not counted, which is what
   D-21's "computed on the text that remains" already says.
@@ -898,21 +1002,41 @@ and the XML format page (`docs/formats/xml.md`) both describe only the
 writers may legitimately disagree on this and both be correct. Before
 comparing a `write` vector's `text` against a target's actual output for
 XML, a harness MUST first strip whitespace that occurs strictly between `>`
-and `<` from both strings, then compare what remains. Whitespace inside
-actual element text content (the content between an element's own opening
-and closing tags, with no nested elements) MUST NOT be touched — that is
-data, not formatting, and stripping it would corrupt what's being compared.
+and `<` from both strings, then compare what remains. Whitespace in element
+text that has a non-whitespace character beside it (` x `, `a b`) is not
+strictly between `>` and `<` and is compared as written: that is data, not
+formatting.
 
-This is safe specifically because an omnist writer never produces XML with
-mixed content — the Document model (§2) gives every node either child
-edges or a single scalar value, never both at once, so an element's content
-is always either entirely sub-elements or entirely one text value, and
-"whitespace strictly between `>` and `<`" can only ever be inter-tag
-formatting, never a fragment of real text data. (General XML documents with
-mixed content don't have this guarantee, which is why this rule is scoped
-to XML vectors in this conformance suite, not stated as a general-purpose
-XML-comparison algorithm.) One reference implementation: strip via
-`text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
+E-18 is safe for everything except one case, because an omnist writer never
+produces XML with mixed content — the Document model (§2) gives every node
+either child edges or a single scalar value, never both at once, so an
+element's content is either entirely sub-elements or entirely one text value.
+The exception is a **whitespace-only string leaf**: `<a>  </a>` has
+whitespace strictly between `>` and `<`, so the strip removes it, and a
+harness following this rule cannot tell the string `"  "` from the empty
+string `""`. The earlier wording of this paragraph ("whitespace inside element
+text MUST NOT be touched") was therefore false for that leaf, and the rule is
+now stated as it holds:
+
+- **A `write` vector for XML MUST NOT contain a whitespace-only string leaf** (E-18):
+  a non-empty string made up only of whitespace, that is, of characters the
+  strip below removes: the characters for which Python's `str.isspace()` is true
+  (which include U+0009, U+000A, U+000D and U+0020), and U+FEFF, which JavaScript's
+  `\s` matches and Python's does not. The empty string is not
+  whitespace-only and is fine. `tools/check_vectors.py` checks this. The write
+  side of such a leaf is not pinned by any vector, and no port is relieved of
+  writing it faithfully.
+- **The read side is pinned instead.** A reader keeps the text of an element
+  that has no child elements exactly as written, whitespace included: `<a>  </a>`
+  reads as `(a, "  ")`, and an element holding only a line feed reads as the
+  one-character string. Whitespace between *child* elements is formatting and
+  is dropped. `parse` vectors in `formats-xml/whitespace` pin both
+  ([xml.md](formats/xml.md#model-mapping)).
+
+General XML documents with mixed content have no such guarantee, which is why
+this rule is scoped to XML vectors in this conformance suite, not stated as a
+general-purpose XML-comparison algorithm. One reference implementation: strip
+via `text.replace(/>\s+</g, "><")` (or each language's equivalent), then apply
 the existing outer-whitespace trim every `write` vector comparison already
 does.
 

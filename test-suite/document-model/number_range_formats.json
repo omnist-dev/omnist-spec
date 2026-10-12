@@ -1,0 +1,274 @@
+{
+  "vectors": [
+    {
+      "name": "document-model/number-range/oml-underflowing-literal-reads-as-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: 1e-999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: underflow reads as 0.0 in OML."
+    },
+    {
+      "name": "document-model/number-range/oml-negative-underflowing-literal-reads-as-negative-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: -1e-999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: underflow with a minus sign reads as -0.0 in OML."
+    },
+    {
+      "name": "document-model/number-range/toml-underflowing-literal-reads-as-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "a = 1e-999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: underflow reads as 0.0 in TOML; a reader must not refuse it."
+    },
+    {
+      "name": "document-model/number-range/toml-negative-underflowing-literal-reads-as-negative-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "a = -1e-999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: underflow with a minus sign reads as -0.0 in TOML."
+    },
+    {
+      "name": "document-model/number-range/yaml-underflowing-literal-reads-as-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1.0e-999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: underflow reads as 0.0 in YAML (1.0e-999 is a YAML 1.1 float, C-17)."
+    },
+    {
+      "name": "document-model/number-range/yaml-negative-underflowing-literal-reads-as-negative-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: -1.0e-999\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: underflow with a minus sign reads as -0.0 in YAML."
+    },
+    {
+      "name": "document-model/number-range/json-negative-zero-literal-keeps-its-sign",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": -0.0}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: -0.0 is a negative zero. (A parse comparison that treats -0.0 and 0.0 as equal cannot see the sign; the write vectors below can.)"
+    },
+    {
+      "name": "document-model/number-range/yaml-negative-zero-literal-keeps-its-sign",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: -0.0\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: -0.0 is a negative zero in YAML."
+    },
+    {
+      "name": "document-model/number-range/toml-negative-zero-literal-keeps-its-sign",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "toml",
+        "text": "a = -0.0\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: -0.0 is a negative zero in TOML."
+    },
+    {
+      "name": "document-model/number-range/oml-negative-zero-literal-keeps-its-sign",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "oml",
+        "text": "a: -0.0\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "D-29: -0.0 is a negative zero in OML."
+    }
+  ]
+}

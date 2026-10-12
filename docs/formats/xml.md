@@ -4,14 +4,28 @@
 
 Omnist does not read arbitrary XML. It reads a deliberately narrow subset —
 **data-XML** — and a conformant reader MUST reject anything outside it rather
-than ignore the unsupported construct.
+than ignore the unsupported construct
+([E-7](../08-conformance-and-errors.md#838-format-codec-adjustments)).
 
 **Supported.** Elements, text content, CDATA sections, comments, processing
 instructions, the XML declaration, attributes (dropped on read, reported via
 `format.attribute-dropped`), and namespace prefixes (dropped, reported via
 `format.namespace-dropped`).
 
-**Not supported.** Each of these MUST fail the read:
+**The declaration's `encoding=` is ignored, and the input is read as UTF-8.**
+Whatever encoding the declaration names, the bytes are decoded as
+[D-14](../02-document-model.md#25-encoding) says, so a declaration that claims
+`ISO-8859-1` neither refuses the document nor re-decodes it
+([C-15](../07-codecs-and-deserialization.md#71-two-stages)).
+
+**Characters and references are checked, and entities are decoded once.** A
+character outside XML 1.0's `Char`, and a numeric character reference that is
+malformed or names such a character (`&#0;`, `&#1;`, `&#xD800;`, `&#xFFFE;`,
+`&#x110000;`, `&#;`, `&#65`), is `parse.codec-syntax`, never dropped, kept as
+text or replaced; `&amp;#65;` reads as the text `&#65;`, not as `A`
+([C-16](../07-codecs-and-deserialization.md#71-two-stages)).
+
+**Not supported.** Each of these MUST fail the read ([E-7](../08-conformance-and-errors.md#838-format-codec-adjustments)):
 
 | Construct | Why it is out of profile |
 |---|---|
@@ -19,13 +33,13 @@ instructions, the XML declaration, attributes (dropped on read, reported via
 | An entity reference other than XML's five predefined (`&lt;` `&gt;` `&amp;` `&quot;` `&apos;`) | Its definition could only have come from a DTD, which is already refused |
 | Mixed content — text alongside child elements in one element | There is no Document shape for it: an edge's target is a value **or** a node, never both ([§2.3](../02-document-model.md#23-structural-invariants) D-4) |
 
-**Reject on sight, not on use.** A reader MUST fail when it encounters the
+**Reject on sight, not on use** ([E-7](../08-conformance-and-errors.md#838-format-codec-adjustments)). A reader MUST fail when it encounters the
 `DOCTYPE` declaration itself, not later when an entity defined by it is
 referenced. A document that declares entities and never uses them is still
 refused. This is what makes the rule testable and keeps the failure early and
 predictable rather than conditional on content.
 
-**These are refusals, not malformed input.** Every document above is
+**These are refusals, not malformed input** ([E-7](../08-conformance-and-errors.md#838-format-codec-adjustments)). Every document above is
 well-formed XML; Omnist is declining a feature. A reader MUST NOT report them
 with a code or message implying the input is invalid XML, because that sends
 the user looking for a defect in a file that has none.
@@ -60,7 +74,13 @@ formats, wrap the data under a single top-level key.
 
 **An empty element is the empty string, and XML has no `null`.** An element
 with no child elements is a string leaf holding its text, so `<a/>` and
-`<a></a>` both read as `(a,"")`. XML has no null token to write instead, and
+`<a></a>` both read as `(a,"")`. The text is kept exactly as written,
+whitespace included: `<a>  </a>` reads as `(a,"  ")`, and an element holding
+only a line feed as the one-character string. Whitespace between *child*
+elements is formatting and is dropped. The write side of a whitespace-only
+leaf cannot be pinned by a vector, because the harness comparison strips it
+([E-18](../08-conformance-and-errors.md#853-operation-drivers)), so the read
+side is pinned instead. XML has no null token to write instead, and
 writing a null leaf as `<a/>` would produce text that reads back as the empty
 string, a different Document. A writer MUST therefore fail on a null leaf with
 `write.unsupported-value`, unconditionally and not only under `strict`, at the
@@ -82,11 +102,15 @@ repeated leaf is reported once per occurrence, each indexed
 (`$.r.d[0]`, `$.r.d[1]`, [E-10](../08-conformance-and-errors.md#84-paths)).
 An integer leaf read from XML under a schema is pretyped, and the digit limit
 binds that route: a leaf typed `integer` with more digits than the limit is
-refused with `document.limit.int-digits` at the leaf's path
-([E-4a](../08-conformance-and-errors.md#832-document-building-and-limits)).
+refused with `document.limit.int-digits` at the leaf's path (`$.r.n` for
+`<r><n>…</n></r>`, indexed for a repeated leaf), in the library and in a
+command-line `materialize` alike
+([E-4a](../08-conformance-and-errors.md#832-document-building-and-limits),
+which states it with a worked case; no vector can check it, because the `parse`
+driver takes no schema, so it is implemented from the text).
 
 **Attributes and namespace prefixes are dropped, and the drop MUST be
-reported.** `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the
+reported** ([E-5](../08-conformance-and-errors.md#838-format-codec-adjustments)). `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the
 attribute is gone, and a reader MUST report `format.attribute-dropped`
 (at the element the attribute was lost from) when it does. A prefixed tag
 `<ns:b>` reads as the local name `b`, with the prefix and any namespace
@@ -189,7 +213,7 @@ is the authority on which implementations ship an XML codec and on what each
 one currently reports. This page deliberately states no per-port status of its
 own: a copy here can only go stale relative to the ledger, and did.
 
-Attribute and namespace-prefix drops MUST be reported via
+Attribute and namespace-prefix drops MUST be reported ([E-5](../08-conformance-and-errors.md#838-format-codec-adjustments)) via
 `format.attribute-dropped`/`format.namespace-dropped`
 ([§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments)),
 never silently.

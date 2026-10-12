@@ -1,0 +1,166 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/escapes/control-character-is-written-as-lowercase-x-escape",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u0001y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\x01y\"\n"
+      },
+      "comment": "C-14: a YAML writer escapes U+0001 as `\\x01`, not raw and not `\\u0001`."
+    },
+    {
+      "name": "formats-yaml/escapes/hex-digits-of-the-x-escape-are-lowercase",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u001fy"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\x1fy\"\n"
+      },
+      "comment": "C-14: U+001F is `\\x1f`, never `\\x1F`."
+    },
+    {
+      "name": "formats-yaml/escapes/delete-is-escaped",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u007fy"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\x7fy\"\n"
+      },
+      "comment": "C-14: U+007F is not printable in YAML 1.1 and is escaped as `\\x7f`."
+    },
+    {
+      "name": "formats-yaml/escapes/c1-control-uses-the-x-escape",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\u0080y"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\x80y\"\n"
+      },
+      "comment": "C-14: U+0080 is not printable in YAML 1.1 and is escaped as `\\x80`."
+    },
+    {
+      "name": "formats-yaml/escapes/noncharacter-ffff-uses-the-u-escape",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\uffffy"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\uffffy\"\n"
+      },
+      "comment": "C-14: U+FFFF is written `\\uffff`."
+    },
+    {
+      "name": "formats-yaml/escapes/noncharacter-uses-the-u-escape",
+      "spec": "docs/07-codecs-and-deserialization.md#73-writing",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "x\ufffey"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "a: \"x\\ufffey\"\n"
+      },
+      "comment": "C-14: from U+0100 up the escape is `\\uXXXX`, lowercase: U+FFFE is `\\ufffe`."
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "vectors": [
+    {
+      "name": "formats-xml/whitespace/spaces-only-element-reads-as-the-spaces",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a>  </a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "  "
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: an element with no child elements keeps its text as written. `<a>  </a>` is the two-space string, not the empty string. This is the case a write vector cannot pin, because the harness comparison strips whitespace between `>` and `<`."
+    },
+    {
+      "name": "formats-xml/whitespace/line-feed-only-element-reads-as-the-line-feed",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a>\n</a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "\n"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: a line feed is text, not formatting, in an element with no children."
+    },
+    {
+      "name": "formats-xml/whitespace/tab-only-element-reads-as-the-tab",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a>\t</a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "\t"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: a tab is text in an element with no children."
+    },
+    {
+      "name": "formats-xml/whitespace/mixed-whitespace-element-reads-unchanged",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a> \t\n </a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": " \t\n "
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: whitespace-only text is kept character for character."
+    },
+    {
+      "name": "formats-xml/whitespace/whitespace-beside-text-is-kept",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a>  x  </a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "  x  "
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: leading and trailing whitespace of a text leaf is data."
+    },
+    {
+      "name": "formats-xml/whitespace/whitespace-only-top-level-element",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<a>  </a>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "  "
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: the same holds for the document element itself."
+    },
+    {
+      "name": "formats-xml/whitespace/whitespace-only-repeated-elements",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a> </a><a>z</a><a>\n</a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": " "
+                      }
+                    }
+                  ],
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "z"
+                      }
+                    }
+                  ],
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "\n"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: every occurrence of a repeated element keeps its own text."
+    },
+    {
+      "name": "formats-xml/whitespace/whitespace-between-child-elements-is-dropped",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r>\n  <a>x</a>\n  <b>y</b>\n</r>\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "x"
+                      }
+                    }
+                  ],
+                  [
+                    "b",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "y"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: whitespace between child elements is formatting and is not text."
+    },
+    {
+      "name": "formats-xml/whitespace/whitespace-in-cdata-is-kept",
+      "spec": "docs/08-conformance-and-errors.md#853-operation-drivers",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "xml",
+        "text": "<r><a><![CDATA[  ]]></a></r>"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "r",
+              {
+                "edges": [
+                  [
+                    "a",
+                    {
+                      "scalar": {
+                        "kind": "string",
+                        "value": "  "
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "E-18: a CDATA section holding only spaces is the two-space string."
+    }
+  ]
+}

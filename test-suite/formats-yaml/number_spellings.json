@@ -1,0 +1,436 @@
+{
+  "vectors": [
+    {
+      "name": "formats-yaml/number-spellings/octal-with-0o-prefix-is-a-string",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 0o17\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "0o17"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: `0o17` is YAML 1.2's octal; YAML 1.1's core schema does not resolve it, so it is a string."
+    },
+    {
+      "name": "formats-yaml/number-spellings/eight-with-a-leading-zero-is-a-string",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 08\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "08"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: a leading zero makes a literal octal in YAML 1.1 and 8 is not an octal digit, so `08` is a string."
+    },
+    {
+      "name": "formats-yaml/number-spellings/zero-colon-five-is-a-string",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 0:5\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "0:5"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: a sexagesimal integer cannot start with 0."
+    },
+    {
+      "name": "formats-yaml/number-spellings/sexagesimal-float",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1:30.5\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 90.5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: a sexagesimal float, 1*60 + 30.5."
+    },
+    {
+      "name": "formats-yaml/number-spellings/sexagesimal-integer",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1:30\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 90
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: a sexagesimal integer, 1*60 + 30."
+    },
+    {
+      "name": "formats-yaml/number-spellings/exponent-without-a-point-is-a-string",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1e3\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "1e3"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: the YAML 1.1 float needs a point, so `1e3` is a string."
+    },
+    {
+      "name": "formats-yaml/number-spellings/exponent-without-a-sign-is-a-string",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1.0e3\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "1.0e3"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: the YAML 1.1 float exponent needs its sign, so `1.0e3` is a string."
+    },
+    {
+      "name": "formats-yaml/number-spellings/exponent-with-a-sign-is-a-number",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1.0e+3\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 1000.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: point and signed exponent resolve to a number."
+    },
+    {
+      "name": "formats-yaml/number-spellings/leading-zero-octal-is-an-integer",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 010\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 8
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: YAML 1.1's leading-zero octal."
+    },
+    {
+      "name": "formats-yaml/number-spellings/hexadecimal",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 0x1F\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 31
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: hexadecimal."
+    },
+    {
+      "name": "formats-yaml/number-spellings/negative-hexadecimal",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: -0x1F\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": -31
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: hexadecimal with a sign."
+    },
+    {
+      "name": "formats-yaml/number-spellings/binary",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 0b101\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: binary."
+    },
+    {
+      "name": "formats-yaml/number-spellings/underscored-decimal",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 1_000\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1000
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: digit-separating underscores."
+    },
+    {
+      "name": "formats-yaml/number-spellings/plus-sign",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: +1\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "integer",
+                  "value": 1
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: an explicit plus sign."
+    },
+    {
+      "name": "formats-yaml/number-spellings/leading-point",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: .5\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 0.5
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: a number may have no digits before the point."
+    },
+    {
+      "name": "formats-yaml/number-spellings/trailing-point",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "yaml",
+        "text": "a: 5.\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": 5.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-17: a number may have no digits after the point."
+    }
+  ]
+}

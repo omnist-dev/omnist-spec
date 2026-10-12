@@ -107,6 +107,20 @@ the mapping's own entry overrides the merged one, as
 defining a key twice is TOML's own rule, dotted keys and inline tables
 included.
 
+**The merge key is not a repeated key.** An unquoted, untagged `<<` is a merge
+instruction ([D-27](02-document-model.md#241-bounding-alias-expansion)), not a
+key, so a mapping that writes it more than once is not a C-12 repeat and is not
+rejected: **every `<<` applies**, in the order written, each contributing its
+entries as one merge does, and where two supply the same key the earlier one
+wins (`c: {<<: *a, <<: *b}` over `a: &a {x: 1, k: a}` and `b: &b {y: 2, k: b}`
+reads as `x`, `k = a`, `y`). **A `<<` written after an explicit key still
+contributes first**: merged entries come before the mapping's own entries
+wherever the `<<` stands, so `{p: 0, <<: *a, k: own, q: 9}` over
+`a: &a {x: 1, k: a}` reads as `x`, `k = own`, `p`, `q` (the order and the
+collision rule of [§ YAML](formats/yaml.md)). A *quoted* `"<<"`, or one tagged
+`!!str`, is an ordinary key, and writing it twice **is** a C-12 repeat and is
+rejected.
+
 **C-13. A YAML `!!pairs`, `!!omap` or `!!set` collection is refused.** A YAML
 input holding a node explicitly tagged `!!pairs`, `!!omap` or `!!set`
 (`tag:yaml.org,2002:pairs`, `:omap`, `:set`), whatever its content, is
@@ -121,6 +135,75 @@ shapes is needed to read a configuration file, so the rule removes the choice
 rather than making it. This rule is about those three tags only: every
 other tag keeps the reading it already has, and what an explicitly tagged `<<`
 is, is [D-27](02-document-model.md#241-bounding-alias-expansion)'s.
+
+**C-15. An XML `encoding=` declaration is ignored; D-14 decides the input
+encoding.** The XML declaration is part of the data-XML profile
+([formats/xml.md](formats/xml.md)), and its `encoding` pseudo-attribute is
+accepted whatever it names (`UTF-8`, `ISO-8859-1`, `UTF-16`, or a name that is
+no encoding at all) and changes nothing. The bytes are read as UTF-8, as
+[D-14](02-document-model.md#25-encoding) requires of every input: bytes that
+are not valid UTF-8 are `parse.invalid-encoding` at `1:1` even under a
+declaration that claims Latin-1 or UTF-16, and valid UTF-8 under such a
+declaration is read as UTF-8. A reader MUST NOT refuse a declaration for the
+encoding it names, and MUST NOT honour it by decoding the input another way: a
+mislabelled file is read as the UTF-8 it is or refused as the invalid bytes it
+holds, never silently re-decoded. The suite pins this with `bytes_hex` vectors.
+
+**C-16. XML text holds only XML 1.0 characters, character references are
+checked, and entities are decoded once.** XML 1.0's `Char` production admits
+U+0009, U+000A, U+000D, U+0020 to U+D7FF, U+E000 to U+FFFD and U+10000 to
+U+10FFFF, and nothing else. In an XML document, both of these are
+`parse.codec-syntax` (a text position, [E-31](08-conformance-and-errors.md#84-paths)):
+
+- **a character outside `Char`**, written directly in text, in a CDATA section or
+  anywhere else the document holds characters (U+0000 to U+0008, U+000B,
+  U+000C, U+000E to U+001F, U+FFFE and U+FFFF); and
+- **a numeric character reference that is malformed or names a code point
+  outside `Char`** (C-16): `&#` followed by decimal digits, or `&#x` (lowercase `x`)
+  followed by hexadecimal digits, and then `;`, with at least one digit.
+  `&#;`, `&#x;`, `&#65` without its `;`, `&#X41;` and a reference whose value
+  does not fit any integer type are malformed, and `&#0;`, `&#1;`, `&#xB;`, a
+  surrogate (`&#xD800;` to `&#xDFFF;`), `&#xFFFE;`, `&#xFFFF;` and `&#x110000;`
+  or above are outside `Char`. A reader MUST NOT drop such a reference, keep it
+  as literal text, replace it with U+FFFD, or fail with anything other than this
+  code, and it MUST NOT crash on one. A valid reference (`&#65;`, `&#x41;`,
+  `&#9;`, `&#x10FFFF;`) reads as the one character it names
+  ([E-8](08-conformance-and-errors.md#838-format-codec-adjustments) for the CR
+  that `&#13;` produces).
+
+**Entities are decoded exactly once.** The five predefined entities and the
+numeric references are replaced by the characters they stand for in a single
+pass, and the result is never scanned again: `&amp;#65;` reads as the six
+characters `&#65;`, not as `A`, and `&amp;lt;` as `&lt;`. The suite pins all of
+this with `parse` vectors (`formats-xml/encoding-and-references/*`), using the
+E-32 position placeholder for the syntax errors.
+
+**C-17. A YAML plain scalar is an integer or a number exactly where YAML 1.1's
+core schema, as PyYAML's default `SafeLoader` resolves it, says so.** The
+spellings that resolve, and the ones that do not, are:
+
+- **Integers**: decimal (`0`, or no leading zero: `10`, `+1`, `-5`), hexadecimal
+  `0x1F`, binary `0b101`, **leading-zero octal `010` (the value 8)**,
+  digit-separating underscores (`1_000`), and sexagesimal integers whose first
+  group starts with `1` to `9` and whose later groups are `0` to `59`
+  (`190:20:30`). The integer-digit limit counts the value
+  ([D-28](02-document-model.md#24-safety-limits)).
+- **Numbers**: a decimal point with digits on at least one side (`5.`, `.5`,
+  `1.5`), an exponent only when the mantissa has the point and the exponent has
+  a sign (`1.0e+3` is `1000.0`), a sexagesimal float (`1:30.5` is `90.5`), and
+  `.inf`, `-.inf` and `.nan`.
+- **Strings**: everything else that merely resembles a number, in particular
+  `0o17` (YAML 1.2's octal, not 1.1's), `08` and `09` (a leading zero makes
+  them octal, and they are not), `0:5` (a sexagesimal integer cannot start with
+  `0`), `1e3` (no point) and `1.0e3` (an exponent needs its sign).
+
+C-17 is the same stance [§ YAML](formats/yaml.md) takes on the boolean aliases
+(matching PyYAML's `SafeLoader` and not the fuller YAML 1.1 list): the
+implementations disagreed on every item above, one reading YAML 1.2 where
+another reads 1.1, and a Document must not depend on which parser read the text.
+A reader built on a library with a different core schema MUST adjust the
+result, not pass it through. TOML and JSON have their own number grammars and
+are not affected.
 
 ## 7.2 Materialization rules
 
@@ -367,7 +450,8 @@ Three points keep the rule narrow:
 - **The path is the Document path of the node holding the string.** For a
   value that is the leaf (`$.a`, `$.item[1]`, indexed per
   [E-10](08-conformance-and-errors.md#84-paths)). For a label it is the node
-  that holds the *edge*, not the edge: §8.4 has no way to quote a label, and
+  that holds the *edge*, not the edge: [E-36](08-conformance-and-errors.md#84-paths)
+  gives a label with no UTF-8 encoding no path spelling, and
   the label is precisely what has no encoding, so the field form would put the
   unwritable string into a byte-compared path, the same reasoning as
   OSD-14's record path. A string beneath an edge whose own label has no
@@ -409,9 +493,17 @@ lowercase, in every format that has the escape: U+001F is `\u001f` in an OML,
 JSON or TOML string, never `\u001F`
 ([OML-15](04-oml-grammar.md#45-strings) is this rule for OML). Two writers that
 disagree on the case write different bytes for one Document, and OML-19 and the
-`write` vectors compare bytes. The rule fixes the case of the digits and
-nothing else: which characters a format escapes, and whether it spells one
-with `\uXXXX` at all (YAML also has `\xXX`), stay the format's own. XML's
+`write` vectors compare bytes. The rule fixes the case of the digits and,
+for YAML, the escape form, and nothing else: which characters a format
+escapes stays the format's own. **A YAML writer that escapes a control
+character with no named YAML escape (not `\t`, `\n`, `\r`, `\v`, `\f`, `\b`, `\a`, `\e`, `\0`, `\N`) spells a code point below U+0100 as `\xXX` and one from U+0100 up (U+FFFE and U+FFFF, below) as
+`\uXXXX`, always with lowercase hex digits**: U+0001 is `\x01`, U+001F is
+`\x1f` and U+007F is `\x7f`, in a double-quoted scalar; never `\x1F` or
+`\u001f`. A YAML writer MUST escape the characters YAML 1.1 does not
+print, as PyYAML escapes them (U+0000 to U+0008, U+000B, U+000C, U+000E to
+U+001F, U+007F, U+0080 to U+009F except U+0085, and U+FFFE and U+FFFF), rather
+than write them raw; the last two are the ones the `\uXXXX` form is for,
+and U+0085 keeps its own escape (E-34). XML's
 numeric character references (`&#13;`, [E-8](08-conformance-and-errors.md#838-format-codec-adjustments))
 are decimal and out of scope.
 

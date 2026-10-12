@@ -1,0 +1,31 @@
+{
+  "vectors": [
+    {
+      "name": "formats-json/negative-zero/json-writes-negative-zero",
+      "spec": "docs/02-document-model.md#221-scalar-kinds",
+      "operation": "write",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": -0.0
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "text": "{\"a\": -0.0}"
+      },
+      "comment": "D-29, OML-30: a writer keeps the sign of a negative zero."
+    }
+  ]
+}

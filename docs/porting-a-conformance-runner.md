@@ -127,7 +127,7 @@ code-agnostic mode is the one permitted relaxation of the code, a bring-up aid
 whose results are not a conformance claim, and the run MUST say it was
 used.
 
-| `operation` | `expect` fields on success | What a runner MUST compare, and how |
+| `operation` | `expect` fields on success | What a runner MUST compare, and how ([E-17](08-conformance-and-errors.md#852-diagnostics-matching)) |
 |---|---|---|
 | `parse` | `ok`, `document`; `diagnostics` on the XML vectors that read a dropped attribute or namespace | `document`: Document equality, order-sensitive (§8.5.4, D-1/D-3). If the vector lists `diagnostics`, they are compared as a `(path, code)` set and an unlisted one is unexpected (§8.3.8, E-5, E-17 rule 3). |
 | `parse_schema` | `ok`; `schema` only when the vector pins round-trip fidelity | `schema` present: **`canonical`**, byte for byte (§8.5.3, §3.3/§5.9). Absent: acceptance only. |
@@ -148,7 +148,8 @@ used.
 **Read-side vectors** (`parse`, `parse_schema`, `parse_schema_oml`) take their
 source as `text` or as `bytes_hex`, exactly one (E-27; see the section below).
 
-**A trap specific to temporal scalars, found the hard way (omnist-spec#51).**
+**A trap specific to temporal scalars, found the hard way (omnist-spec#51;
+[D-5](02-document-model.md#23-structural-invariants)).**
 A vector's `expect.document` `value` field for a `date`/`time`/`datetime`
 scalar MUST already be written in your own format's canonical spelling — not
 just any string that happens to be semantically equivalent to the source
@@ -194,14 +195,14 @@ functionally identical.
 
 ## Reporting: skip is not failure, and every skip needs a reason
 
-[§8.5.5](08-conformance-and-errors.md#855-reporting) is normative here, not
+[§8.5.5](08-conformance-and-errors.md#855-reporting) (E-20 to E-22) is normative here, not
 just a suggestion: your CI **MUST** fail the build on any nonzero `fail`
 count, and **MUST NOT** fail merely because `skip` is nonzero — provided
 every skip cites a real reason. Two categories:
 
 - **Not yet implemented.** Temporary; expected to become a `pass` once the
   work lands. No ledger entry required on its own.
-- **Documented divergence.** Your target language or design genuinely
+- **Documented divergence** ([E-21](08-conformance-and-errors.md#855-reporting)). Your target language or design genuinely
   cannot provide something a vector depends on — not a missing feature, a
   structural limit. This requires a numbered entry in
   [chapter 9](09-divergence-ledger.md)'s divergence ledger (see
