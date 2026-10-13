@@ -355,7 +355,7 @@ port's own
 This is a TypeScript implementation shape against D-9's intent, not a spec gap;
 [D-23](02-document-model.md#242-resource-bounds-beyond-the-document) lets an
 implementation refuse such an input by size, and D-24 says it does not make the
-parse fast. No issue is open for the TOML parse (issue pending).
+parse fast. Tracked in [omnist-ts#170](https://github.com/omnist-dev/omnist-ts/issues/170).
 **Remove this entry when TypeScript reads an array of tables in linear time.**
 
 **DIV-13. TypeScript's `field(label, type, 0, 0)` rejects cardinality `[0,0]` with `schema.invalid-cardinality`, although S-15 keeps `[0,0]` representable and S-24 makes the writer, not construction, refuse it.**
@@ -367,7 +367,8 @@ Go, Java, Rust and Python accept `[0,0]` at construction. `normalize` and
 rebuild fields through `field()`. The port documents this as a known divergence
 in its `docs/schema.md` and `CHANGELOG.md`. Measured 2026-10-13:
 `field("a", t.string, 0, 0)` throws `schema.invalid-cardinality`
-("has an invalid cardinality [0,0]").
+("has an invalid cardinality [0,0]"). Tracked in
+[omnist-ts#170](https://github.com/omnist-dev/omnist-ts/issues/170).
 **Remove this entry when TypeScript's `field()` accepts `[0,0]` (S-15).**
 
 **DIV-33. TypeScript's Track 2 runner compares a read report's diagnostics on paths only.**
@@ -379,8 +380,8 @@ runner gap this entry used to list has closed: the Track 1 lint-code comparison
 (omnist#359, omnist-ts#164, omnist-rs#200, omnist-go#135, omnist-j#125), Java's
 order-insensitive parse comparison (omnist-j#126) and its re-parse of a `write`
 vector's text, TypeScript's path-only write comparison (omnist-ts#166), `compact`
-(E-35) and the outer-whitespace trim of E-18. No issue is open for the remaining
-gap (issue pending).
+(E-35) and the outer-whitespace trim of E-18. Tracked in
+[omnist-ts#170](https://github.com/omnist-dev/omnist-ts/issues/170).
 **Remove this entry when TypeScript compares `(path, code)` for a read report.**
 
 **DIV-42. XML integer pretyping (E-4a, C-1): prose only, no vector; Rust and Go differ.**
@@ -393,8 +394,9 @@ digit limit, their codes were not read). Rust refuses it at `$.r.n` with
 `materialize.inexact-conversion`, where E-4a requires
 `document.limit.int-digits`. Go's `materialize` leaves the value a string,
 reporting `materialize.inexact-conversion` at `$.r.n`, and does not pretype XML
-at all: `<n>3</n>` also stays `"3"`. Go's library was not measured. No issue is
-open for either port (issue pending).
+at all: `<n>3</n>` also stays `"3"`. Go's library was not measured. Tracked in
+[omnist-rs#204](https://github.com/omnist-dev/omnist-rs/issues/204) (Rust) and
+[omnist-go#140](https://github.com/omnist-dev/omnist-go/issues/140) (Go).
 **Remove this entry when each port refuses the worked case at `$.r.n`.**
 
 **DIV-43. TypeScript's readers lose data: YAML offset datetimes, TOML and YAML fractions, and an 8 MB XML attribute ([omnist-ts#169](https://github.com/omnist-dev/omnist-ts/issues/169)).**
