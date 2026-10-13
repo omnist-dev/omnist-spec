@@ -283,17 +283,12 @@ documents. Whatever values an implementation chooses:
   within one implementation (§2.4 note below) — a document that parses MUST
   NOT then fail to build.
 
-**Where this stands today.** Rust, Go and Java expose a configuration
-surface for the depth, node-count and integer-digit limits (a `Limits`
-struct, struct or record passed to the readers; checked 2026-10-05, see
-[§9.3](09-divergence-ledger.md#93-current-status)). Python and TypeScript do
-not: Python's `_MAX_DEPTH`, `_MAX_NODES`, and `_MAX_INT_DIGITS` are
-hardcoded module constants and TypeScript's are compile-time constants, with no
-constructor argument, function parameter, or environment variable that lets a
-caller change them. That is permitted ("MAY set any of these limits"), and it
-is why those two ports skip the six `document-model/limits` vectors, which
-need a runtime-configurable limit to declare
-([`DIV-28`](09-divergence-ledger.md#94-known-open-divergences)). All five ports
+**Where this stands today.** All five ports expose a configuration surface for
+the depth, node-count and integer-digit limits (a `Limits` struct, struct or
+record, or an option, passed to the readers; checked 2026-10-13 by every port
+running the vectors that declare a limit). A port that fixed these as
+constants would still be permitted ("MAY set any of these limits"), and would
+skip those vectors with a reason per §8.5.5. All five ports
 do expose the maximum input size of D-23 (§2.4.2).
 
 **D-13. What is fixed regardless of the chosen value: how exceeding it is reported.**
