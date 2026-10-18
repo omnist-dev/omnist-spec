@@ -1,5 +1,7 @@
 # OSD-OML
 
+> **Status: under review, implementation paused.** This extension is under review and is not yet ready to implement. Implementers are asked not to start work on it, and the ports have paused implementation. The 28 OSD-OML conformance vectors stay skipped in every port, and that skip is expected. This notice will be removed when the review concludes. It is informative only and changes no rule.
+
 **Status: normative.** Version 1.1 of this extension, versioned
 independently of Core per
 [Extensions: Conformance and versioning](overview.md#conformance-and-versioning).

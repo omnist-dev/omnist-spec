@@ -37,7 +37,7 @@ This specification defines:
 5. the **Schema Algebra**: the operations over schemas and their exact semantics;
 6. the ingestion pipeline that turns JSON, YAML, TOML, and XML into Documents;
 7. a conformance protocol and error taxonomy;
-8. an **Extensions** mechanism for optional capabilities built on Core, currently comprising OSD-OML.
+8. an **Extensions** mechanism for optional capabilities built on Core, currently comprising OSD-OML (under review; implementation paused, see its [status notice](extensions/osd-oml.md)).
 
 The target is byte-identical conformance results across independent
 implementations. Where a rule is underspecified, that is a defect in this
