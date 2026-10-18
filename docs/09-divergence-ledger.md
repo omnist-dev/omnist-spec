@@ -466,11 +466,20 @@ in the item (2026-10-05 unless stated).
   converted to JSON and YAML: Python, TypeScript, Rust and Go write `+00:00`;
   Java writes `Z`. All five write `+00:00` in OML. The value is the same; E-37
   pins the offset as held, not which spelling stands for UTC. Post-1.0.
-- *Fractions longer than six digits, read from TOML* (2026-10-13, a nine-digit
-  fraction on a datetime and on a time). Python and Rust read six digits,
-  TypeScript three (`DIV-43`), Java all nine (`DIV-44` when written to OML), and
-  Go refuses the literal as `parse.codec-syntax` ("malformed datetime literal").
-  The spec pins no digit count beyond what OML's grammar allows. Post-1.0.
+- *Fractions longer than six digits, on read* (re-measured on each port's
+  default-branch tip on 2026-10-18, a seven- and a nine-digit fraction on a
+  datetime, in YAML, TOML and OML). The spec requires the OML grammar's one to
+  six digits (`1*6DIGIT`) and [E-37](08-conformance-and-errors.md#838-format-codec-adjustments)
+  never to round or drop a digit; it pins no other digit count. OML: every port
+  refuses a seventh digit (Python, TypeScript and Go with `parse.trailing-content`;
+  Rust with a "stray character" error and no code in its CLI; Java with
+  `parse.trailing-content`). YAML and TOML differ. Java accepts up to nine digits
+  (a tenth fails). Go fails a seven to nine digit fraction with `parse.codec-syntax`,
+  even when the extra digits are zeros. TypeScript refuses a seventh digit with
+  `parse.codec-syntax`. Rust fails a non-zero digit past the sixth (the CLI prints
+  no code) and drops zeros past it (`.1234560` reads as `.123456`). Python keeps six
+  digits and silently drops the rest: `.1234567` and `.123456789` both read as
+  `.123456`, with no error. Java's nine digits do not survive into OML (`DIV-44`). Post-1.0.
 - *Raw TAB, CR and U+2028 in a YAML plain scalar* (2026-10-13, a JSON string
   `x<char>y` converted to YAML). Python writes TAB and CR double-quoted
   and U+2028 single-quoted with the character raw; TypeScript writes TAB and
