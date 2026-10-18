@@ -3,6 +3,47 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## v0.36.0-beta (2026-10-18)
+
+**Normative (minor)** - codifies the measured behaviour of all five ports for
+the integer digit limit, XML pretyping and NaN/Infinity
+([#142](https://github.com/omnist-dev/omnist-spec/issues/142),
+[#157](https://github.com/omnist-dev/omnist-spec/issues/157),
+[#149](https://github.com/omnist-dev/omnist-spec/issues/149)). The suite grows
+from 731 to **793** vectors. No new diagnostic code. OSD-OML is untouched.
+
+- **D-28 (extended).** The digit count excludes the sign (`-`, `+`), the
+  prefix, underscores, leading zeros and colons. 4,301 digits is
+  `document.limit.int-digits` at the Document path on every route. The limit is
+  enforced once, at the leaf read, and for XML at pretyping only, never as
+  `materialize.inexact-conversion`. A `number` is exempt however long its
+  integer part.
+- **D-29 (extended).** An XML leaf typed `number` reads past binary64 as an
+  infinity (underflow as +/-0.0, `-0` as `-0.0`), with no length limit.
+- **C-18 (new).** XML pretyping: `integer` only from `-?(0|[1-9][0-9]*)`;
+  `number` only from a JSON number; everything else (`+5`, `007`, `0x1F`,
+  `1_000`, `5.0`, `NaN`, `INF`) stays a string.
+- **C-19 (new).** NaN and Infinity are numbers only where the format spells
+  them (YAML `.nan` `.inf`; TOML and OML `nan` `inf`). The JSON tokens `NaN`,
+  `Infinity` and `-Infinity` are `parse.codec-syntax`.
+- **E-33 (extended).** A runner compares two NaNs as equal.
+- **Vectors.** 62 new: `document-model/limits-default.json`,
+  `document-model/number-exempt.json`, `formats-{json,yaml,toml,oml}/nonfinite.json`
+  and `formats-xml/limits.json`.
+- **Tooling (#149).** The rule-coverage gate gains a baseline ratchet, enforced
+  reports and vector citations (`tools/rule_coverage_baseline.txt`).
+- **Ledger.** `DIV-42` rewritten; `DIV-45` to `DIV-48` added (all provisional).
+
+### Migration, per port
+
+| Port | Must change |
+|---|---|
+| Python | JSON reader: reject the `NaN`, `Infinity` and `-Infinity` tokens (C-19, DIV-45). Runner: compare NaN equal (E-33, DIV-47). |
+| Rust | JSON reader: reject the same tokens (DIV-45). Runner: NaN equality (DIV-47). OML int-digits error path must be the Document path, not `1:4` (D-28, DIV-46). CLI: same path (DIV-46). |
+| TypeScript | Runner: NaN equality (DIV-47). |
+| Go | XML pretyping forms narrowed to C-18 (DIV-42); number overflow per D-29 (DIV-42); CLI int-digits path (DIV-46). |
+| Java | None. Note: the YAML writer emits `!!int '...'` for oversized integers (DIV-48), writer-only. |
+
 ## v0.35.0-beta (2026-10-12)
 
 **Normative (minor)** - the nine rulings on the audit's remaining issues
