@@ -1,0 +1,125 @@
+{
+  "vectors": [
+    {
+      "name": "formats-oml/nonfinite/nan-is-a-number",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "a: nan\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "NaN"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-19 and OML-30: OML spells it `nan`. E-33 encodes the non-finite number as the string `NaN`. Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Go, Java; fails on Rust (DIV-47, expected until adopted)."
+    },
+    {
+      "name": "formats-oml/nonfinite/inf-is-a-number",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "a: inf\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-19 and OML-30: OML spells it `inf`. E-33 encodes the non-finite number as the string `Infinity`. Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Rust, Go and Java."
+    },
+    {
+      "name": "formats-oml/nonfinite/negative-inf-is-a-number",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "happy-path",
+      "input": {
+        "format": "oml",
+        "text": "a: -inf\n"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "number",
+                  "value": "-Infinity"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-19 and OML-30: OML spells it `-inf`. E-33 encodes the non-finite number as the string `-Infinity`. Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Rust, Go and Java."
+    },
+    {
+      "name": "formats-oml/nonfinite/capitalised-nan-is-a-bare-word",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: NaN\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.bare-word"
+          }
+        ]
+      },
+      "comment": "C-19: OML's spellings are lowercase; `NaN` is a bare identifier and `parse.bare-word`, as for any other word that is not null, true or false. Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Rust, Go and Java."
+    },
+    {
+      "name": "formats-oml/nonfinite/capitalised-infinity-is-a-bare-word",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "oml",
+        "text": "a: Infinity\n"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "1:4",
+            "code": "parse.bare-word"
+          }
+        ]
+      },
+      "comment": "C-19: OML's spellings are lowercase; `Infinity` is a bare identifier and `parse.bare-word`, as for any other word that is not null, true or false. Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Rust, Go and Java."
+    }
+  ]
+}

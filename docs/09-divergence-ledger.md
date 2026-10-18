@@ -112,7 +112,7 @@ of truth: each implementation's own conformance run is. It records **what**,
 not **how it got that way**: the reasoning, history and audit trail for any
 cell live in that port's own issue tracker and commit history, not here.*
 
-**Last updated: 2026-10-13.** This chapter records which spec release each port
+**Last updated: 2026-10-18.** This chapter records which spec release each port
 pins and what is open. It does not record a port's own version, its registry
 state or its conformance counts: those are the port's tags and CI, and copying
 them here was the largest source of stale figures. The "Spec version pinned" row
@@ -163,8 +163,12 @@ did not re-measure (the OML, OSD, `any`, `validate`, `materialize`, algebra and
 fuzz rows) are carried from an earlier edit; the vector suites each port passes
 cover them.
 
-The Track 2 suite is v0.35.0-beta, 731 vectors in this tree. No port fails a
-vector it runs, and no port skips any but the 28 OSD-OML vectors, which every
+The Track 2 suite is v0.35.0-beta, 793 vectors in this tree: the 731 of the tag
+and 62 added since for the digit limit at its default, a `number` exempt from it,
+NaN and the infinities (C-18, C-19, D-28, D-29; `DIV-42`, `DIV-45` to `DIV-48`).
+No port fails a vector of the tag it runs, and on the 62 new ones the failures
+are the ones those entries list (measured 2026-10-18 at each port's
+default-branch tip, not at a tag). No port skips any but the 28 OSD-OML vectors, which every
 port skips until it implements that extension
 ([omnist#341](https://github.com/omnist-dev/omnist/issues/341),
 [omnist-ts#145](https://github.com/omnist-dev/omnist-ts/issues/145),
@@ -239,7 +243,8 @@ number range) and `DIV-35` to `DIV-41` (quoted path labels, writing temporals,
 negative zero, XML characters and references, YAML escapes, number spellings and
 merge keys, Java's literals and lone `CR`) closed on 2026-10-13: every port's
 run of the v0.35.0-beta suite at its latest tag fails none of the 731 vectors.
-`DIV-5`, `DIV-12`, `DIV-13`, `DIV-33`, `DIV-42`, `DIV-43` and `DIV-44` are live.
+`DIV-5`, `DIV-12`, `DIV-13`, `DIV-33`, `DIV-42`, `DIV-43`, `DIV-44`, `DIV-45`,
+`DIV-46`, `DIV-47` and `DIV-48` are live.
 One caution on `DIV-3`: comments in `test-suite/formats-xml/xml.json` and
 `test-suite/formats-json/json.json` cite a `DIV-3` closed 2026-08-23. That is
 an earlier entry that held the number before the alias-limit entry opened in
@@ -384,20 +389,33 @@ vector's text, TypeScript's path-only write comparison (omnist-ts#166), `compact
 [omnist-ts#170](https://github.com/omnist-dev/omnist-ts/issues/170).
 **Remove this entry when TypeScript compares `(path, code)` for a read report.**
 
-**DIV-42. XML integer pretyping (E-4a, C-1): prose only, no vector; Rust and Go differ.**
-No vector can pin it, because `parse` takes no schema. Measured 2026-10-13
-against the worked case (`<r><n>` holding 4,301 digits, schema
-`Root { "r": Inner }`, `Inner { "n": integer }`) through each CLI: Python,
-TypeScript and Java refuse it at `$.r.n` (Java's `--json` shows
-`document.limit.int-digits`; Python's and TypeScript's text messages name the
-digit limit, their codes were not read). Rust refuses it at `$.r.n` with
-`materialize.inexact-conversion`, where E-4a requires
-`document.limit.int-digits`. Go's `materialize` leaves the value a string,
-reporting `materialize.inexact-conversion` at `$.r.n`, and does not pretype XML
-at all: `<n>3</n>` also stays `"3"`. Go's library was not measured. Tracked in
-[omnist-rs#204](https://github.com/omnist-dev/omnist-rs/issues/204) (Rust) and
-[omnist-go#140](https://github.com/omnist-dev/omnist-go/issues/140) (Go).
-**Remove this entry when each port refuses the worked case at `$.r.n`.**
+**DIV-42. XML pretyping (C-18, E-4a, D-29): prose only, no vector; Go and Rust differ.**
+No vector can pin it, because `parse` takes no schema; the no-schema half is
+pinned (`formats-xml/limits/*`, which every port passes). **Provisional: measured
+2026-10-18 through each CLI at the default-branch tips, not adopted by any port
+from the text.** The worked case of E-4a (an `integer` leaf of 4,301 digits) is
+now refused with `document.limit.int-digits` at `$.r.n` by all five ports
+(Rust's `--json` prints no code for a document-level error, so its code is read
+from the message; see `DIV-46`), so the entry this replaces, which said Rust and
+Go refused it with another code or not at all, is out of date. What still
+differs from [C-18](07-codecs-and-deserialization.md#71-two-stages) and
+[D-29](02-document-model.md#221-scalar-kinds):
+- *Go pretypes more than C-18 allows.* An `integer` leaf of `+5`, `007` or `-007`
+  reads as an integer (`5`, `7`, `-7`), `+` followed by 4,300 nines and `0` followed
+  by 4,300 nines read, and 4,400 zeros before `17` reads as 17; the other four
+  leave all of them strings. A `number` leaf of `1.`, `.5`, `+1.5`, `007` and
+  `1_0.5` reads as a number in Go and stays a string in the other four.
+- *Go refuses a `number` leaf that overflows binary64* (`1e999`, `-1e999`, a
+  400-digit or 4,300-digit integer text, `1e4301`) with
+  `materialize.inexact-conversion`; D-29 says it reads as an infinity, and the
+  other four read it so.
+- *Rust refuses a `number` leaf whose integer part has 4,301 digits* (`999…9.5`,
+  or a 4,301-digit integer text) with `materialize.inexact-conversion`; 4,300 digits
+  and below read as `+Infinity`. D-28 says a `number` is exempt.
+Tracked in [omnist-rs#204](https://github.com/omnist-dev/omnist-rs/issues/204)
+(Rust) and [omnist-go#140](https://github.com/omnist-dev/omnist-go/issues/140)
+(Go); the number-leaf points are not yet filed there.
+**Remove this entry when Go and Rust read the C-18 forms as the other three do.**
 
 **DIV-43. TypeScript's readers lose data: YAML offset datetimes, TOML and YAML fractions, and an 8 MB XML attribute ([omnist-ts#169](https://github.com/omnist-dev/omnist-ts/issues/169)).**
 Found by the review of the v0.35.0-beta adoption and identical on the previous
@@ -422,6 +440,49 @@ and stringifies when no native literal is exact, so the OML writer should report
 the CLI's `format` command does not apply the schema's integer typing to XML,
 while `convert` and `validate` do; that part was not re-run.
 **Remove this entry when omnist-j#133 is closed.**
+
+**DIV-45. Python and Rust read the bare JSON tokens `NaN`, `Infinity` and `-Infinity` as numbers (C-19).**
+C-19 says a JSON reader rejects them with `parse.codec-syntax`. **Provisional:
+measured 2026-10-18 at the default-branch tips.** Python and Rust read them as NaN,
+`+Infinity` and `-Infinity`, so the three vectors
+`formats-json/nonfinite/bare-*-token-is-a-codec-syntax-error` fail there
+(`expected failure, ... succeeded`); TypeScript, Go and Java reject the tokens
+and pass. The readers' result cannot be written back as JSON (E-6).
+**Remove this entry when Python and Rust pass those three vectors.**
+
+**DIV-46. `document.limit.int-digits` is not always reported at the Document path (E-4a).**
+**Provisional: measured 2026-10-18.** Two ports differ, and the two points are
+different layers.
+- *Rust's OML reader*, through the library, reports an integer of 4,301 digits at
+  the default limit at the text position `1:4`, not at `$.a`; the two vectors
+  `limits-default/oml-4301-digit-integer-is-refused` and
+  `oml-negative-4301-digit-integer-is-refused` fail there. The same port passes the
+  declared-limit OML vector, so the position form is specific to the default-limit
+  path. Its CLI additionally prints no code for any document-level error
+  (`"errors": []` in `--json`), so the code is visible only in the message.
+- *Go's CLI* (`parse`, `materialize`) renders the same error with a text position
+  (`1:4314`, `2:6`) for JSON, YAML, TOML and OML; its library carries the Document
+  path, and its runner passes every vector of this family.
+No vector can catch the CLI half: the runners call the libraries.
+**Remove this entry when Rust's OML reader and both CLIs report the Document path and Rust's CLI reports the code.**
+
+**DIV-47. The Python, TypeScript and Rust runners fail a NaN vector whatever the implementation read (E-33).**
+**Provisional: measured 2026-10-18.** The three vectors
+`formats-{yaml,toml,oml}/nonfinite/nan-is-a-number` fail in those three runners with
+`parsed document does not match expected`, while the same three ports'
+CLIs print `nan` for each input: the runners compare the expected Document with the
+read one by the language's equality, and a NaN is not equal to itself. E-33 now
+requires the comparison to treat two NaNs as equal. Go and Java pass the vectors.
+**Remove this entry when the three runners compare NaN as equal.**
+
+**DIV-48. Java's YAML writer writes a 4,300-digit integer as `!!int '9…9'` (writer only).**
+**Provisional: measured 2026-10-18.** Not a reader difference and not vectored: the
+other four YAML writers write the digits as a plain scalar (`n: 9…9`), Java writes
+the quoted, tagged form, which differs byte for byte and so changes a round trip
+through a diff.
+No spec rule requires one spelling today; the entry records it so the next
+YAML-writer ruling starts from the measurement.
+**Remove this entry when a rule fixes the YAML spelling of a long integer and Java follows it, or when Java writes the plain digits.**
 
 **Retired by measurement: Rust's arena cap.** `DIV-11` recorded that Rust's
 Document arena counted scalar leaves against the 1,000,000-node cap, so a large

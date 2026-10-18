@@ -110,6 +110,15 @@ the write fails with `write.unsupported-value`
 with no fraction and no exponent is an `integer`, never a `number`, however
 many digits it has (D-28).
 
+**The same holds for the text of an XML leaf the schema types as `number`**
+([C-18](07-codecs-and-deserialization.md#71-two-stages)): `1e999` reads as
+`+Infinity`, `-1e999` as `-Infinity`, `1e-999` as `0.0`, `-1e-999` and `-0.0` as
+`-0.0`, and a text of 400 or 4 301 digits, with or without a fraction, rounds
+to binary64 as any other number would. No length limit applies to a `number`
+(D-28), so a refusal of such a leaf, as `materialize.inexact-conversion` or as
+`document.limit.int-digits`, is a defect. Only text that is not a number
+literal stays a string.
+
 `null` is a value but not a kind. It has no scalar kind of its own and is
 admitted only where a schema permits it (§3).
 
@@ -261,6 +270,20 @@ on how it was spelled, and a Document holds the value, so a writer or a
 looked like. The rule is the same on every route into the model (JSON, YAML,
 TOML, OML, and the schema-directed pretyping of an XML leaf,
 [E-4a](08-conformance-and-errors.md#832-document-building-and-limits)).
+
+**What the count includes, where it is enforced, and what is exempt.** The sign
+(`-`, and the `+` YAML and TOML allow) is not a digit. A value is counted once,
+at the leaf where the integer is read, and a value of 4 301 digits at the
+default limit is `document.limit.int-digits` at the Document path of that leaf
+([E-4a](08-conformance-and-errors.md#832-document-building-and-limits)), on
+every route and never a text position. For XML the one place is the pretyping
+([C-18](07-codecs-and-deserialization.md#71-two-stages)): the check is never
+deferred to `materialize`, so an oversized XML leaf is never reported as
+`materialize.inexact-conversion`. **A `number` is exempt when it is spelled
+with a fraction or an exponent, however long its integer part:** the limit bounds
+the digits of an `integer`, and a bare digit-only literal is an `integer`, subject
+to the limit, however it is read. So `999…9.5` with 4 301 nines and `1e4301` are `number`s that read
+as `+Infinity` ([D-29](#221-scalar-kinds)) with no diagnostic, in every format.
 
 **Choosing different values.** An implementation MAY set any of these limits
 lower or higher than the reference default, to fit its deployment target —
