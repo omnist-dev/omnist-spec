@@ -1,0 +1,91 @@
+{
+  "vectors": [
+    {
+      "name": "formats-json/nonfinite/bare-nan-token-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": NaN}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-19: JSON has no spelling for NaN or an infinity, so the bare token `NaN` is not JSON and the read fails with `parse.codec-syntax` at a text position (E-32 placeholder); a reader that accepts the token builds a Document its own writer cannot write back (E-6). Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Go, Java; fails on Rust (DIV-45, expected until adopted)."
+    },
+    {
+      "name": "formats-json/nonfinite/bare-infinity-token-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": Infinity}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-19: JSON has no spelling for NaN or an infinity, so the bare token `Infinity` is not JSON and the read fails with `parse.codec-syntax` at a text position (E-32 placeholder); a reader that accepts the token builds a Document its own writer cannot write back (E-6). Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Go, Java; fails on Rust (DIV-45, expected until adopted)."
+    },
+    {
+      "name": "formats-json/nonfinite/bare-negative-infinity-token-is-a-codec-syntax-error",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "error-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": -Infinity}"
+      },
+      "expect": {
+        "ok": false,
+        "diagnostics": [
+          {
+            "path": "line:col",
+            "code": "parse.codec-syntax"
+          }
+        ]
+      },
+      "comment": "C-19: JSON has no spelling for NaN or an infinity, so the bare token `-Infinity` is not JSON and the read fails with `parse.codec-syntax` at a text position (E-32 placeholder); a reader that accepts the token builds a Document its own writer cannot write back (E-6). Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Go, Java; fails on Rust (DIV-45, expected until adopted)."
+    },
+    {
+      "name": "formats-json/nonfinite/quoted-nan-is-a-string",
+      "spec": "docs/07-codecs-and-deserialization.md#71-two-stages",
+      "operation": "parse",
+      "purpose": "edge-case",
+      "input": {
+        "format": "json",
+        "text": "{\"a\": \"NaN\"}"
+      },
+      "expect": {
+        "ok": true,
+        "document": {
+          "edges": [
+            [
+              "a",
+              {
+                "scalar": {
+                  "kind": "string",
+                  "value": "NaN"
+                }
+              }
+            ]
+          ]
+        }
+      },
+      "comment": "C-19: the quoted `\"NaN\"` is an ordinary string; only the bare token is refused. Verified live 2026-10-18 at the ports default-branch tips: passes on Python, TypeScript, Rust, Go and Java."
+    }
+  ]
+}

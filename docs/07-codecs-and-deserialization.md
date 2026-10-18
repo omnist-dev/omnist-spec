@@ -60,6 +60,38 @@ format gets this exception: a JSON/YAML/TOML/OML/OSD leaf that is a string
 after stage 1 stays a string unless stage 2 upgrades it, per §7.2's normal
 rule.
 
+**C-18. XML pretyping reads exactly two literal forms, and everything else stays
+a string.** The text of a leaf is compared byte for byte, with no trimming:
+
+- A leaf the schema types as `integer` is pretyped only when its text is
+  `-?(0|[1-9][0-9]*)`: an optional minus sign, then `0` or digits with no
+  leading zero. `-0` is the integer `0`. `+5`, `007`, `-007`, `0x1F`, `0o17`,
+  `0b101`, `1_000`, `5.0`, `1e3`, a leading or trailing space and the empty text
+  stay strings, and stage 2 then rejects them with
+  `materialize.inexact-conversion`. The digit limit
+  ([D-28](02-document-model.md#24-safety-limits)) is checked here, on the
+  digits of that text, and nowhere later.
+- A leaf the schema types as `number` is pretyped only when its text is a
+  JSON number, `-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?`, and then
+  reads as the nearest binary64 ([D-29](02-document-model.md#221-scalar-kinds)):
+  `5` is `5.0`, `1e999` is `+Infinity`, `-0` is `-0.0`. No length limit applies.
+  `1.`, `.5`, `+1.5`, `007`, `1_0.5` and the hexadecimal forms stay strings.
+- `NaN`, `Infinity`, `INF`, `-INF` and every other spelling of a non-finite
+  number are not number literals here ([C-19](#71-two-stages)): they stay strings
+  and fail stage 2 against `number`.
+
+**C-19. NaN and the infinities are numbers only where the format spells them.**
+YAML spells them `.nan`, `.inf` and `-.inf` ([C-17](#71-two-stages)); TOML spells
+them `nan`, `inf` and `-inf`, each with an optional sign; OML spells them `nan`,
+`inf` and `-inf` ([OML-30](04-oml-grammar.md#49-canonical-output)), and OML
+`NaN` and `Infinity` are `parse.bare-word`. JSON has no spelling for either, so a
+JSON reader MUST reject the bare tokens `NaN`, `Infinity` and `-Infinity` with
+`parse.codec-syntax`, at a text position
+([E-11](08-conformance-and-errors.md#84-paths)), and produce no Document; it MUST
+NOT read them as numbers, which would make a Document that its own JSON writer
+cannot write back ([E-6](08-conformance-and-errors.md#838-format-codec-adjustments)).
+A quoted `"NaN"` is the string. XML has no spelling either (C-18).
+
 **C-11. When a JSON object repeats a key, the last value replaces the earlier
 ones, and the surviving edge keeps the position of the key's first
 occurrence.** `{"a":1,"a":2}` reads as the single edge `(a,2)`, and a later

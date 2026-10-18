@@ -107,7 +107,12 @@ refused with `document.limit.int-digits` at the leaf's path (`$.r.n` for
 command-line `materialize` alike
 ([E-4a](../08-conformance-and-errors.md#832-document-building-and-limits),
 which states it with a worked case; no vector can check it, because the `parse`
-driver takes no schema, so it is implemented from the text).
+driver takes no schema, so it is implemented from the text). Which texts are
+pretyped at all is [C-18](../07-codecs-and-deserialization.md#71-two-stages)'s:
+an `integer` leaf only from `-?(0|[1-9][0-9]*)`, a `number` leaf only from a
+JSON number, and `+5`, `007`, `0x1F`, `1_000`, `NaN` and `INF` stay strings. A
+`number` leaf past binary64's range reads as an infinity, with no length limit
+([D-29](../02-document-model.md#221-scalar-kinds)).
 
 **Attributes and namespace prefixes are dropped, and the drop MUST be
 reported** ([E-5](../08-conformance-and-errors.md#838-format-codec-adjustments)). `<a x="1"><b>hi</b></a>` reads as `[(a,[(b,"hi")])]`; the

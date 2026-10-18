@@ -1166,7 +1166,11 @@ so a vector file could not hold one otherwise. The string form is unambiguous
 because the `value` of every other `number` is a JSON number and never a JSON
 string, and it applies to kind `number` only: a `string` scalar whose text is
 `NaN` is an ordinary string. A vector author and a vector reader apply the
-same three spellings, as they apply the integer threshold of E-19.
+same three spellings, as they apply the integer threshold of E-19. **A runner
+compares two NaN values as equal** when it matches a decoded `number` against
+what the implementation read: the language's own floating-point equality says a
+NaN is not equal to itself, and a runner that applies it fails every NaN vector
+whatever the implementation read.
 
 ### 8.5.5 Reporting
 

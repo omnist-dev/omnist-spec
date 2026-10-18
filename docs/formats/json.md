@@ -20,7 +20,9 @@ schema upgrades it in stage 2. A writer MUST stringify a temporal leaf to
 ISO-8601, unaltered and with its seconds, and report `format.temporal-stringified`
 ([E-37](../08-conformance-and-errors.md#838-format-codec-adjustments)).
 
-**No `NaN` or `Infinity`.** Those tokens are not valid JSON. Writing one MUST
+**No `NaN` or `Infinity`.** Those tokens are not valid JSON. Reading one MUST
+fail with `parse.codec-syntax` ([C-19](../07-codecs-and-deserialization.md#71-two-stages)).
+Writing one MUST
 ([E-6](../08-conformance-and-errors.md#838-format-codec-adjustments))
 fail with `write.unsupported-value`
 ([§8.3.8](../08-conformance-and-errors.md#838-format-codec-adjustments)),
