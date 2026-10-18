@@ -406,9 +406,10 @@ converts an offset datetime to UTC (`12:00+01:00` reads as `11:00`); the YAML an
 TOML readers truncate a fraction to three digits; an XML attribute value over
 about 8 MB throws an uncaught `RangeError`; and the XML parser is super-linear
 in depth (a 100,000-deep document took about 350 s before the depth limit was
-reported). Of these, 2026-10-13 re-measured only the fraction: TOML
-`2024-01-15T12:00:00.123456789Z` reads as `.123` (the other ports' results are in
-the unpinned notes). The other three are quoted from the issue and were not run.
+reported). Of these, 2026-10-18 re-measured only the fraction, and it no longer
+truncates: on the current default-branch tip TypeScript refuses a seventh digit in
+YAML and TOML with `parse.codec-syntax` (the other ports' results are in the
+unpinned notes). The other three are quoted from the issue and were not run.
 **Remove this entry when omnist-ts#169 is closed.**
 
 **DIV-44. Java's OML writer emits a fraction its own grammar cannot read, and `format --schema` ignores the schema for XML ([omnist-j#133](https://github.com/omnist-dev/omnist-j/issues/133)).**
