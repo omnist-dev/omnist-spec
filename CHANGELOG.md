@@ -3,6 +3,10 @@
 Versioning per [§10.3](docs/10-governance-and-versioning.md#103-versioning).
 This file starts at v0.3.0-alpha; earlier history is in `git log`.
 
+## Unreleased
+
+- OSD-OML extension marked under review; implementation paused in all ports (informative notice only, no rule changed).
+
 ## v0.36.0-beta (2026-10-18)
 
 **Normative (minor)** - codifies the measured behaviour of all five ports for

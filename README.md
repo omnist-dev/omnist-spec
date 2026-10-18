@@ -34,7 +34,7 @@ happens to do, and the others drift. The spec exists so that:
 | `docs/09-divergence-ledger.md` | Permitted vs forbidden implementation variation |
 | `docs/10-governance-and-versioning.md` | Spec-first workflow, SemVer, discrepancy protocol |
 | `docs/formats/` | Per-format codec chapters (JSON, YAML, TOML, XML, OML) |
-| `docs/extensions/` | Extensions to the Core: OSD-OML |
+| `docs/extensions/` | Extensions to the Core: OSD-OML (under review, implementation paused) |
 | `docs/conformance-harness.md`, `docs/porting-a-conformance-runner.md` | The Track 1 harness protocol and a guide to building a runner |
 | `docs/operations-and-models-reference.md` | Reference tables of operations and models |
 | `grammars/oml.abnf` | OML grammar, machine-readable and executable |

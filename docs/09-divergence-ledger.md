@@ -134,7 +134,7 @@ temporals (E-37), XML characters and references (C-15, C-16), YAML escapes and
 number spellings (C-14, C-17), lone `CR` (E-29) and negative zero. Which port
 adopted what, in which release, is in each port's own changelog.
 
-No port implements the OSD-OML extension (§9.6).
+No port implements the OSD-OML extension (§9.6); the extension is under review and implementation is paused (see its [status notice](extensions/osd-oml.md)).
 
 | | Python | TypeScript | Rust | Go | Java |
 |---|---|---|---|---|---|
