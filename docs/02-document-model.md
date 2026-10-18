@@ -279,9 +279,10 @@ default limit is `document.limit.int-digits` at the Document path of that leaf
 every route and never a text position. For XML the one place is the pretyping
 ([C-18](07-codecs-and-deserialization.md#71-two-stages)): the check is never
 deferred to `materialize`, so an oversized XML leaf is never reported as
-`materialize.inexact-conversion`. **A `number` is exempt, whatever the spelling
-and however long its integer part:** the limit bounds the digits of an
-`integer`, so `999…9.5` with 4 301 nines and `1e4301` are `number`s that read
+`materialize.inexact-conversion`. **A `number` is exempt when it is spelled
+with a fraction or an exponent, however long its integer part:** the limit bounds
+the digits of an `integer`, and a bare digit-only literal is an `integer`, subject
+to the limit, however it is read. So `999…9.5` with 4 301 nines and `1e4301` are `number`s that read
 as `+Infinity` ([D-29](#221-scalar-kinds)) with no diagnostic, in every format.
 
 **Choosing different values.** An implementation MAY set any of these limits

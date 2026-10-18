@@ -80,6 +80,12 @@ a string.** The text of a leaf is compared byte for byte, with no trimming:
   number are not number literals here ([C-19](#71-two-stages)): they stay strings
   and fail stage 2 against `number`.
 
+A leaf's pretyping depends on the one scalar kind the schema gives it. There is no
+union of scalar kinds to choose between ([§3](03-schema-model.md) supports none,
+and all five readers reject `integer|number|string` as OSD syntax, measured
+2026-10-18), so a text is never tried against several kinds, and a leaf typed
+`string` or `any` is never pretyped.
+
 **C-19. NaN and the infinities are numbers only where the format spells them.**
 YAML spells them `.nan`, `.inf` and `-.inf` ([C-17](#71-two-stages)); TOML spells
 them `nan`, `inf` and `-inf`, each with an optional sign; OML spells them `nan`,
