@@ -1,0 +1,64 @@
+# Pre-existing findings of tools/check_rule_coverage.py (omnist-spec#149).
+# One finding per line: kind|file|identity. The gate fails on any finding NOT
+# listed here (a regression) and on any line listed here that no longer
+# applies (so this file only ever shrinks). Do not add to it to make a new
+# finding pass: fix the finding. Kinds:
+#   cited-not-defined  normative paragraph cites a rule of its chapter but
+#                      defines none (mostly continuation paragraphs)
+#   outside-spine      normative paragraph in docs/extensions/osd-oml.md with
+#                      no R- number (read-only until #53 rewrites it)
+#   out-of-order       chapter 6 rule defined out of document order (A-22 and
+#                      A-23 are documented exceptions in 6.1; moving them
+#                      would renumber or restructure normative text)
+#   unvectored-should  SHOULD rule no vector names (D-10, D-24, D-25 bound
+#                      resources with no reference default; nothing to vector)
+cited-not-defined|docs/02-document-model.md|- **An alias with no preceding definition is malformed input.** A name
+cited-not-defined|docs/02-document-model.md|- **An entry point that decodes bytes into a string on the caller's be
+cited-not-defined|docs/02-document-model.md|- **A plain `<<` and a `<<` tagged `!!merge` are merge keys; nothing e
+cited-not-defined|docs/02-document-model.md|- **D-14 binds every byte-oriented entry point, and it MUST validate**
+cited-not-defined|docs/02-document-model.md|D-18 is violated, and the codec MUST reject the input, when `E(a)` exc
+cited-not-defined|docs/02-document-model.md|**D-19's bound holds only if the check is made as it goes.** An
+cited-not-defined|docs/02-document-model.md|/ Maximum input size / none (D-24) / Bytes of one input, any format (D
+cited-not-defined|docs/02-document-model.md|**Members of a merge MUST be mappings.** YAML 1.1's merge type takes a
+cited-not-defined|docs/02-document-model.md|**On depth (D-12, elaborated).** Within one implementation, the Docume
+cited-not-defined|docs/02-document-model.md|**The check is one pass.** `W` and `S` for every candidate node MUST b
+cited-not-defined|docs/02-document-model.md|**The default.** It is chosen from measured `W(root)` of realistic ali
+cited-not-defined|docs/02-document-model.md|**The fourth and fifth rows are conditional; the first three are not.*
+cited-not-defined|docs/02-document-model.md|**The one string type that is itself bytes, and what D-14 asks of it.*
+cited-not-defined|docs/02-document-model.md|**The path is `1:1` always: a fixed value, not a computed position.**
+cited-not-defined|docs/02-document-model.md|The reference defaults of D-9's limits are what the Python implementat
+cited-not-defined|docs/02-document-model.md|**This is also what makes D-14 conformance-checkable.** The vectors fo
+cited-not-defined|docs/02-document-model.md|**What a writer does with such a string is not out of scope.** Accepti
+cited-not-defined|docs/02-document-model.md|**`W` is a conservative upper bound, not the exact materialized count.
+cited-not-defined|docs/03-schema-model.md|- A record MUST NOT be named `any` — this is S-3, restated here for th
+cited-not-defined|docs/03-schema-model.md|This matters because the routes are not equally constrained. A text gr
+cited-not-defined|docs/04-oml-grammar.md|An implementation MUST report `parse.trailing-content` at the text pos
+cited-not-defined|docs/05-osd-grammar.md|/ `record R{"a":string} record S{"b":string}` with two `root` declarat
+cited-not-defined|docs/05-osd-grammar.md|/ `record R{"": string}` / error: a field label MUST NOT be empty (OSD
+cited-not-defined|docs/07-codecs-and-deserialization.md|- **a numeric character reference that is malformed or names a code po
+cited-not-defined|docs/07-codecs-and-deserialization.md|A reader or writer SHOULD be able to report the adjustments a given co
+cited-not-defined|docs/07-codecs-and-deserialization.md|C-17 is the same stance [§ YAML](formats/yaml.md) takes on the boolean
+cited-not-defined|docs/08-conformance-and-errors.md|1. **The value is never altered.** A writer MUST NOT convert a `dateti
+cited-not-defined|docs/08-conformance-and-errors.md|- **A `write` vector for XML MUST NOT contain a whitespace-only string
+cited-not-defined|docs/08-conformance-and-errors.md|**Codec read failures use `parse.codec-syntax`** — input that is not
+cited-not-defined|docs/08-conformance-and-errors.md|**[D-14](02-document-model.md#25-encoding) is not one of these
+cited-not-defined|docs/08-conformance-and-errors.md|E-18 is safe for everything except one case, because an omnist writer
+cited-not-defined|docs/08-conformance-and-errors.md|E-27 exists for one requirement, and adds nothing the suite could alre
+cited-not-defined|docs/08-conformance-and-errors.md|**E-27 forbids the tempting shortcut: a runner MUST NOT decode the byt
+cited-not-defined|docs/08-conformance-and-errors.md|**How a runner presents `bytes_hex` to the implementation under test.*
+cited-not-defined|docs/08-conformance-and-errors.md|- **Not yet implemented.** The operation or feature doesn't exist yet
+cited-not-defined|docs/08-conformance-and-errors.md|**The error-code taxonomy in §8.3 is normative and mandatory.** It exi
+cited-not-defined|docs/08-conformance-and-errors.md|The same holds for `format.string-line-break-char`, which a YAML write
+cited-not-defined|docs/08-conformance-and-errors.md|The two ways not to run these vectors are different results and MUST N
+out-of-order|docs/06-schema-algebra.md|A-22
+out-of-order|docs/06-schema-algebra.md|A-23
+outside-spine|docs/extensions/osd-oml.md|A canonical writer MUST follow one general rule instead of a per-field
+outside-spine|docs/extensions/osd-oml.md|A Schema-Document MUST be parsed and written with the exact same gener
+outside-spine|docs/extensions/osd-oml.md|- **Atomic.** Converting a Schema-Document MUST either succeed with a
+outside-spine|docs/extensions/osd-oml.md|**Backward compatibility:** omitting `--from`/`--to` entirely MUST mea
+outside-spine|docs/extensions/osd-oml.md|- `cardinality` at `{min: 1; max: 1}` (exactly-one, the default) MUST
+outside-spine|docs/extensions/osd-oml.md|**CLI:** every schema-consuming and schema-producing command (`validat
+outside-spine|docs/extensions/osd-oml.md|Per [§E.10](#e10-validation-contract), failure at any step MUST produc
+unvectored-should|docs/02-document-model.md|D-10
+unvectored-should|docs/02-document-model.md|D-24
+unvectored-should|docs/02-document-model.md|D-25
