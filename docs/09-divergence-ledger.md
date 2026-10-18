@@ -406,9 +406,10 @@ converts an offset datetime to UTC (`12:00+01:00` reads as `11:00`); the YAML an
 TOML readers truncate a fraction to three digits; an XML attribute value over
 about 8 MB throws an uncaught `RangeError`; and the XML parser is super-linear
 in depth (a 100,000-deep document took about 350 s before the depth limit was
-reported). Of these, 2026-10-13 re-measured only the fraction: TOML
-`2024-01-15T12:00:00.123456789Z` reads as `.123` (the other ports' results are in
-the unpinned notes). The other three are quoted from the issue and were not run.
+reported). Of these, 2026-10-18 re-measured only the fraction, and it no longer
+truncates: on the current default-branch tip TypeScript refuses a seventh digit in
+YAML and TOML with `parse.codec-syntax` (the other ports' results are in the
+unpinned notes). The other three are quoted from the issue and were not run.
 **Remove this entry when omnist-ts#169 is closed.**
 
 **DIV-44. Java's OML writer emits a fraction its own grammar cannot read, and `format --schema` ignores the schema for XML ([omnist-j#133](https://github.com/omnist-dev/omnist-j/issues/133)).**
@@ -466,11 +467,20 @@ in the item (2026-10-05 unless stated).
   converted to JSON and YAML: Python, TypeScript, Rust and Go write `+00:00`;
   Java writes `Z`. All five write `+00:00` in OML. The value is the same; E-37
   pins the offset as held, not which spelling stands for UTC. Post-1.0.
-- *Fractions longer than six digits, read from TOML* (2026-10-13, a nine-digit
-  fraction on a datetime and on a time). Python and Rust read six digits,
-  TypeScript three (`DIV-43`), Java all nine (`DIV-44` when written to OML), and
-  Go refuses the literal as `parse.codec-syntax` ("malformed datetime literal").
-  The spec pins no digit count beyond what OML's grammar allows. Post-1.0.
+- *Fractions longer than six digits, on read* (re-measured on each port's
+  default-branch tip on 2026-10-18, a seven- and a nine-digit fraction on a
+  datetime, in YAML, TOML and OML). The spec requires the OML grammar's one to
+  six digits (`1*6DIGIT`) and [E-37](08-conformance-and-errors.md#838-format-codec-adjustments)
+  never to round or drop a digit; it pins no other digit count. OML: every port
+  refuses a seventh digit (Python, TypeScript and Go with `parse.trailing-content`;
+  Rust with a "stray character" error and no code in its CLI; Java with
+  `parse.trailing-content`). YAML and TOML differ. Java accepts up to nine digits
+  (a tenth fails). Go fails a seven to nine digit fraction with `parse.codec-syntax`,
+  even when the extra digits are zeros. TypeScript refuses a seventh digit with
+  `parse.codec-syntax`. Rust fails a non-zero digit past the sixth (the CLI prints
+  no code) and drops zeros past it (`.1234560` reads as `.123456`). Python keeps six
+  digits and silently drops the rest: `.1234567` and `.123456789` both read as
+  `.123456`, with no error. Java's nine digits do not survive into OML (`DIV-44`). Post-1.0.
 - *Raw TAB, CR and U+2028 in a YAML plain scalar* (2026-10-13, a JSON string
   `x<char>y` converted to YAML). Python writes TAB and CR double-quoted
   and U+2028 single-quoted with the character raw; TypeScript writes TAB and
