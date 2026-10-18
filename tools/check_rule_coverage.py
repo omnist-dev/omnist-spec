@@ -25,7 +25,15 @@ Since omnist-spec#149 the gate also covers SHOULD, not
 only MUST/SHALL; counts a letter-suffixed label (`R-3a`) as a rule number;
 sees definitions that sit in a table cell (`| `infer` | **S-21.** ...`) or
 inline (`**A-9:**`, `**(A-10)**`, `**Determinism requirement (A-5).**`); and fails when a document cites a rule
-number nothing defines. What it does not do is listed next to `REPORTED`.
+number nothing defines.
+
+The remaining findings that predate the gate live in
+`tools/rule_coverage_baseline.txt` (kind|file|identity). A finding not in the
+baseline fails CI; a baseline line that no longer applies also fails, so the
+file only shrinks. Kinds: cited-not-defined (a normative paragraph that cites
+its chapter's rule without defining one), outside-spine (osd-oml.md, read-only
+until #53), out-of-order (chapter 6 only), unvectored-should (a SHOULD rule no
+vector names). A vector that cites an undefined rule number also fails.
 """
 
 from __future__ import annotations
@@ -387,22 +395,143 @@ def stale_range_claims() -> list[str]:
     return errors
 
 
-def cited_not_defined(path: str, prefix: str) -> int:
-    """Report-only: normative paragraphs that cite a rule of this namespace
-    without defining one. `gaps_in` is satisfied by any same-namespace
-    number, so a paragraph that merely mentions `E-5` passes; most of these
-    are continuation paragraphs of the rule above them. Deciding which are
-    real gaps needs a continuation-paragraph convention first."""
+BASELINE = ROOT / "tools" / "rule_coverage_baseline.txt"
+
+
+def _ident(text: str) -> str:
+    """A stable, line-number-free identity for a paragraph: its opening words."""
+    return re.sub(r"\s+", " ", text.strip())[:70].rstrip().replace("|", "/")
+
+
+def cited_not_defined(path: str, prefix: str) -> list[str]:
+    """Normative paragraphs that cite a rule of this namespace without
+    defining one. `gaps_in` is satisfied by any same-namespace number, so a
+    paragraph that merely mentions `E-5` passes; most of these are
+    continuation paragraphs of the rule above them. Tracked against the
+    baseline: no new one may appear (omnist-spec#149)."""
     lines = (ROOT / path).read_text(encoding="utf-8").split("\n")
-    n = 0
+    out = []
     for item in _rules(lines):
         text = " ".join(lines[i] for i in item)
         if NORMATIVE.search(text) and not any(
                 d.rsplit("-", 1)[0] == prefix
                 for i in item
                 for d in definitions_in(lines[i]) + title_definitions_in(lines[i])):
-            n += 1
-    return n
+            out.append(f"cited-not-defined|{path}|{_ident(lines[item[0]])}")
+    return out
+
+
+def outside_spine(path: str, prefix: str) -> list[str]:
+    """Normative paragraphs in a file that owns a spine but carry none of its
+    numbers. Read-only for osd-oml.md (still being rewritten, #53)."""
+    return [f"outside-spine|{path}|{_ident(preview)}"
+            for _, preview in gaps_in(path, prefix)]
+
+
+def out_of_order() -> list[str]:
+    """Chapter 6 numbers its rules in document order (almost: A-22 and A-23
+    are documented exceptions, baselined). A label that breaks the order is
+    reported minimally: the longest in-order subsequence is kept, the rest
+    flagged (so A-22 and A-23, not A-14..A-21, when 22 and 23 sit early)."""
+    out = []
+    for rel, prefix in DEFINING_FILE.items():
+        if prefix != "A":
+            # Only chapter 6 promises document order; every other chapter
+            # numbers by history (a rule added later takes the next free
+            # number wherever it sits) and says so.
+            continue
+        seq: list[tuple[int, str]] = []
+        seen: set[str] = set()
+        in_fence = False
+        for line in (ROOT / rel).read_text(encoding="utf-8").splitlines():
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            for d in definitions_in(line) + title_definitions_in(line):
+                if d.rsplit("-", 1)[0] == prefix and d not in seen:
+                    seen.add(d)
+                    seq.append((int(re.sub(r"\D", "", d.rsplit("-", 1)[1])), d))
+        n = len(seq)
+        best = [1] * n
+        prev = [-1] * n
+        for i in range(n):
+            for j in range(i):
+                if seq[j][0] <= seq[i][0] and best[j] + 1 > best[i]:
+                    best[i], prev[i] = best[j] + 1, j
+        keep: set[int] = set()
+        if n:
+            k = max(range(n), key=lambda i: best[i])
+            while k != -1:
+                keep.add(k)
+                k = prev[k]
+        out += [f"out-of-order|{rel}|{seq[i][1]}" for i in range(n) if i not in keep]
+    return out
+
+
+def vector_texts() -> list[tuple[str, str]]:
+    """(file, text) for every prose field of every vector."""
+    import json
+    out = []
+    for path in sorted((ROOT / "test-suite").glob("*/*.json")):
+        rel = path.relative_to(ROOT).as_posix()
+        for v in json.loads(path.read_text(encoding="utf-8"))["vectors"]:
+            out.append((rel, " ".join(str(v.get(k, ""))
+                                      for k in ("name", "spec", "comment"))))
+    return out
+
+
+def dangling_vector_citations() -> list[str]:
+    """A vector naming a rule number nothing defines (a typo, or a rule
+    that was renumbered out from under it)."""
+    defined = all_definitions()
+    bases = {re.sub(r"[a-z]$", "", d) for d in defined}
+    errors = []
+    for rel, text in vector_texts():
+        for m in CITE.finditer(text):
+            if m.group(1) not in defined and m.group(1) not in bases:
+                errors.append(f"{rel}: a vector cites {m.group(1)}, which "
+                              f"nothing defines")
+    return sorted(set(errors))
+
+
+def unvectored_should() -> list[str]:
+    """A rule that carries a SHOULD is exactly the one an implementation can
+    skip unnoticed. Each needs a vector that names its exact number in its
+    own namespace (a vector citing a neighbouring rule does not count)."""
+    named = set()
+    for _, text in vector_texts():
+        named.update(m.group(1) for m in CITE.finditer(text))
+    out = []
+    for path, prefix in ENFORCED.items():
+        lines = (ROOT / path).read_text(encoding="utf-8").split("\n")
+        for item in _rules(lines):
+            text = " ".join(lines[i] for i in item)
+            if not re.search(r"\bSHOULD\b", text):
+                continue
+            for i in item:
+                for d in definitions_in(lines[i]) + title_definitions_in(lines[i]):
+                    if d.rsplit("-", 1)[0] == prefix and d not in named:
+                        out.append(f"unvectored-should|{path}|{d}")
+    return sorted(set(out))
+
+
+def load_baseline() -> set[str]:
+    if not BASELINE.is_file():
+        return set()
+    return {ln.strip() for ln in BASELINE.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.lstrip().startswith("#")}
+
+
+def baseline_findings() -> list[str]:
+    found = list(unvectored_should()) + out_of_order()
+    for path, prefix in REPORTED.items():
+        if prefix:
+            found += outside_spine(path, prefix)
+    for path, prefix in ENFORCED.items():
+        found += cited_not_defined(path, prefix)
+    return found
 
 
 def main() -> int:
@@ -433,18 +562,38 @@ def main() -> int:
             print(f"{path}: every normative paragraph cites a rule "
                   f"(citation-only)")
 
-    for path, prefix in REPORTED.items():
-        gaps = gaps_in(path, prefix)
-        what = f"the {prefix}- spine" if prefix else "any rule number"
-        note = "covered" if not gaps else f"{len(gaps)} outside {what}"
-        print(f"{path}: {note} (reported, not enforced)")
-        for line_no, preview in gaps:
-            print(f"    {path}:{line_no}: {preview}")
+    found = baseline_findings()
+    base = load_baseline()
+    new = sorted(set(found) - base)
+    stale = sorted(base - set(found))
+    kinds: dict[str, int] = {}
+    for f in found:
+        k = f.split("|", 1)[0]
+        kinds[k] = kinds.get(k, 0) + 1
+    print("baseline (pre-existing, tools/rule_coverage_baseline.txt): "
+          + (", ".join(f"{k}={v}" for k, v in sorted(kinds.items())) or "none"))
+    if new:
+        failed = True
+        print(f"error: {len(new)} new finding(s) not in the baseline "
+              f"(fix them; do not add to the baseline):", file=sys.stderr)
+        for f in new:
+            print(f"  {f}", file=sys.stderr)
+    if stale:
+        failed = True
+        print(f"error: {len(stale)} baseline entr(y/ies) no longer apply; "
+              f"delete them from the baseline:", file=sys.stderr)
+        for f in stale:
+            print(f"  {f}", file=sys.stderr)
 
-    for path, prefix in ENFORCED.items():
-        n = cited_not_defined(path, prefix)
-        print(f"{path}: {n} normative paragraph(s) cite a {prefix}- rule "
-              f"without defining one (reported, not enforced)")
+    vdang = dangling_vector_citations()
+    if vdang:
+        failed = True
+        print(f"error: {len(vdang)} vector citation(s) of an undefined rule:",
+              file=sys.stderr)
+        for line in vdang:
+            print(f"  {line}", file=sys.stderr)
+    else:
+        print("vectors: every cited rule number is defined")
 
     for err in stale_exemptions():
         failed = True
